@@ -7,6 +7,9 @@ let p1 = {
   },
 };
 
+
+// deep copy --> obj-> string -> obj2
+
 const p1KaString = JSON.stringify(p1);
 console.log(p1KaString);
 let p2 = JSON.parse(p1KaString);

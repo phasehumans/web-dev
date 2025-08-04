@@ -4,6 +4,7 @@ let p1 = {
 };
 
 let p2 = {
+  
   ...p1, // Spread Operator ...
 };
 
