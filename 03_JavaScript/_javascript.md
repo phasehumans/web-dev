@@ -5,6 +5,9 @@
 - const: can't update and redeclare
 - var is not used (hoisting err | fn scope err)
 
+## Input & Output
+- console.log("text")
+- console.log(`text is here ${var} another text here`)
 
 ## DataTypes
 
@@ -37,11 +40,13 @@
 
 
 ## Memory in JS
+- stack(primitive) -> copy is pass
+- heap(non primitive) -> ref is pass
 
 ### Stack
-
+- ref variable are stored w/ memory address
 ### Heap
-
+- actual data is stored and unique memory address is given
 
 ## Strings
 - used to hold data that is represented in text form
@@ -90,6 +95,18 @@ array.map(callback(element, index, array), thisArg);
 - Properties -->  Attribute: Color, weight etc.
 - Method -->  Actions, functions
 
+## Functions
+- reusable block of code
+- Arrow function: consise way to write fn  
+- IFFE: Immediately Invoked Function Expression : execute immediately after defination  
+- higher order fn: fn that take another fn as argument
+- recursive fn: fn calls itself
+
+
+scope:
+- global scope
+- local scope : inside {}
+
 ## Control Flow
 - conditionals
 - iteration / loop
@@ -105,19 +122,6 @@ Switch: used to test one variable or expression against multiple possible values
 - break
 - default
 - case
-
-
-## Functions
-- reusable block of code
-- Arrow function: consise way to write fn  
-- IFFE: Immediately Invoked Function Expression : execute immediately after defination  
-- higher order fn: fn that take another fn as argument
-- recursive fn: fn calls itself
-
-
-### Closures
-
-
 
 
 

@@ -3,7 +3,8 @@ const prn= 231107042
 
 // variable declare: let, var
 /*
-prefer not to used var; scope error
+prefer not to used var; scope error, use let and const
+
 */
 let fname= "chetan"
 var lname= "sonawane"

@@ -36,6 +36,15 @@ console.log(userOne);
 console.log(useTwo);
 
 
+/* 
+
+x ----> memory address in heap, if that value changes on memory address then actual value of x is changed
+
+x : ref variable
+
+
+*/
+
 
  
 
