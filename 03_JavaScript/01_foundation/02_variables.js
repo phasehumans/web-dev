@@ -5,6 +5,11 @@ const prn= 231107042
 /*
 prefer not to used var; scope error, use let and const
 
+hoisting err of var
+
+blocked scope -> let , const
+fn scope -> var
+
 */
 let fname= "chetan"
 var lname= "sonawane"

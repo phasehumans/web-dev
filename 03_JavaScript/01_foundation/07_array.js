@@ -59,7 +59,7 @@ console.log(fruits.concat(intFruits));
 
 // spread operator
 const allFruits= [...fruits, ...intFruits]
-console.log(allFruits);
+console.log("all spread opt -->", allFruits);
 
 
 // flat: merge subarrays

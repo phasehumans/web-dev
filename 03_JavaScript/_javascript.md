@@ -13,7 +13,7 @@
 
 ### Primitive
 - immutable
-- call by value
+- call by value - copy of data, changes are in copy
 
 1. Number
 2. String
@@ -24,7 +24,7 @@
 
 ### Non-Primitive / Reference
 - mutable
-- call by ref
+- call by ref - direct ref of memory address
 
 1. Object -> collection of key value pair  { }
 2. Array -> [ ]
@@ -48,9 +48,15 @@
 ### Heap
 - actual data is stored and unique memory address is given
 
+
+- primitive -> separte address and ref var
+- non primitive: obj1 ---->  memoy_address <------ obj2; so one change then another also gets change
+
+
 ## Strings
 - used to hold data that is represented in text form
 - immutable
+- var.__proto__ --> obj of methods
 
 #### Methods
 - str[index] --> access char  
@@ -87,6 +93,15 @@ array.map(callback(element, index, array), thisArg);
 - filter() --> return filter arr based on condn, not change og
 - sort() --> sort
 - reverse() --> reverse, modify og
+- flat(infinity)  --> merge subarrays
+- conact(newarr)  --> add arr
+- find()
+- findLast()
+- findLastIndex()
+- join()  --> joins and return as str
+- slice()
+- toSpliced() --> similar to slice, no chnage in og
+
 
 
 ## Objects
@@ -94,6 +109,12 @@ array.map(callback(element, index, array), thisArg);
 - Objects --> Represent Properties, Methods[Functionalities]
 - Properties -->  Attribute: Color, weight etc.
 - Method -->  Actions, functions
+
+## Shallow copy & Deep copy
+- shallow copy only copies the top-level of an object
+- Nested objects/arrays are shared references — changes in one affect the other
+- why -> primitive → copied by value. & object → copied by reference.
+- A deep copy copies everything, including nested objects, so the new object is fully independent.
 
 ## Functions
 - reusable block of code
@@ -122,6 +143,21 @@ Switch: used to test one variable or expression against multiple possible values
 - break
 - default
 - case
+
+## ES6+
+
+### Hoisting
+- mechanism where variable and function declarations are moved to the top of their containing scope during the compilation phase, before the code is executed. However, only the declarations are hoisted—not the initializations.
+
+- var  -> undefined
+- let and const  -> referror
+- Block Scope (let and const): Variables declared with let and const are limited to the block where they are defined. Example: Inside a loop or conditional block.
+- Function Scope (var): Variables declared with var are limited to the nearest function. If declared outside any function, they become global variables.
+- avoid var, unless legacy code
+
+
+### Arrow fn
+
 
 
 
