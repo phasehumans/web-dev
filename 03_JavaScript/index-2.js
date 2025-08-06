@@ -3,6 +3,8 @@ let fname2 = fname;
 
 console.log(fname);
 
-fname = "Piyush";
+fname = "chaitanya";
 
 console.log(fname);
+console.log(fname2);
+

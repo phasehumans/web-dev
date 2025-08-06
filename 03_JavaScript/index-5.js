@@ -1,6 +1,6 @@
 let p1 = {
   fname: "Hitesh",
-  lname: "Ch",
+  lname: "Chaudhari",
 };
 
 let p2 = {

@@ -109,6 +109,7 @@ array.map(callback(element, index, array), thisArg);
 - Objects --> Represent Properties, Methods[Functionalities]
 - Properties -->  Attribute: Color, weight etc.
 - Method -->  Actions, functions
+- Even with const, only the reference is fixed — the contents are still changeable (const obj1 = {})
 
 ## Shallow copy & Deep copy
 - shallow copy only copies the top-level of an object
