@@ -122,17 +122,22 @@ array.map(callback(element, index, array), thisArg);
 - IFFE: Immediately Invoked Function Expression : execute immediately after defination  
 - higher order fn: fn that take another fn as argument
 - recursive fn: fn calls itself
-
+- call back fn: function that you pass as an argument to another function so that the receiving function can call it back at a later time.
+to run after a certain task completes, without blocking the rest of the program.
 
 scope:
 - global scope
 - local scope : inside {}
 
+### Asynchronous programming
+- where tasks can run without blocking the rest of the program while waiting for something to finish.
+
+
 ## Control Flow
 - conditionals
 - iteration / loop
 
-### Conditionls
+### Conditionals
 - if = agar ye condition true hai
 - else if = warna agar dusri condition true hai
 - else = sab galat ho gaya toh ye karo
@@ -144,6 +149,19 @@ Switch: used to test one variable or expression against multiple possible values
 - default
 - case
 
+### Loops
+- for 
+- while 
+- dowhile
+- for of(arr, map, string)
+- for in(obj)
+
+array specific
+- for each
+- filter ---> filter returns value(arr) that satisfy condn
+- map 
+- reduce -> array.reduce(callback, initialValue)
+
 ## ES6+
 
 ### Hoisting
@@ -154,9 +172,6 @@ Switch: used to test one variable or expression against multiple possible values
 - Block Scope (let and const): Variables declared with let and const are limited to the block where they are defined. Example: Inside a loop or conditional block.
 - Function Scope (var): Variables declared with var are limited to the nearest function. If declared outside any function, they become global variables.
 - avoid var, unless legacy code
-
-
-### Arrow fn
 
 
 
