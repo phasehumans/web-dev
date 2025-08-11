@@ -163,7 +163,6 @@ array specific
 - map 
 - reduce -> array.reduce(callback, initialValue)
 
-## ES6+
 
 ### Hoisting
 - mechanism where variable and function declarations are moved to the top of their containing scope during the compilation phase, before the code is executed. However, only the declarations are hoisted—not the initializations.
@@ -173,6 +172,35 @@ array specific
 - Block Scope (let and const): Variables declared with let and const are limited to the block where they are defined. Example: Inside a loop or conditional block.
 - Function Scope (var): Variables declared with var are limited to the nearest function. If declared outside any function, they become global variables.
 - avoid var, unless legacy code
+
+
+## Advance JS
+
+### Shallow Copy & Deep Copy
+- obj1 = obj2 --> ref passing
+- user also got changed; pass by ref, soln-> spread opt
+- a= {...b} spread operator 
+- but for nested obj, spread is shallow copy
+- soln --> deep copy (serialization (obj -> str) - deserialization)
+
+### Prototype
+- object from which other objects inherit properties and methods
+- prototype based inheritance system
+- Object.prototype = {}
+- obj1._ _proto_ _= Object.prototype
+- Array.prototype= {properties / methods}
+- arr._proto_ = Array.prototype ---> Array has parent class and arr has child class
+- proto chaining --> obj2._ proto _ = obj1 
+- eveything is obj in js --> arr.proto.proto = obj , str.proto.proto= obj
+
+
+
+### Polyfills
+- fallback mechanism
+- custom methods if prototype doesn't supported by browser etc
+- .map, .filter, .reduce
+
+
 
 
 
