@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chaitanya — Portfolio</title>
+  <meta name="description" content="Portfolio of Chaitanya — Web Developer &amp; GenAI enthusiast" />
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <h1 class="logo">Chaitanya</h1>
+      <nav>
+        <ul class="nav-list">
+          <li><a href="#about">About</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#skills">Skills</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <h2>Hi, I'm <span class="accent">Chaitanya</span>.</h2>
+          <p class="lead">I build modern web apps and explore Generative AI. I love clean UI, fast code, and meaningful products.</p>
+          <div class="hero-ctas">
+            <a class="btn" href="#projects">See projects</a>
+            <a class="btn btn-outline" href="#contact">Get in touch</a>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="card-avatar"></div>
+          <div class="card-info">
+            <p><strong>Full-stack dev</strong> • JavaScript • React • Node</p>
+            <p><strong>GenAI</strong> • Prompt engineering • LLM apps</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="container about">
+      <h3>About</h3>
+      <p>I’m a developer who enjoys building fast, accessible web experiences and experimenting with generative AI to solve real problems. I focus on shipping polished user-facing features and clean, maintainable code.</p>
+    </section>
+
+    <section id="projects" class="container projects">
+      <h3>Selected projects</h3>
+      <div class="project-grid">
+        <article class="project-card">
+          <h4>Portfolio Website</h4>
+          <p>Responsive personal website with smooth animations and a simple CMS-free workflow.</p>
+          <div class="card-actions">
+            <a href="#" class="link">View</a>
+            <a href="#" class="link">Source</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <h4>ChatAssist</h4>
+          <p>Lightweight chat app that uses an LLM backend for contextual replies and summarization tools.</p>
+          <div class="card-actions">
+            <a href="#" class="link">Demo</a>
+            <a href="#" class="link">Source</a>
+          </div>
+        </article>
+
+        <article class="project-card">
+          <h4>Taskify</h4>
+          <p>Task management app with offline support and local-first sync.</p>
+          <div class="card-actions">
+            <a href="#" class="link">Demo</a>
+            <a href="#" class="link">Source</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="skills" class="container skills">
+      <h3>Skills</h3>
+      <ul class="skill-list">
+        <li>HTML &amp; CSS</li>
+        <li>JavaScript (ES6+)</li>
+        <li>React &amp; Next.js</li>
+        <li>Node.js &amp; Express</li>
+        <li>SQL &amp; NoSQL</li>
+      </ul>
+    </section>
+
+    <section id="contact" class="container contact">
+      <h3>Contact</h3>
+      <p>If you want to work together or just say hi, drop a message.</p>
+      <form id="contactForm" class="contact-form">
+        <label>
+          <span>Name</span>
+          <input type="text" name="name" required />
+        </label>
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" required />
+        </label>
+        <label>
+          <span>Message</span>
+          <textarea name="message" rows="4" required></textarea>
+        </label>
+        <button class="btn" type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Chaitanya. Built with ❤️.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
