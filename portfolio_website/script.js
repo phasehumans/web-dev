@@ -1,5 +1,7 @@
+// year for footer
 document.getElementById('year').textContent = new Date().getFullYear();
 
+// smooth scroll for sections 
 document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click', e=>{
     const target = document.querySelector(a.getAttribute('href'));
