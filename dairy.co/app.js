@@ -1,12 +1,3 @@
-/* app.js
- - Shared dataset + UI logic for multi-page static site
- - No server required; uses query param `?id=` to show company detail.
-*/
-
-/* ===== sample data =====
-   You can replace/add companies here.
-   Each company has: id, name, region, products, description, established, website, certifications
-*/
 const COMPANIES = [
   {
     id: "alpine-farms",
@@ -21,7 +12,7 @@ const COMPANIES = [
   },
   {
     id: "greenmeadow",
-    name: "Green Meadow Co-op",
+    name: "Green Meadow Co-operation",
     region: "Midwest",
     products: ["Milk", "Butter"],
     description: "Cooperative of small farms focused on sustainable pasture-raised milk.",
@@ -202,7 +193,7 @@ function initCompanyDetailPage() {
   `;
 }
 
-/* ===== Contact form handling (front-end only) ===== */
+
 function initContactForm() {
   const form = el("#contact-form");
   if (!form) return;
