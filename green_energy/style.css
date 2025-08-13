@@ -1,3 +1,45 @@
+nav .nav-links {
+    list-style: none;
+}
+.contact p {
+    padding: 0 1.5rem;
+}
+.about-text {
+    padding: 0 1.5rem;
+}
+/* Center About Us heading */
+.about.container h2 {
+    text-align: center;
+}
+/* About Flex Layout */
+.about-flex {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+.about-img {
+    flex: 1 1 300px;
+    min-width: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.about-text {
+    flex: 2 1 350px;
+    min-width: 250px;
+}
+
+
+@media (max-width: 900px) {
+    .about-flex {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .about-img, .about-text {
+        min-width: 0;
+    }
+}
 /* General Reset */
 * {
     margin: 0;
@@ -64,7 +106,7 @@ nav a:hover {
 
 /* Hero */
 .hero {
-    background: url('https://images.unsplash.com/photo-1509395176047-4a66953fd231') center/cover no-repeat;
+    background: url('https://static.vecteezy.com/system/resources/thumbnails/038/935/982/small/photovoltaic-panels-and-wind-turbines-against-beautiful-sunset-over-mountain-landscape-photo.jpg') center/cover no-repeat;
     height: 90vh;
     display: flex;
     align-items: center;
@@ -134,15 +176,15 @@ nav a:hover {
     color: #2e7d32;
 }
 
-.service-card p {
-    padding: 0 1rem 1rem;
+.service-card {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 2rem;
+    border-radius: 28px;
+    text-align: center;
+    transition: box-shadow 0.2s;
 }
 
-/* About */
-.about {
-    padding: 3rem 0;
-    text-align: center;
-}
 
 /* Contact */
 .contact {

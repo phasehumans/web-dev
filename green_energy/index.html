@@ -12,10 +12,10 @@
             <h1 class="logo">Green<span>Energy</span></h1>
             <nav>
                 <ul class="nav-links">
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#services">Services</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="services.html">Services</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
                 </ul>
                 <button class="menu-toggle" onclick="toggleMenu()">☰</button>
             </nav>
@@ -24,47 +24,75 @@
 
     <section id="home" class="hero">
         <div class="hero-text">
+            <div class="hero-img">
+                <!-- <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=900&q=80" alt="Solar panels in a green field" style="width:100%;max-width:500px;border-radius:24px;box-shadow:0 4px 24px rgba(0,0,0,0.1);margin-bottom:2rem;"> -->
+            </div>
             <h2>Powering the Future with Solar Energy</h2>
-            <p>Clean, sustainable, and affordable solar panel solutions for your home and business.</p>
-            <a href="#contact" class="btn">Contact</a>
+            <p>Clean, sustainable, and affordable solar panel solutions for your home and business. Harness the power of the sun to reduce your carbon footprint and save on energy costs. Join the green revolution today!</p>
+            <!-- <ul style="margin:1.5rem 0 2rem 1.5rem;text-align:left;">
+                <li>High-efficiency solar panels for all property types</li>
+                <li>Expert installation and maintenance</li>
+                <li>Eco-friendly and cost-effective energy solutions</li>
+            </ul> -->
+            <a href="contact.html" class="btn">Contact</a>
         </div>
     </section>
 
-    <!-- Services -->
+    <!-- Services (Home Preview) -->
     <section id="services" class="services container">
         <h2>Our Services</h2>
         <div class="service-grid">
             <div class="service-card">
-                <img src="https://images.unsplash.com/photo-1509395176047-4a66953fd231" alt="Solar Installation">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" alt="Solar Installation">
                 <h3>Solar Panel Installation</h3>
-                <p>Professional installation for homes, offices, and industries with maximum efficiency.</p>
+                <p>Professional installation for homes, offices, and industries. We use the latest technology to ensure maximum efficiency and durability for every project.</p>
             </div>
             <div class="service-card">
-                <img src="https://images.unsplash.com/photo-1554188248-986adbb73be0" alt="Maintenance">
+                <img src="https://images.unsplash.com/photo-1516117172878-fd2c41f4a759?auto=format&fit=crop&w=400&q=80" alt="Maintenance">
                 <h3>Maintenance & Repair</h3>
-                <p>Keep your panels in top condition with regular check-ups and quick repairs.</p>
+                <p>Keep your panels in top condition with regular check-ups, cleaning, and fast repairs. Our team ensures your system always performs at its best.</p>
             </div>
             <div class="service-card">
-                <img src="https://images.unsplash.com/photo-1603072225705-64a8e88e71b3" alt="Consulting">
+                <img src="https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80" alt="Consulting">
                 <h3>Consulting & Planning</h3>
-                <p>Get expert advice on the best solar solutions for your needs and budget.</p>
+                <p>Get expert advice on the best solar solutions for your needs and budget. We offer site assessments, energy audits, and custom system designs.</p>
             </div>
+        </div>
+        <div style="text-align:center;margin-top:2rem;">
+            <a href="services.html" class="btn">See All Services</a>
         </div>
     </section>
 
     <section id="about" class="about container">
-        <h2>About Us</h2>
-        <p>At Green Energy, we believe in creating a sustainable future through renewable energy solutions. Our expert team is dedicated to delivering high-quality solar panel systems with eco-friendly designs that help reduce carbon footprints and energy bills.</p>
+        <h2 >About Us</h2>
+        <div class="about-flex">
+            <div class="about-img">
+                <img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=800&q=80" alt="Green Energy Team" style="width:100%;max-width:400px;border-radius:24px;box-shadow:0 4px 24px rgba(0,0,0,0.1);">
+            </div>
+            <div class="about-text">
+                <p>At Green Energy, we are passionate about building a cleaner, greener future. With over a decade of experience, our team delivers high-quality solar panel systems and eco-friendly solutions for homes and businesses. We are committed to reducing carbon footprints, lowering energy bills, and making renewable energy accessible to everyone.</p>
+                <ul style="margin:1.5rem 0 2rem 1.5rem;text-align:left;">
+                    <li>Certified solar energy professionals</li>
+                    <li>Cutting-edge technology and design</li>
+                    <li>Customer-focused service and support</li>
+                </ul>
+                <a href="about.html" class="btn">Learn More</a>
+            </div>
+        </div>
     </section>
 
     <section id="contact" class="contact container">
         <h2>Contact Us</h2>
+        <p>Ready to make the switch to solar? Have questions about our services? Reach out to our team for a free consultation and quote.</p>
         <form>
             <input type="text" placeholder="Your Name" required>
             <input type="email" placeholder="Your Email" required>
             <textarea placeholder="Your Message" rows="5" required></textarea>
             <button type="submit" class="btn">Send Message</button>
         </form>
+        <div style="margin-top:2rem;">
+            <a href="contact.html" class="btn">More Contact Options</a>
+        </div>
     </section>
 
     
