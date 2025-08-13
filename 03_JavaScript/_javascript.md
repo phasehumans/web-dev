@@ -168,7 +168,7 @@ array specific
 - mechanism where variable and function declarations are moved to the top of their containing scope during the compilation phase, before the code is executed. However, only the declarations are hoisted—not the initializations.
 
 - var  -> undefined
-- let and const  -> referror
+- let and const  -> referror (hoist but Temporal dead zone)
 - Block Scope (let and const): Variables declared with let and const are limited to the block where they are defined. Example: Inside a loop or conditional block.
 - Function Scope (var): Variables declared with var are limited to the nearest function. If declared outside any function, they become global variables.
 - avoid var, unless legacy code
@@ -201,7 +201,27 @@ array specific
 - .map, .filter, .reduce
 
 
+### Inner working
+- call stack (execute immediate & clear stack)
+- callback queue (browser -> que -> call stack) codn: stack empty
+- call stack ---> browser (register & start timer) --> callback queue  or micro task queue--> (event loop) --> call stack (execute)
+- undefine var err - bind(context)
+- micro task queue >> callback queue / task queue
+- starvation - infinite popup task in MTQ 
+- global execution context (GEC) is pushed in stack
+- memory phase: all var loaded w/ undefine and fn defn
+- exectuion phase: var values added, fn's FEC is execcuted
+
+### Promises
+- obj that represent eventual result of async opt
+- to avoid callback hell
+- promise- pending, fullfilled, rejected
+- .then() .catch() .finally()
 
 
-
+### Lexical Scoping & Closures
+- lexical: the scope of var is detrmine by where it is written, not by where its called from
+- access of var in scope
+- closure fn: fn that has access to the var of its outer fn, even after outer fn has finished execution
+- fn returning fn w/ lexical scope binded
 
