@@ -243,5 +243,5 @@ array specific
 
 ## DOM
 - to acess -> document.getelementby id or class
-- addeventlistener on click, drag, mouse and keyboard
+- addeventlistener on click, drag, input etc
 - .innertext
