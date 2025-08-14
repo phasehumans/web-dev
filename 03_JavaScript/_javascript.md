@@ -8,7 +8,11 @@
 ## Input & Output
 - console.log("text")
 - console.log(`text is here ${var} another text here`)
+- prompt() --> inbrowser
+- process.stdin.setEncoding('utf8'): This line sets the encoding for the standard input to UTF-8. It ensures that the input is treated as a UTF-8 encoded string, which is a common character encoding.
+- process.stdin.on('data', function (input) {: This line sets up an event listener for the 'data' event on the standard input stream. The provided callback function will be executed whenever data is received on the standard input.
 
+ 
 ## DataTypes
 
 ### Primitive
@@ -101,6 +105,7 @@ array.map(callback(element, index, array), thisArg);
 - join()  --> joins and return as str
 - slice()
 - toSpliced() --> similar to slice, no chnage in og
+- ...names to collect any additional names into an array.
 
 
 
@@ -125,6 +130,8 @@ array.map(callback(element, index, array), thisArg);
 - recursive fn: fn calls itself
 - call back fn: function that you pass as an argument to another function so that the receiving function can call it back at a later time.
 to run after a certain task completes, without blocking the rest of the program.
+- .this ->  bind to obj that call fn 
+- arrow fn has lexical scoping, Arrow functions inherit this from their surrounding scope, while regular functions define their own this context.
 
 scope:
 - global scope
@@ -177,6 +184,7 @@ array specific
 ## Advance JS
 
 ### Shallow Copy & Deep Copy
+- spread opt {...a , ...b} --> b will overide a prop
 - obj1 = obj2 --> ref passing
 - user also got changed; pass by ref, soln-> spread opt
 - a= {...b} spread operator 
@@ -225,3 +233,15 @@ array specific
 - closure fn: fn that has access to the var of its outer fn, even after outer fn has finished execution
 - fn returning fn w/ lexical scope binded
 
+
+### Destructing
+- pull values from arrays or objects into separate variables
+- in array based on order, obj based on name
+- const colors = ["red", "green", "blue"];
+- const [primary, secondary, tertiary] = colors;
+
+
+## DOM
+- to acess -> document.getelementby id or class
+- addeventlistener on click, drag, mouse and keyboard
+- .innertext
