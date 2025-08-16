@@ -1,0 +1,56 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f9f9f9;
+  color: #333;
+}
+
+.container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  width: 320px;
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  line-height: 1.4;
+  resize: none; /* user cannot drag resize */
+  outline: none;
+  transition: border 0.2s;
+  overflow: hidden; /* prevents scrollbars */
+}
+
+textarea:focus {
+  border-color: #4a90e2;
+}
+
+
+
+#counter {
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+  color: #666;
+}
