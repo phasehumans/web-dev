@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recipe Finder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">Recipe Finder</div>
+      <div class="subtitle">Search by name or ingredient.</div>
+      <div class="searchbar" role="search">
+        <input id="q" type="text" placeholder="Try &quot;chicken&quot;, &quot;pasta&quot;" aria-label="Search recipes" />
+        <div class="controls">
+          <label class="radio"><input type="radio" name="mode" value="name" checked /> by name</label>
+          <label class="radio"><input type="radio" name="mode" value="ingredient" /> by ingredient</label>
+          <button id="go" class="btn" aria-label="Search">Search</button>
+        </div>
+      </div>
+      <div id="meta" class="meta" aria-live="polite"></div>
+    </header>
+
+    <main id="results" aria-live="polite">
+      <div class="empty"></div>
+    </main>
+  </div>
+
+  <dialog id="modal" class="modal" aria-label="Recipe details">
+    <div class="closebar"><button class="closebtn" id="closeModal" aria-label="Close">✕</button></div>
+    <div class="wrap">
+      <div class="media"><img id="mImg" alt="Recipe image" /></div>
+      <div class="body">
+        <h2 id="mTitle"></h2>
+        <div class="tags" id="mTags"></div>
+        <div class="section">
+          <strong>Ingredients</strong>
+          <ul id="mIngr" class="ingredients"></ul>
+        </div>
+        <div class="section">
+          <strong>Instructions</strong>
+          <div id="mInst" class="instr"></div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
