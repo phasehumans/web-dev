@@ -1,6 +1,63 @@
 # HTML
+- HTML = Hypertext Markup Language, used to create webpages
+- Structure: `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`
+- Headings: `<h1>` to `<h6>`; Paragraph: `<p>`
+- Links: `<a href="url">text</a>`; Images: `<img src="" alt="">`
+- Lists: `<ul>` / `<ol>` + `<li>`; Tables: `<table>` + `<tr>` + `<td>`
+- Div & Span: `<div>` block container, `<span>` inline container
+- Forms: `<form>` with `<input>`, `<textarea>`, `<select>`, `<button>`
+- Input types: text, password, email, number, checkbox, radio, submit
+- Semantic tags: `<header>`, `<footer>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`
+- Audio/Video: `<audio>` / `<video>` + `controls`; `<iframe>` embeds content
+- Attributes: id, class, src, href, alt, title, style
+- Meta tags: `<meta charset="UTF-8">`, `<meta name="description">`, `<title>`
+- CSS/JS links: `<link rel="stylesheet">`, `<script src="" defer>`
+- Comments: `<!-- comment -->`; Line break: `<br>`; Horizontal line: `<hr>`
+- Text emphasis: `<strong>` bold, `<em>` italic, `<blockquote>` quote
 
 # CSS
+
+- CSS = Cascading Style Sheets, used to style HTML elements  
+- Ways to apply CSS:
+  - Inline: `style=""` inside HTML tag  
+  - Internal: `<style>` in `<head>`  
+  - External: separate `.css` file linked with `<link>`  
+- Selectors: choose elements to style  
+  - Element: `p` → all paragraphs  
+  - Class: `.class` → elements with that class  
+  - ID: `#id` → single unique element  
+  - Universal: `*` → all elements  
+- Colors: define colors of text/background  
+  - Named: `red`, `blue`  
+  - Hex: `#ff0000`  
+  - RGB: `rgb(255,0,0)`  
+  - HSL: `hsl(0,100%,50%)`  
+- Text properties: style text  
+  - `color`, `font-size`, `font-family`, `text-align`, `text-decoration`  
+- Box model: spacing around elements  
+  - `margin` → outside space  
+  - `border` → edge line  
+  - `padding` → inside space  
+  - `width` & `height` → element size  
+- Display: how element behaves  
+  - `block`, `inline`, `inline-block`, `none`  
+  - Visibility: `visible` / `hidden`  
+- Positioning: control placement  
+  - `static`, `relative`, `absolute`, `fixed`, `sticky`  
+- Flexbox: layout in one dimension  
+  - `display: flex`, `justify-content`, `align-items`, `flex-direction`  
+- Grid: layout in two dimensions  
+  - `display: grid`, `grid-template-columns/rows`, `gap`  
+- Background: style backgrounds  
+  - `background-color`, `background-image`, `background-size`, `background-repeat`  
+- Pseudo-classes: style specific states  
+  - `:hover`, `:focus`, `:nth-child()`, `:first-child`  
+- Pseudo-elements: style part of an element  
+  - `::before`, `::after`  
+- Transitions & Animations: animate changes  
+  - `transition`, `transform`, `animation`  
+- Overflow: handle content exceeding box  
+  - `visible`, `hidden`, `scroll`, `auto`
 
 # JavaScript
 
@@ -120,7 +177,7 @@ array.map(callback(element, index, array), thisArg);
 - Method -->  Actions, functions
 - Even with const, only the reference is fixed — the contents are still changeable (const obj1 = {})
 
-## Shallow copy & Deep copy
+### Shallow copy & Deep copy
 - shallow copy only copies the top-level of an object
 - Nested objects/arrays are shared references — changes in one affect the other
 - why -> primitive → copied by value. & object → copied by reference.
@@ -140,9 +197,6 @@ to run after a certain task completes, without blocking the rest of the program.
 scope:
 - global scope
 - local scope : inside {}
-
-### Asynchronous programming
-- where tasks can run without blocking the rest of the program while waiting for something to finish.
 
 
 ## Control Flow
@@ -174,6 +228,8 @@ array specific
 - map 
 - reduce -> array.reduce(callback, initialValue)
 
+  
+## ES6+
 
 ### Hoisting
 - mechanism where variable and function declarations are moved to the top of their containing scope during the compilation phase, before the code is executed. However, only the declarations are hoisted—not the initializations.
@@ -183,9 +239,6 @@ array specific
 - Block Scope (let and const): Variables declared with let and const are limited to the block where they are defined. Example: Inside a loop or conditional block.
 - Function Scope (var): Variables declared with var are limited to the nearest function. If declared outside any function, they become global variables.
 - avoid var, unless legacy code
-
-
-## Advance JS
 
 ### Shallow Copy & Deep Copy
 - spread opt {...a , ...b} --> b will overide a prop
@@ -230,6 +283,11 @@ array specific
 - promise- pending, fullfilled, rejected
 - .then() .catch() .finally()
 
+### Async/Await
+
+- Async/Await = modern way to handle asynchronous code in JS  
+- `async` function: always returns a Promise
+
 
 ### Lexical Scoping & Closures
 - lexical: the scope of var is detrmine by where it is written, not by where its called from
@@ -246,6 +304,37 @@ array specific
 
 
 ## DOM
-- to acess -> document.getelementby id or class
-- addeventlistener on click, drag, input etc
-- .innertext
+- DOM = Document Object Model, represents HTML as objects  
+- Allows JS to read, change, add, or remove elements and content  
+- Access elements:
+  - `getElementById("id")` → single element by ID  
+  - `getElementsByClassName("class")` → HTMLCollection  
+  - `getElementsByTagName("tag")` → HTMLCollection  
+  - `querySelector("selector")` → first match  
+  - `querySelectorAll("selector")` → NodeList of all matches  
+- Modify content:
+  - `element.textContent` → text inside element  
+  - `element.innerHTML` → HTML inside element  
+  - `element.innerText` → visible text  
+- Modify attributes:
+  - `element.setAttribute("attr", "value")`  
+  - `element.getAttribute("attr")`  
+  - `element.removeAttribute("attr")`  
+- Style elements:
+  - `element.style.property = "value"`  
+- Classes:
+  - `element.classList.add("class")`  
+  - `element.classList.remove("class")`  
+  - `element.classList.toggle("class")`  
+- Create & remove elements:
+  - `document.createElement("tag")`  
+  - `parent.appendChild(child)`  
+  - `parent.removeChild(child)`  
+- Events:
+  - `element.addEventListener("event", callback)`  
+  - `onclick`, `onmouseover`, `onchange` as shortcuts  
+- DOM traversal:
+  - `parentNode`, `childNodes`, `firstChild`, `lastChild`, `nextSibling`, `previousSibling`  
+- Forms & inputs:
+  - `input.value` → get/set input value  
+  - Validate or manipulate input dynamically
