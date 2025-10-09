@@ -1,12 +1,16 @@
 # HTML
-- HTML = Hypertext Markup Language, used to create webpages
+- HTML = Hypertext Markup Language, used to create webpages (unstyle basic building blocks) 
 - Structure: `<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`
 - Headings: `<h1>` to `<h6>`; Paragraph: `<p>`
-- Links: `<a href="url">text</a>`; Images: `<img src="" alt="">`
+- Links: `<a href="url">text</a>`; Images: `<img src="url" alt="">`
+  - target: _blank (new tab)
 - Lists: `<ul>` / `<ol>` + `<li>`; Tables: `<table>` + `<tr>` + `<td>`
 - Div & Span: `<div>` block container, `<span>` inline container
 - Forms: `<form>` with `<input>`, `<textarea>`, `<select>`, `<button>`
 - Input types: text, password, email, number, checkbox, radio, submit
+  - input & labels
+  - placeholder
+- break tag: `<br>`
 - Semantic tags: `<header>`, `<footer>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`
 - Audio/Video: `<audio>` / `<video>` + `controls`; `<iframe>` embeds content
 - Attributes: id, class, src, href, alt, title, style
@@ -19,9 +23,9 @@
 
 - CSS = Cascading Style Sheets, used to style HTML elements  
 - Ways to apply CSS:
-  - Inline: `style=""` inside HTML tag  
-  - Internal: `<style>` in `<head>`  
-  - External: separate `.css` file linked with `<link>`  
+  - Inline 
+  - Internal
+  - External
 - Selectors: choose elements to style  
   - Element: `p` → all paragraphs  
   - Class: `.class` → elements with that class  
@@ -37,7 +41,7 @@
 - Box model: spacing around elements  
   - `margin` → outside space  
   - `border` → edge line  
-  - `padding` → inside space  
+  - `padding` → inside space 
   - `width` & `height` → element size  
 - Display: how element behaves  
   - `block`, `inline`, `inline-block`, `none`  
