@@ -65,6 +65,17 @@
 
 # JavaScript
 
+https://projects.100xdevs.com/tracks/javascript-1/Javascript-101-2
+
+- browser only understand html, css, js and webassembly (c++/rust <-- wasm)
+- interpreted: js code -----> runs on machine
+  - code runs line by line (chunks)
+  - compile at runtime
+- compiled: c++ / java code ----> binary code ---> runs on machine
+- dynamically typed: change datatype
+- single threaded
+- garbage collector
+
 ## Variable
 - let: can update and redeclare
 - const: can't update and redeclare
