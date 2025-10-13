@@ -1,0 +1,1 @@
+this is example of sample txt, it will import by fs module and it is io expensive task
