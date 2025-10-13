@@ -65,7 +65,7 @@
 
 # JavaScript
 
-https://projects.100xdevs.com/tracks/javascript-1/Javascript-101-2
+- https://projects.100xdevs.com/tracks/javascript-1/Javascript-101-2
 
 - browser only understand html, css, js and webassembly (c++/rust <-- wasm)
 - interpreted: js code -----> runs on machine
@@ -152,6 +152,7 @@ https://projects.100xdevs.com/tracks/javascript-1/Javascript-101-2
 - split(separator, limit)
 - repeat(interval)
 - concat(" ", str2) --> join two str; str1 + str2
+- \" \\ it\'s -> it's
 
 
 ## Arrays
@@ -204,10 +205,12 @@ array.map(callback(element, index, array), thisArg);
 - IFFE: Immediately Invoked Function Expression : execute immediately after defination  
 - higher order fn: fn that take another fn as argument
 - recursive fn: fn calls itself
-- call back fn: function that you pass as an argument to another function so that the receiving function can call it back at a later time.
-to run after a certain task completes, without blocking the rest of the program.
+- call back fn: function that you pass as an argument to another function so that the receiving function (higher order fn) can call it back at a later time.
+- to run after a certain task completes, without blocking the rest of the program.
 - .this ->  bind to obj that call fn 
 - arrow fn has lexical scoping, Arrow functions inherit this from their surrounding scope, while regular functions define their own this context.
+- functional argument: passing a fn to another fn as an argument (sync)
+- callback: similar but w/ async code
 
 scope:
 - global scope
@@ -245,6 +248,16 @@ array specific
 
   
 ## ES6+
+
+### Async 
+- sync code: runs line by line. each operation wait for the prev operation to execute before moving to next
+- I/O operations: input- output opeartions that req, data transfer and waiting time like calls to db, network calls, disks, clocks, external devices
+- fs library (access file system)
+- io bound tasks (readfile etc)
+- cpu bond task (loops , condn)
+- http://latentflip.com/loupe/  (visualize async code)
+- this: has context of current obj, it has current obj
+- new: creates the instance of class
 
 ### Hoisting
 - mechanism where variable and function declarations are moved to the top of their containing scope during the compilation phase, before the code is executed. However, only the declarations are hoisted—not the initializations.
@@ -293,10 +306,12 @@ array specific
 - exectuion phase: var values added, fn's FEC is execcuted
 
 ### Promises
+- promise class gives you a promise, that i will return you something in the future
 - obj that represent eventual result of async opt
 - to avoid callback hell
 - promise- pending, fullfilled, rejected
 - .then() .catch() .finally()
+- 
 
 ### Async/Await
 
