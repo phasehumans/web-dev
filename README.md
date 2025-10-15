@@ -79,7 +79,7 @@
 ## Variable
 - let: can update and redeclare
 - const: can't update and redeclare
-- var is not used (hoisting err | fn scope err)
+- var is not used (hoisting err | fn scope err), undefine is use before initalize
 
 ## Input & Output
 - console.log("text")
@@ -101,6 +101,7 @@
 4. Undefined
 5. Null
 6. Symbol -> used to create unique indetifiers
+7. bigInt
 
 ### Non-Primitive / Reference
 - mutable
@@ -108,6 +109,7 @@
 
 1. Object -> collection of key value pair  { }
 2. Array -> [ ]
+
 
 
 ## Operators
@@ -120,8 +122,8 @@
 
 
 ## Memory in JS
-- stack(primitive) -> copy is pass
-- heap(non primitive) -> ref is pass
+- stack(primitive: num, str, bool, null, undefine) -> copy is pass || call by value || immutable
+- heap(non primitive: array, object) -> ref is pass || call by ref || mutable
 
 ### Stack
 - ref variable are stored w/ memory address
@@ -133,12 +135,15 @@
 - non primitive: obj1 ---->  memoy_address <------ obj2; so one change then another also gets change
 
 
-## Strings
+## String
 - used to hold data that is represented in text form
 - immutable
-- var.__proto__ --> obj of methods
+- call by value
+- console.log(str.__proto__)  // {}
+- console.log(str.__proto__.__proto__)  // [Object: null prototype] {}
 
 #### Methods
+- function tied to class(in this case String Class) are called methods
 - str[index] --> access char  
 - str.charat(index) --> acces char
 - length  
@@ -152,12 +157,12 @@
 - split(separator, limit)
 - repeat(interval)
 - concat(" ", str2) --> join two str; str1 + str2
-- \" \\ it\'s -> it's
 
 
-## Arrays
+## Array
 - used to store multi values in single var
 - dynamic and hetro elmt
+- mutable and pass by ref
 
 #### Methods
 - push() --> add at last
@@ -186,28 +191,22 @@ array.map(callback(element, index, array), thisArg);
 
 
 
-## Objects
+## Object
 - collection of key value pair 
 - Objects --> Represent Properties, Methods[Functionalities]
 - Properties -->  Attribute: Color, weight etc.
 - Method -->  Actions, functions
 - Even with const, only the reference is fixed — the contents are still changeable (const obj1 = {})
 
-### Shallow copy & Deep copy
-- shallow copy only copies the top-level of an object
-- Nested objects/arrays are shared references — changes in one affect the other
-- why -> primitive → copied by value. & object → copied by reference.
-- A deep copy copies everything, including nested objects, so the new object is fully independent.
 
-## Functions
+## Function
 - reusable block of code
 - Arrow function: consise way to write fn  
 - IFFE: Immediately Invoked Function Expression : execute immediately after defination  
-- higher order fn: fn that take another fn as argument
-- recursive fn: fn calls itself
+- higher order fn: fn that take another fn as argument ex. promise
 - call back fn: function that you pass as an argument to another function so that the receiving function (higher order fn) can call it back at a later time.
-- to run after a certain task completes, without blocking the rest of the program.
-- .this ->  bind to obj that call fn 
+- recursive fn: fn calls itself
+- .this ->  bind to obj (instance of class not object) that call fn 
 - arrow fn has lexical scoping, Arrow functions inherit this from their surrounding scope, while regular functions define their own this context.
 - functional argument: passing a fn to another fn as an argument (sync)
 - callback: similar but w/ async code
@@ -246,10 +245,19 @@ array specific
 - map 
 - reduce -> array.reduce(callback, initialValue)
 
-  
 ## ES6+
 
-### Async 
+### Shallow copy & Deep copy
+- shallow copy {...} only copies the top-level of an object
+- spread opt {...a , ...b} --> b will overide a prop
+- obj1 = obj2 --> ref passing
+- user also got changed; pass by ref, soln-> spread opt
+- a= {...b} spread operator 
+- but for nested obj, spread is shallow copy
+- why -> primitive → copied by value. & object → copied by reference
+- soln --> deep copy (serialization (obj -> str) - deserialization)
+
+## Async 
 - sync code: runs line by line. each operation wait for the prev operation to execute before moving to next
 - I/O operations: input- output opeartions that req, data transfer and waiting time like calls to db, network calls, disks, clocks, external devices
 - fs library (access file system)
@@ -265,16 +273,8 @@ array specific
 - var  -> undefined
 - let and const  -> referror (hoist but Temporal dead zone)
 - Block Scope (let and const): Variables declared with let and const are limited to the block where they are defined. Example: Inside a loop or conditional block.
-- Function Scope (var): Variables declared with var are limited to the nearest function. If declared outside any function, they become global variables.
-- avoid var, unless legacy code
+- Function Scope (var): Variables declared with var are limited to the nearest function. If declared outside any function, they become global variables
 
-### Shallow Copy & Deep Copy
-- spread opt {...a , ...b} --> b will overide a prop
-- obj1 = obj2 --> ref passing
-- user also got changed; pass by ref, soln-> spread opt
-- a= {...b} spread operator 
-- but for nested obj, spread is shallow copy
-- soln --> deep copy (serialization (obj -> str) - deserialization)
 
 ### Prototype
 - object from which other objects inherit properties and methods
@@ -290,8 +290,8 @@ array specific
 
 ### Polyfills
 - fallback mechanism
-- custom methods if prototype doesn't supported by browser etc
-- .map, .filter, .reduce
+- custom methods if prototype methods doesn't supported by browser
+- methods like -> .map, .filter, .reduce
 
 
 ### Inner working
