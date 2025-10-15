@@ -7,7 +7,7 @@ let user1 = {
       }
   };
   
-  let user2 = user1;  //Shallow copy (just reference)
+  let user2 = user1;  // pass by ref
   
 user2.name = "Sumit";
   
@@ -15,7 +15,7 @@ console.log(user1.name);
 console.log(user2.name);
 
 
-// deep copy
+// shallow copy: inside nested obj or array
 let user3={
     ...user1
 }

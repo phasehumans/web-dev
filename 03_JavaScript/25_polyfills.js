@@ -1,4 +1,3 @@
-
 if (!Array.prototype.myForEach) { // for test myforEach
 
   Array.prototype.myForEach = function (userFn) { // userfn- function provided- value and index

@@ -3,9 +3,6 @@ obj declaration:
 - literals (non singleton)
 - constructor (singleton)
 
-
-
-
 */
 
 // constructor method :singleton

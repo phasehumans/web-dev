@@ -6,6 +6,7 @@ Object.prototype.chai = function () {
 const arr = [1, 2, 3];
 console.log(arr);
 
+// polyfills 
 if (!Array.prototype.fill) {
   // throw new Error("Please update your browse");
   // Fallback - Polyfill

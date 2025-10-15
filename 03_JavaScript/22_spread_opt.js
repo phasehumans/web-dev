@@ -23,7 +23,7 @@ student.height= "5.11"
 console.log(student.height)     //5.11
 console.log(user.height)        //5.11
 
-// why user also got changed; pass by ref , soln-> swallow copy 
+// why user also got changed; pass by ref , soln-> spread operator
 
 
 // spread operator ...konsa_copy_karna_hai

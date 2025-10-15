@@ -1,7 +1,7 @@
 /* 
 fn : reusable block of code 
 
-code after return is unreachable code
+code after return is unreachable code /doesnot execute
 
 */
 
@@ -51,7 +51,7 @@ const truefn = () => {     // arrow fn
     console.log(`True`)
 }
 
-callbckfn(67, truefn) // value and truefn is fn(arrow fn)
+callbckfn(67, truefn) // truefn is callback
 
 
 
