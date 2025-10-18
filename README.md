@@ -311,12 +311,14 @@ array specific
 - to avoid callback hell
 - promise- pending, fullfilled, rejected
 - .then() .catch() .finally()
-- 
+
+### Callback hell
+- async code inside the asyc code
+- nested callbacks or nested async operations
 
 ### Async/Await
-
-- Async/Await = modern way to handle asynchronous code in JS  
-- `async` function: always returns a Promise
+- write async code that looks and behave like sync code 
+- syntactic sugar on top of promise
 
 
 ### Lexical Scoping & Closures
