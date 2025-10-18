@@ -1,4 +1,5 @@
 const button= document.getElementById('btn')
+// get element based onn its id, class or type
 
 function changeClr(){
 
@@ -9,4 +10,5 @@ function changeClr(){
     document.body.style.backgroundColor= `rgb(${red},${green},${blue})`
 }
 
+// evenlistner, if click then run this fn (changeclr)
 button.addEventListener('click' , changeClr)
