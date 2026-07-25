@@ -184,10 +184,10 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                 </span>
                             </h2>
                         </div>
-                        <div className="relative flex items-center bg-[#252525] rounded-full shadow-sm w-[94px] overflow-hidden mr-1.5 md:mr-2">
+                        <div className="relative flex items-center bg-[#252525] rounded-full shadow-lg shadow-black/40 w-[94px] overflow-hidden mr-1.5 md:mr-2">
                             {/* sliding indicator */}
                             <div
-                                className={`absolute left-0 top-0 bottom-0 w-1/2 rounded-full bg-[#87B2F4] transition-transform duration-300 ease-out shadow-sm ${
+                                className={`absolute left-0 top-0 bottom-0 w-1/2 rounded-full bg-[#87B2F4] transition-transform duration-300 ease-out shadow-lg shadow-black/40 ${
                                     chatMode === 'agent' ? 'translate-x-0' : 'translate-x-full'
                                 }`}
                             />

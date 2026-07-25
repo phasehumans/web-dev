@@ -60,7 +60,7 @@ const MagneticIconWithTooltip = ({ icon: Icon, tooltip, onClick, href }: any) =>
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 2, scale: 0.9 }}
                         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                        className="absolute top-[calc(100%+8px)] right-0 z-50 flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg pointer-events-none whitespace-nowrap shadow-xl"
+                        className="absolute top-[calc(100%+8px)] right-0 z-50 flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg pointer-events-none whitespace-nowrap shadow-lg shadow-black/40"
                     >
                         <span className="text-[12px] font-medium text-[#EDEDEF]">{tooltip}</span>
                     </motion.div>
@@ -94,13 +94,15 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
                         </span>
                     </button>
                 ) : (
-                    <button
-                        onClick={() => navigate('/docs')}
+                    <a
+                        href="/docs"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="hidden md:flex items-center gap-1 h-7 px-2.5 rounded-full bg-[#1F1F1F] hover:bg-[#252525] text-[12px] transition-all font-medium text-[#999999] hover:text-[#E8E8E8]"
                     >
                         <span>Docs</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
-                    </button>
+                    </a>
                 )}
             </div>
 
@@ -113,7 +115,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
                             '_blank'
                         )
                     }}
-                    className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 py-1 text-[13px] text-[#E8E8E6] shadow-sm transition-all duration-200 cursor-pointer hover:bg-white/5 group whitespace-nowrap flex-shrink-0 opacity-[0.85] hover:opacity-100"
+                    className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 py-1 text-[13px] text-[#E8E8E6] shadow-lg shadow-black/40 transition-all duration-200 cursor-pointer hover:bg-white/5 group whitespace-nowrap flex-shrink-0 opacity-[0.85] hover:opacity-100"
                 >
                     <span className="bg-[#87B2F4]/15 text-[#87B2F4] rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none flex items-center justify-center flex-shrink-0">
                         New

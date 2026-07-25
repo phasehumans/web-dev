@@ -19,3 +19,7 @@ A tiered rate limiting system enforcing API access quotas globally across API ro
 ## StructuredLogger
 
 A Pino-based logging subsystem providing structured JSON logs, request ID correlation (`x-request-id`), and module-scoped child loggers (`logger.child({ module })`).
+
+## NavigationSearchIndex
+
+A canonical index of site pages and subpages across the web application. Used by the Search Modal to provide instant keyboard-driven route navigation (`Cmd+K`). Supports rich search indexing over page titles, sub-titles, route paths, and Intent Alias Keywords (e.g. mapping "dark mode" -> Preferences, "api key" -> Secrets).

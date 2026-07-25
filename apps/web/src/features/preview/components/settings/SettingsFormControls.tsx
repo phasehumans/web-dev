@@ -10,7 +10,7 @@ interface BigModalProps {
 
 export const BigModalOverlay: React.FC<BigModalProps> = ({ onClose, children }) => {
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-black/40 backdrop-blur-none animate-in fade-in duration-200">
             <div className="absolute inset-0" />
             <div className="relative w-full max-w-[1000px] h-[90vh] md:h-[86vh] bg-[#141414] rounded-3xl border border-[#242323] flex overflow-hidden shadow-2xl text-left">
                 {children}

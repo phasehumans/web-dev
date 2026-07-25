@@ -40,20 +40,14 @@ export const SessionRenameModal: React.FC<SessionRenameModalProps> = ({
                     update how it appears across your workspace.
                 </p>
 
-                <div className="flex flex-col gap-1.5">
-                    <label
-                        htmlFor="project-rename-input"
-                        className="text-[11px] font-semibold text-[#8F8E8D] uppercase tracking-wider block"
-                    >
-                        Project name
-                    </label>
+                <div>
                     <input
                         id="project-rename-input"
                         type="text"
                         autoFocus
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        className="w-full bg-[#202020] border border-[#282828] rounded-lg px-3.5 py-2.5 text-white text-[13px] focus:border-[#4A4948] focus:outline-none transition-colors"
+                        className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-lg px-3.5 py-2.5 text-white text-[13px] focus:outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948]"
                         placeholder="Enter project name..."
                         disabled={isDisabled}
                     />

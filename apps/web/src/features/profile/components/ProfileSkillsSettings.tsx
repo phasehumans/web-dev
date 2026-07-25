@@ -1,4 +1,4 @@
-import { Plus, Trash2, Pencil, Search, ExternalLink, Check, User } from 'lucide-react'
+import { Trash2, Pencil, Search, Check, User } from 'lucide-react'
 import React, { useState } from 'react'
 
 interface PersonalSkill {
@@ -299,82 +299,51 @@ export const ProfileSkillsSettings: React.FC = () => {
 
                     {/* Explore Skills Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
-                        {displayedExploreSkills.map((skill) => (
-                            <div
-                                key={skill.id}
-                                className="p-4 bg-[#191919] border border-[#242323] rounded-xl hover:border-[#313131] transition-colors flex flex-col justify-between gap-3 group"
-                            >
-                                <div className="flex flex-col gap-2">
-                                    {/* Header row */}
-                                    <div className="flex items-start justify-between gap-2">
+                        {displayedExploreSkills.map((skill) => {
+                            const isAdded = Boolean(skill.isAdded)
+                            return (
+                                <div
+                                    key={skill.id}
+                                    className="p-4 bg-[#191919] border border-[#242323] rounded-xl flex flex-col gap-2.5 hover:border-[#313131] transition-colors group cursor-pointer"
+                                    onClick={() => handleToggleExploreSkill(skill.id)}
+                                >
+                                    <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2 min-w-0">
                                             <div
-                                                className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${
+                                                className={`w-6 h-6 rounded-md ${
                                                     skill.avatarBg ?? 'bg-[#242323] text-[#D6D5C9]'
-                                                }`}
+                                                } flex items-center justify-center shrink-0`}
                                             >
                                                 {skill.avatarText}
                                             </div>
-                                            <span className="text-[14px] font-medium text-[#D6D5C9] truncate font-mono">
+                                            <span className="text-[14px] font-medium text-[#D6D5C9] truncate">
                                                 {skill.title}
                                             </span>
                                             {skill.isOfficial && (
-                                                <span className="px-1.5 py-0.5 rounded text-[11px] font-medium bg-[#242323] text-[#7B7A79] border border-[#313131] shrink-0">
-                                                    Official
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {/* Actions */}
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            <a
-                                                href={`https://github.com/${skill.repo}`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="p-1.5 rounded-lg text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
-                                                title="View on GitHub"
-                                            >
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
-
-                                            {skill.isAdded ? (
-                                                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-medium text-[#7B7A79] bg-[#242323]">
-                                                    <Check className="w-3 h-3 text-[#34D399]" />
-                                                    Added
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    onClick={() =>
-                                                        handleToggleExploreSkill(skill.id)
-                                                    }
-                                                    className="px-2.5 py-1 rounded-lg border border-[#383736] text-[12px] font-medium text-[#D6D5C9] hover:bg-[#242323] transition-colors flex items-center gap-1"
-                                                    title="Add skill"
+                                                <span
+                                                    className="w-3.5 h-3.5 rounded-full bg-[#87B2F4] flex items-center justify-center text-[#100E12] shrink-0"
+                                                    title="Official Skill"
                                                 >
-                                                    <Plus className="w-3 h-3" />
-                                                    <span>Add</span>
-                                                </button>
+                                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                                </span>
                                             )}
                                         </div>
-                                    </div>
-
-                                    {/* Repo tag & Installs */}
-                                    <div className="flex items-center gap-2.5 text-[12px] text-[#7B7A79]">
-                                        <span className="px-2 py-0.5 rounded bg-[#100E12] border border-[#2B2A29] font-mono text-[11px]">
-                                            {skill.repo}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <span className="text-[#7B7A79]">⚡</span>
-                                            {skill.installs} installs
+                                        <span
+                                            className={`px-2 py-0.5 rounded text-[11px] font-medium border shrink-0 transition-colors ${
+                                                isAdded
+                                                    ? 'bg-[#87B2F4]/10 text-[#87B2F4] border-[#87B2F4]/30'
+                                                    : 'bg-[#242323] text-[#7B7A79] border-[#313131] group-hover:text-[#D6D5C9]'
+                                            }`}
+                                        >
+                                            {isAdded ? 'Installed' : 'Not installed'}
                                         </span>
                                     </div>
-
-                                    {/* Description */}
-                                    <p className="text-[13px] text-[#7B7A79] leading-relaxed line-clamp-2 mt-0.5">
+                                    <p className="text-[13px] text-[#7B7A79] leading-relaxed line-clamp-2">
                                         {skill.description}
                                     </p>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
 
                     {/* Load More Button */}
@@ -391,7 +360,7 @@ export const ProfileSkillsSettings: React.FC = () => {
 
             {/* Modal for Creating New Skill */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
                     <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-md p-6 flex flex-col gap-5 shadow-2xl">
                         <div className="flex flex-col gap-1">
                             <h3 className="text-[16px] font-medium text-white">Create New Skill</h3>

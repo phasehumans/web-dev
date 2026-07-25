@@ -11,12 +11,15 @@ interface SearchModalProps {
     isAuthenticated?: boolean
 }
 
-interface SearchItem {
+export type SearchCategory = 'Recent' | 'Navigation' | 'Settings Subpages'
+
+export interface SearchItem {
     id: string
     label: string
     subtitle?: string
-    category: 'Recent' | 'Navigation' | 'Settings'
+    category: SearchCategory
     icon: React.ReactNode
+    keywords?: string[]
     action: () => void
 }
 
@@ -38,7 +41,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         }
     })
 
-    // reset search query and selected index on open
+    // Reset search query and selected index on open
     useEffect(() => {
         if (isOpen) {
             setSearchQuery('')
@@ -54,13 +57,30 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     }
 
     const allItems: SearchItem[] = [
-        // navigation
+        // Main Navigation Pages
+        {
+            id: 'go-home',
+            label: 'Home / New Session',
+            subtitle: 'Start a new AI coding session',
+            category: 'Navigation',
+            icon: <Icons.Home className="w-4 h-4 text-neutral-400" />,
+            keywords: ['home', 'new', 'chat', 'session', 'prompt', 'create', 'start'],
+            action: () => {
+                onClose()
+                if (onNewThread) {
+                    onNewThread()
+                } else {
+                    navigate('/')
+                }
+            },
+        },
         {
             id: 'go-projects',
             label: 'Sessions',
-            subtitle: 'Go to all sessions',
+            subtitle: 'View all active sessions & history',
             category: 'Navigation',
             icon: <Icons.Folder className="w-4 h-4 text-neutral-400" />,
+            keywords: ['projects', 'history', 'threads', 'saved', 'chats', 'sessions'],
             action: () => {
                 onClose()
                 navigate('/projects')
@@ -68,10 +88,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         },
         {
             id: 'go-templates',
-            label: 'Wiki',
-            subtitle: 'Go to wiki',
+            label: 'Wiki & Templates',
+            subtitle: 'Explore repository wikis & codebase docs',
             category: 'Navigation',
             icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
+            keywords: ['wiki', 'templates', 'codebase', 'repos', 'architecture', 'docs'],
             action: () => {
                 onClose()
                 navigate('/templates')
@@ -80,145 +101,223 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         {
             id: 'go-docs',
             label: 'Documentation',
-            subtitle: 'Go to December documentation',
+            subtitle: 'Guides, API documentation & tutorials',
             category: 'Navigation',
             icon: <Icons.DocsBook className="w-4 h-4 text-neutral-400" />,
+            keywords: ['docs', 'help', 'guide', 'manual', 'reference', 'tutorials'],
             action: () => {
                 onClose()
                 navigate('/docs')
             },
         },
-        // settings
+        {
+            id: 'go-activate',
+            label: 'Device Activation',
+            subtitle: 'Link CLI or secondary device code',
+            category: 'Navigation',
+            icon: <Icons.Terminal className="w-4 h-4 text-neutral-400" />,
+            keywords: ['activate', 'cli', 'code', 'pair', 'terminal', 'device', 'link'],
+            action: () => {
+                onClose()
+                navigate('/activate')
+            },
+        },
+
+        // Settings Subpages
         {
             id: 'go-settings-account',
-            label: 'Account Settings',
-            subtitle: 'Manage profile & account details',
-            category: 'Settings',
-            icon: <Icons.Settings className="w-4 h-4 text-neutral-400" />,
+            label: 'Account Details',
+            subtitle: 'Settings / Account',
+            category: 'Settings Subpages',
+            icon: <Icons.User className="w-4 h-4 text-neutral-400" />,
+            keywords: [
+                'profile',
+                'account',
+                'password',
+                'security',
+                'email',
+                'avatar',
+                'user',
+                'name',
+            ],
             action: () => {
                 onClose()
                 navigate('/settings/account')
             },
         },
         {
-            id: 'go-settings-account-profile',
-            label: 'Profile Details',
-            subtitle: 'Settings > Account',
-            category: 'Settings',
-            icon: <Icons.User className="w-4 h-4 text-neutral-400" />,
-            action: () => {
-                onClose()
-                navigate('/settings/account#profile')
-            },
-        },
-        {
-            id: 'go-settings-account-password',
-            label: 'Password & Security',
-            subtitle: 'Settings > Account',
-            category: 'Settings',
-            icon: <Icons.Lock className="w-4 h-4 text-neutral-400" />,
-            action: () => {
-                onClose()
-                navigate('/settings/account#password')
-            },
-        },
-        {
             id: 'go-settings-preferences',
-            label: 'Preferences',
-            subtitle: 'Manage theme & app preferences',
-            category: 'Settings',
+            label: 'Preferences & Appearance',
+            subtitle: 'Settings / Preferences',
+            category: 'Settings Subpages',
             icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
+            keywords: [
+                'theme',
+                'dark mode',
+                'light mode',
+                'custom design',
+                'shortcuts',
+                'appearance',
+                'display',
+                'preferences',
+            ],
             action: () => {
                 onClose()
                 navigate('/settings/preferences')
             },
         },
         {
-            id: 'go-settings-preferences-custom-design',
-            label: 'Custom Design',
-            subtitle: 'Settings > Preferences',
-            category: 'Settings',
-            icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
-            action: () => {
-                onClose()
-                navigate('/settings/preferences#custom-design')
-            },
-        },
-        {
-            id: 'go-settings-preferences-shortcuts',
-            label: 'Keyboard Shortcuts',
-            subtitle: 'Settings > Preferences',
-            category: 'Settings',
-            icon: <Icons.Settings className="w-4 h-4 text-neutral-400" />,
-            action: () => {
-                onClose()
-                navigate('/settings/preferences#shortcuts')
-            },
-        },
-        {
             id: 'go-settings-integrations',
-            label: 'Integrations',
-            subtitle: 'Manage connected services & API keys',
-            category: 'Settings',
+            label: 'Integrations & Connections',
+            subtitle: 'Settings / Integrations',
+            category: 'Settings Subpages',
             icon: <Icons.Globe className="w-4 h-4 text-neutral-400" />,
+            keywords: ['integrations', 'connections', 'github', 'oauth', 'services', 'third party'],
             action: () => {
                 onClose()
                 navigate('/settings/integrations')
             },
         },
         {
-            id: 'go-settings-integrations-github',
-            label: 'GitHub Integration',
-            subtitle: 'Settings > Integrations',
-            category: 'Settings',
+            id: 'go-settings-repositories',
+            label: 'GitHub Repositories',
+            subtitle: 'Settings / Repositories',
+            category: 'Settings Subpages',
             icon: <Icons.Github className="w-4 h-4 text-neutral-400" />,
+            keywords: ['repos', 'repositories', 'github', 'git', 'sync', 'branches', 'codebase'],
             action: () => {
                 onClose()
-                navigate('/settings/integrations#github')
+                navigate('/settings/repositories')
+            },
+        },
+        {
+            id: 'go-settings-skills',
+            label: 'Agent Skills',
+            subtitle: 'Settings / Skills',
+            category: 'Settings Subpages',
+            icon: <Icons.Skills className="w-4 h-4 text-neutral-400" />,
+            keywords: [
+                'skills',
+                'agent',
+                'bot',
+                'tools',
+                'capabilities',
+                'custom skills',
+                'prompts',
+            ],
+            action: () => {
+                onClose()
+                navigate('/settings/skills')
+            },
+        },
+        {
+            id: 'go-settings-secrets',
+            label: 'API Keys & Secrets',
+            subtitle: 'Settings / Secrets',
+            category: 'Settings Subpages',
+            icon: <Icons.Lock className="w-4 h-4 text-neutral-400" />,
+            keywords: ['api key', 'secrets', 'tokens', 'credentials', 'env', 'variables', 'keys'],
+            action: () => {
+                onClose()
+                navigate('/settings/secrets')
+            },
+        },
+        {
+            id: 'go-settings-review',
+            label: 'Code Review Settings',
+            subtitle: 'Settings / Review',
+            category: 'Settings Subpages',
+            icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
+            keywords: [
+                'review',
+                'code review',
+                'linter',
+                'standards',
+                'pr',
+                'pull request',
+                'rules',
+            ],
+            action: () => {
+                onClose()
+                navigate('/settings/review')
+            },
+        },
+        {
+            id: 'go-settings-wiki',
+            label: 'Repository Wiki Settings',
+            subtitle: 'Settings / Wiki',
+            category: 'Settings Subpages',
+            icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
+            keywords: ['wiki settings', 'docs generation', 'markdown', 'knowledge base'],
+            action: () => {
+                onClose()
+                navigate('/settings/wiki')
+            },
+        },
+        {
+            id: 'go-settings-schedules',
+            label: 'Schedules & Timers',
+            subtitle: 'Settings / Schedules',
+            category: 'Settings Subpages',
+            icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
+            keywords: ['schedules', 'cron', 'timers', 'recurring', 'automation', 'tasks', 'jobs'],
+            action: () => {
+                onClose()
+                navigate('/settings/schedules')
             },
         },
         {
             id: 'go-settings-billing',
             label: 'Billing & Credits',
-            subtitle: 'Manage subscription & credit balance',
-            category: 'Settings',
+            subtitle: 'Settings / Billing',
+            category: 'Settings Subpages',
             icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
+            keywords: [
+                'billing',
+                'credits',
+                'payment',
+                'invoices',
+                'receipts',
+                'subscription',
+                'plan',
+                'pricing',
+                'pro',
+            ],
             action: () => {
                 onClose()
                 navigate('/settings/billing')
             },
         },
         {
-            id: 'go-settings-billing-subscription',
-            label: 'Subscription Plan',
-            subtitle: 'Settings > Billing & Credits',
-            category: 'Settings',
-            icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
-            action: () => {
-                onClose()
-                navigate('/settings/billing#subscription')
-            },
-        },
-        {
-            id: 'go-settings-billing-invoices',
-            label: 'Invoices & Receipts',
-            subtitle: 'Settings > Billing & Credits',
-            category: 'Settings',
-            icon: <Icons.DocsBook className="w-4 h-4 text-neutral-400" />,
-            action: () => {
-                onClose()
-                navigate('/settings/billing#invoices')
-            },
-        },
-        {
             id: 'go-settings-usage',
-            label: 'Usage',
-            subtitle: 'View AI generation & model usage',
-            category: 'Settings',
+            label: 'Usage & Quotas',
+            subtitle: 'Settings / Usage',
+            category: 'Settings Subpages',
             icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
+            keywords: [
+                'usage',
+                'quotas',
+                'token limit',
+                'ai calls',
+                'metrics',
+                'stats',
+                'analytics',
+            ],
             action: () => {
                 onClose()
                 navigate('/settings/usage')
+            },
+        },
+        {
+            id: 'go-settings-privacy',
+            label: 'Privacy & Security',
+            subtitle: 'Settings / Privacy',
+            category: 'Settings Subpages',
+            icon: <Icons.Lock className="w-4 h-4 text-neutral-400" />,
+            keywords: ['privacy', 'security', 'data', 'encryption', 'gdpr', 'compliance', 'terms'],
+            action: () => {
+                onClose()
+                navigate('/settings/privacy')
             },
         },
     ]
@@ -234,7 +333,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     let displayedItems: SearchItem[] = []
 
     if (searchQuery.trim() === '') {
-        // show recent first, then the rest
+        // Show recent items first, then all remaining items
         displayedItems = [...recentItems, ...allItems]
     } else {
         const query = searchQuery.toLowerCase()
@@ -242,16 +341,12 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             (item) =>
                 item.label.toLowerCase().includes(query) ||
                 item.subtitle?.toLowerCase().includes(query) ||
-                item.category.toLowerCase().includes(query)
+                item.category.toLowerCase().includes(query) ||
+                item.keywords?.some((k) => k.toLowerCase().includes(query))
         )
     }
 
-    // group items by category
-    const categories: ('Recent' | 'Navigation' | 'Settings')[] = [
-        'Recent',
-        'Navigation',
-        'Settings',
-    ]
+    const categories: SearchCategory[] = ['Recent', 'Navigation', 'Settings Subpages']
 
     useEffect(() => {
         setSelectedIndex(0)
@@ -271,11 +366,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
             if (e.key === 'ArrowDown') {
                 e.preventDefault()
-                setSelectedIndex((prev) => (prev + 1) % displayedItems.length)
+                setSelectedIndex((prev) => (prev + 1) % (displayedItems.length || 1))
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault()
                 setSelectedIndex(
-                    (prev) => (prev - 1 + displayedItems.length) % displayedItems.length
+                    (prev) => (prev - 1 + displayedItems.length) % (displayedItems.length || 1)
                 )
             } else if (e.key === 'Enter') {
                 e.preventDefault()
@@ -283,7 +378,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     const item = displayedItems[selectedIndex]
                     saveRecent(item.id)
                     if (e.ctrlKey || e.metaKey) {
-                        // open in new tab behavior simulation
                         window.open(window.location.origin, '_blank')
                         onClose()
                     } else {
@@ -313,28 +407,25 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 className="w-full max-w-[640px] bg-[#1E1E1E] border border-[#282828] rounded-xl shadow-[0_0_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* search input */}
+                {/* Search input */}
                 <div className="flex items-center px-4 py-3.5 border-b border-[#282828] bg-[#1E1E1E]">
                     <Icons.Search className="w-4 h-4 text-[#888888] mr-3 shrink-0" />
                     <input
                         ref={inputRef}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Type a command or search..."
+                        placeholder="Type a page, subpage, or topic..."
                         className="w-full bg-transparent text-[14.5px] font-medium text-[#EDEDED] placeholder-[#777777] focus:outline-none caret-white font-sans"
                     />
                 </div>
 
-                {/* results list */}
+                {/* Results list */}
                 <div className="flex flex-col py-2 max-h-[420px] overflow-y-auto no-scrollbar">
                     {categories.map((category) => {
                         const categoryItems = displayedItems.filter(
                             (item) => item.category === category
                         )
                         if (categoryItems.length === 0) return null
-
-                        // ensure we use a set to deduplicate recents if needed, but they are mapped uniquely by index in render
-                        // note: recent category might show duplicate items if they are also in navigation/settings. that's typical command palette behavior.
 
                         return (
                             <div key={category} className="flex flex-col mb-2 last:mb-0">
@@ -368,7 +459,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                                     <div className="shrink-0 text-[#888888] group-hover:text-[#EDEDED] flex items-center justify-center">
                                                         {item.icon}
                                                     </div>
-                                                    <div className="flex items-baseline min-w-0 gap-1.5 truncate">
+                                                    <div className="flex items-baseline min-w-0 gap-2 truncate">
                                                         <span
                                                             className={cn(
                                                                 'text-[14px] font-medium transition-colors',
@@ -380,7 +471,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                                             {item.label}
                                                         </span>
                                                         {item.subtitle && (
-                                                            <span className="text-[14px] text-[#7B7A79] transition-colors">
+                                                            <span className="text-[13px] text-[#7B7A79] transition-colors truncate">
                                                                 {item.subtitle}
                                                             </span>
                                                         )}

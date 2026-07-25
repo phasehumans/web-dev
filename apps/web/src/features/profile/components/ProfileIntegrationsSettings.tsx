@@ -76,6 +76,16 @@ interface McpServerItem {
 
 const RECOMMENDED_MCP_SERVERS: McpServerItem[] = [
     {
+        id: 'github-mcp',
+        name: 'GitHub',
+        description:
+            'Search repositories, issues, pull requests, files, and commits via the official GitHub MCP server.',
+        installed: false,
+        iconBg: 'bg-[#24292E]',
+        iconContent: <GithubIcon />,
+        category: 'Developer Tools',
+    },
+    {
         id: 'figma-mcp',
         name: 'Figma',
         description:
@@ -84,6 +94,26 @@ const RECOMMENDED_MCP_SERVERS: McpServerItem[] = [
         iconBg: 'bg-[#1E1B2E]',
         iconContent: <FigmaIcon />,
         category: 'Design',
+    },
+    {
+        id: 'postgres-mcp',
+        name: 'PostgreSQL',
+        description:
+            'Execute SQL queries, inspect table schemas, and analyze database structures securely.',
+        installed: false,
+        iconBg: 'bg-[#336791]',
+        iconContent: <span className="text-[10px] font-bold text-white">PG</span>,
+        category: 'Database',
+    },
+    {
+        id: 'slack-mcp',
+        name: 'Slack',
+        description:
+            'Read and reply to Slack channels, post messages, inspect user profiles, and search chat history.',
+        installed: false,
+        iconBg: 'bg-[#4A154B]',
+        iconContent: <span className="text-[11px] font-bold text-white">#</span>,
+        category: 'Productivity',
     },
     {
         id: 'atlassian-mcp',
@@ -138,6 +168,16 @@ const RECOMMENDED_MCP_SERVERS: McpServerItem[] = [
         category: 'Monitoring',
     },
     {
+        id: 'brave-search-mcp',
+        name: 'Brave Search',
+        description:
+            'Perform real-time web search and retrieve fresh search results via Brave Search API.',
+        installed: false,
+        iconBg: 'bg-[#FF1A1A]',
+        iconContent: <span className="text-[10px] font-bold text-white">B</span>,
+        category: 'Search',
+    },
+    {
         id: 'context7-mcp',
         name: 'Context7',
         description: 'Access up-to-date documentation for 1000+ npm packages and frameworks.',
@@ -145,6 +185,16 @@ const RECOMMENDED_MCP_SERVERS: McpServerItem[] = [
         iconBg: 'bg-[#242323]',
         iconContent: <span className="text-[11px] font-bold text-[#D6D5C9]">CO</span>,
         category: 'Documentation',
+    },
+    {
+        id: 'puppeteer-mcp',
+        name: 'Puppeteer',
+        description:
+            'Headless browser automation to navigate pages, render JavaScript, capture screenshots, and scrape content.',
+        installed: false,
+        iconBg: 'bg-[#00D8A2]',
+        iconContent: <span className="text-[10px] font-bold text-black">P</span>,
+        category: 'Developer Tools',
     },
     {
         id: 'playwright-mcp',
@@ -177,6 +227,156 @@ const RECOMMENDED_MCP_SERVERS: McpServerItem[] = [
 ]
 
 const ALL_MCP_SERVERS: McpServerItem[] = [
+    {
+        id: 'cloudflare-mcp',
+        name: 'Cloudflare',
+        description:
+            'Manage Cloudflare Workers, KV namespaces, R2 storage buckets, DNS records, and WAF settings.',
+        installed: false,
+        iconBg: 'bg-[#F38020]',
+        iconContent: <span className="text-[10px] font-bold text-white">CF</span>,
+        category: 'Cloud',
+    },
+    {
+        id: 'stripe-mcp',
+        name: 'Stripe',
+        description:
+            'Query customers, subscriptions, invoices, charges, and payment intents in Stripe.',
+        installed: false,
+        iconBg: 'bg-[#635BFF]',
+        iconContent: <span className="text-[11px] font-bold text-white">S</span>,
+        category: 'Finance',
+    },
+    {
+        id: 'datadog-mcp',
+        name: 'Datadog',
+        description:
+            'Query Datadog metrics, APM traces, monitors, service health, and infrastructure log analytics.',
+        installed: false,
+        iconBg: 'bg-[#632CA6]',
+        iconContent: <span className="text-[10px] font-bold text-white">DD</span>,
+        category: 'Monitoring',
+    },
+    {
+        id: 'pinecone-mcp',
+        name: 'Pinecone',
+        description:
+            'Vector database similarity search, index query execution, and high-dimensional embedding retrieval.',
+        installed: false,
+        iconBg: 'bg-[#111827]',
+        iconContent: <span className="text-[10px] font-bold text-white">PC</span>,
+        category: 'AI / Database',
+    },
+    {
+        id: 'mongodb-mcp',
+        name: 'MongoDB Atlas',
+        description:
+            'Query document collections, inspect schemas, execute aggregation pipelines, and manage indexes.',
+        installed: false,
+        iconBg: 'bg-[#13AA52]',
+        iconContent: <span className="text-[10px] font-bold text-white">M</span>,
+        category: 'Database',
+    },
+    {
+        id: 'docker-mcp',
+        name: 'Docker',
+        description:
+            'Manage local Docker containers, images, volumes, compose stacks, and inspect container logs.',
+        installed: false,
+        iconBg: 'bg-[#2496ED]',
+        iconContent: <span className="text-[10px] font-bold text-white">D</span>,
+        category: 'DevOps',
+    },
+    {
+        id: 'gitlab-mcp',
+        name: 'GitLab',
+        description:
+            'Access GitLab projects, issues, merge requests, CI/CD pipeline runs, and repository files.',
+        installed: false,
+        iconBg: 'bg-[#FC6D26]',
+        iconContent: <span className="text-[10px] font-bold text-white">GL</span>,
+        category: 'Developer Tools',
+    },
+    {
+        id: 'neon-mcp',
+        name: 'Neon Postgres',
+        description:
+            'Serverless Postgres database operations, instant branching, and SQL query execution via Neon API.',
+        installed: false,
+        iconBg: 'bg-[#00E599]',
+        iconContent: <span className="text-[10px] font-bold text-black">N</span>,
+        category: 'Database',
+    },
+    {
+        id: 'supabase-mcp-server',
+        name: 'Supabase Server',
+        description:
+            'Direct Supabase project management: query tables, run migrations, and manage storage buckets.',
+        installed: false,
+        iconBg: 'bg-[#3ECF8E]',
+        iconContent: <SupabaseIcon />,
+        category: 'Database',
+    },
+    {
+        id: 'trello-mcp',
+        name: 'Trello',
+        description:
+            'Query Trello boards, lists, cards, checklists, and manage team project workflows.',
+        installed: false,
+        iconBg: 'bg-[#0079BF]',
+        iconContent: <span className="text-[10px] font-bold text-white">TR</span>,
+        category: 'Productivity',
+    },
+    {
+        id: 'clickup-mcp',
+        name: 'ClickUp',
+        description:
+            'Manage ClickUp tasks, folders, spaces, time tracking, custom fields, and workspace goals.',
+        installed: false,
+        iconBg: 'bg-[#7B68EE]',
+        iconContent: <span className="text-[10px] font-bold text-white">CU</span>,
+        category: 'Productivity',
+    },
+    {
+        id: 'hubspot-mcp',
+        name: 'HubSpot CRM',
+        description:
+            'Access CRM contacts, companies, deals, marketing campaigns, and sales pipelines in HubSpot.',
+        installed: false,
+        iconBg: 'bg-[#FF7A59]',
+        iconContent: <span className="text-[10px] font-bold text-white">HS</span>,
+        category: 'CRM',
+    },
+    {
+        id: 'zendesk-mcp',
+        name: 'Zendesk',
+        description:
+            'Query support tickets, customer conversations, SLAs, and search Help Center knowledge articles.',
+        installed: false,
+        iconBg: 'bg-[#03363D]',
+        iconContent: <span className="text-[10px] font-bold text-white">ZD</span>,
+        category: 'Support',
+    },
+    {
+        id: 'elasticsearch-mcp',
+        name: 'Elasticsearch',
+        description:
+            'Full-text search query execution, cluster stats inspection, and index mapping management.',
+        installed: false,
+        iconBg: 'bg-[#005571]',
+        iconContent: <span className="text-[10px] font-bold text-white">ES</span>,
+        category: 'Search',
+    },
+    {
+        id: 'google-maps-mcp',
+        name: 'Google Maps',
+        description:
+            'Geocoding, place search, travel directions, distance matrix, and spatial intelligence.',
+        installed: false,
+        iconBg: 'bg-[#4285F4]',
+        iconContent: <span className="text-[10px] font-bold text-white">GM</span>,
+        category: 'Location',
+    },
     {
         id: 'redshift-mcp',
         name: 'Amazon Redshift (IAM Auth)',
@@ -509,7 +709,7 @@ export const ProfileIntegrationsSettings: React.FC<ProfileIntegrationsSettingsPr
 
             {/* Custom MCP Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
                     <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-md p-6 flex flex-col gap-5 shadow-2xl">
                         <div className="flex flex-col gap-1">
                             <h3 className="text-[16px] font-medium text-white">

@@ -204,33 +204,48 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
         )
     }
 
+    const handleConnectGitHub = () => {
+        if (onConnectGitHub) {
+            onConnectGitHub()
+        } else {
+            window.location.href = 'https://github.com/apps/trydecember'
+        }
+    }
+
     if (data && !data.githubConnected) {
         return (
-            <div className="flex items-center justify-center h-full bg-[#141414] text-gray-100 p-6 font-sans">
-                <div className="max-w-md w-full bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8 text-center shadow-2xl flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-[#252525] border border-[#333333] flex items-center justify-center mb-5 text-white shadow-inner">
-                        <Icons.Globe className="w-8 h-8 text-[#E8E8E8]" />
+            <div className="relative h-full w-full flex-1 overflow-y-auto bg-[#141414] px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
+                <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
+                    {/* Top Header */}
+                    <div className="mb-2 flex flex-col">
+                        <h1 className="text-[24px] font-medium text-[#D6D5C9] mb-1">Wiki</h1>
+                        <p className="text-[13px] text-[#7B7A79]">
+                            Explore GitHub repositories and browse AI-generated project
+                            documentation.
+                        </p>
                     </div>
-                    <h2 className="text-xl font-semibold text-white tracking-tight mb-2">
-                        Connect GitHub
-                    </h2>
-                    <p className="text-sm text-[#919191] leading-relaxed mb-6">
-                        Link your GitHub account to discover repositories, automatically generate
-                        AI-powered wikis, and search project documentation.
-                    </p>
-                    <button
-                        onClick={() => {
-                            if (onConnectGitHub) {
-                                onConnectGitHub()
-                            } else {
-                                window.location.href = '/settings/integrations'
-                            }
-                        }}
-                        className="w-full py-3 px-5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium text-sm transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 flex items-center justify-center gap-2 group cursor-pointer"
-                    >
-                        <span>Connect GitHub</span>
-                        <Icons.ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                    </button>
+
+                    {/* GitHub Not Connected Card UI (Matches Repositories Settings Page) */}
+                    <div className="border border-dashed border-[#383736] rounded-xl py-16 flex flex-col items-center justify-center gap-4 bg-[#100E12]/30 hover:border-[#4A4948] transition-colors mt-2">
+                        <div className="w-12 h-12 rounded-xl bg-[#191919] border border-[#383736] flex items-center justify-center">
+                            <Icons.Github className="w-6 h-6 text-[#7B7A79]" />
+                        </div>
+                        <div className="flex flex-col items-center gap-1 text-center">
+                            <span className="text-[14px] font-medium text-[#D6D5C9]">
+                                Connect GitHub to view all repositories
+                            </span>
+                            <span className="text-[12px] text-[#7B7A79]">
+                                Import your GitHub repositories to access your codebases directly.
+                            </span>
+                        </div>
+                        <button
+                            onClick={handleConnectGitHub}
+                            className="mt-2 flex items-center gap-2 px-4 py-2 rounded-lg bg-[#242323] hover:bg-[#2C2B2B] text-[13px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer border border-[#383736]"
+                        >
+                            <Icons.Github className="w-4 h-4" />
+                            <span>Connect GitHub</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         )

@@ -84,8 +84,8 @@ export const SessionShareModal: React.FC<SessionShareModalProps> = ({
                 </p>
 
                 {!isSharedAsTemplate && (
-                    <div className="flex flex-col gap-1.5 mt-2 relative" ref={dropdownRef}>
-                        <label className="text-[11px] font-semibold text-[#8F8E8D] uppercase tracking-wider block">
+                    <div className="mt-1 relative" ref={dropdownRef}>
+                        <label className="text-[13px] text-[#8F8E8D] mb-2 block leading-relaxed">
                             Template Category
                         </label>
                         <button

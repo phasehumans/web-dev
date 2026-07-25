@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 
 import type { PullRequestReview, ReviewFinding } from '../api/review'
 
+import { SessionPrTooltip } from '@/features/sessions/components/SessionPrTooltip'
 import { Icons } from '@/shared/components/ui/Icons'
 
 interface ReviewDetailViewProps {
@@ -271,9 +272,21 @@ export const ReviewDetailView: React.FC<ReviewDetailViewProps> = ({
             {/* PR Header Section */}
             <div className="flex flex-col gap-3 rounded-xl border border-[#2A2A2A] bg-[#1A1A1A] p-6 shadow-lg">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="px-2.5 py-1 rounded-md bg-purple-500/10 border border-purple-500/20 text-[11px] font-semibold text-purple-400">
-                        {review.provider} #{review.prNumber}
-                    </span>
+                    {review.prNumber ? (
+                        <SessionPrTooltip
+                            session={{
+                                id: review.id,
+                                title: review.title,
+                                prNumber: review.prNumber,
+                                prUrl: review.prUrl,
+                                repoName: review.repository,
+                                prTitle: review.title,
+                                branchName: (review as any).branchName || (review as any).branch,
+                                additions: (review as any).additions,
+                                deletions: (review as any).deletions,
+                            }}
+                        />
+                    ) : null}
                     <span className="text-[13px] font-mono text-[#7B7A79]">
                         {review.repository}
                     </span>

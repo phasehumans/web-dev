@@ -686,7 +686,7 @@ export const WikiReader: React.FC<WikiReaderProps> = ({
 
             {/* Create Page Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-none z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b border-[#282828] pb-3">
                             <h3 className="text-base font-bold text-white">Add Wiki Page</h3>
@@ -754,7 +754,7 @@ export const WikiReader: React.FC<WikiReaderProps> = ({
 
             {/* Edit Page Modal */}
             {isEditModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-none z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b border-[#282828] pb-3">
                             <h3 className="text-base font-bold text-white">Edit Wiki Page</h3>
@@ -820,7 +820,7 @@ export const WikiReader: React.FC<WikiReaderProps> = ({
 
             {/* Delete Confirmation Modal */}
             {isDeleteModalOpen && activePage && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-none z-50 flex items-center justify-center p-4">
                     <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
                         <h3 className="text-base font-bold text-white">Delete Page</h3>
                         <p className="text-xs text-gray-300 leading-relaxed">

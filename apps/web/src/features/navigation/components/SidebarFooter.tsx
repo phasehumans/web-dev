@@ -87,7 +87,7 @@ export const SidebarFooter: React.FC<
 
     const handleCopy = (e: React.MouseEvent) => {
         e.stopPropagation()
-        navigator.clipboard.writeText('bun install -g @trydecember/cli')
+        navigator.clipboard.writeText('npm install -g @trydecember/cli')
         setIsCopied(true)
         setTimeout(() => setIsCopied(false), 2000)
     }
@@ -162,7 +162,7 @@ export const SidebarFooter: React.FC<
                                         $
                                     </span>
                                     <span className="text-[#D6D5C9] text-[11px] font-mono truncate tracking-tight">
-                                        bun install -g @trydecember/cli
+                                        npm install -g @trydecember/cli
                                     </span>
                                 </div>
                                 <button

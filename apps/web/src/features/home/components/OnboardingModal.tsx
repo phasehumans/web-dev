@@ -24,10 +24,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
     if (!isOpen) return null
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-[2px] pointer-events-auto animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-none pointer-events-auto animate-in fade-in duration-300">
             <div className="absolute inset-0" />
             <div
-                className="relative w-full max-w-[520px] bg-[#121211] border border-white/5 rounded-[20px] shadow-[0_24px_50px_-12px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col p-6 animate-in zoom-in-95 duration-200"
+                className="relative w-full max-w-[520px] bg-[#121211] border border-white/5 rounded-[20px] shadow-lg shadow-black/40 overflow-hidden flex flex-col p-6 animate-in zoom-in-95 duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* 1. video player container */}

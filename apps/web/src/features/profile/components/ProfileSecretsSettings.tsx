@@ -325,7 +325,7 @@ export const ProfileSecretsSettings: React.FC = () => {
 
             {/* Modal: Add Single Secret */}
             {isAddOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
                     <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-md p-6 flex flex-col gap-5 shadow-2xl">
                         <div className="flex flex-col gap-1">
                             <h3 className="text-[16px] font-medium text-white">Add Secret</h3>
@@ -422,7 +422,7 @@ export const ProfileSecretsSettings: React.FC = () => {
 
             {/* Modal: Bulk Add Secrets */}
             {isBulkAddOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
                     <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-lg p-6 flex flex-col gap-5 shadow-2xl">
                         <div className="flex flex-col gap-1">
                             <h3 className="text-[16px] font-medium text-white">Bulk Add Secrets</h3>

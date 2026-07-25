@@ -371,7 +371,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
 
                         {isPlusMenuOpen && (
                             <div
-                                className={`absolute ${plusMenuPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} left-0 w-[230px] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-2xl z-50 flex flex-col animate-in fade-in zoom-in-95 duration-150`}
+                                className={`absolute ${plusMenuPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} left-0 w-[230px] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-150`}
                             >
                                 {plusMenuItems.map((item, idx) => (
                                     <button
@@ -440,7 +440,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                             <span className="text-[12px] font-medium">Canvas</span>
                         </button>
                         {showCanvasCard && (
-                            <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex flex-col bg-[#1E1E1E] border border-[#2A2928] rounded-2xl shadow-2xl overflow-hidden w-[260px] animate-in fade-in zoom-in-95 duration-200 cursor-default">
+                            <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex flex-col bg-[#1E1E1E] border border-[#2A2928] rounded-2xl shadow-lg shadow-black/40 overflow-hidden w-[260px] animate-in fade-in zoom-in-95 duration-200 cursor-default">
                                 <div className="w-full h-[140px] bg-[#1E1E1E] relative overflow-hidden flex items-center justify-center p-1.5 pb-0 pointer-events-none">
                                     <div className="w-full h-full relative overflow-hidden rounded-xl border border-[#2A2928]">
                                         <img
@@ -461,8 +461,8 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                             </span>
                                         </div>
                                         <span className="text-[12px] text-[#8F8E8D] mt-1 leading-relaxed">
-                                            A powerful visual workspace to organize your code,
-                                            architecture, and context alongside your conversation.
+                                            A freeform visual workspace to express your ideas far
+                                            more freely than simple text prompts.
                                         </span>
                                     </div>
                                     <div className="flex justify-end mx-1 mt-1">
@@ -530,7 +530,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
 
                     {isModelSelectorOpen && (
                         <div
-                            className={`absolute ${modelSelectorPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} right-0 w-[200px] bg-[#1F1F1F] border border-white/[0.08] rounded-xl p-1 shadow-2xl z-50 flex flex-col gap-0.5`}
+                            className={`absolute ${modelSelectorPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} right-0 w-[200px] bg-[#1F1F1F] border border-white/[0.08] rounded-xl p-1 shadow-lg shadow-black/40 z-50 flex flex-col gap-0.5`}
                         >
                             {MODELS.map((model, idx) => {
                                 const isSelected = selectedModel === model.id

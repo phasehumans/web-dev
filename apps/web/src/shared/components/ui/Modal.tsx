@@ -29,7 +29,7 @@ export const Modal: React.FC<ModalProps> = ({
         return createPortal(
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
                 <div
-                    className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+                    className="absolute inset-0 bg-black/40 backdrop-blur-none"
                     onClick={onClose}
                 />
                 <div
@@ -66,7 +66,7 @@ export const Modal: React.FC<ModalProps> = ({
 
     return createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px]" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-none" onClick={onClose} />
             <div
                 className={`relative w-full ${maxWidth} bg-[#1E1E1E] border border-[#272727] rounded-xl shadow-2xl overflow-visible animate-in fade-in zoom-in-95 duration-200`}
             >

@@ -1,6 +1,6 @@
 {
     "name": "@december/server",
-    "version": "0.2.19",
+    "version": "0.2.20",
     "module": "server.ts",
     "type": "module",
     "private": true,

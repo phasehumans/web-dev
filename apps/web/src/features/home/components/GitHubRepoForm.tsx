@@ -78,7 +78,7 @@ export const GitHubRepoForm: React.FC<GitHubRepoFormProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full max-w-[400px] mt-3 rounded-2xl bg-[#1E1E1E] border border-[#2E2D2C] shadow-2xl overflow-hidden font-sans flex flex-col"
+            className="w-full max-w-[400px] mt-3 rounded-2xl bg-[#1E1E1E] border border-[#2E2D2C] shadow-lg shadow-black/40 overflow-hidden font-sans flex flex-col"
         >
             <div className="flex flex-col p-3 gap-3">
                 {/* header row */}

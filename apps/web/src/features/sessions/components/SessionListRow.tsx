@@ -83,9 +83,9 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
     return (
         <div
             className={`group relative grid cursor-pointer grid-cols-[minmax(0,2fr)_minmax(100px,auto)_minmax(100px,auto)_minmax(150px,1fr)_minmax(100px,auto)_2.5rem] items-center gap-2 rounded-lg border pl-1 pr-5 py-2 transition-all duration-200 hover:bg-[#191919] md:gap-3 ${
-                session.isArchived
+                session.isArchived && !isMenuOpen
                     ? 'opacity-60 border-transparent hover:opacity-100'
-                    : 'border-transparent'
+                    : 'border-transparent opacity-100'
             }`}
             style={{ zIndex: isMenuOpen ? 50 : undefined }}
             onClick={() => onOpenProject(session.id)}

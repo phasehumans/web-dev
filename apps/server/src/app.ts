@@ -5,12 +5,7 @@ import express from 'express'
 import { httpLogger } from './config/logger'
 import { env } from './env'
 import { errorHandler } from './middleware/error.middleware'
-import {
-    authRateLimiter,
-    cliRateLimiter,
-    globalRateLimiter,
-    runtimeRateLimiter,
-} from './middleware/rate-limiter'
+import { cliRateLimiter, globalRateLimiter, runtimeRateLimiter } from './middleware/rate-limiter'
 import authRouter from './modules/auth/auth.routes'
 import billingRouter from './modules/billing/billing.routes'
 import canvasRouter from './modules/canvas/canvas.routes'
@@ -32,6 +27,9 @@ import usageRouter from './modules/usage/usage.routes'
 import wikiRouter from './modules/wiki/wiki.routes'
 
 const app = express()
+
+// Enable trust proxy for proper IP resolution behind reverse proxies/load balancers
+app.set('trust proxy', true)
 
 // Attach HTTP structured logger
 app.use(httpLogger)
@@ -55,7 +53,7 @@ app.use('/api', globalRateLimiter)
 app.use('/socket.io', globalRateLimiter)
 
 // Apply strict module rate limiting tiers to sensitive endpoints
-app.use('/api/v1/auth', authRateLimiter, authRouter)
+app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/setting', settingRouter)
 
 app.use('/api/v1/canvas', canvasRouter)

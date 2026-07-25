@@ -5,6 +5,8 @@ import { ReviewDetailView } from '../../review/components/ReviewDetailView'
 import { ReviewPreferencesDrawer } from '../../review/components/ReviewPreferencesDrawer'
 import { useSessions } from '../hooks/useSessions'
 
+import { SessionPrTooltip } from './SessionPrTooltip'
+
 import { Icons } from '@/shared/components/ui/Icons'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { Tooltip } from '@/shared/components/ui/Tooltip'
@@ -122,7 +124,7 @@ export const ReviewPage: React.FC = () => {
 
     const formatDate = (dInput: string | Date) => {
         const d = new Date(dInput)
-        if (isNaN(d.getTime())) return '--'
+        if (isNaN(d.getTime())) return ''
         return d.toLocaleDateString(undefined, {
             month: 'short',
             day: 'numeric',
@@ -280,16 +282,15 @@ export const ReviewPage: React.FC = () => {
                         {Array.from({ length: 6 }).map((_, index) => (
                             <div
                                 key={`review-skeleton-${index}`}
-                                className="grid grid-cols-[minmax(0,2fr)_minmax(120px,1fr)_minmax(110px,auto)_minmax(85px,auto)_minmax(90px,auto)_minmax(100px,auto)] items-center gap-2 rounded-lg border border-transparent bg-[#191919]/5 pl-1 pr-5 py-2 md:gap-3"
+                                className="grid grid-cols-[minmax(0,1fr)_minmax(85px,auto)_minmax(100px,auto)_minmax(100px,auto)_minmax(100px,auto)] items-center gap-3 md:gap-5 rounded-lg border border-transparent bg-[#191919]/5 px-3 py-2.5"
                             >
                                 <div className="flex flex-col gap-1.5 w-full pr-4 min-w-0 justify-center">
                                     <Skeleton className="h-4 w-[85%] bg-white/[0.06]" />
                                     <Skeleton className="h-3 w-[60%] bg-white/[0.04]" />
                                 </div>
-                                <Skeleton className="h-3.5 w-24 bg-white/[0.04]" />
-                                <Skeleton className="h-4 w-16 rounded-md bg-white/[0.04]" />
-                                <Skeleton className="h-4 w-12 rounded-md bg-white/[0.04]" />
                                 <Skeleton className="h-3.5 w-16 bg-white/[0.04]" />
+                                <Skeleton className="h-4 w-16 rounded-md bg-white/[0.04]" />
+                                <Skeleton className="h-4 w-16 rounded-md bg-white/[0.04]" />
                                 <Skeleton className="h-4 w-20 rounded-md bg-white/[0.04]" />
                             </div>
                         ))}
@@ -333,11 +334,11 @@ export const ReviewPage: React.FC = () => {
                                     <div
                                         key={review.id}
                                         onClick={() => setSelectedReview(review)}
-                                        className="group relative grid cursor-pointer grid-cols-[minmax(0,2fr)_minmax(120px,1fr)_minmax(110px,auto)_minmax(85px,auto)_minmax(90px,auto)_minmax(100px,auto)] items-center gap-2 rounded-lg border border-transparent pl-1 pr-5 py-2 transition-all duration-200 hover:bg-[#191919] md:gap-3"
+                                        className="group relative grid cursor-pointer grid-cols-[minmax(0,1fr)_minmax(85px,auto)_minmax(100px,auto)_minmax(100px,auto)_minmax(100px,auto)] items-center gap-3 md:gap-5 rounded-lg border border-transparent px-3 py-2.5 transition-all duration-200 hover:bg-[#191919]"
                                     >
                                         {/* PR Title & Summary Description */}
                                         <div className="flex flex-col min-w-0 justify-center">
-                                            <span className="truncate text-[14px] font-medium text-[#D6D5C9] transition-colors">
+                                            <span className="truncate text-[14px] font-medium text-[#D6D5C9] transition-colors group-hover:text-white">
                                                 {review.title || 'Untitled Review'}
                                             </span>
                                             <span className="truncate text-[12px] text-[#7B7A79] transition-colors">
@@ -346,10 +347,15 @@ export const ReviewPage: React.FC = () => {
                                             </span>
                                         </div>
 
-                                        {/* Repository Name */}
-                                        <div className="truncate text-[13px] text-[#7B7A79] transition-colors group-hover:text-[#A3A2A0] font-mono">
-                                            {review.repository || '--'}
-                                        </div>
+                                        {/* Date (Just beside title) */}
+                                        <Tooltip
+                                            position="top"
+                                            content={formatTooltipDate(review.createdAt, 'Created')}
+                                        >
+                                            <div className="truncate text-[13px] text-[#7B7A79] transition-colors group-hover:text-[#A3A2A0]">
+                                                {formatDate(review.createdAt)}
+                                            </div>
+                                        </Tooltip>
 
                                         {/* Session ID */}
                                         <div className="flex items-center gap-1.5 min-w-0">
@@ -365,26 +371,29 @@ export const ReviewPage: React.FC = () => {
                                             ) : null}
                                         </div>
 
-                                        {/* PR Number Badge (Sessions style) */}
+                                        {/* PR Number Badge with Tooltip */}
                                         <div className="flex items-center">
-                                            <span className="flex items-center gap-1 rounded-md bg-[#202020] hover:bg-[#272727] transition-colors px-2 py-0.5 text-[11px] font-medium text-purple-400 select-none">
-                                                <Icons.GitPullRequest className="h-3 w-3" />#
-                                                {review.prNumber}
-                                            </span>
+                                            {review.prNumber ? (
+                                                <SessionPrTooltip
+                                                    session={{
+                                                        id: review.id,
+                                                        title: review.title,
+                                                        prNumber: review.prNumber,
+                                                        prUrl: review.prUrl,
+                                                        repoName: review.repository,
+                                                        prTitle: review.title,
+                                                        branchName:
+                                                            (review as any).branchName ||
+                                                            (review as any).branch,
+                                                        additions: (review as any).additions,
+                                                        deletions: (review as any).deletions,
+                                                    }}
+                                                />
+                                            ) : null}
                                         </div>
 
-                                        {/* Date */}
-                                        <Tooltip
-                                            position="top"
-                                            content={formatTooltipDate(review.createdAt, 'Created')}
-                                        >
-                                            <div className="truncate text-[13px] text-[#7B7A79] transition-colors group-hover:text-[#A3A2A0]">
-                                                {formatDate(review.createdAt)}
-                                            </div>
-                                        </Tooltip>
-
                                         {/* Status Badge */}
-                                        <div className="flex items-center gap-2 min-w-0">
+                                        <div className="flex items-center justify-end gap-2 min-w-0">
                                             <Tooltip
                                                 position="top"
                                                 content={

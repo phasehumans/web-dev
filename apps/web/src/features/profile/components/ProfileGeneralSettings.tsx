@@ -1,5 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Volume1, Volume2, VolumeX, FilePlus, Trash2, Loader2, ExternalLink } from 'lucide-react'
+import {
+    Volume1,
+    Volume2,
+    VolumeX,
+    FilePlus,
+    Trash2,
+    Loader2,
+    ExternalLink,
+    FileText,
+    Save,
+} from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -260,33 +270,57 @@ Use this template file to specify coding styles, design tokens, responsive grids
                                         setdesignDirty(true)
                                     }
                                 }}
-                                className="flex items-center gap-2 px-4 py-2 border border-[#383736] rounded-lg text-[14px] font-medium text-[#D6D5C9] hover:bg-[#242323] transition-colors w-fit shadow-sm"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer w-fit"
                             >
-                                <FilePlus className="w-4 h-4" />
-                                Create design.md
+                                <FilePlus className="w-3.5 h-3.5" />
+                                <span>Create design.md</span>
                             </button>
                         </div>
                     ) : (
-                        <div className="flex flex-col border border-[#2B2A29] rounded-xl overflow-hidden bg-[#131211]">
-                            <div className="flex items-center justify-between px-4 py-3 bg-[#131211] border-b border-[#2B2A29]">
-                                <span className="text-[13px] font-medium text-[#D6D5C9]">
-                                    design.md
-                                </span>
-                                <span className="text-[12px] text-[#4A4948]">
+                        <div className="flex flex-col border border-[#282828] rounded-xl overflow-hidden bg-[#202020] transition-all">
+                            {/* Editor Header Bar */}
+                            <div className="flex items-center justify-between px-4 py-2.5 bg-[#202020] border-b border-[#282828]">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-[#87B2F4]" />
+                                    <span className="text-[13px] font-medium text-[#D6D5C9]">
+                                        design.md
+                                    </span>
+                                </div>
+                                <span className="text-[11px] font-mono text-[#7B7A79] bg-[#181818] px-2 py-0.5 rounded border border-[#282828]">
                                     {designText.length} chars
                                 </span>
                             </div>
-                            <div className="p-4 bg-[#131211]">
-                                <textarea
-                                    className="w-full h-[500px] bg-[#0E0D0C] border border-[#2B2A29] rounded-lg p-4 text-[13.5px] text-[#D6D5C9] placeholder:text-[#4A4948] font-mono leading-[1.6] resize-none focus:outline-none focus:border-[#383736] transition-colors caret-[#D6D5C9] no-scrollbar"
-                                    spellCheck={false}
-                                    value={designText}
-                                    onChange={(e) => {
-                                        setdesignText(e.target.value)
-                                        setdesignDirty(true)
-                                    }}
-                                ></textarea>
-                                <div className="flex items-center gap-3 mt-4">
+
+                            {/* Editor Code Area */}
+                            <textarea
+                                className="w-full h-[450px] bg-[#181818] p-4 text-[13px] text-[#D6D5C9] placeholder:text-[#7B7A79] font-mono leading-[1.7] resize-none focus:outline-none transition-colors caret-[#87B2F4] selection:bg-[#2B2B2B] no-scrollbar border-none"
+                                spellCheck={false}
+                                value={designText}
+                                onChange={(e) => {
+                                    setdesignText(e.target.value)
+                                    setdesignDirty(true)
+                                }}
+                                placeholder="Enter custom layout rules and instructions..."
+                            ></textarea>
+
+                            {/* Editor Footer Bar */}
+                            <div className="flex items-center justify-between px-4 py-2.5 bg-[#202020] border-t border-[#282828]">
+                                <span className="text-[12px] text-[#7B7A79]">
+                                    Persistent layout rules for december
+                                </span>
+                                <div className="flex items-center gap-2.5">
+                                    <button
+                                        onClick={() => deletedesignMutation.mutate()}
+                                        disabled={deletedesignMutation.isPending}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] font-medium text-[#7B7A79] hover:text-red-400 transition-colors rounded-lg disabled:opacity-30 cursor-pointer"
+                                    >
+                                        {deletedesignMutation.isPending ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        )}
+                                        <span>Delete</span>
+                                    </button>
                                     <button
                                         onClick={() => {
                                             if (designText.trim()) {
@@ -296,24 +330,14 @@ Use this template file to specify coding styles, design tokens, responsive grids
                                             }
                                         }}
                                         disabled={!designDirty || updatedesignMutation.isPending}
-                                        className="px-4 py-1.5 rounded-lg border border-[#383736] text-[13px] font-medium text-[#D6D5C9] hover:bg-[#242323] transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
+                                        className="px-4 py-1.5 rounded-lg bg-[#181818] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
                                     >
-                                        {updatedesignMutation.isPending && (
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                        )}
-                                        Save
-                                    </button>
-                                    <button
-                                        onClick={() => deletedesignMutation.mutate()}
-                                        disabled={deletedesignMutation.isPending}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-[#7B7A79] hover:text-red-400 transition-colors rounded-lg disabled:opacity-30"
-                                    >
-                                        {deletedesignMutation.isPending ? (
-                                            <Loader2 className="w-[15px] h-[15px] animate-spin" />
+                                        {updatedesignMutation.isPending ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#87B2F4]" />
                                         ) : (
-                                            <Trash2 className="w-[15px] h-[15px]" />
+                                            <Save className="w-3.5 h-3.5 text-[#87B2F4]" />
                                         )}
-                                        Delete
+                                        <span>Save</span>
                                     </button>
                                 </div>
                             </div>

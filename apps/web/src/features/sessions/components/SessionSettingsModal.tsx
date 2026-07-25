@@ -6,7 +6,7 @@ export const SessionSettingsModal: React.FC<{ onClose: () => void }> = ({ onClos
     const [folder, setFolder] = useState('main-project')
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-[1px] flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-none flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                     <h2 className="text-xl font-bold text-gray-900">Session Settings</h2>

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 
 import { profileAPI, type GithubRepo } from '@/features/profile/api/profile'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { Tooltip } from '@/shared/components/ui/Tooltip'
 
 interface ProfileRepositoriesSettingsProps {
     isGithubConnected: boolean
@@ -91,15 +92,16 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => reposQuery.refetch()}
-                                className="p-2 rounded-lg border border-[#282828] bg-[#202020] hover:bg-[#282828] text-[#949494] hover:text-white transition-colors cursor-pointer"
-                                title="Refresh repositories"
-                            >
-                                <RotateCw
-                                    className={`w-3.5 h-3.5 ${reposQuery.isRefetching ? 'animate-spin text-[#87B2F4]' : ''}`}
-                                />
-                            </button>
+                            <Tooltip position="top" content="Refresh repositories">
+                                <button
+                                    onClick={() => reposQuery.refetch()}
+                                    className="p-2 rounded-lg border border-[#282828] bg-[#202020] hover:bg-[#282828] text-[#949494] hover:text-white transition-colors cursor-pointer"
+                                >
+                                    <RotateCw
+                                        className={`w-3.5 h-3.5 ${reposQuery.isRefetching ? 'animate-spin text-[#87B2F4]' : ''}`}
+                                    />
+                                </button>
+                            </Tooltip>
                             <button
                                 onClick={onConnectGithub}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer"

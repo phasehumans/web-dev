@@ -73,7 +73,7 @@ const SessionListAreaSkeleton: React.FC = () => {
     )
 }
 
-const EmptySessionsState: React.FC<{ onNewProject: () => void }> = ({ onNewProject }) => {
+const EmptySessionsState: React.FC = () => {
     return (
         <div className="flex min-h-[420px] flex-col items-center justify-center px-6 py-16 text-center">
             <div className="relative mb-6 h-28 w-32">
@@ -103,12 +103,6 @@ const EmptySessionsState: React.FC<{ onNewProject: () => void }> = ({ onNewProje
             <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#7B7A79]">
                 Sessions you create or launch will appear here.
             </p>
-            <button
-                onClick={onNewProject}
-                className="mt-5 rounded-lg border border-[#383736] bg-[#1A1918] px-4 py-2 text-[13px] font-medium text-[#D6D5C9] transition-colors hover:bg-[#262626]"
-            >
-                New session
-            </button>
         </div>
     )
 }
@@ -302,7 +296,7 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
             {isInitialLoading ? (
                 <SessionListAreaSkeleton />
             ) : !hasUnfilteredSessions ? (
-                <EmptySessionsState onNewProject={onNewProject} />
+                <EmptySessionsState />
             ) : !hasSessions ? (
                 <NoResultsState />
             ) : (

@@ -2,6 +2,54 @@
 
 ### Features
 
+- _(home)_ Add get started section
+- _(hero)_ Add get started section in home page (#217)
+- _(wiki)_ Implement Prisma schema & backend wiki foundation (#220)
+- _(wiki)_ Implement GitHub repo listing & unconnected CTA view (#221)
+- _(wiki)_ Implement stubbed agent wiki generation workflow (#222)
+- _(wiki)_ Implement wiki reader and page CRUD management (#223)
+- _(wiki)_ Implement interactive WikiChat agent interface (#224)
+- _(review/wiki)_ Add review and wiki module and refactor modules on standards (#227)
+- Add lint and ci configs
+- _(settings)_ Add settings sub pages ui
+- _(ui)_ Add review/wiki page updates and settings sub-pages UI (#238)
+- _(server)_ Implement rate limits and structured logging (closes #239)
+- _(auth)_ Replace bcrypt with SHA-256 for refresh token hashing (#229)
+- _(auth)_ Implement refresh token rotation grace period window (#229)
+- _(auth)_ Add session caching to authMiddleware with immediate signout invalidation (#229)
+- _(auth)_ Enforce strict rate limiting on public auth endpoints (#229)
+- _(auth)_ Implement periodic cleanup job to purge expired and revoked sessions (#229)
+
+### Bug Fixes
+
+- _(hero)_ Fix agent switch and more options
+- _(sessions)_ Fix sessions ui
+- _(sessions)_ Fix sessions ui and insgihts modal
+- _(sessions)_ Fix sessions module and ui (#218)
+- _(review)_ Fix review module and ui
+- Lint configs and auto lint
+- Ci pipeline
+- Review and wiki page
+- _(types)_ Resolve type errors in web and cli to satisfy pre-push typecheck hook
+- _(server)_ Resolve code review findings for rate limiting, retryAfter, and logger env
+- _(server)_ Resolve code review findings for rate limiter and logger
+- _(auth)_ Hardening & Optimization of Server Authentication Architecture (#229) (#245)
+
+### Refactor
+
+- _(server)_ Standardize all modules to match reference architecture (#225)
+- _(server)_ Standardize service layer functions, single typed parameters, and exports (#226)
+- _(auth)_ Apply code review polish to types, controllers, and test coverage
+
+### Documentation
+
+- Add testing and environment setup instructions to AGENTS.md
+- Add server module architecture and service layer standards to AGENTS.md
+
+## [0.2.19] - 2026-07-21
+
+### Features
+
 - Implement uiux improvements for chat and missing dependencies
 - Ui/ux improvements for chat and missing dependencies (#216)
 
@@ -9,6 +57,10 @@
 
 - Extensive test coverage for all cli domains
 - Extensive test coverage for tools and providers
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.19
 
 ## [0.2.18] - 2026-07-20
 
