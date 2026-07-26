@@ -9,7 +9,7 @@
         "start": "bun src/server.ts",
         "build": "echo 'No build required for server'",
         "typecheck": "tsc --noEmit",
-        "test": "dotenv -e ../../.env -- bun test"
+        "test": "dotenv -e ../../.env.test -- bun test"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.5.8",
@@ -53,6 +53,7 @@
         "express": "^5.2.1",
         "express-rate-limit": "8.5.2",
         "google-auth-library": "^10.6.1",
+        "helmet": "8.3.0",
         "ioredis": "5.11.1",
         "jsonwebtoken": "^9.0.3",
         "multer": "^2.1.1",

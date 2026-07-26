@@ -96,8 +96,14 @@ export const globalRateLimiter = createRateLimiter({
 // Strict rate limiters for specific sensitive modules
 export const authRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
-    limit: 15,
+    limit: 20,
     message: 'Too many authentication attempts, please try again after 15 minutes',
+})
+
+export const refreshRateLimiter = createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    message: 'Too many session refresh requests, please try again later',
 })
 
 export const runtimeRateLimiter = createRateLimiter({

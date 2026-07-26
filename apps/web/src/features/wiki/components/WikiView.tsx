@@ -5,6 +5,7 @@ import { WikiReader } from './WikiReader'
 
 import { apiFetch } from '@/shared/api/client'
 import { Icons } from '@/shared/components/ui/Icons'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { Tooltip } from '@/shared/components/ui/Tooltip'
 
 export interface UserGitHubRepo {
@@ -191,13 +192,77 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
 
     if (isLoading && !data) {
         return (
-            <div className="flex flex-col h-full bg-[#141414] text-gray-100 p-6 md:p-8 overflow-y-auto">
-                <div className="max-w-6xl mx-auto w-full animate-pulse">
-                    <div className="h-8 w-48 bg-[#222222] rounded mb-2" />
-                    <div className="h-4 w-96 bg-[#1F1F1F] rounded mb-8" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="h-28 bg-[#1A1A1A] rounded-xl border border-[#262626]" />
-                        <div className="h-28 bg-[#1A1A1A] rounded-xl border border-[#262626]" />
+            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
+                <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
+                    {/* Top Header */}
+                    <div className="mb-2 flex flex-col">
+                        <h1 className="text-[24px] font-medium text-[#D6D5C9] mb-1">Wiki</h1>
+                        <p className="text-[13px] text-[#7B7A79]">
+                            Explore GitHub repositories and browse AI-generated project
+                            documentation.
+                        </p>
+                    </div>
+
+                    {/* Top Control Bar Skeleton */}
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="relative w-full max-w-[320px] sm:max-w-[380px]">
+                            <Icons.Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
+                            <div className="w-full h-9 bg-[#202020] border border-[#282828] rounded-lg" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="w-9 h-9 rounded-lg bg-[#202020]" />
+                            <Skeleton className="w-32 h-9 rounded-lg bg-[#202020]" />
+                        </div>
+                    </div>
+
+                    {/* Pinned Section Skeleton */}
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-4 w-14 bg-white/[0.06]" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                            {Array.from({ length: 2 }).map((_, i) => (
+                                <div
+                                    key={`wiki-pinned-skeleton-${i}`}
+                                    className="bg-[#1B1B1B]/60 rounded-xl p-2.5 flex flex-col justify-between min-h-[72px]"
+                                >
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                        <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                                            <Skeleton className="h-4 w-32 bg-white/[0.06]" />
+                                            <Skeleton className="h-3 w-20 bg-white/[0.04]" />
+                                        </div>
+                                        <Skeleton className="h-4 w-4 rounded-md bg-white/[0.04]" />
+                                    </div>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <Skeleton className="h-3 w-28 bg-white/[0.04]" />
+                                        <Skeleton className="h-6 w-16 rounded-md bg-white/[0.06]" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Repositories Section Skeleton */}
+                    <div className="flex flex-col gap-2">
+                        <Skeleton className="h-4 w-24 bg-white/[0.06]" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div
+                                    key={`wiki-repo-skeleton-${i}`}
+                                    className="bg-[#1B1B1B]/60 rounded-xl p-2.5 flex flex-col justify-between min-h-[72px]"
+                                >
+                                    <div className="flex items-start justify-between gap-2 mb-2">
+                                        <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                                            <Skeleton className="h-4 w-36 bg-white/[0.06]" />
+                                            <Skeleton className="h-3 w-24 bg-white/[0.04]" />
+                                        </div>
+                                        <Skeleton className="h-4 w-4 rounded-md bg-white/[0.04]" />
+                                    </div>
+                                    <div className="flex items-center justify-between mt-1">
+                                        <Skeleton className="h-3 w-24 bg-white/[0.04]" />
+                                        <Skeleton className="h-6 w-16 rounded-md bg-white/[0.06]" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -214,7 +279,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
 
     if (data && !data.githubConnected) {
         return (
-            <div className="relative h-full w-full flex-1 overflow-y-auto bg-[#141414] px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
+            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
                 <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
                     {/* Top Header */}
                     <div className="mb-2 flex flex-col">
@@ -252,7 +317,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
     }
 
     return (
-        <div className="relative h-full w-full flex-1 overflow-y-auto bg-[#141414] px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
+        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
             <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
                 {/* Top Header (Matches Sessions & Review Page structure) */}
                 <div className="mb-2 flex flex-col">

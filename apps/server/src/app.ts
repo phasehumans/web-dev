@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import express from 'express'
+import helmet from 'helmet'
 
 import { httpLogger } from './config/logger'
 import { env } from './env'
@@ -27,6 +28,9 @@ import usageRouter from './modules/usage/usage.routes'
 import wikiRouter from './modules/wiki/wiki.routes'
 
 const app = express()
+
+// Set baseline HTTP security headers
+app.use(helmet())
 
 // Enable trust proxy for proper IP resolution behind reverse proxies/load balancers
 app.set('trust proxy', true)
