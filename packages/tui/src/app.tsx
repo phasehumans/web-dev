@@ -1,7 +1,7 @@
 import { Agent } from '@december/agent'
 import { MessageList, InputBar, TaskHUD, GlobalShortcuts } from '@december/tui'
 import { AuthMenus, AskQuestionMenu } from '@december/tui'
-import { Box, Text } from 'ink'
+import { Box } from 'ink'
 import { useState, useCallback, useEffect } from 'react'
 
 export function ChatApp({
@@ -88,16 +88,6 @@ export function ChatApp({
         return acc
     }, 0)
 
-    const activeSubagent = activeMessages.find(
-        (m) => m.role === 'assistant' && m.toolCalls?.some((tc) => tc.name === 'invoke_subagent')
-    )
-    const hasActiveSubagent =
-        activeSubagent &&
-        !activeMessages.some(
-            (m) =>
-                m.role === 'tool' && activeSubagent.toolCalls?.some((tc) => tc.id === m.toolCallId)
-        )
-
     return (
         <Box flexDirection="column" width="100%">
             <GlobalShortcuts {...session} agent={agent} />
@@ -147,17 +137,7 @@ export function ChatApp({
                 contextTokens={totalTokens}
                 authMethod={session.authMethod}
                 hasBothAuth={session.hasBothAuth}
-                authUI={
-                    hasActiveSubagent ? (
-                        <Box paddingX={1}>
-                            <Text color="#F59E0B" bold>
-                                ◆ Subagent Active...
-                            </Text>
-                        </Box>
-                    ) : (
-                        authUI
-                    )
-                }
+                authUI={authUI}
                 agent={agent}
                 resetChat={() => {
                     console.clear()

@@ -49,10 +49,6 @@ describe('formatters', () => {
             )
         })
 
-        test('formats subagent', () => {
-            expect(getToolSummary('subagent', '{}')).toBe('Subagent()')
-        })
-
         test('handles unknown tools', () => {
             expect(getToolSummary('unknown_tool', JSON.stringify({ foo: 'bar' }))).toBe(
                 'unknown_tool()'
