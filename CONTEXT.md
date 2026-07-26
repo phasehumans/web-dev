@@ -23,3 +23,19 @@ A Pino-based logging subsystem providing structured JSON logs, request ID correl
 ## NavigationSearchIndex
 
 A canonical index of site pages and subpages across the web application. Used by the Search Modal to provide instant keyboard-driven route navigation (`Cmd+K`). Supports rich search indexing over page titles, sub-titles, route paths, and Intent Alias Keywords (e.g. mapping "dark mode" -> Preferences, "api key" -> Secrets).
+
+## EvalTask
+
+A standardized specification for an agent evaluation benchmark task. Defines the initial workspace snapshot, user prompt, resource limits (max turns, timeouts), and validation script command.
+
+## EvalRunner
+
+The orchestration component in `@december/evals` that executes an `EvalTask` against an `Agent` instance inside a configured execution backend (`apps/runtime` sandbox or local fallback), recording performance metrics and evaluating task completion.
+
+## TrajectoryLog
+
+A step-by-step event log (`trajectory.jsonl`) generated during an evaluation run. Captures turn-by-turn prompts, agent actions, tool inputs, tool execution outputs, token consumption, and step latencies.
+
+## EvalReport
+
+A structured summary report (`summary.json`) produced at the conclusion of an evaluation suite run. Contains aggregate metrics including pass rates (Pass@1), total execution duration, token usage totals, and cost metrics.

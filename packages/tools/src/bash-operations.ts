@@ -94,7 +94,7 @@ export function createLocalBashOperations() {
                         else options.signal.addEventListener('abort', onAbort, { once: true })
                     }
 
-                    child.on('close', (code) => {
+                    ;(child as any).on('close', (code: number | null) => {
                         if (child.pid) untrackDetachedChildPid(child.pid)
                         if (timeoutHandle) clearTimeout(timeoutHandle)
                         if (options.signal) options.signal.removeEventListener('abort', onAbort)

@@ -21,9 +21,6 @@ export function getToolSummary(name: string, inputStr: string): string {
             case 'find_files':
             case 'grep_search':
                 return `Search(${args.Query || args.pattern || args.query || ''})`.trim()
-            case 'subagent':
-            case 'invoke_subagent':
-                return `Subagent()`
             case 'search_web':
                 return `WebSearch(${args.query || ''})`.trim()
             case 'ask_question':

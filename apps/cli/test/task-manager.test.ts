@@ -14,9 +14,7 @@ describe('taskManager', () => {
             taskManager.removeTask(task.id)
         }
 
-        mockProcessKill = spyOn(process, 'kill').mockImplementation(() => {
-            return true
-        })
+        mockProcessKill = spyOn(process, 'kill').mockImplementation(() => true as any)
     })
 
     afterEach(() => {

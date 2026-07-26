@@ -346,11 +346,6 @@ export function BotMessage({ blocks, usage }: Props) {
                             block.toolName === 'multi_replace_file_content'
                         )
                             statusLabel = 'Modifying...'
-                        else if (
-                            block.toolName === 'subagent' ||
-                            block.toolName === 'invoke_subagent'
-                        )
-                            statusLabel = 'Invoking subagent...'
                         else if (block.toolName === 'ask_question')
                             statusLabel = 'Asking question...'
                         else if (block.toolName === 'manage_task') statusLabel = 'Managing tasks...'
