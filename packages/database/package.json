@@ -13,7 +13,10 @@
         "db:studio": "prisma studio --browser none --port 5555",
         "db:clear": "bunx dotenv-cli -e ../../.env -- prisma migrate reset --force",
         "build": "bun run db:generate",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test": "bunx --bun dotenv-cli -e ../../.env.test -- bun test test/unit test/integration",
+        "test:unit": "bunx --bun dotenv-cli -e ../../.env.test -- bun test test/unit",
+        "test:integration": "bunx --bun dotenv-cli -e ../../.env.test -- bun test test/integration"
     },
     "dependencies": {
         "@prisma/client": "7.8.0",
