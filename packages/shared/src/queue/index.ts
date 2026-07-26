@@ -3,10 +3,22 @@ import Redis from 'ioredis'
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
 
+function createRedisClient(): Redis {
+    const client = new Redis(REDIS_URL, {
+        maxRetriesPerRequest: null,
+        lazyConnect: true,
+        enableOfflineQueue: false,
+    })
+    client.on('error', (_err) => {
+        // Intentionally swallowed: handles redis connection errors gracefully when offline in test environment
+    })
+    return client
+}
+
 let _redisClient: Redis | null = null
 export function getRedisClient() {
     if (!_redisClient) {
-        _redisClient = new Redis(REDIS_URL, { maxRetriesPerRequest: null })
+        _redisClient = createRedisClient()
     }
     return _redisClient
 }
@@ -14,7 +26,7 @@ export function getRedisClient() {
 let _redisSubClient: Redis | null = null
 export function getRedisSubClient() {
     if (!_redisSubClient) {
-        _redisSubClient = new Redis(REDIS_URL, { maxRetriesPerRequest: null })
+        _redisSubClient = createRedisClient()
     }
     return _redisSubClient
 }

@@ -67,17 +67,29 @@ const toApiError = async (res: Response) => {
     return new ApiError(message, res.status, payload?.errors)
 }
 
-export const refreshAuthSession = async () => {
-    try {
-        const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-            method: 'POST',
-            credentials: 'include',
-        })
+let activeRefreshPromise: Promise<boolean> | null = null
 
-        return res.ok
-    } catch {
-        return false
+export const refreshAuthSession = async () => {
+    if (activeRefreshPromise) {
+        return activeRefreshPromise
     }
+
+    activeRefreshPromise = (async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include',
+            })
+
+            return res.ok
+        } catch {
+            return false
+        } finally {
+            activeRefreshPromise = null
+        }
+    })()
+
+    return activeRefreshPromise
 }
 
 export const apiFetch = async (

@@ -48,25 +48,29 @@ const SessionListAreaSkeleton: React.FC = () => {
             {Array.from({ length: 6 }).map((_, index) => (
                 <div
                     key={`session-list-skeleton-${index}`}
-                    className="grid grid-cols-[minmax(0,2fr)_minmax(100px,auto)_minmax(100px,auto)_minmax(150px,1fr)_8rem_2.5rem] items-center gap-3 rounded-xl border border-[#242323]/10 bg-[#191919]/5 pl-1 pr-5 py-3 md:gap-4"
+                    className="grid grid-cols-[minmax(0,2fr)_minmax(100px,auto)_minmax(100px,auto)_minmax(150px,1fr)_minmax(100px,auto)_2.5rem] items-center gap-2 rounded-lg border border-transparent bg-[#191919]/40 pl-1 pr-5 py-2 md:gap-3"
                 >
-                    <div className="flex flex-col gap-1.5 w-full max-w-xs pr-4">
-                        <Skeleton className="h-4 w-[85%] bg-white/[0.06]" />
-                        <Skeleton className="h-3 w-[60%] bg-white/[0.04]" />
+                    <div className="flex flex-1 items-center gap-3 min-w-0 pr-4">
+                        <div className="flex flex-1 flex-col gap-1.5 min-w-0">
+                            <Skeleton className="h-4 w-[65%] bg-white/[0.06]" />
+                            <Skeleton className="h-3 w-[85%] bg-white/[0.04]" />
+                        </div>
                     </div>
-                    <div>
-                        <Skeleton className="h-3.5 w-16 bg-white/[0.04]" />
+                    <div className="truncate pr-2">
+                        <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
                     </div>
-                    <div>
-                        <Skeleton className="h-3.5 w-16 bg-white/[0.04]" />
+                    <div className="truncate pr-2">
+                        <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
                     </div>
-                    <div>
-                        <Skeleton className="h-3.5 w-20 bg-white/[0.04]" />
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <Skeleton className="h-5 w-16 rounded-md bg-white/[0.04]" />
+                    </div>
+                    <div className="truncate">
+                        <Skeleton className="h-3.5 w-12 bg-white/[0.04]" />
                     </div>
                     <div className="flex justify-center">
                         <Skeleton className="h-7 w-7 rounded-lg bg-white/[0.04]" />
                     </div>
-                    <div></div>
                 </div>
             ))}
         </div>

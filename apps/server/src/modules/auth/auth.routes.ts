@@ -1,7 +1,11 @@
 import { Router } from 'express'
 
 import { authMiddleware } from '../../middleware/auth.middleware'
-import { authRateLimiter, deviceCodeLimiter } from '../../middleware/rate-limiter'
+import {
+    authRateLimiter,
+    refreshRateLimiter,
+    deviceCodeLimiter,
+} from '../../middleware/rate-limiter'
 
 import { authController } from './auth.controller'
 
@@ -15,7 +19,7 @@ authRouter.post('/forgot-password/verify', authRateLimiter, authController.verif
 authRouter.post('/forgot-password/reset', authRateLimiter, authController.resetPassword)
 authRouter.post('/google', authRateLimiter, authController.google)
 authRouter.post('/github', authRateLimiter, authController.github)
-authRouter.post('/refresh', authRateLimiter, authController.refreshSession)
+authRouter.post('/refresh', refreshRateLimiter, authController.refreshSession)
 authRouter.post('/signout', authMiddleware, authController.signout)
 authRouter.post('/signout/all', authMiddleware, authController.signoutAll)
 authRouter.delete('/account', authMiddleware, authController.deleteAccount)

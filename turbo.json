@@ -28,6 +28,12 @@
             "dependsOn": ["db:generate"],
             "cache": false
         },
+        "test:unit": {
+            "cache": false
+        },
+        "test:integration": {
+            "cache": false
+        },
         "dev": {
             "dependsOn": ["db:generate"],
             "cache": false,

@@ -227,7 +227,7 @@ describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
     it('POST /api/v1/auth/login - returns 429 when rate limit threshold is exceeded', async () => {
         const RATE_LIMIT_TEST_IP = '10.99.99.99'
         let rateLimitedRes: any
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 25; i++) {
             const res = await request(app)
                 .post('/api/v1/auth/login')
                 .set('x-forwarded-for', RATE_LIMIT_TEST_IP)

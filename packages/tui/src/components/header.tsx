@@ -8,6 +8,7 @@ function getGitBranch(): string | null {
     try {
         return execSync('git rev-parse --abbrev-ref HEAD', { stdio: 'pipe' }).toString().trim()
     } catch {
+        // Intentionally swallowed: fallback to null if git command is unavailable or non-git directory
         return null
     }
 }
@@ -18,6 +19,7 @@ function getCwd(): string {
         const home = homedir()
         return cwd.startsWith(home) ? '~' + cwd.slice(home.length) : cwd
     } catch {
+        // Intentionally swallowed: fallback to default home tilde path if process.cwd fails
         return '~'
     }
 }
