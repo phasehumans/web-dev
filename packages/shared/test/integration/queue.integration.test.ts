@@ -11,6 +11,7 @@ describe('Redis & Queue Integration (Integration)', () => {
             await client.ping()
             isRedisAvailable = true
         } catch {
+            // Intentionally swallowed: Redis ping failed when offline in test environment
             isRedisAvailable = false
         }
     })
@@ -25,7 +26,7 @@ describe('Redis & Queue Integration (Integration)', () => {
                 const subClient = getRedisSubClient()
                 subClient.disconnect()
             } catch {
-                // Intentionally swallowed: cleanup when offline in test environment
+                // Intentionally swallowed: cleanup error when offline in test environment
             }
         }
     })

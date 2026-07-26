@@ -19,7 +19,7 @@ export function TaskHUD({ cwd }: { cwd: string }) {
                         .filter((l) => l.trim().match(/^- \[( |x|\/|-)\]/))
                     setTaskLines(lines.slice(0, 8)) // show up to 8 tasks
                 } catch (e) {
-                    // ignore
+                    // Intentionally swallowed: task.md file read error ignored during concurrent file writes
                 }
             } else {
                 setTaskLines([])
