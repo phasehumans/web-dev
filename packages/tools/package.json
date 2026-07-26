@@ -6,7 +6,9 @@
     "scripts": {
         "build": "echo 'No build required for tools'",
         "typecheck": "tsc --noEmit",
-        "test": "bun test"
+        "test": "bun test test/unit test/integration",
+        "test:unit": "bun test test/unit",
+        "test:integration": "bun test test/integration"
     },
     "dependencies": {
         "@december/shared": "workspace:*",

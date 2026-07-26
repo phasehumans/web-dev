@@ -32,6 +32,7 @@ export function killProcessTree(pid: number): void {
         try {
             process.kill(-pid, 'SIGKILL')
         } catch {
+            // Intentionally swallowed: process group kill failed, falling back to direct PID kill
             try {
                 process.kill(pid, 'SIGKILL')
             } catch {
