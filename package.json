@@ -19,6 +19,8 @@
         "typecheck": "turbo run typecheck",
         "dev": "turbo run dev --filter=!@trydecember/cli --filter=!@december/tui",
         "test": "turbo run test",
+        "test:unit": "turbo run test:unit",
+        "test:integration": "turbo run test:integration",
         "test:tools": "cd packages/tools && bun test",
         "test:providers": "cd packages/providers && bun test",
         "test:shared": "cd packages/shared && bun test",
