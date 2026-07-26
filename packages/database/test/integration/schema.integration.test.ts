@@ -59,15 +59,17 @@ describe('Database Schema & Model Constraints (Integration)', () => {
         expect(wiki1.pages[0]?.title).toBe('Overview')
 
         // Attempting to create duplicate wiki for same user and repoFullName should throw unique constraint error
-        expect(
-            prisma.repositoryWiki.create({
-                data: {
-                    userId: user.id,
-                    repoFullName: 'phasehumans/december',
-                    repoOwner: 'phasehumans',
-                    repoName: 'december',
-                },
-            })
+        await expect(
+            Promise.resolve(
+                prisma.repositoryWiki.create({
+                    data: {
+                        userId: user.id,
+                        repoFullName: 'phasehumans/december',
+                        repoOwner: 'phasehumans',
+                        repoName: 'december',
+                    },
+                })
+            )
         ).rejects.toThrow()
 
         // Clean up test records

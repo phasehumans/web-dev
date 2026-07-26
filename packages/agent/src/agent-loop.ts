@@ -2,7 +2,6 @@ import util from 'util'
 
 import { safeParseJson } from '@december/shared'
 import pRetry, { AbortError } from 'p-retry'
-import { v4 as uuidv4 } from 'uuid'
 
 import { Agent } from './agent'
 
@@ -429,35 +428,6 @@ async function executeSingleTool(
                 signal,
                 onStream: (chunk) => {
                     eventQueue.push({ type: 'ToolExecutionUpdate', toolCallId: toolCall.id, chunk })
-                },
-                spawnSubagent: async (prompt: string) => {
-                    if (agent.sessionId.startsWith('subagent-')) {
-                        throw new Error(
-                            'Depth limit reached: Subagents cannot spawn their own subagents.'
-                        )
-                    }
-
-                    const subagentId = `subagent-${uuidv4().slice(0, 8)}`
-                    const readOnlyTools = Array.from(agent.tools.values()).filter((t) =>
-                        ['read_file', 'list_dir', 'find_files', 'grep_search'].includes(t.name)
-                    )
-
-                    const subagent = new Agent({
-                        sessionId: subagentId,
-                        systemPrompt:
-                            'You are a read-only research subagent. Your goal is to gather information for the main agent.',
-                        llm: agent.llm,
-                        tools: readOnlyTools,
-                        operations: agent.operations,
-                    })
-
-                    const generator = runAgentLoop(subagent, prompt)
-                    for await (const event of generator) {
-                        // ignore inner events
-                    }
-
-                    const lastMsg = subagent.messages.filter((m) => m.role === 'assistant').pop()
-                    return lastMsg ? lastMsg.content : 'Subagent failed to produce a response.'
                 },
             })
         } catch (e: any) {
