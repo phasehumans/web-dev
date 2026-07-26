@@ -27,6 +27,7 @@
         "test:tui": "cd packages/tui && bun test",
         "test:agent": "cd packages/agent && bun test",
         "test:cli": "cd apps/cli && bun test",
+        "test:evals": "cd packages/evals && bun test",
         "clean": "bash scripts/clean.sh",
         "db:generate": "turbo run db:generate",
         "db:migrate": "turbo run db:migrate",
