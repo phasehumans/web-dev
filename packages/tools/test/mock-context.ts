@@ -28,6 +28,5 @@ export function createMockContext(): ToolExecuteContext {
         },
         env: new Map(),
         onStream: mock(),
-        spawnSubagent: mock(async () => ''),
     }
 }

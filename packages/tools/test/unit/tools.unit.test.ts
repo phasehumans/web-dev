@@ -9,7 +9,6 @@ import { GrepSearchTool } from '../../src/grep'
 import { LsTool } from '../../src/ls'
 import { ManageTaskTool } from '../../src/manage_task'
 import { ReadFileTool } from '../../src/read'
-import { SubagentTool } from '../../src/subagent'
 import { WebSearchTool } from '../../src/web_search'
 import { WriteFileTool } from '../../src/write'
 
@@ -42,10 +41,9 @@ describe('Tools Schema & Registration (Unit)', () => {
         expect(LsTool.name).toBe('list_dir')
     })
 
-    test('Process tools (bash, manage_task, subagent) have correct names', () => {
+    test('Process tools (bash, manage_task) have correct names', () => {
         expect(BashTool.name).toBe('bash')
         expect(ManageTaskTool.name).toBe('manage_task')
-        expect(SubagentTool.name).toBe('invoke_subagent')
     })
 
     test('Web tools (web_search) have correct names', () => {

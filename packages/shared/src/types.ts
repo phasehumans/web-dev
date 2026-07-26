@@ -6,7 +6,6 @@ export interface ToolExecuteContext {
     operations: Environment
     env: Map<string, string>
     onStream: (chunk: string) => void
-    spawnSubagent: (prompt: string) => Promise<string>
     signal?: AbortSignal
 }
 export interface Message {
