@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { LsTool } from '../../src/ls'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('LsTool', () => {
     test('should return directory contents successfully', async () => {

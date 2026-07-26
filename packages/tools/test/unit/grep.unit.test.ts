@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { GrepSearchTool } from '../../src/grep'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('GrepSearchTool', () => {
     test('should search files successfully', async () => {

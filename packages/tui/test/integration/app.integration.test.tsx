@@ -2,7 +2,7 @@ import { describe, expect, it, mock } from 'bun:test'
 import React from 'react'
 
 import { ChatApp } from '../../src/app'
-import { renderWithProviders } from '../helpers/test-providers'
+import { renderWithProviders } from '../test-providers'
 
 describe('ChatApp TUI Integration', () => {
     it('renders top task HUD, header, message list, and input bar correctly', () => {

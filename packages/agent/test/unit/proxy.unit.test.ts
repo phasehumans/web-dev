@@ -2,7 +2,7 @@ import { describe, test, expect, mock } from 'bun:test'
 
 import { Agent } from '../../src/agent'
 import { EventStreamingProxy } from '../../src/proxy'
-import { MockLLM } from '../helpers/mock-provider'
+import { MockLLM } from '../mock-provider'
 
 describe('EventStreamingProxy (Unit)', () => {
     test('run method serializes events and sends to rpc', async () => {

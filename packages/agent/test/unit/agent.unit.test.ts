@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test'
 
 import { Agent } from '../../src/agent'
-import { MockLLM } from '../helpers/mock-provider'
+import { MockLLM } from '../mock-provider'
 
 const mockOperations = {} as any
 

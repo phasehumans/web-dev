@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test'
 
 import { ConversationManager } from '../../src/conversation-manager'
-import { MockLLM } from '../helpers/mock-provider'
+import { MockLLM } from '../mock-provider'
 
 describe('ConversationManager (Unit)', () => {
     test('initializes with empty messages by default', () => {

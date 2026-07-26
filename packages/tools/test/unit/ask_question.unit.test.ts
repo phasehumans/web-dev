@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { AskQuestionTool } from '../../src/ask_question'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('AskQuestionTool', () => {
     test('should ask question successfully', async () => {

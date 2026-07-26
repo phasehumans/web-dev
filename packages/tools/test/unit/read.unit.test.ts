@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { ReadFileTool } from '../../src/read'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('ReadFileTool', () => {
     test('should return file contents successfully', async () => {

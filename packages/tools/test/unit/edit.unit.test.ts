@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { EditFileTool } from '../../src/edit'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('EditFileTool', () => {
     test('should replace exact substring successfully', async () => {

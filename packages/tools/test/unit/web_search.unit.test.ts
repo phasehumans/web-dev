@@ -1,7 +1,7 @@
 import { describe, expect, test, mock, afterAll } from 'bun:test'
 
 import { WebSearchTool } from '../../src/web_search'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('WebSearchTool', () => {
     const originalFetch = global.fetch

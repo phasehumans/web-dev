@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { EditDiffTool } from '../../src/edit_diff'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('EditDiffTool', () => {
     test('should apply a valid diff successfully', async () => {

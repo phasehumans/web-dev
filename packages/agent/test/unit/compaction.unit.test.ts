@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test'
 
 import { compactContextIfNeeded } from '../../src/utils/compaction'
-import { MockLLM } from '../helpers/mock-provider'
+import { MockLLM } from '../mock-provider'
 
 import type { Message } from '@december/shared'
 

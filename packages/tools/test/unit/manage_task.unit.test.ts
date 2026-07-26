@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import { ManageTaskTool } from '../../src/manage_task'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('ManageTaskTool', () => {
     test('should get task status successfully', async () => {

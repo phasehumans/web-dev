@@ -2,7 +2,7 @@ import { describe, expect, it, mock } from 'bun:test'
 import React from 'react'
 
 import { CommandMenu } from '../../src/components/command-menu'
-import { renderWithProviders } from '../helpers/test-providers'
+import { renderWithProviders } from '../test-providers'
 
 describe('CommandMenu Integration', () => {
     it('renders filtered commands matching user query', () => {

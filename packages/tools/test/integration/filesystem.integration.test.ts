@@ -8,7 +8,7 @@ import { EditFileTool } from '../../src/edit'
 import { LsTool } from '../../src/ls'
 import { ReadFileTool } from '../../src/read'
 import { WriteFileTool } from '../../src/write'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('Filesystem Tools Integration', () => {
     let testDir: string

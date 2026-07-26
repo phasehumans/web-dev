@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { SubagentTool } from '../../src/subagent'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('SubagentTool', () => {
     test('should invoke subagent and return result', async () => {

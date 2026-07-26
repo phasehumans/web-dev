@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { FindFilesTool } from '../../src/find'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('FindFilesTool', () => {
     test('should find files successfully', async () => {

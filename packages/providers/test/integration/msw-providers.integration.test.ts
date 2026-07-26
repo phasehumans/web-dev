@@ -1,6 +1,6 @@
 import { describe, expect, test, beforeAll, afterAll, afterEach } from 'bun:test'
 
-import { server } from '../helpers/msw-server'
+import { server } from '../msw-server'
 
 describe('MSW Provider HTTP Interception (Integration)', () => {
     beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }))

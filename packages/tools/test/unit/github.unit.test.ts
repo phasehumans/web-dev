@@ -1,7 +1,7 @@
 import { describe, expect, test, mock, afterAll } from 'bun:test'
 
 import { GitHubTool } from '../../src/github'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('GitHubTool', () => {
     const originalFetch = global.fetch

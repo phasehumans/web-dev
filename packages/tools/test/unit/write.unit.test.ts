@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { WriteFileTool } from '../../src/write'
-import { createMockContext } from '../helpers/mock-context'
+import { createMockContext } from '../mock-context'
 
 describe('WriteFileTool', () => {
     test('should write file contents successfully', async () => {
