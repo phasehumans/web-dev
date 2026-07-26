@@ -53,7 +53,7 @@ export const localOperations: PlatformAdapter = {
                     }
                 }, 3000)
 
-                child.on('close', (code) => {
+                ;(child as any).on('close', (code: number | null) => {
                     clearTimeout(bgTimeout)
                     if (timeoutHandle) clearTimeout(timeoutHandle)
                     taskManager.markCompleted(task.id, code)
