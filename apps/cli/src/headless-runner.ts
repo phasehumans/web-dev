@@ -151,6 +151,15 @@ export async function runHeadlessTask(
                 case 'StreamChunk':
                     writeOut(event.content)
                     break
+                case 'ThinkingChunk':
+                    writeOut(event.content)
+                    break
+                case 'AgentStatus':
+                    writeOut(`\n[Status: ${event.message}]\n`)
+                    break
+                case 'ContextCompacted':
+                    writeOut(`\n[Context Compacted: ${event.summary}]\n`)
+                    break
                 case 'ToolCallStart':
                     writeOut(`\n\n[Tool Executing: ${event.toolCall.name}]\n`)
                     writeOut(

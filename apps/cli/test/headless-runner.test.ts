@@ -57,6 +57,33 @@ describe('runHeadlessTask', () => {
         expect(stdoutData).toContain('Headless task complete.')
     })
 
+    it('routes thinking deltas, agent status, and context compaction to stdout', async () => {
+        async function* mockGenerator() {
+            yield { type: 'ThinkingChunk', content: 'Analyzing problem space...' }
+            yield { type: 'AgentStatus', message: 'Retrying connection...' }
+            yield { type: 'ContextCompacted', summary: 'Compacted 10 messages' }
+        }
+
+        mockRunAgentLoop.mockReturnValue(mockGenerator())
+
+        let stdoutData = ''
+        mockStdout.on('data', (chunk) => {
+            stdoutData += chunk.toString()
+        })
+
+        const result = await runHeadlessTask('test prompt', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+        })
+
+        expect(result.success).toBe(true)
+        expect(stdoutData).toContain('Analyzing problem space...')
+        expect(stdoutData).toContain('[Status: Retrying connection...]')
+        expect(stdoutData).toContain('[Context Compacted: Compacted 10 messages]')
+    })
+
     it('attaches askQuestion and requestPermission to agent.operations.ui', async () => {
         async function* mockGenerator() {
             yield { type: 'StreamChunk', content: 'Done' }
