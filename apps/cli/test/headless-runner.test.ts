@@ -133,19 +133,15 @@ describe('runHeadlessTask', () => {
     })
 
     it('isolates askQuestion input from triggering agent.steer', async () => {
-        async function* mockGenerator() {
-            // simulate tool calling askQuestion
+        mockRunAgentLoop.mockImplementation(async function* () {
             const ansPromise = mockAgent.operations.ui.askQuestion([
                 { question: 'Which framework?', options: ['Next.js', 'Vite'] },
             ])
-            // write answer to stdin while askQuestion is pending
             mockStdin.write('1\n')
             const ans = await ansPromise
             expect(ans).toBe('Next.js')
             yield { type: 'StreamChunk', content: 'Selected framework' }
-        }
-
-        mockRunAgentLoop.mockReturnValue(mockGenerator())
+        })
 
         await runHeadlessTask('test prompt', {
             agent: mockAgent,
@@ -154,12 +150,11 @@ describe('runHeadlessTask', () => {
             stderr: mockStderr as any,
         })
 
-        // agent.steer must NOT have been called with '1'
         expect(mockAgent.steer).not.toHaveBeenCalled()
     })
 
     it('isolates requestPermission input from triggering agent.steer', async () => {
-        async function* mockGenerator() {
+        mockRunAgentLoop.mockImplementation(async function* () {
             const permPromise = mockAgent.operations.ui.requestPermission({
                 name: 'run_command',
                 input: { CommandLine: 'ls' },
@@ -168,9 +163,7 @@ describe('runHeadlessTask', () => {
             const perm = await permPromise
             expect(perm).toEqual({ block: false })
             yield { type: 'StreamChunk', content: 'Approved' }
-        }
-
-        mockRunAgentLoop.mockReturnValue(mockGenerator())
+        })
 
         await runHeadlessTask('test prompt', {
             agent: mockAgent,
@@ -179,18 +172,14 @@ describe('runHeadlessTask', () => {
             stderr: mockStderr as any,
         })
 
-        // agent.steer must NOT have been called with 'y'
         expect(mockAgent.steer).not.toHaveBeenCalled()
     })
 
     it('sends user steering input to agent when no prompt is pending', async () => {
-        async function* mockGenerator() {
-            // write steering input
+        mockRunAgentLoop.mockImplementation(async function* () {
             mockStdin.write('change approach\n')
             yield { type: 'StreamChunk', content: 'Steered' }
-        }
-
-        mockRunAgentLoop.mockReturnValue(mockGenerator())
+        })
 
         await runHeadlessTask('test prompt', {
             agent: mockAgent,
@@ -204,6 +193,67 @@ describe('runHeadlessTask', () => {
             content: 'change approach',
             isUI: true,
         })
+    })
+
+    it('auto-approves tool permissions when nonInteractive option is true', async () => {
+        mockRunAgentLoop.mockImplementation(async function* () {
+            const perm = await mockAgent.operations.ui.requestPermission({
+                name: 'run_command',
+                input: { CommandLine: 'rm -rf /tmp/test' },
+            })
+            expect(perm).toEqual({ block: false })
+            yield { type: 'StreamChunk', content: 'Executed non-interactively' }
+        })
+
+        const result = await runHeadlessTask('test prompt', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+            nonInteractive: true,
+        })
+
+        expect(result.success).toBe(true)
+    })
+
+    it('auto-selects first question option when nonInteractive is true', async () => {
+        mockRunAgentLoop.mockImplementation(async function* () {
+            const ans = await mockAgent.operations.ui.askQuestion([
+                { question: 'Choice?', options: ['Option A', 'Option B'] },
+            ])
+            expect(ans).toBe('Option A')
+            yield { type: 'StreamChunk', content: 'Chosen Option A' }
+        })
+
+        const result = await runHeadlessTask('test prompt', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+            nonInteractive: true,
+        })
+
+        expect(result.success).toBe(true)
+    })
+
+    it('fails pre-flight check and exits with error if isAuthenticated is false', async () => {
+        let stderrData = ''
+        mockStderr.on('data', (chunk) => {
+            stderrData += chunk.toString()
+        })
+
+        const result = await runHeadlessTask('test prompt', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+            isAuthenticated: false,
+        })
+
+        expect(result.success).toBe(false)
+        expect(result.error).toBe('Not authenticated')
+        expect(stderrData).toContain('Not authenticated')
+        expect(mockRunAgentLoop).not.toHaveBeenCalled()
     })
 
     it('restores console functions when restoreConsole is invoked', () => {

@@ -30,6 +30,8 @@ export interface HeadlessTaskOptions {
     stdin?: NodeJS.ReadableStream
     stdout?: NodeJS.WritableStream
     stderr?: NodeJS.WritableStream
+    nonInteractive?: boolean
+    isAuthenticated?: boolean
 }
 
 export interface HeadlessTaskResult {
@@ -58,6 +60,17 @@ export async function runHeadlessTask(
         if (stderr && stderr.write) stderr.write(msg)
     }
 
+    if (options.isAuthenticated === false) {
+        writeErr(
+            'Error: Not authenticated. Please run `december login` or configure an API key (e.g. OPENAI_API_KEY, ANTHROPIC_API_KEY).\n'
+        )
+        return { success: false, error: 'Not authenticated' }
+    }
+
+    const isNonInteractive =
+        options.nonInteractive ??
+        Boolean(process.env.NON_INTERACTIVE || (stdin === process.stdin && !process.stdin.isTTY))
+
     const rl = readline.createInterface({
         input: stdin as any,
         output: stdout as any,
@@ -69,7 +82,9 @@ export async function runHeadlessTask(
         isPromptActive = true
         return new Promise((resolve) => {
             rl.question(query, (answer: string) => {
-                isPromptActive = false
+                queueMicrotask(() => {
+                    isPromptActive = false
+                })
                 resolve(answer)
             })
         })
@@ -84,6 +99,11 @@ export async function runHeadlessTask(
         if (q.options) {
             q.options.forEach((opt: string, i: number) => writeOut(`${i + 1}. ${opt}\n`))
         }
+        if (isNonInteractive) {
+            const defaultAnswer = q.options && q.options.length > 0 ? q.options[0] : ''
+            writeOut(`\n[Auto-selected in non-interactive mode]: ${defaultAnswer}\n`)
+            return Promise.resolve(defaultAnswer)
+        }
         return promptUser('\nSelect an option or type your answer: ').then((answer) => {
             const num = parseInt(answer)
             if (!isNaN(num) && num > 0 && q.options && num <= q.options.length) {
@@ -94,6 +114,9 @@ export async function runHeadlessTask(
     }
 
     agent.operations.ui.requestPermission = async (toolCall: any) => {
+        if (isNonInteractive) {
+            return { block: false }
+        }
         if (
             ['replace_file_content', 'multi_replace_file_content', 'run_command'].includes(
                 toolCall.name
