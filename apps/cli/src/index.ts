@@ -48,7 +48,9 @@ dotenv.config()
 
 import pkg from '../package.json' with { type: 'json' }
 
+import { parseCliArgs, getHelpText } from './args'
 import { loginViaBrowser, loginViaDeviceCode } from './auth'
+export { parseCliArgs, getHelpText } from './args'
 import { getProviderConfig, loadConfig, getAuthStatus } from './config'
 import { FileSessionRepository } from './file-session-repository'
 import { runHeadlessTask, suppressConsole } from './headless-runner'
@@ -138,6 +140,18 @@ async function main() {
         console.warn('Failed to parse mcp.json:', err.message)
     }
 
+    const parsedArgs = parseCliArgs(process.argv.slice(2))
+
+    if (parsedArgs.isHelp) {
+        console.log(getHelpText(pkg.version))
+        process.exit(0)
+    }
+
+    if (parsedArgs.isVersion) {
+        console.log(pkg.version)
+        process.exit(0)
+    }
+
     const config = await loadConfig()
 
     const harness = new AgentHarness({
@@ -171,9 +185,9 @@ Guidelines:
             submitPrTool,
         ],
         operations: localOperations,
-        modelOptions: { model: providerConfig?.model || 'gemini-3.5-flash' },
+        modelOptions: { model: parsedArgs.model || providerConfig?.model || 'gemini-3.5-flash' },
         sessionRepository,
-        sessionId,
+        sessionId: parsedArgs.sessionId || sessionId,
         workspaceDir: process.cwd(),
         hooks: {
             beforeToolCall: async (toolCall) => {
@@ -191,10 +205,7 @@ Guidelines:
 
     const userEmail = config.decemberToken ? config.email : undefined
 
-    const args = process.argv.slice(2)
-    const command = args[0]
-
-    if (command === 'handoff') {
+    if (parsedArgs.command === 'handoff') {
         console.log('Initiating Cloud Handoff...')
         if (!config.decemberToken) {
             console.error('You must be logged in via `december login` to use handoff.')
@@ -298,20 +309,15 @@ Guidelines:
         process.exit(0)
     }
 
-    if (command === 'login') {
+    if (parsedArgs.command === 'login') {
         console.log('Please login via the browser...')
         await loginViaBrowser()
         process.exit(0)
     }
 
-    if (
-        command &&
-        !['handoff', 'login', 'logout', 'init'].includes(command) &&
-        !command.startsWith('-')
-    ) {
-        const prompt = args.join(' ')
-        console.log(`\nExecuting Headless Task: "${prompt}"\n`)
-        const result = await runHeadlessTask(prompt, { agent })
+    if (parsedArgs.prompt) {
+        console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
+        const result = await runHeadlessTask(parsedArgs.prompt, { agent })
         process.exit(result.success ? 0 : 1)
     }
 
