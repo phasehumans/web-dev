@@ -166,7 +166,7 @@ export function geminiProvider(apiKey?: string): LLMProvider {
                 : undefined
 
             const responseStream = await (client.models.generateContentStream as any)({
-                model: modelOptions?.model || 'gemini-2.5-pro',
+                model: modelOptions?.model || 'gemini-3.6-flash',
                 contents: geminiMessages,
                 config: {
                     systemInstruction: systemPrompt

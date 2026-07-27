@@ -1,9 +1,3 @@
 {
-    "mcpServers": {
-        // Add your Model Context Protocol (MCP) servers here
-        // "example-server": {
-        //   "command": "node",
-        //   "args": ["path/to/server.js"]
-        // }
-    }
+    "mcpServers": {}
 }

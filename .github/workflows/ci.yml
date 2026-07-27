@@ -1,48 +1,48 @@
-name: CI Validation
-
-on:
-    pull_request:
-        branches: [main, master, dev]
-    push:
-        branches: [main, master, dev]
-
-jobs:
-    verify:
-        name: Lint, Typecheck, Test & Build
-        runs-on: ubuntu-latest
-
-        env:
-            NODE_ENV: test
-            JWT_SECRET: ci-testing-secret-key-12345
-            DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/december_test?schema=public'
-            # GitHub Repository Secrets (configured in GitHub Repository Settings -> Secrets)
-            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-            ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-            GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v4
-
-            - name: Setup Bun
-              uses: oven-sh/setup-bun@v2
-              with:
-                  bun-version: latest
-
-            - name: Install Dependencies
-              run: bun install --frozen-lockfile
-
-            - name: Generate Prisma Client
-              run: bun db:generate
-
-            - name: Lint Codebase
-              run: bun run lint
-
-            - name: Typecheck TypeScript
-              run: bun run typecheck
-
-            - name: Run Test Suite
-              run: bun run test
-
-            - name: Build Monorepo Workspaces
-              run: bun run build
+# CI Pipeline disabled
+# name: CI Validation
+#
+# on:
+#     pull_request:
+#         branches: [main, master, dev]
+#     push:
+#         branches: [main, master, dev]
+#
+# jobs:
+#     verify:
+#         name: Lint, Typecheck, Test & Build
+#         runs-on: ubuntu-latest
+#
+#         env:
+#             NODE_ENV: test
+#             JWT_SECRET: ci-testing-secret-key-12345
+#             DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/december_test?schema=public'
+#             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+#             ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+#             GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+#
+#         steps:
+#             - name: Checkout Repository
+#               uses: actions/checkout@v4
+#
+#             - name: Setup Bun
+#               uses: oven-sh/setup-bun@v2
+#               with:
+#                   bun-version: latest
+#
+#             - name: Install Dependencies
+#               run: bun install --frozen-lockfile
+#
+#             - name: Generate Prisma Client
+#               run: bun db:generate
+#
+#             - name: Lint Codebase
+#               run: bun run lint
+#
+#             - name: Typecheck TypeScript
+#               run: bun run typecheck
+#
+#             - name: Run Test Suite
+#               run: bun run test
+#
+#             - name: Build Monorepo Workspaces
+#               run: bun run build

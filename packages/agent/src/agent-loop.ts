@@ -50,41 +50,68 @@ function formatError(e: any): string {
     if (!e) return 'Unknown error'
     if (typeof e === 'string') return e
     if (e.originalError) return formatError(e.originalError) // p-retry aborterror
-    if (e.cause) return formatError(e.cause)
 
-    // ensure we capture the raw response data if available (axios/fetch style)
-    // ensure we capture the raw response data if available (axios/fetch style)
-    let rawData = e.response?.data || e.error || e
-
-    // if it's a gemini sdk apierror, the detailed json is often stuffed into a message string
-    const msgStr = e.error?.error?.message || e.error?.message || e.message || rawData?.message
-    if (msgStr && typeof msgStr === 'string') {
+    // First, check if e has a direct message or error message property before looking at cause
+    const directMessage = e.error?.error?.message || e.error?.message || e.message
+    if (directMessage && typeof directMessage === 'string' && directMessage.trim()) {
         try {
-            const parsedMessage = safeParseJson(msgStr)
-            // if it's valid json, use it as the raw data
-            rawData = parsedMessage
-        } catch {
-            // not json, just keep the original rawdata but we'll include the message string if it's the only thing we have
-            if (rawData === e && !e.response && !e.error) {
-                return msgStr
+            const parsedMessage = safeParseJson(directMessage)
+            if (parsedMessage && typeof parsedMessage === 'object') {
+                if (typeof parsedMessage.error?.message === 'string')
+                    return parsedMessage.error.message
+                if (typeof parsedMessage.message === 'string') return parsedMessage.message
+                if (typeof parsedMessage.error === 'string') return parsedMessage.error
             }
+        } catch {
+            // not json
+        }
+        return directMessage
+    }
+
+    if (e.cause && e.cause !== e) {
+        const formattedCause = formatError(e.cause)
+        if (
+            formattedCause &&
+            formattedCause !== 'Unknown error' &&
+            formattedCause !== '{}' &&
+            formattedCause !== '{\n}' &&
+            formattedCause !== '[object Object]'
+        ) {
+            return formattedCause
         }
     }
 
+    // ensure we capture the raw response data if available (axios/fetch style)
+    const rawData = e.response?.data || e.error || e
+
     try {
         const json = JSON.stringify(rawData, null, 2)
-        if (json !== '{}' && json !== '""') return json
+        if (
+            json &&
+            json !== '{}' &&
+            json !== '""' &&
+            json !== '{\n  "cause": {}\n}' &&
+            json !== '{"cause":{}}'
+        )
+            return json
     } catch {
         // Fall back to util.inspect
     }
 
     try {
-        return util.inspect(rawData, { depth: 4 })
+        const inspected = util.inspect(rawData, { depth: 4 })
+        if (
+            inspected &&
+            inspected !== '{}' &&
+            inspected !== '{ cause: {} }' &&
+            inspected !== '[object Object]'
+        )
+            return inspected
     } catch {
         // Fall back to String conversion
     }
 
-    return String(e)
+    return String(e) || 'Unknown error'
 }
 
 export async function* runAgentLoop(

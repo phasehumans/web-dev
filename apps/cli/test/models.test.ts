@@ -8,10 +8,33 @@ describe('models utils', () => {
             const models = getProviderModels('anthropic')
             expect(models).toEqual(
                 expect.arrayContaining([
+                    expect.objectContaining({ value: 'claude-3-7-sonnet-latest' }),
                     expect.objectContaining({ value: 'claude-3-5-sonnet-latest' }),
                 ])
             )
-            expect(models.length).toBe(3)
+            expect(models.length).toBe(5)
+        })
+
+        it('returns google models when provider is google', () => {
+            const models = getProviderModels('google')
+            expect(models).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({ value: 'gemini-3.6-flash' }),
+                    expect.objectContaining({ value: 'gemini-3.1-pro' }),
+                ])
+            )
+            expect(models.length).toBe(11)
+        })
+
+        it('returns openai models when provider is openai', () => {
+            const models = getProviderModels('openai')
+            expect(models).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({ value: 'o3-mini' }),
+                    expect.objectContaining({ value: 'gpt-4o' }),
+                ])
+            )
+            expect(models.length).toBe(8)
         })
 
         it('returns default model when provider is unknown', () => {
@@ -22,8 +45,9 @@ describe('models utils', () => {
 
     describe('getModelLabel', () => {
         it('returns correct label for a known model value', () => {
-            const label = getModelLabel('gemini-3.5-flash')
-            expect(label).toBe('Gemini 3.5 Flash')
+            expect(getModelLabel('gemini-3.6-flash')).toBe('Gemini 3.6 Flash')
+            expect(getModelLabel('claude-3-7-sonnet-latest')).toBe('Claude 3.7 Sonnet')
+            expect(getModelLabel('o3-mini')).toBe('o3-mini')
         })
 
         it('returns the value itself if model is not found', () => {
@@ -34,15 +58,20 @@ describe('models utils', () => {
 
     describe('getModelContextWindow', () => {
         it('returns 1000000 for gemini models', () => {
-            expect(getModelContextWindow('gemini-3.5-flash')).toBe(1000000)
+            expect(getModelContextWindow('gemini-3.6-flash')).toBe(1000000)
         })
 
         it('returns 200000 for claude models', () => {
-            expect(getModelContextWindow('claude-3-5-sonnet-latest')).toBe(200000)
+            expect(getModelContextWindow('claude-3-7-sonnet-latest')).toBe(200000)
         })
 
-        it('returns 128000 for gpt-4 models', () => {
+        it('returns 200000 for o3-mini/o1 models', () => {
+            expect(getModelContextWindow('o3-mini')).toBe(200000)
+        })
+
+        it('returns 128000 for gpt-4 and deepseek models', () => {
             expect(getModelContextWindow('gpt-4o')).toBe(128000)
+            expect(getModelContextWindow('deepseek-chat')).toBe(128000)
         })
 
         it('returns 100000 as default', () => {

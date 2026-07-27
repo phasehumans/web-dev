@@ -76,7 +76,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
 
 export function getHelpText(version: string = '0.0.0'): string {
     return `December CLI v${version}
-Autonomous AI Software Engineer
+AI coding assistant that lives in your terminal.
 
 Usage:
   december                          Launch interactive TUI session

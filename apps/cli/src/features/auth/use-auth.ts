@@ -20,13 +20,14 @@ export function useAuth({ initialAuth, userEmail, authMode: initialAuthMode }: a
             label: '(free) mistralai/mistral-7b-instruct:free',
             value: 'mistralai/mistral-7b-instruct:free',
         },
-        { label: 'anthropic/claude-3-haiku', value: 'anthropic/claude-3-haiku' },
+        { label: 'google/gemini-3.6-flash', value: 'google/gemini-3.6-flash' },
+        { label: 'anthropic/claude-3.7-sonnet', value: 'anthropic/claude-3.7-sonnet' },
         { label: 'anthropic/claude-3.5-sonnet', value: 'anthropic/claude-3.5-sonnet' },
-        { label: 'google/gemini-flash-1.5', value: 'google/gemini-flash-1.5' },
-        { label: 'google/gemini-pro-1.5', value: 'google/gemini-pro-1.5' },
-        { label: 'meta-llama/llama-3-70b-instruct', value: 'meta-llama/llama-3-70b-instruct' },
-        { label: 'openai/gpt-3.5-turbo', value: 'openai/gpt-3.5-turbo' },
+        { label: 'openai/o3-mini', value: 'openai/o3-mini' },
         { label: 'openai/gpt-4o', value: 'openai/gpt-4o' },
+        { label: 'deepseek/deepseek-r1', value: 'deepseek/deepseek-r1' },
+        { label: 'deepseek/deepseek-chat', value: 'deepseek/deepseek-chat' },
+        { label: 'meta-llama/llama-3.3-70b-instruct', value: 'meta-llama/llama-3.3-70b-instruct' },
     ]
     const [openRouterModels, setOpenRouterModels] = useState<
         { label: string; value: string }[] | null

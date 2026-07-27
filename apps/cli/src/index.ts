@@ -197,7 +197,7 @@ Guidelines:
             submitPrTool,
         ],
         operations: localOperations,
-        modelOptions: { model: parsedArgs.model || providerConfig?.model || 'gemini-3.5-flash' },
+        modelOptions: { model: parsedArgs.model || providerConfig?.model || 'gemini-3.6-flash' },
         sessionRepository,
         sessionId: parsedArgs.sessionId || sessionId,
         workspaceDir: process.cwd(),
