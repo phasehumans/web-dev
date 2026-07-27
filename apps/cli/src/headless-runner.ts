@@ -63,24 +63,33 @@ export async function runHeadlessTask(
         output: stdout as any,
     })
 
+    let isPromptActive = false
+
+    const promptUser = (query: string): Promise<string> => {
+        isPromptActive = true
+        return new Promise((resolve) => {
+            rl.question(query, (answer: string) => {
+                isPromptActive = false
+                resolve(answer)
+            })
+        })
+    }
+
     if (!agent.operations) agent.operations = {} as any
     if (!agent.operations.ui) agent.operations.ui = {} as any
 
     agent.operations.ui.askQuestion = (questions: any[]) => {
-        return new Promise((resolve) => {
-            const q = questions[0]
-            writeOut(`\n\n[Question]: ${q.question}\n`)
-            if (q.options) {
-                q.options.forEach((opt: string, i: number) => writeOut(`${i + 1}. ${opt}\n`))
+        const q = questions[0]
+        writeOut(`\n\n[Question]: ${q.question}\n`)
+        if (q.options) {
+            q.options.forEach((opt: string, i: number) => writeOut(`${i + 1}. ${opt}\n`))
+        }
+        return promptUser('\nSelect an option or type your answer: ').then((answer) => {
+            const num = parseInt(answer)
+            if (!isNaN(num) && num > 0 && q.options && num <= q.options.length) {
+                return q.options[num - 1]
             }
-            rl.question('\nSelect an option or type your answer: ', (answer: string) => {
-                const num = parseInt(answer)
-                if (!isNaN(num) && num > 0 && q.options && num <= q.options.length) {
-                    resolve(q.options[num - 1])
-                } else {
-                    resolve(answer)
-                }
-            })
+            return answer
         })
     }
 
@@ -90,20 +99,18 @@ export async function runHeadlessTask(
                 toolCall.name
             )
         ) {
-            return new Promise((resolve) => {
-                rl.question(`\nExecute ${toolCall.name}? (y/n): `, (answer: string) => {
-                    if (answer.toLowerCase().startsWith('y')) {
-                        resolve({ block: false })
-                    } else {
-                        resolve({ block: true, reason: 'User denied execution in UI.' })
-                    }
-                })
-            })
+            const answer = await promptUser(`\nExecute ${toolCall.name}? (y/n): `)
+            if (answer.toLowerCase().startsWith('y')) {
+                return { block: false }
+            } else {
+                return { block: true, reason: 'User denied execution in UI.' }
+            }
         }
         return { block: false }
     }
 
     rl.on('line', (input: string) => {
+        if (isPromptActive) return
         if (input.trim()) {
             agent.steer({ role: 'user', content: input, isUI: true })
             writeOut(`\n[Steering input sent to agent]\n`)

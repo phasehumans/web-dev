@@ -132,6 +132,80 @@ describe('runHeadlessTask', () => {
         expect(stderrData).toContain('[Agent Error: LLM Rate limit reached]')
     })
 
+    it('isolates askQuestion input from triggering agent.steer', async () => {
+        async function* mockGenerator() {
+            // simulate tool calling askQuestion
+            const ansPromise = mockAgent.operations.ui.askQuestion([
+                { question: 'Which framework?', options: ['Next.js', 'Vite'] },
+            ])
+            // write answer to stdin while askQuestion is pending
+            mockStdin.write('1\n')
+            const ans = await ansPromise
+            expect(ans).toBe('Next.js')
+            yield { type: 'StreamChunk', content: 'Selected framework' }
+        }
+
+        mockRunAgentLoop.mockReturnValue(mockGenerator())
+
+        await runHeadlessTask('test prompt', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+        })
+
+        // agent.steer must NOT have been called with '1'
+        expect(mockAgent.steer).not.toHaveBeenCalled()
+    })
+
+    it('isolates requestPermission input from triggering agent.steer', async () => {
+        async function* mockGenerator() {
+            const permPromise = mockAgent.operations.ui.requestPermission({
+                name: 'run_command',
+                input: { CommandLine: 'ls' },
+            })
+            mockStdin.write('y\n')
+            const perm = await permPromise
+            expect(perm).toEqual({ block: false })
+            yield { type: 'StreamChunk', content: 'Approved' }
+        }
+
+        mockRunAgentLoop.mockReturnValue(mockGenerator())
+
+        await runHeadlessTask('test prompt', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+        })
+
+        // agent.steer must NOT have been called with 'y'
+        expect(mockAgent.steer).not.toHaveBeenCalled()
+    })
+
+    it('sends user steering input to agent when no prompt is pending', async () => {
+        async function* mockGenerator() {
+            // write steering input
+            mockStdin.write('change approach\n')
+            yield { type: 'StreamChunk', content: 'Steered' }
+        }
+
+        mockRunAgentLoop.mockReturnValue(mockGenerator())
+
+        await runHeadlessTask('test prompt', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+        })
+
+        expect(mockAgent.steer).toHaveBeenCalledWith({
+            role: 'user',
+            content: 'change approach',
+            isUI: true,
+        })
+    })
+
     it('restores console functions when restoreConsole is invoked', () => {
         const originalLog = console.log
         suppressConsole()
