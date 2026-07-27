@@ -34,17 +34,27 @@ describe('CLI Standalone Commands', () => {
         expect(config.activeProvider).toBeUndefined()
     })
 
-    it('handleInitCommand scaffolds .december directory and mcp.json config', async () => {
+    it('handleInitCommand scaffolds full .december workspace files', async () => {
         const originalCwd = process.cwd()
         try {
             process.chdir(tmpDir)
             await handleInitCommand()
 
-            const mcpExists = await fs
-                .access(path.join(tmpDir, '.december', 'mcp.json'))
-                .then(() => true)
-                .catch(() => false)
-            expect(mcpExists).toBe(true)
+            const expectedFiles = [
+                'AGENTS.md',
+                'rules.md',
+                'skills.md',
+                'mcp.json',
+                'settings.json',
+            ]
+
+            for (const file of expectedFiles) {
+                const exists = await fs
+                    .access(path.join(tmpDir, '.december', file))
+                    .then(() => true)
+                    .catch(() => false)
+                expect(exists).toBe(true)
+            }
 
             const mcpContent = JSON.parse(
                 await fs.readFile(path.join(tmpDir, '.december', 'mcp.json'), 'utf-8')
