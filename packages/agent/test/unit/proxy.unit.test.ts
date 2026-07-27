@@ -6,8 +6,15 @@ import { MockLLM } from '../mock-provider'
 
 describe('EventStreamingProxy (Unit)', () => {
     test('run method serializes events and sends to rpc', async () => {
+        const llm = new MockLLM()
+        llm.pushResponse([
+            { type: 'thinking_delta', text: 'Thinking hard' },
+            { type: 'text', text: 'Output answer' },
+            { type: 'usage', promptTokens: 10, completionTokens: 20 },
+        ])
+
         const mockAgent = new Agent({
-            llm: new MockLLM(),
+            llm,
             tools: [],
             operations: {} as any,
         })
@@ -22,18 +29,23 @@ describe('EventStreamingProxy (Unit)', () => {
             }),
         }
 
-        await proxy.run('Start', rpc)
+        await proxy.run('Start task', rpc)
 
         expect(rpc.sendEvent).toHaveBeenCalled()
         expect(sentEvents.length).toBeGreaterThan(0)
 
-        const hasTextChunk = sentEvents.some((str) => str.includes('default response'))
-        expect(hasTextChunk).toBe(true)
+        const parsedEvents = sentEvents.map((s) => JSON.parse(s))
 
-        const hasTurnStart = sentEvents.some((str) => str.includes('TurnStart'))
-        expect(hasTurnStart).toBe(true)
-
-        const hasAgentEnd = sentEvents.some((str) => str.includes('AgentEnd'))
-        expect(hasAgentEnd).toBe(true)
+        expect(parsedEvents.some((e) => e.type === 'AgentStart')).toBe(true)
+        expect(
+            parsedEvents.some((e) => e.type === 'ThinkingChunk' && e.content === 'Thinking hard')
+        ).toBe(true)
+        expect(
+            parsedEvents.some((e) => e.type === 'StreamChunk' && e.content === 'Output answer')
+        ).toBe(true)
+        expect(parsedEvents.some((e) => e.type === 'AgentUsage' && e.promptTokens === 10)).toBe(
+            true
+        )
+        expect(parsedEvents.some((e) => e.type === 'AgentEnd')).toBe(true)
     })
 })

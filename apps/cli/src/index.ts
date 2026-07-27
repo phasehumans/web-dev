@@ -2,7 +2,6 @@
 import { execSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
-import readline from 'readline'
 
 import { AgentHarness } from '@december/agent'
 
@@ -52,6 +51,9 @@ import pkg from '../package.json' with { type: 'json' }
 import { loginViaBrowser, loginViaDeviceCode } from './auth'
 import { getProviderConfig, loadConfig, getAuthStatus } from './config'
 import { FileSessionRepository } from './file-session-repository'
+import { runHeadlessTask } from './headless-runner'
+export { runHeadlessTask } from './headless-runner'
+export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 import { useAgentSession } from './hooks/use-agent-session'
 import { localOperations } from './local-operations'
 
@@ -314,92 +316,8 @@ Guidelines:
     ) {
         const prompt = args.join(' ')
         console.log(`\nExecuting Headless Task: "${prompt}"\n`)
-        const { runAgentLoop } = await import('@december/agent')
-
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        })
-
-        if (!agent.operations) agent.operations = {} as any
-        if (!agent.operations.ui) agent.operations.ui = {} as any
-
-        agent.operations.ui.askQuestion = (questions: any[]) => {
-            return new Promise((resolve) => {
-                const q = questions[0]
-                console.log(`\n\n[Question]: ${q.question}`)
-                if (q.options) {
-                    q.options.forEach((opt: string, i: number) => console.log(`${i + 1}. ${opt}`))
-                }
-                rl.question('\nSelect an option or type your answer: ', (answer: string) => {
-                    const num = parseInt(answer)
-                    if (!isNaN(num) && num > 0 && q.options && num <= q.options.length) {
-                        resolve(q.options[num - 1])
-                    } else {
-                        resolve(answer)
-                    }
-                })
-            })
-        }
-
-        agent.operations.ui.requestPermission = async (toolCall: any) => {
-            if (
-                ['replace_file_content', 'multi_replace_file_content', 'run_command'].includes(
-                    toolCall.name
-                )
-            ) {
-                return new Promise((resolve) => {
-                    rl.question(`\nExecute ${toolCall.name}? (y/n): `, (answer: string) => {
-                        if (answer.toLowerCase().startsWith('y')) {
-                            resolve({ block: false })
-                        } else {
-                            resolve({ block: true, reason: 'User denied execution in UI.' })
-                        }
-                    })
-                })
-            }
-            return { block: false }
-        }
-
-        // steer while streaming
-        rl.on('line', (input: string) => {
-            if (input.trim()) {
-                agent.steer({ role: 'user', content: input, isUI: true })
-                console.log(`\n[Steering input sent to agent]\n`)
-            }
-        })
-
-        const stream = runAgentLoop(agent, prompt)
-
-        for await (const event of stream) {
-            switch (event.type) {
-                case 'StreamChunk':
-                    process.stdout.write(event.content)
-                    break
-                case 'ToolCallStart':
-                    console.log(`\n\n[Tool Executing: ${event.toolCall.name}]`)
-                    console.log(event.toolCall.input)
-                    break
-                case 'ToolCallResult':
-                    if (event.result.error) {
-                        console.error(`[Tool Error] ${event.result.error}`)
-                    } else {
-                        console.log(`[Tool Result Received]`)
-                    }
-                    break
-                case 'AgentUsage':
-                    console.log(
-                        `\n[Usage: ${event.promptTokens} prompt, ${event.completionTokens} completion]`
-                    )
-                    break
-                case 'AgentError':
-                    console.error(`\n[Agent Error: ${event.error}]`)
-                    break
-            }
-        }
-        console.log('\n\nHeadless task complete.')
-        rl.close()
-        process.exit(0)
+        const result = await runHeadlessTask(prompt, { agent })
+        process.exit(result.success ? 0 : 1)
     }
 
     render(

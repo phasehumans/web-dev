@@ -296,12 +296,21 @@ async function streamAssistantResponse(
                 maxTimeout: 30000,
                 signal,
                 onFailedAttempt: (error: any) => {
-                    if (
-                        error.status === 429 ||
-                        error.message?.includes('429') ||
-                        error.message?.toLowerCase().includes('quota') ||
-                        error.message?.toLowerCase().includes('rate limit')
-                    ) {
+                    const actualError = error.error || error.originalError || error
+                    const status = actualError.status || actualError.statusCode || error.status
+                    const msg = (
+                        actualError.message ||
+                        error.message ||
+                        String(actualError)
+                    ).toLowerCase()
+                    const isRateLimit =
+                        status === 429 ||
+                        msg.includes('429') ||
+                        msg.includes('quota') ||
+                        msg.includes('rate limit') ||
+                        msg.includes('rate_limit')
+
+                    if (isRateLimit) {
                         const delaySeconds = Math.round(Math.pow(2, error.attemptNumber - 1) * 2)
                         eventQueue.push({
                             type: 'AgentStatus',

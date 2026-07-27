@@ -6,15 +6,24 @@ import { MockLLM } from '../mock-provider'
 const mockOperations = {} as any
 
 describe('Agent core functionality (Unit)', () => {
-    test('initializes with default system prompt', () => {
+    test('initializes with default system prompt and tools map', () => {
+        const tool1 = { name: 'tool_a', description: 'desc a', inputSchema: {} } as any
+        const tool2 = { name: 'tool_b', description: 'desc b', inputSchema: {} } as any
+
         const agent = new Agent({
             llm: new MockLLM(),
-            tools: [],
+            tools: [tool1, tool2],
             operations: mockOperations,
+            thinkingLevel: 'medium',
         })
+
         expect(agent.messages.length).toBe(1)
         expect(agent.messages[0]!.role).toBe('system')
         expect(agent.messages[0]!.content).toBe('You are a helpful coding agent.')
+        expect(agent.tools.size).toBe(2)
+        expect(agent.tools.get('tool_a')).toBe(tool1)
+        expect(agent.tools.get('tool_b')).toBe(tool2)
+        expect(agent.thinkingLevel).toBe('medium')
     })
 
     test('initializes queues based on mode', () => {
@@ -48,6 +57,8 @@ describe('Agent core functionality (Unit)', () => {
         const drained2 = agent.steeringQueue.drain()
         expect(drained2.length).toBe(1)
         expect(drained2[0]!.content).toBe('steer2')
+
+        expect(agent.steeringQueue.drain()).toEqual([])
     })
 
     test('followUp queue drain all mode', () => {
@@ -65,6 +76,33 @@ describe('Agent core functionality (Unit)', () => {
         expect(drained[0]!.content).toBe('follow1')
         expect(drained[1]!.content).toBe('follow2')
         expect(agent.followUpQueue.length).toBe(0)
+        expect(agent.followUpQueue.drain()).toEqual([])
+    })
+
+    test('filters out isUI messages in defaultConvertToLlm', () => {
+        const agent = new Agent({
+            llm: new MockLLM(),
+            tools: [],
+            operations: mockOperations,
+        })
+        agent.addMessage({ role: 'user', content: 'User msg' })
+        agent.addMessage({ role: 'assistant', content: 'UI status msg', isUI: true })
+
+        const providerMsgs = agent.convertToLlm(agent.messages)
+        expect(providerMsgs.length).toBe(2) // system prompt + user msg
+        expect(providerMsgs.some((m) => m.content === 'UI status msg')).toBe(false)
+    })
+
+    test('uses custom convertToLlm when provided', () => {
+        const customConvert = (msgs: any[]) => msgs.map((m) => ({ ...m, content: 'custom' }))
+        const agent = new Agent({
+            llm: new MockLLM(),
+            tools: [],
+            operations: mockOperations,
+            convertToLlm: customConvert,
+        })
+        const providerMsgs = agent.convertToLlm(agent.messages)
+        expect(providerMsgs[0]!.content).toBe('custom')
     })
 
     test('clearContext leaves only system prompt', async () => {
@@ -79,6 +117,16 @@ describe('Agent core functionality (Unit)', () => {
         await agent.clearContext()
         expect(agent.messages.length).toBe(1)
         expect(agent.messages[0]!.role).toBe('system')
+    })
+
+    test('handles saveContext, loadContext without sessionRepository gracefully', async () => {
+        const agent = new Agent({
+            llm: new MockLLM(),
+            tools: [],
+            operations: mockOperations,
+        })
+        await expect(agent.saveContext()).resolves.toBeUndefined()
+        await expect(agent.loadContext()).resolves.toBeUndefined()
     })
 
     test('persistence and session handling', async () => {
@@ -119,16 +167,13 @@ describe('Agent core functionality (Unit)', () => {
 
     test('setLLM updates the llm provider', () => {
         const agent = new Agent({
-            llm: new MockLLM(),
+            llm: new MockLLM('mock1'),
             tools: [],
             operations: mockOperations,
         })
-        expect(agent.llm.id).toBe('mock')
+        expect(agent.llm.id).toBe('mock1')
 
-        class MockLLM2 extends MockLLM {
-            public id = 'mock2'
-        }
-        agent.setLLM(new MockLLM2())
+        agent.setLLM(new MockLLM('mock2'))
         expect(agent.llm.id).toBe('mock2')
     })
 
