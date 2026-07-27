@@ -4,6 +4,27 @@ import { runAgentLoop } from '@december/agent'
 
 import type { Agent } from '@december/agent'
 
+const originalConsole = {
+    log: console.log,
+    warn: console.warn,
+    error: console.error,
+    info: console.info,
+}
+
+export function suppressConsole() {
+    console.warn = () => {}
+    console.error = () => {}
+    console.log = () => {}
+    console.info = () => {}
+}
+
+export function restoreConsole() {
+    console.log = originalConsole.log
+    console.warn = originalConsole.warn
+    console.error = originalConsole.error
+    console.info = originalConsole.info
+}
+
 export interface HeadlessTaskOptions {
     agent: Agent
     stdin?: NodeJS.ReadableStream
@@ -20,12 +41,22 @@ export async function runHeadlessTask(
     prompt: string,
     options: HeadlessTaskOptions
 ): Promise<HeadlessTaskResult> {
+    restoreConsole()
+
     const {
         agent,
         stdin = process.stdin,
         stdout = process.stdout,
         stderr = process.stderr,
     } = options
+
+    const writeOut = (msg: string) => {
+        if (stdout && stdout.write) stdout.write(msg)
+    }
+
+    const writeErr = (msg: string) => {
+        if (stderr && stderr.write) stderr.write(msg)
+    }
 
     const rl = readline.createInterface({
         input: stdin as any,
@@ -38,9 +69,9 @@ export async function runHeadlessTask(
     agent.operations.ui.askQuestion = (questions: any[]) => {
         return new Promise((resolve) => {
             const q = questions[0]
-            console.log(`\n\n[Question]: ${q.question}`)
+            writeOut(`\n\n[Question]: ${q.question}\n`)
             if (q.options) {
-                q.options.forEach((opt: string, i: number) => console.log(`${i + 1}. ${opt}`))
+                q.options.forEach((opt: string, i: number) => writeOut(`${i + 1}. ${opt}\n`))
             }
             rl.question('\nSelect an option or type your answer: ', (answer: string) => {
                 const num = parseInt(answer)
@@ -75,7 +106,7 @@ export async function runHeadlessTask(
     rl.on('line', (input: string) => {
         if (input.trim()) {
             agent.steer({ role: 'user', content: input, isUI: true })
-            console.log(`\n[Steering input sent to agent]\n`)
+            writeOut(`\n[Steering input sent to agent]\n`)
         }
     })
 
@@ -88,32 +119,37 @@ export async function runHeadlessTask(
         for await (const event of stream) {
             switch (event.type) {
                 case 'StreamChunk':
-                    if (stdout.write) stdout.write(event.content)
+                    writeOut(event.content)
                     break
                 case 'ToolCallStart':
-                    console.log(`\n\n[Tool Executing: ${event.toolCall.name}]`)
-                    console.log(event.toolCall.input)
+                    writeOut(`\n\n[Tool Executing: ${event.toolCall.name}]\n`)
+                    writeOut(
+                        typeof event.toolCall.input === 'string'
+                            ? event.toolCall.input
+                            : JSON.stringify(event.toolCall.input)
+                    )
+                    writeOut('\n')
                     break
                 case 'ToolCallResult':
                     if (event.result.error) {
-                        console.error(`[Tool Error] ${event.result.error}`)
+                        writeErr(`\n[Tool Error] ${event.result.error}\n`)
                     } else {
-                        console.log(`[Tool Result Received]`)
+                        writeOut(`\n[Tool Result Received]\n`)
                     }
                     break
                 case 'AgentUsage':
-                    console.log(
-                        `\n[Usage: ${event.promptTokens} prompt, ${event.completionTokens} completion]`
+                    writeOut(
+                        `\n[Usage: ${event.promptTokens} prompt, ${event.completionTokens} completion]\n`
                     )
                     break
                 case 'AgentError':
                     hasError = true
                     errorMessage = event.error
-                    console.error(`\n[Agent Error: ${event.error}]`)
+                    writeErr(`\n[Agent Error: ${event.error}]\n`)
                     break
             }
         }
-        console.log('\n\nHeadless task complete.')
+        writeOut('\n\nHeadless task complete.\n')
     } finally {
         rl.close()
     }

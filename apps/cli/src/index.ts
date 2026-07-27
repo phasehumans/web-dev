@@ -51,23 +51,18 @@ import pkg from '../package.json' with { type: 'json' }
 import { loginViaBrowser, loginViaDeviceCode } from './auth'
 import { getProviderConfig, loadConfig, getAuthStatus } from './config'
 import { FileSessionRepository } from './file-session-repository'
-import { runHeadlessTask } from './headless-runner'
-export { runHeadlessTask } from './headless-runner'
+import { runHeadlessTask, suppressConsole } from './headless-runner'
+export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
 export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 import { useAgentSession } from './hooks/use-agent-session'
 import { localOperations } from './local-operations'
-
-const originalConsoleError = console.error
 
 async function main() {
     process.title = 'december'
     process.stdout.write('\x1b]0;december\x07')
 
     // suppress noisy sdk console logs that corrupt the ink tui layout
-    console.warn = () => {}
-    console.error = () => {}
-    console.log = () => {}
-    console.info = () => {}
+    suppressConsole()
 
     const providerConfig = await getProviderConfig()
     const authStatus = await getAuthStatus()
@@ -342,4 +337,4 @@ Guidelines:
     )
 }
 
-main().catch(originalConsoleError)
+main().catch(console.error)
