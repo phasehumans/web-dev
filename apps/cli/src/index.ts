@@ -51,6 +51,8 @@ import pkg from '../package.json' with { type: 'json' }
 import { parseCliArgs, getHelpText } from './args'
 import { loginViaBrowser, loginViaDeviceCode } from './auth'
 export { parseCliArgs, getHelpText } from './args'
+import { handleLogoutCommand, handleInitCommand } from './commands'
+export { handleLogoutCommand, handleInitCommand } from './commands'
 import { getProviderConfig, loadConfig, getAuthStatus } from './config'
 import { FileSessionRepository } from './file-session-repository'
 import { runHeadlessTask, suppressConsole } from './headless-runner'
@@ -312,6 +314,16 @@ Guidelines:
     if (parsedArgs.command === 'login') {
         console.log('Please login via the browser...')
         await loginViaBrowser()
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'logout') {
+        await handleLogoutCommand()
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'init') {
+        await handleInitCommand()
         process.exit(0)
     }
 
