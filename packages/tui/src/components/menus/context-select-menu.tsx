@@ -9,7 +9,7 @@ function getModelContextWindow(id: string) {
 
 export function ContextSelectMenu(props: any) {
     const { agent, handleContextSelect } = props
-    const activeModelId = agent.modelOptions?.model || 'gemini-3.5-flash'
+    const activeModelId = agent.modelOptions?.model || 'gemini-3.6-flash'
     const currentModelName = getModelLabel(activeModelId)
     const maxTokens = getModelContextWindow(activeModelId)
 

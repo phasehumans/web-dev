@@ -183,7 +183,7 @@ export const COMMANDS: Command[] = [
 
     {
         name: 'init',
-        description: 'Create a .december folder with initial agent rules',
+        description: 'Create a .december folder with initial rules, skills, and configuration',
         value: '/init',
         action: (ctx) => {
             try {
@@ -195,18 +195,26 @@ export const COMMANDS: Command[] = [
                     return
                 }
 
-                fs.mkdirSync(decDir)
+                fs.mkdirSync(decDir, { recursive: true })
 
                 const agentsFile = path.join(decDir, 'AGENTS.md')
-
                 const rulesFile = path.join(decDir, 'rules.md')
+                const skillsFile = path.join(decDir, 'skills.md')
                 const mcpFile = path.join(decDir, 'mcp.json')
 
-                fs.writeFileSync(agentsFile, '')
+                fs.writeFileSync(
+                    agentsFile,
+                    '# AGENTS.md\n\nWelcome to December workspace instructions. December automatically loads project context, coding rules, and available agent skills from `.december/`.\n'
+                )
 
                 fs.writeFileSync(
                     rulesFile,
-                    '# Rules\n\nAdd project-specific rules here (e.g., database schema guidelines, or styling rules). December will automatically read these rules when working on your project.\n'
+                    '# Rules\n\n- **Code Quality**: Ensure all functions have proper TypeScript typing and descriptive parameter names.\n- **Error Handling**: Never use empty catch blocks; always handle or explicitly log exceptions.\n- **Testing**: Write unit or integration tests for new services and run test suites before submitting changes.\n- **Architecture**: Keep business logic inside service modules and delegate HTTP request parsing to controllers.\n'
+                )
+
+                fs.writeFileSync(
+                    skillsFile,
+                    '# Skills\n\n- **Code Review**: Autonomous code review checking coding standards and architectural requirements.\n- **Refactoring**: Step-by-step code refactoring with incremental safety checks and clean commits.\n- **Bug Diagnosis**: Systematic root cause investigation using log tracebacks and regression tests.\n- **Test Generation**: Automated generation of unit and integration test suites using red-green-refactor patterns.\n'
                 )
 
                 fs.writeFileSync(

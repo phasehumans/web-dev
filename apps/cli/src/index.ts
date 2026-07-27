@@ -2,7 +2,6 @@
 import { execSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
-import readline from 'readline'
 
 import { AgentHarness } from '@december/agent'
 
@@ -49,23 +48,47 @@ dotenv.config()
 
 import pkg from '../package.json' with { type: 'json' }
 
+import { parseCliArgs, getHelpText } from './args'
 import { loginViaBrowser, loginViaDeviceCode } from './auth'
+export { parseCliArgs, getHelpText } from './args'
+import { handleLogoutCommand, handleInitCommand } from './commands'
+export { handleLogoutCommand, handleInitCommand } from './commands'
 import { getProviderConfig, loadConfig, getAuthStatus } from './config'
 import { FileSessionRepository } from './file-session-repository'
+import { runHeadlessTask, suppressConsole } from './headless-runner'
+export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
+export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 import { useAgentSession } from './hooks/use-agent-session'
 import { localOperations } from './local-operations'
-
-const originalConsoleError = console.error
 
 async function main() {
     process.title = 'december'
     process.stdout.write('\x1b]0;december\x07')
 
+    const parsedArgs = parseCliArgs(process.argv.slice(2))
+
+    if (parsedArgs.isHelp) {
+        console.log(getHelpText(pkg.version))
+        process.exit(0)
+    }
+
+    if (parsedArgs.isVersion) {
+        console.log(pkg.version)
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'logout') {
+        await handleLogoutCommand()
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'init') {
+        await handleInitCommand()
+        process.exit(0)
+    }
+
     // suppress noisy sdk console logs that corrupt the ink tui layout
-    console.warn = () => {}
-    console.error = () => {}
-    console.log = () => {}
-    console.info = () => {}
+    suppressConsole()
 
     const providerConfig = await getProviderConfig()
     const authStatus = await getAuthStatus()
@@ -174,9 +197,9 @@ Guidelines:
             submitPrTool,
         ],
         operations: localOperations,
-        modelOptions: { model: providerConfig?.model || 'gemini-3.5-flash' },
+        modelOptions: { model: parsedArgs.model || providerConfig?.model || 'gemini-3.6-flash' },
         sessionRepository,
-        sessionId,
+        sessionId: parsedArgs.sessionId || sessionId,
         workspaceDir: process.cwd(),
         hooks: {
             beforeToolCall: async (toolCall) => {
@@ -194,10 +217,7 @@ Guidelines:
 
     const userEmail = config.decemberToken ? config.email : undefined
 
-    const args = process.argv.slice(2)
-    const command = args[0]
-
-    if (command === 'handoff') {
+    if (parsedArgs.command === 'handoff') {
         console.log('Initiating Cloud Handoff...')
         if (!config.decemberToken) {
             console.error('You must be logged in via `december login` to use handoff.')
@@ -301,105 +321,16 @@ Guidelines:
         process.exit(0)
     }
 
-    if (command === 'login') {
+    if (parsedArgs.command === 'login') {
         console.log('Please login via the browser...')
         await loginViaBrowser()
         process.exit(0)
     }
 
-    if (
-        command &&
-        !['handoff', 'login', 'logout', 'init'].includes(command) &&
-        !command.startsWith('-')
-    ) {
-        const prompt = args.join(' ')
-        console.log(`\nExecuting Headless Task: "${prompt}"\n`)
-        const { runAgentLoop } = await import('@december/agent')
-
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        })
-
-        if (!agent.operations) agent.operations = {} as any
-        if (!agent.operations.ui) agent.operations.ui = {} as any
-
-        agent.operations.ui.askQuestion = (questions: any[]) => {
-            return new Promise((resolve) => {
-                const q = questions[0]
-                console.log(`\n\n[Question]: ${q.question}`)
-                if (q.options) {
-                    q.options.forEach((opt: string, i: number) => console.log(`${i + 1}. ${opt}`))
-                }
-                rl.question('\nSelect an option or type your answer: ', (answer: string) => {
-                    const num = parseInt(answer)
-                    if (!isNaN(num) && num > 0 && q.options && num <= q.options.length) {
-                        resolve(q.options[num - 1])
-                    } else {
-                        resolve(answer)
-                    }
-                })
-            })
-        }
-
-        agent.operations.ui.requestPermission = async (toolCall: any) => {
-            if (
-                ['replace_file_content', 'multi_replace_file_content', 'run_command'].includes(
-                    toolCall.name
-                )
-            ) {
-                return new Promise((resolve) => {
-                    rl.question(`\nExecute ${toolCall.name}? (y/n): `, (answer: string) => {
-                        if (answer.toLowerCase().startsWith('y')) {
-                            resolve({ block: false })
-                        } else {
-                            resolve({ block: true, reason: 'User denied execution in UI.' })
-                        }
-                    })
-                })
-            }
-            return { block: false }
-        }
-
-        // steer while streaming
-        rl.on('line', (input: string) => {
-            if (input.trim()) {
-                agent.steer({ role: 'user', content: input, isUI: true })
-                console.log(`\n[Steering input sent to agent]\n`)
-            }
-        })
-
-        const stream = runAgentLoop(agent, prompt)
-
-        for await (const event of stream) {
-            switch (event.type) {
-                case 'StreamChunk':
-                    process.stdout.write(event.content)
-                    break
-                case 'ToolCallStart':
-                    console.log(`\n\n[Tool Executing: ${event.toolCall.name}]`)
-                    console.log(event.toolCall.input)
-                    break
-                case 'ToolCallResult':
-                    if (event.result.error) {
-                        console.error(`[Tool Error] ${event.result.error}`)
-                    } else {
-                        console.log(`[Tool Result Received]`)
-                    }
-                    break
-                case 'AgentUsage':
-                    console.log(
-                        `\n[Usage: ${event.promptTokens} prompt, ${event.completionTokens} completion]`
-                    )
-                    break
-                case 'AgentError':
-                    console.error(`\n[Agent Error: ${event.error}]`)
-                    break
-            }
-        }
-        console.log('\n\nHeadless task complete.')
-        rl.close()
-        process.exit(0)
+    if (parsedArgs.prompt) {
+        console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
+        const result = await runHeadlessTask(parsedArgs.prompt, { agent })
+        process.exit(result.success ? 0 : 1)
     }
 
     render(
@@ -424,4 +355,4 @@ Guidelines:
     )
 }
 
-main().catch(originalConsoleError)
+main().catch(console.error)

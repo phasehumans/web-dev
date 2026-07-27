@@ -16,7 +16,7 @@ export function SettingsDialog({ close, toast }: Props) {
     // local dummy settings states
     const [soundEnabled, setSoundEnabled] = useState(true)
     const [density, setDensity] = useState<'compact' | 'spacious'>('compact')
-    const [defaultModel, setDefaultModel] = useState('gemini-2.5-flash')
+    const [defaultModel, setDefaultModel] = useState('gemini-3.6-flash')
     const [maxTokens, setMaxTokens] = useState(4096)
     const [geminiKey, setGeminiKey] = useState('configured')
     const [openrouterKey, setOpenrouterKey] = useState('not-configured')
@@ -126,9 +126,9 @@ export function SettingsDialog({ close, toast }: Props) {
             {
                 label: `Default Model: [${defaultModel}]`,
                 value:
-                    defaultModel === 'gemini-2.5-flash'
-                        ? 'model:gemini-2.5-pro'
-                        : 'model:gemini-2.5-flash',
+                    defaultModel === 'gemini-3.6-flash'
+                        ? 'model:gemini-3.1-pro'
+                        : 'model:gemini-3.6-flash',
             },
             {
                 label: `Max Tokens: [${maxTokens}]`,

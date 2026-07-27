@@ -83,11 +83,24 @@ export function parseErrorMessage(err: any): string {
 
     if (errMsg === '[object Object]' && err && typeof err === 'object') {
         try {
-            return util.inspect(err)
+            const inspected = util.inspect(err)
+            if (inspected && inspected !== '{}' && inspected !== '{ cause: {} }') {
+                return inspected
+            }
         } catch {
             // Fall back to raw string
         }
     }
 
-    return errMsg.replace(/^\[.*?Error\]:\s*/, '').trim()
+    const result = errMsg.replace(/^\[.*?Error\]:\s*/, '').trim()
+    if (
+        result === '{\n  "cause": {}\n}' ||
+        result === '{"cause":{}}' ||
+        result === '{}' ||
+        result === '{ cause: {} }'
+    ) {
+        return 'An unknown error occurred while communicating with the model provider.'
+    }
+
+    return result
 }

@@ -146,7 +146,7 @@ export function BotMessage({ blocks, usage }: Props) {
                     case 'error': {
                         return (
                             <Box key={idx} flexDirection="column" paddingLeft={1} marginY={1}>
-                                <Text color="#f87171">Agent Error: {block.error}</Text>
+                                <Text color="white">Agent Error: {block.error}</Text>
                             </Box>
                         )
                     }

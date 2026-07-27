@@ -15,6 +15,13 @@ describe('ConversationManager (Unit)', () => {
         expect(manager.messages[0]!.content).toBe('hello')
     })
 
+    test('supports setting messages array directly via setter', () => {
+        const manager = new ConversationManager()
+        const newMsgs = [{ role: 'system', content: 'system' }] as any
+        manager.messages = newMsgs
+        expect(manager.messages).toEqual(newMsgs)
+    })
+
     test('addMessage assigns ID and parentId automatically', () => {
         const manager = new ConversationManager()
         manager.addMessage({ role: 'user', content: 'first' })
@@ -37,7 +44,7 @@ describe('ConversationManager (Unit)', () => {
         expect(firstMsg.parentId).toBe('parent-0')
     })
 
-    test('compactIfNeeded delegates to compaction utility', async () => {
+    test('compactIfNeeded delegates to compaction utility and returns summary', async () => {
         const manager = new ConversationManager()
         manager.addMessage({ role: 'system', content: 'system' })
         for (let i = 0; i < 25; i++) {
@@ -45,10 +52,11 @@ describe('ConversationManager (Unit)', () => {
         }
 
         const llm = new MockLLM()
+        llm.pushResponse('Compacted Summary Text')
         const result = await manager.compactIfNeeded(llm, 10)
 
         expect(result.compacted).toBe(true)
-        expect(result.summary).toContain('default response')
+        expect(result.summary).toBe('[COMPACTED HISTORY SUMMARY]\nCompacted Summary Text')
         expect(manager.messages.length).toBe(22)
     })
 

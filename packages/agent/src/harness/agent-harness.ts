@@ -63,17 +63,13 @@ Guidelines:
 
     private discoverSkills(): string[] {
         const skills: string[] = []
-        const skillsDir = path.join(this.config.workspaceDir, '.december', 'skills')
+        const skillsFile = path.join(this.config.workspaceDir, '.december', 'skills.md')
 
         try {
-            if (fs.existsSync(skillsDir)) {
-                const folders = fs.readdirSync(skillsDir)
-                for (const folder of folders) {
-                    const skillPath = path.join(skillsDir, folder, 'SKILL.md')
-                    if (fs.existsSync(skillPath)) {
-                        const content = fs.readFileSync(skillPath, 'utf8')
-                        skills.push(`- ${folder}:\n${content}`)
-                    }
+            if (fs.existsSync(skillsFile)) {
+                const content = fs.readFileSync(skillsFile, 'utf8').trim()
+                if (content) {
+                    skills.push(content)
                 }
             }
         } catch (e) {
@@ -84,24 +80,21 @@ Guidelines:
 
     private discoverRules(): { path: string; content: string }[] {
         const rules: { path: string; content: string }[] = []
-        const rulesDir = path.join(this.config.workspaceDir, '.december', 'rules')
 
         try {
-            if (fs.existsSync(rulesDir)) {
-                const files = fs.readdirSync(rulesDir)
-                for (const file of files) {
-                    if (file.endsWith('.md')) {
-                        const rulePath = path.join(rulesDir, file)
-                        const content = fs.readFileSync(rulePath, 'utf8')
+            const candidateFiles = [
+                path.join(this.config.workspaceDir, 'AGENTS.md'),
+                path.join(this.config.workspaceDir, '.december', 'AGENTS.md'),
+                path.join(this.config.workspaceDir, '.december', 'rules.md'),
+            ]
+
+            for (const rulePath of candidateFiles) {
+                if (fs.existsSync(rulePath)) {
+                    const content = fs.readFileSync(rulePath, 'utf8').trim()
+                    if (content) {
                         rules.push({ path: rulePath, content })
                     }
                 }
-            }
-
-            const rootRulesPath = path.join(this.config.workspaceDir, '.december', 'rules.md')
-            if (fs.existsSync(rootRulesPath)) {
-                const content = fs.readFileSync(rootRulesPath, 'utf8')
-                rules.push({ path: rootRulesPath, content })
             }
         } catch (e) {
             // ignore errors reading rules
