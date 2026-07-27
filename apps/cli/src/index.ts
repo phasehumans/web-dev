@@ -65,6 +65,28 @@ async function main() {
     process.title = 'december'
     process.stdout.write('\x1b]0;december\x07')
 
+    const parsedArgs = parseCliArgs(process.argv.slice(2))
+
+    if (parsedArgs.isHelp) {
+        console.log(getHelpText(pkg.version))
+        process.exit(0)
+    }
+
+    if (parsedArgs.isVersion) {
+        console.log(pkg.version)
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'logout') {
+        await handleLogoutCommand()
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'init') {
+        await handleInitCommand()
+        process.exit(0)
+    }
+
     // suppress noisy sdk console logs that corrupt the ink tui layout
     suppressConsole()
 
@@ -140,18 +162,6 @@ async function main() {
         }
     } catch (err: any) {
         console.warn('Failed to parse mcp.json:', err.message)
-    }
-
-    const parsedArgs = parseCliArgs(process.argv.slice(2))
-
-    if (parsedArgs.isHelp) {
-        console.log(getHelpText(pkg.version))
-        process.exit(0)
-    }
-
-    if (parsedArgs.isVersion) {
-        console.log(pkg.version)
-        process.exit(0)
     }
 
     const config = await loadConfig()
@@ -314,16 +324,6 @@ Guidelines:
     if (parsedArgs.command === 'login') {
         console.log('Please login via the browser...')
         await loginViaBrowser()
-        process.exit(0)
-    }
-
-    if (parsedArgs.command === 'logout') {
-        await handleLogoutCommand()
-        process.exit(0)
-    }
-
-    if (parsedArgs.command === 'init') {
-        await handleInitCommand()
         process.exit(0)
     }
 

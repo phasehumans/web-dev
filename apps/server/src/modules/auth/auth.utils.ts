@@ -32,11 +32,12 @@ export const sendOTP = async (email: string, otp: string) => {
     const attachments: any[] = []
     const fromEmail = env.SENDER_EMAIL || 'onboarding@resend.dev'
 
-    await resend.emails.send({
-        from: `December <${fromEmail}>`,
-        to: email,
-        subject: 'Your Verification Code',
-        html: `
+    try {
+        await resend.emails.send({
+            from: `December <${fromEmail}>`,
+            to: email,
+            subject: 'Your Verification Code',
+            html: `
         <!DOCTYPE html>
         <html>
           <head>
@@ -145,8 +146,14 @@ export const sendOTP = async (email: string, otp: string) => {
           </body>
         </html>
       `,
-        attachments,
-    })
+            attachments,
+        })
+    } catch (error) {
+        console.error(`[Email Service] Failed to send OTP email to ${email}:`, error)
+        if (env.ENV === 'DEV') {
+            console.log(`[DEV OTP Code] Verification code for ${email} is: ${otp}`)
+        }
+    }
 }
 
 export const sendWelcomeEmail = async (email: string, name: string) => {

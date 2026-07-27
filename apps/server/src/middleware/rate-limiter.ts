@@ -5,15 +5,11 @@ import RedisStore from 'rate-limit-redis'
 
 import { env } from '../env'
 
-let redisStoreInstance: RedisStore | undefined
+let redisClient: Redis | undefined
 
 if (env.REDIS_URL) {
     try {
-        const client = new Redis(env.REDIS_URL)
-        redisStoreInstance = new RedisStore({
-            // @ts-expect-error ioredis sendCommand signature compatibility
-            sendCommand: (...args: string[]) => client.call(...args),
-        })
+        redisClient = new Redis(env.REDIS_URL)
     } catch {
         // Fallback to memory store if Redis initialization fails
     }
@@ -23,19 +19,31 @@ export interface RateLimiterOptions {
     windowMs?: number
     limit?: number
     message?: string
+    prefix?: string
 }
+
+let instanceCounter = 0
 
 export const createRateLimiter = (options: RateLimiterOptions = {}) => {
     const windowMs = options.windowMs || 15 * 60 * 1000
     const limit = options.limit || 500
     const message = options.message || 'Too many requests, please try again later.'
+    const prefix = options.prefix || `rl:${++instanceCounter}:`
+
+    const store = redisClient
+        ? new RedisStore({
+              // @ts-expect-error ioredis sendCommand signature compatibility
+              sendCommand: (...args: string[]) => redisClient!.call(...args),
+              prefix,
+          })
+        : undefined
 
     return rateLimit({
         windowMs,
         limit,
         standardHeaders: true,
         legacyHeaders: false,
-        store: redisStoreInstance,
+        ...(store ? { store } : {}),
         validate: { keyGeneratorIpFallback: false, xForwardedForHeader: false },
         keyGenerator: (req) => {
             if ((req as any).user?.userId) {
@@ -91,6 +99,7 @@ export const globalRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     limit: 500,
     message: 'Global API rate limit exceeded',
+    prefix: 'rl:global:',
 })
 
 // Strict rate limiters for specific sensitive modules
@@ -98,30 +107,35 @@ export const authRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     limit: 20,
     message: 'Too many authentication attempts, please try again after 15 minutes',
+    prefix: 'rl:auth:',
 })
 
 export const refreshRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     limit: 100,
     message: 'Too many session refresh requests, please try again later',
+    prefix: 'rl:refresh:',
 })
 
 export const runtimeRateLimiter = createRateLimiter({
     windowMs: 60 * 1000,
     limit: 30,
     message: 'Too many runtime execution requests, please try again in a minute',
+    prefix: 'rl:runtime:',
 })
 
 export const cliRateLimiter = createRateLimiter({
     windowMs: 60 * 1000,
     limit: 60,
     message: 'CLI rate limit exceeded',
+    prefix: 'rl:cli:',
 })
 
 export const deviceCodeLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
     limit: 5,
     message: 'Too many device code generation requests, please try again after 15 minutes',
+    prefix: 'rl:device:',
 })
 
 // Alias export for backward compatibility
