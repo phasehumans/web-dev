@@ -9,12 +9,7 @@ function AppWrapper(props: any) {
     return React.createElement(App, { ...props, session })
 }
 
-import {
-    openaiProvider,
-    anthropicProvider,
-    geminiProvider,
-    openrouterProvider,
-} from '@december/providers'
+import { openaiProvider } from '@december/providers'
 import { configureMCP } from '@december/tools'
 import {
     BashTool,
@@ -38,12 +33,8 @@ import {
 } from '@december/tools'
 import { ChatApp as App } from '@december/tui'
 import { RootLayout } from '@december/tui'
-import dotenv from 'dotenv'
 import { render } from 'ink'
 import React from 'react'
-
-process.env.DOTENV_CONFIG_QUIET = 'true'
-dotenv.config()
 
 import pkg from '../package.json' with { type: 'json' }
 
@@ -59,6 +50,7 @@ export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-run
 export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 import { useAgentSession } from './hooks/use-agent-session'
 import { localOperations } from './local-operations'
+import { instantiateProvider } from './utils/provider-factory'
 
 async function main() {
     process.title = 'december'
@@ -96,50 +88,7 @@ async function main() {
     // the tui will intercept prompts and force them to /login
     let llm: any
     if (providerConfig) {
-        switch (providerConfig.provider) {
-            case 'openai':
-                llm = openaiProvider(undefined, providerConfig.apiKey)
-                break
-            case 'anthropic':
-                llm = anthropicProvider(undefined, providerConfig.apiKey)
-                break
-            case 'google':
-                llm = geminiProvider(providerConfig.apiKey)
-                break
-            case 'openrouter':
-                llm = openrouterProvider(providerConfig.apiKey)
-                break
-            case 'deepseek':
-                llm = openaiProvider('https://api.deepseek.com', providerConfig.apiKey)
-                break
-            case 'groq':
-                llm = openaiProvider('https://api.groq.com/openai/v1', providerConfig.apiKey)
-                break
-            case 'huggingface':
-                llm = openaiProvider(
-                    'https://api-inference.huggingface.co/v1/',
-                    providerConfig.apiKey
-                )
-                break
-            case 'moonshot':
-                llm = openaiProvider('https://api.moonshot.cn/v1', providerConfig.apiKey)
-                break
-            case 'mistral':
-                llm = openaiProvider('https://api.mistral.ai/v1', providerConfig.apiKey)
-                break
-            case 'xai':
-                llm = openaiProvider('https://api.x.ai/v1', providerConfig.apiKey)
-                break
-            case 'zai':
-                llm = openaiProvider('https://api.zai.ai/v1', providerConfig.apiKey)
-                break
-            default: {
-                const serverUrl = process.env.DECEMBER_SERVER_URL || 'https://api.trydecember.com'
-                const proxyUrl = `${serverUrl}/api/v1/cli`
-                llm = openaiProvider(proxyUrl, providerConfig.apiKey)
-                break
-            }
-        }
+        llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
     } else {
         llm = openaiProvider(undefined, 'dummy-key')
     }
@@ -196,7 +145,10 @@ Guidelines:
             submitPrTool,
         ],
         operations: localOperations,
-        modelOptions: { model: parsedArgs.model || providerConfig?.model || 'gemini-3.6-flash' },
+        modelOptions: {
+            model: parsedArgs.model || providerConfig?.model || 'gemini-3.6-flash',
+            thinkingLevel: config.thinkingLevel || 'medium',
+        },
         sessionRepository,
         sessionId: parsedArgs.sessionId || sessionId,
         workspaceDir: process.cwd(),
@@ -205,9 +157,9 @@ Guidelines:
                 // future integration: hook into the tui to request user approval for destructive bash commands
             },
         },
-        thinkingLevel: config.thinkingLevel,
-        steeringMode: config.steeringMode,
-        followUpMode: config.followUpMode,
+        thinkingLevel: config.thinkingLevel || 'medium',
+        steeringMode: config.steeringMode || 'all',
+        followUpMode: config.followUpMode || 'all',
     })
 
     const agent = harness.getAgent()

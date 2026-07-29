@@ -129,4 +129,17 @@ describe('OpenAI Provider (Integration)', () => {
         expect(provider.id).toBe('openai')
         expect(provider.stream).toBeInstanceOf(Function)
     })
+
+    test('should map thinkingLevel to reasoning_effort', async () => {
+        const provider = openaiProvider('test-key')
+        const gen = provider.stream([{ role: 'user', content: 'hello' }], undefined, undefined, {
+            thinkingLevel: 'medium',
+        })
+
+        const it = gen[Symbol.asyncIterator]()
+        await it.next()
+
+        expect(capturedOptions).not.toBeNull()
+        expect(capturedOptions.reasoning_effort).toBe('medium')
+    })
 })

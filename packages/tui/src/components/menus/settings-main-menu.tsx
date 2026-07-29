@@ -6,11 +6,8 @@ import { CustomIndicator, CustomItem } from './menu-items'
 export function SettingsMainMenu(props: any) {
     const {
         settingsNonWorkspace,
-        settingsNotifications,
         settingsShowTasks,
-        settingsShowTips,
         settingsToolPermission,
-        settingsAutoUpdate,
         settingsThinkingLevel,
         settingsSteeringMode,
         settingsFollowUpMode,
@@ -24,24 +21,12 @@ export function SettingsMainMenu(props: any) {
             value: 'nonWorkspaceAccess',
         },
         {
-            label: `Notifications            [${settingsNotifications ? 'on' : 'off'}]`,
-            value: 'notifications',
-        },
-        {
             label: `Show Active Tasks        [${settingsShowTasks ? 'on' : 'off'}]`,
             value: 'showActiveTasks',
         },
         {
-            label: `Show Tips                [${settingsShowTips ? 'on' : 'off'}]`,
-            value: 'showTips',
-        },
-        {
             label: `Tool Permission          [${settingsToolPermission}]`,
             value: 'toolPermission',
-        },
-        {
-            label: `Auto Update              [${settingsAutoUpdate ? 'on' : 'off'}]`,
-            value: 'autoUpdate',
         },
         {
             label: `Thinking Level           [${settingsThinkingLevel}]`,

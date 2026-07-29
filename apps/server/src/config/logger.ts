@@ -5,7 +5,7 @@ import pinoHttp from 'pino-http'
 
 import { env } from '../env'
 
-const isDev = env.ENV === 'DEV' || env.NODE_ENV === 'development'
+const isDev = env.ENV === 'DEV'
 
 export const logger = pino({
     level: isDev ? 'debug' : 'info',

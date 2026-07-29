@@ -66,7 +66,7 @@ describe('instantiateProvider', () => {
     })
 
     it('defaults to localhost proxy when provider is unknown', () => {
-        process.env.DECEMBER_SERVER_PORT = '5000'
+        process.env.SERVER_PORT = '5000'
         instantiateProvider('unknown', 'key-123')
         expect(providers.openaiProvider).toHaveBeenCalledWith(
             'http://localhost:5000/api/v1',

@@ -4,10 +4,12 @@ import path from 'path'
 import { Box, Text } from 'ink'
 import React, { useState, useEffect } from 'react'
 
-export function TaskHUD({ cwd }: { cwd: string }) {
+export function TaskHUD({ cwd, showTasks = true }: { cwd: string; showTasks?: boolean }) {
     const [taskLines, setTaskLines] = useState<string[]>([])
 
     useEffect(() => {
+        if (!showTasks) return
+
         const taskPath = path.join(cwd, 'task.md')
 
         const updateTasks = () => {
@@ -29,9 +31,9 @@ export function TaskHUD({ cwd }: { cwd: string }) {
         updateTasks()
         const interval = setInterval(updateTasks, 2000)
         return () => clearInterval(interval)
-    }, [cwd])
+    }, [cwd, showTasks])
 
-    if (taskLines.length === 0) return null
+    if (!showTasks || taskLines.length === 0) return null
 
     return (
         <Box

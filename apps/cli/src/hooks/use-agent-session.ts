@@ -118,12 +118,8 @@ export function useAgentSession({
 
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsNotifications,
-        setSettingsNotifications,
         settingsShowTasks,
         setSettingsShowTasks,
-        settingsShowTips,
-        setSettingsShowTips,
         settingsToolPermission,
         setSettingsToolPermission,
         settingsCompactMode,
@@ -140,8 +136,6 @@ export function useAgentSession({
         setSettingsDefaultModel,
         settingsMaxTokens,
         setSettingsMaxTokens,
-        settingsAutoUpdate,
-        setSettingsAutoUpdate,
         settingsThinkingLevel,
         setSettingsThinkingLevel,
         settingsSteeringMode,
@@ -219,7 +213,15 @@ export function useAgentSession({
             const interval = setInterval(update, 500)
             return () => clearInterval(interval)
         }
-    }, [authMode])
+    }, [authMode, setTasksData])
+
+    const handleKillTask = useCallback(
+        (taskId: string) => {
+            taskManager.killTask(taskId)
+            setTasksData([...taskManager.getTasks()])
+        },
+        [setTasksData]
+    )
 
     const generateGrillQuestions = useCallback(
         async (userPrompt: string) => {
@@ -385,7 +387,7 @@ export function useAgentSession({
                                 {
                                     type: 'text',
                                     content:
-                                        'No stored credentials to remove. /logout only removes credentials saved by /login; environment variables and models.json config are unchanged.',
+                                        'No stored credentials to remove. `/logout` only removes credentials saved by `/login`.',
                                 },
                             ],
                         },
@@ -418,7 +420,9 @@ export function useAgentSession({
             }
 
             if (text.trim() === '/model') {
-                if (!isAuthenticated) {
+                const { getAuthStatus } = await import('../config')
+                const status = await getAuthStatus()
+                if (!isAuthenticated || (!status.hasByok && !status.hasDecember)) {
                     setStaticMessages((prev) => [...prev, ...activeMessages])
                     setActiveMessages([
                         { id: getNextMsgId(), role: 'user', text },
@@ -428,15 +432,19 @@ export function useAgentSession({
                             blocks: [
                                 {
                                     type: 'text',
-                                    content: 'You must log in first to configure a model.',
+                                    content:
+                                        '**Authentication Required**\n\nYou are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
                                 },
                             ],
                         },
                     ])
                     return
                 }
-                loadConfig().then((config) => {
-                    setSelectedProvider(config.activeProvider || '')
+                loadConfig().then(async (config) => {
+                    const { getProviderConfig } = await import('../config')
+                    const providerConfig = await getProviderConfig()
+                    const activeProvider = config.activeProvider || providerConfig?.provider || ''
+                    setSelectedProvider(activeProvider)
                     setAuthMode('model_select')
                 })
                 return
@@ -527,12 +535,9 @@ export function useAgentSession({
             if (text.trim() === '/settings') {
                 loadConfig().then((config) => {
                     setSettingsNonWorkspace(config.nonWorkspaceAccess ?? false)
-                    setSettingsNotifications(config.notifications ?? false)
                     setSettingsShowTasks(config.showActiveTasks ?? true)
-                    setSettingsShowTips(config.showTips ?? true)
                     setSettingsToolPermission(config.toolPermission ?? 'always-proceed')
-                    setSettingsAutoUpdate(config.autoUpdate ?? true)
-                    setSettingsThinkingLevel(config.thinkingLevel ?? 'off')
+                    setSettingsThinkingLevel(config.thinkingLevel ?? 'medium')
                     setSettingsSteeringMode(config.steeringMode ?? 'all')
                     setSettingsFollowUpMode(config.followUpMode ?? 'all')
                     setAuthMode('settings_main')
@@ -546,7 +551,8 @@ export function useAgentSession({
             }
 
             if (text.trim() === '/usage') {
-                const url = 'https://trydecember.com/settings/analytics/plan'
+                const baseUrl = process.env.WEB_URL || 'https://trydecember.com'
+                const url = `${baseUrl}/settings/analytics`
                 setActiveMessages((prev) => [
                     ...prev,
                     {
@@ -579,7 +585,7 @@ export function useAgentSession({
                             {
                                 type: 'text',
                                 content:
-                                    'You are not logged in. Please use `/login` to configure your API key or log in via December.',
+                                    '**Authentication Required**\n\nYou are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
                             },
                         ],
                     },
@@ -761,16 +767,10 @@ Explain which files need to be created, modified, or deleted, and what the chang
         setSessionNewName,
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsNotifications,
-        setSettingsNotifications,
         settingsShowTasks,
         setSettingsShowTasks,
-        settingsShowTips,
-        setSettingsShowTips,
         settingsToolPermission,
         setSettingsToolPermission,
-        settingsAutoUpdate,
-        setSettingsAutoUpdate,
         settingsThinkingLevel,
         setSettingsThinkingLevel,
         settingsSteeringMode,
@@ -795,5 +795,6 @@ Explain which files need to be created, modified, or deleted, and what the chang
         setPendingQuestions,
         getProviderModels,
         handleAbort,
+        handleKillTask,
     }
 }

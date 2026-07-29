@@ -1,5 +1,5 @@
 export async function loginViaDeviceCode(
-    baseUrl: string = process.env.DECEMBER_SERVER_URL || 'https://api.trydecember.com',
+    baseUrl: string = process.env.SERVER_URL || 'https://api.trydecember.com',
     onCodeGenerated: (userCode: string, verificationUri: string) => void
 ): Promise<{ token: string; email: string | null }> {
     return new Promise(async (resolve, reject) => {
@@ -9,13 +9,17 @@ export async function loginViaDeviceCode(
                 headers: { 'Content-Type': 'application/json' },
             })
 
-            if (!genRes.ok) {
-                throw new Error('Failed to generate device code')
+            let genData: any = {}
+            try {
+                genData = await genRes.json()
+            } catch {
+                // Intentionally swallowed: fallback handled if server returns non-JSON
             }
 
-            const genData = (await genRes.json()) as any
-            if (!genData.success) {
-                throw new Error(genData.message || 'Failed to generate device code')
+            if (!genRes.ok || !genData.success) {
+                throw new Error(
+                    genData.message || `Failed to generate device code (${genRes.status})`
+                )
             }
 
             const { deviceCode, userCode, verificationUri, expiresIn, interval } = genData.data

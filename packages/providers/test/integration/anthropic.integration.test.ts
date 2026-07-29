@@ -142,4 +142,18 @@ describe('Anthropic Provider (Integration)', () => {
         expect(provider.id).toBe('anthropic')
         expect(provider.stream).toBeInstanceOf(Function)
     })
+
+    test('should map thinkingLevel to thinking budget_tokens and max_tokens', async () => {
+        const provider = anthropicProvider('test-key')
+        const gen = provider.stream([{ role: 'user', content: 'hello' }], undefined, undefined, {
+            thinkingLevel: 'high',
+        })
+
+        const it = gen[Symbol.asyncIterator]()
+        await it.next()
+
+        expect(capturedOptions).not.toBeNull()
+        expect(capturedOptions.thinking).toEqual({ type: 'enabled', budget_tokens: 8192 })
+        expect(capturedOptions.max_tokens).toBe(9216)
+    })
 })

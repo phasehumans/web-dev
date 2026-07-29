@@ -75,10 +75,10 @@ export class Agent {
         this.operations = config.operations
         this.env = new Map<string, string>()
         this.modelOptions = config.modelOptions
-        this.thinkingLevel = config.thinkingLevel || 'off'
+        this.thinkingLevel = config.thinkingLevel || 'medium'
         this.convertToLlm = config.convertToLlm || this.defaultConvertToLlm
-        this.steeringQueue = new PendingMessageQueue(config.steeringMode || 'one-at-a-time')
-        this.followUpQueue = new PendingMessageQueue(config.followUpMode || 'one-at-a-time')
+        this.steeringQueue = new PendingMessageQueue(config.steeringMode || 'all')
+        this.followUpQueue = new PendingMessageQueue(config.followUpMode || 'all')
         this.conversation = new ConversationManager()
 
         for (const tool of config.tools) {

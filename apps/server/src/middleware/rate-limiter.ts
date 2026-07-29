@@ -132,10 +132,17 @@ export const cliRateLimiter = createRateLimiter({
 })
 
 export const deviceCodeLimiter = createRateLimiter({
-    windowMs: 15 * 60 * 1000,
+    windowMs: 5 * 60 * 1000,
     limit: 5,
-    message: 'Too many device code generation requests, please try again after 15 minutes',
+    message: 'Too many device code generation requests, please try again after 5 minutes',
     prefix: 'rl:device:',
+})
+
+export const deviceTokenPollLimiter = createRateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 180,
+    message: 'Too many device token polling requests, please try again later',
+    prefix: 'rl:device-poll:',
 })
 
 // Alias export for backward compatibility

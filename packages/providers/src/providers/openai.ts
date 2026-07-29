@@ -74,6 +74,18 @@ export function openaiProvider(
                 },
             }))
 
+            const thinkingLevel = modelOptions?.thinkingLevel
+            let reasoningEffort: 'low' | 'medium' | 'high' | undefined
+            if (thinkingLevel && thinkingLevel !== 'off') {
+                if (thinkingLevel === 'minimal' || thinkingLevel === 'low') {
+                    reasoningEffort = 'low'
+                } else if (thinkingLevel === 'medium') {
+                    reasoningEffort = 'medium'
+                } else if (thinkingLevel === 'high') {
+                    reasoningEffort = 'high'
+                }
+            }
+
             const stream = await client.chat.completions.create(
                 {
                     model: modelOptions?.model || 'gpt-4o',
@@ -82,6 +94,7 @@ export function openaiProvider(
                     stream: true,
                     temperature: modelOptions?.temperature,
                     max_tokens: modelOptions?.max_tokens,
+                    reasoning_effort: reasoningEffort,
                     stream_options: { include_usage: true },
                 },
                 { signal }

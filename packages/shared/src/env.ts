@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 export const env = createEnv({
     server: {
-        NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+        ENV: z.enum(['DEV', 'TEST', 'PROD']).default('DEV'),
         PORT: z.coerce.number().default(3000),
         LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 

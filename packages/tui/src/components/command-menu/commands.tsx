@@ -137,7 +137,7 @@ export const COMMANDS: Command[] = [
 
                 ctx.toast.show({ variant: 'info', message: 'Requesting upload URL...' })
 
-                const serverUrl = process.env.DECEMBER_SERVER_URL || 'https://api.trydecember.com'
+                const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
                 const proxyUrl = `${serverUrl}/api/v1`
                 const urlRes = await fetch(`${proxyUrl}/cli/handoff/upload-url`, {
                     headers: { Authorization: `Bearer ${config.decemberToken}` },

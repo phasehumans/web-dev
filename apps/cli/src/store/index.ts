@@ -79,12 +79,8 @@ export interface CliState {
     // settings feature
     settingsNonWorkspace: boolean
     setSettingsNonWorkspace: (val: boolean) => void
-    settingsNotifications: boolean
-    setSettingsNotifications: (val: boolean) => void
     settingsShowTasks: boolean
     setSettingsShowTasks: (val: boolean) => void
-    settingsShowTips: boolean
-    setSettingsShowTips: (val: boolean) => void
     settingsToolPermission: 'always-ask' | 'always-proceed'
     setSettingsToolPermission: (val: 'always-ask' | 'always-proceed') => void
     settingsCompactMode: boolean
@@ -95,8 +91,6 @@ export interface CliState {
     setSettingsAutoScroll: (val: boolean) => void
     settingsStreamSpeed: 'smooth' | 'instant'
     setSettingsStreamSpeed: (val: 'smooth' | 'instant') => void
-    settingsAutoUpdate: boolean
-    setSettingsAutoUpdate: (val: boolean) => void
     settingsSelectedIndex: number
     setSettingsSelectedIndex: (val: number) => void
     settingsDefaultModel: string
@@ -222,13 +216,9 @@ export const useCliStore = create<CliState>((set) => ({
     // settings feature
     settingsNonWorkspace: false,
     setSettingsNonWorkspace: (settingsNonWorkspace) => set({ settingsNonWorkspace }),
-    settingsNotifications: false,
-    setSettingsNotifications: (settingsNotifications) => set({ settingsNotifications }),
     settingsShowTasks: true,
     setSettingsShowTasks: (settingsShowTasks) => set({ settingsShowTasks }),
-    settingsShowTips: true,
-    setSettingsShowTips: (settingsShowTips) => set({ settingsShowTips }),
-    settingsToolPermission: 'always-ask',
+    settingsToolPermission: 'always-proceed',
     setSettingsToolPermission: (settingsToolPermission) => set({ settingsToolPermission }),
     settingsCompactMode: false,
     setSettingsCompactMode: (settingsCompactMode) => set({ settingsCompactMode }),
@@ -238,15 +228,13 @@ export const useCliStore = create<CliState>((set) => ({
     setSettingsAutoScroll: (settingsAutoScroll) => set({ settingsAutoScroll }),
     settingsStreamSpeed: 'smooth',
     setSettingsStreamSpeed: (settingsStreamSpeed) => set({ settingsStreamSpeed }),
-    settingsAutoUpdate: true,
-    setSettingsAutoUpdate: (settingsAutoUpdate) => set({ settingsAutoUpdate }),
     settingsSelectedIndex: 0,
     setSettingsSelectedIndex: (settingsSelectedIndex) => set({ settingsSelectedIndex }),
     settingsDefaultModel: '',
     setSettingsDefaultModel: (settingsDefaultModel) => set({ settingsDefaultModel }),
     settingsMaxTokens: '',
     setSettingsMaxTokens: (settingsMaxTokens) => set({ settingsMaxTokens }),
-    settingsThinkingLevel: 'off',
+    settingsThinkingLevel: 'medium',
     setSettingsThinkingLevel: (settingsThinkingLevel) => set({ settingsThinkingLevel }),
     settingsSteeringMode: 'all',
     setSettingsSteeringMode: (settingsSteeringMode) => set({ settingsSteeringMode }),

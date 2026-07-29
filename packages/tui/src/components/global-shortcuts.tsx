@@ -13,6 +13,8 @@ export function GlobalShortcuts(session: any) {
         setTaskViewingId,
         taskScrollOffset,
         setTaskScrollOffset,
+        taskSelectedIndex,
+        setTaskSelectedIndex,
         sessionRenameMode,
         setSessionRenameMode,
         customInputMode,
@@ -21,13 +23,13 @@ export function GlobalShortcuts(session: any) {
         setPlanMode,
         grillMode,
         setGrillMode,
-        grillQuestions,
         setGrillQuestions,
         setCurrentGrillIndex,
         setGrillAnswers,
         setGrillPrompt,
         setCurrentPlannedPrompt,
         tasksData,
+        handleKillTask,
     } = session
 
     useInput((input, key) => {
@@ -39,10 +41,31 @@ export function GlobalShortcuts(session: any) {
                 } else {
                     setAuthMode('none')
                 }
+            } else if (taskViewingId) {
+                if (key.upArrow) setTaskScrollOffset((prev: number) => Math.max(0, prev - 1))
+                if (key.downArrow) setTaskScrollOffset((prev: number) => prev + 1)
+                if (key.leftArrow) setTaskScrollOffset((prev: number) => Math.max(0, prev - 10))
+                if (key.rightArrow) setTaskScrollOffset((prev: number) => prev + 10)
+            } else {
+                if (key.upArrow) setTaskSelectedIndex((prev: number) => Math.max(0, prev - 1))
+                if (key.downArrow)
+                    setTaskSelectedIndex((prev: number) =>
+                        Math.min(Math.max(0, (tasksData?.length || 1) - 1), prev + 1)
+                    )
+                if (key.return) {
+                    const selected = tasksData?.[taskSelectedIndex]
+                    if (selected) {
+                        setTaskViewingId(selected.id)
+                        setTaskScrollOffset(0)
+                    }
+                }
+                if (input === 'k' || input === 'K') {
+                    const selected = tasksData?.[taskSelectedIndex]
+                    if (selected && handleKillTask) {
+                        handleKillTask(selected.id)
+                    }
+                }
             }
-            if (taskViewingId && key.upArrow)
-                setTaskScrollOffset((prev: number) => Math.max(0, prev - 1))
-            if (taskViewingId && key.downArrow) setTaskScrollOffset((prev: number) => prev + 1)
             return
         }
 
@@ -60,7 +83,6 @@ export function GlobalShortcuts(session: any) {
             if (key.escape) {
                 setPlanMode(false)
                 setCurrentPlannedPrompt(null)
-                toast.show({ variant: 'error', message: 'Plan rejected.' })
             }
             return
         }

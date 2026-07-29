@@ -1,3 +1,5 @@
+import path from 'node:path'
+
 import { Agent } from '@december/agent'
 
 import { loadConfig } from '../config'
@@ -14,6 +16,33 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
 
     agent.operations.ui.requestPermission = async (toolCall: any) => {
         const config = await loadConfig()
+
+        const fileTools = [
+            'view_file',
+            'write_to_file',
+            'replace_file_content',
+            'multi_replace_file_content',
+        ]
+        if (fileTools.includes(toolCall.name)) {
+            const targetPath =
+                toolCall.input?.TargetFile ||
+                toolCall.input?.AbsolutePath ||
+                toolCall.input?.filePath ||
+                toolCall.input?.path
+            if (targetPath) {
+                const cwd = process.cwd()
+                const resolved = path.resolve(cwd, targetPath)
+                const relative = path.relative(cwd, resolved)
+                const isOutside = relative.startsWith('..') || path.isAbsolute(relative)
+                if (!config.nonWorkspaceAccess && isOutside) {
+                    return {
+                        block: true,
+                        error: 'Access denied: Non-workspace access is disabled in settings',
+                    }
+                }
+            }
+        }
+
         if (config.toolPermission === 'always-proceed') return { block: false }
 
         const modifyingTools = [

@@ -9,6 +9,7 @@ export const getProviderModels = (provider: string) => {
                 { label: 'Claude 3 Haiku', value: 'claude-3-haiku-20240307' },
             ]
         case 'google':
+        case 'gemini':
             return [
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
                 { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
@@ -66,6 +67,7 @@ export const getProviderModels = (provider: string) => {
                 { label: 'Qwen 2.5 Coder 32B', value: 'Qwen/Qwen2.5-Coder-32B-Instruct' },
             ]
         case 'kimi':
+        case 'moonshot':
         case 'moonshoot':
             return [
                 { label: 'Moonshot v1 8K', value: 'moonshot-v1-8k' },
@@ -92,6 +94,16 @@ export const getProviderModels = (provider: string) => {
             return [
                 { label: 'ZAI v1', value: 'zai-v1' },
                 { label: 'GLM 4', value: 'glm-4' },
+            ]
+        case 'december':
+        case 'december_proxy':
+            return [
+                { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
+                { label: 'Claude 3.7 Sonnet', value: 'claude-3-7-sonnet-latest' },
+                { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet-latest' },
+                { label: 'o3-mini', value: 'o3-mini' },
+                { label: 'GPT-4o', value: 'gpt-4o' },
+                { label: 'DeepSeek Reasoner (R1)', value: 'deepseek-reasoner' },
             ]
         default:
             return [{ label: 'Default', value: 'default' }]
