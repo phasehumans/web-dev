@@ -323,6 +323,7 @@
       "name": "@december/tui",
       "version": "0.2.20",
       "dependencies": {
+        "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
         "cli-highlight": "2.1.11",
         "ink": "^7.0.5",

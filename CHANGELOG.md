@@ -2,6 +2,55 @@
 
 ### Features
 
+- _(evals)_ Scaffold @december/evals package and task loader (#258)
+- _(cli)_ Extract runHeadlessTask seam and add integration test suite (#265)
+- _(cli)_ Restore console output streams and format headless events (#266)
+- _(cli)_ Add structured CLI argument parsing and standard flag dispatch (#267)
+- _(cli)_ Isolate readline steering queue during active interactive prompts (#268)
+- _(cli)_ Add non-interactive CI/CD automation mode and pre-flight auth check (#269)
+- _(cli)_ Implement standalone CLI handlers for logout and init commands (#270)
+- _(cli)_ Stream thinking deltas and status events to stdout in headless mode
+- _(cli)_ Refactor settings, enforce sandboxing and tasks mode (#298)
+- _(cli)_ Refactor settings, enforce sandboxing and tasks mode (#298) (#299)
+
+### Bug Fixes
+
+- _(types)_ Fix child process listener types for typecheck verification
+- _(cli)_ Parse CLI flags before console suppression in index.ts
+- _(cli)_ Align standalone init command with TUI workspace file scaffolding
+- _(cli)_ Expand BYOK provider models, fix agent error formatting, and update TUI styling
+- _(cli)_ Expand BYOK provider models, fix agent error formatting, and update TUI styling (#271)
+- Headless mode
+
+### Other
+
+- Remove subagents and transition to single-agent CLI architecture (#263)
+
+### Refactor
+
+- _(shared,tui)_ Address code review standards and queue helper deduplication (#246)
+- _(test)_ Remove helpers subfolders and flatten helper files into test directory (#246)
+- _(tools)_ Remove SubagentTool and spawnSubagent from ToolExecuteContext (#253)
+- _(agent)_ Remove subagent spawning and subagent depth checks (#254)
+- _(cli,tui)_ Clean up subagent tool registrations, formatters, and TUI status banners (#255)
+
+### Documentation
+
+- _(adr)_ Document single-agent architecture decision (#256)
+
+### Testing
+
+- _(packages)_ Standardize test structure for agent, tools, providers (#246)
+- _(root)_ Add test:unit and test:integration scripts (#246)
+- _(database)_ Add unit and integration test structure for database (#246)
+- _(tui)_ Add unit and integration test structure for tui (#247, #248, #249)
+- _(shared)_ Add unit and integration test structure for shared package (#246)
+- Comprehensive unit and integration test architecture across packages (#246, #247, #248, #249) (#250)
+
+## [0.2.20] - 2026-07-25
+
+### Features
+
 - _(home)_ Add get started section
 - _(hero)_ Add get started section in home page (#217)
 - _(wiki)_ Implement Prisma schema & backend wiki foundation (#220)
@@ -45,6 +94,10 @@
 
 - Add testing and environment setup instructions to AGENTS.md
 - Add server module architecture and service layer standards to AGENTS.md
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.20
 
 ## [0.2.19] - 2026-07-21
 

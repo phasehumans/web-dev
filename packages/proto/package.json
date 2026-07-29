@@ -1,6 +1,6 @@
 {
     "name": "@december/proto",
-    "version": "0.2.20",
+    "version": "0.2.21",
     "private": true,
     "scripts": {
         "build": "mkdir -p src/generated && protoc --plugin=protoc-gen-ts_proto=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./src/generated ./runtime.proto --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true",
