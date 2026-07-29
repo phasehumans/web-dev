@@ -70,6 +70,24 @@ export function anthropicProvider(baseURL?: string, apiKey?: string): LLMProvide
                 input_schema: t.inputSchema,
             }))
 
+            const thinkingLevel = modelOptions?.thinkingLevel
+            let thinking: { type: 'enabled'; budget_tokens: number } | undefined
+            let maxTokens = modelOptions?.max_tokens || 4096
+
+            if (thinkingLevel && thinkingLevel !== 'off') {
+                const budgetMap: Record<string, number> = {
+                    minimal: 1024,
+                    low: 2048,
+                    medium: 4096,
+                    high: 8192,
+                }
+                const budget = budgetMap[thinkingLevel]
+                if (budget) {
+                    thinking = { type: 'enabled', budget_tokens: budget }
+                    maxTokens = Math.max(maxTokens, budget + 1024)
+                }
+            }
+
             const stream = await client.messages.create(
                 {
                     model: modelOptions?.model || 'claude-3-5-sonnet-20241022',
@@ -77,8 +95,9 @@ export function anthropicProvider(baseURL?: string, apiKey?: string): LLMProvide
                     system: systemPrompt,
                     tools: antTools,
                     stream: true,
-                    max_tokens: modelOptions?.max_tokens || 4096,
-                    temperature: modelOptions?.temperature,
+                    max_tokens: maxTokens,
+                    temperature: thinking ? undefined : modelOptions?.temperature,
+                    thinking: thinking as any,
                 },
                 { signal }
             )
@@ -108,6 +127,8 @@ export function anthropicProvider(baseURL?: string, apiKey?: string): LLMProvide
                 } else if (event.type === 'content_block_delta') {
                     if (event.delta.type === 'text_delta') {
                         yield { type: 'text', text: event.delta.text }
+                    } else if (event.delta.type === 'thinking_delta') {
+                        yield { type: 'thinking_delta', text: (event.delta as any).thinking }
                     } else if (event.delta.type === 'input_json_delta') {
                         const id = activeToolCalls.get(event.index)
                         if (id) {

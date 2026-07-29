@@ -9,6 +9,7 @@ export const getProviderModels = (provider: string) => {
                 { label: 'Claude 3 Haiku', value: 'claude-3-haiku-20240307' },
             ]
         case 'google':
+        case 'gemini':
             return [
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
                 { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
@@ -66,6 +67,7 @@ export const getProviderModels = (provider: string) => {
                 { label: 'Qwen 2.5 Coder 32B', value: 'Qwen/Qwen2.5-Coder-32B-Instruct' },
             ]
         case 'kimi':
+        case 'moonshot':
         case 'moonshoot':
             return [
                 { label: 'Moonshot v1 8K', value: 'moonshot-v1-8k' },
@@ -92,6 +94,16 @@ export const getProviderModels = (provider: string) => {
             return [
                 { label: 'ZAI v1', value: 'zai-v1' },
                 { label: 'GLM 4', value: 'glm-4' },
+            ]
+        case 'december':
+        case 'december_proxy':
+            return [
+                { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
+                { label: 'Claude 3.7 Sonnet', value: 'claude-3-7-sonnet-latest' },
+                { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet-latest' },
+                { label: 'o3-mini', value: 'o3-mini' },
+                { label: 'GPT-4o', value: 'gpt-4o' },
+                { label: 'DeepSeek Reasoner (R1)', value: 'deepseek-reasoner' },
             ]
         default:
             return [{ label: 'Default', value: 'default' }]
@@ -120,18 +132,5 @@ export const getModelLabel = (value: string) => {
     return value
 }
 
-export const getModelContextWindow = (value: string) => {
-    if (value.includes('gemini')) return 1000000
-    if (value.includes('claude')) return 200000
-    if (value.includes('o3-mini') || value.includes('o1')) return 200000
-    if (value.includes('gpt-4.5')) return 128000
-    if (value.includes('gpt-4')) return 128000
-    if (value.includes('gpt-3.5')) return 16385
-    if (value.includes('deepseek')) return 128000
-    if (value.includes('llama-3.3') || value.includes('llama-3.1')) return 128000
-    if (value.includes('128k')) return 131072
-    if (value.includes('32k')) return 32768
-    if (value.includes('8192')) return 8192
-    if (value.includes('8k')) return 8192
-    return 100000
-}
+import { getModelContextWindow } from '@december/providers'
+export { getModelContextWindow }

@@ -39,3 +39,11 @@ A step-by-step event log (`trajectory.jsonl`) generated during an evaluation run
 ## EvalReport
 
 A structured summary report (`summary.json`) produced at the conclusion of an evaluation suite run. Contains aggregate metrics including pass rates (Pass@1), total execution duration, token usage totals, and cost metrics.
+
+## PrReview
+
+An AI-generated code review for a GitHub Pull Request executed inside an ephemeral E2B sandbox. Contains review status (`PENDING`, `COMPLETED`, `FAILED`), overall summary markdown, GitHub review event (`COMMENT`, `REQUEST_CHANGES`, `APPROVE`), E2B sandbox reference, target PR metadata, and child `PrReviewComment` entries.
+
+## PrReviewComment
+
+A line-specific code review finding attached to a `PrReview`. Holds the file path, line number, diff side (`LEFT`/`RIGHT`), review feedback text, optional suggested code fix diff, GitHub comment ID, and resolution status (`OPEN`, `FIXED`, `IGNORED`).

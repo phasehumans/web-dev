@@ -28,16 +28,13 @@ export interface DecemberConfig {
     decemberToken?: string
     email?: string
     nonWorkspaceAccess?: boolean
-    notifications?: boolean
     showActiveTasks?: boolean
-    showTips?: boolean
     toolPermission?: 'always-proceed' | 'always-ask'
     compactMode?: boolean
     soundEffects?: boolean
     autoScroll?: boolean
     streamSpeed?: 'smooth' | 'instant'
     approvedTools?: string[]
-    autoUpdate?: boolean
     thinkingLevel?: 'off' | 'minimal' | 'low' | 'medium' | 'high'
     steeringMode?: 'all' | 'one-at-a-time'
     followUpMode?: 'all' | 'one-at-a-time'
@@ -107,12 +104,8 @@ export async function saveConfig(config: DecemberConfig): Promise<void> {
 export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
     const config = await loadConfig()
 
-    const hasByokConfig = config.activeProvider && config.providers[config.activeProvider]
-    const hasEnvVars =
-        process.env.GEMINI_API_KEY ||
-        process.env.OPENAI_API_KEY ||
-        process.env.ANTHROPIC_API_KEY ||
-        process.env.OPENROUTER_API_KEY
+    const hasByokConfig =
+        config.activeProvider && config.providers && config.providers[config.activeProvider]
     const hasDecember = !!config.decemberToken
 
     // if preferred is december and it exists, use it first
@@ -130,20 +123,6 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
         }
     }
 
-    // check for common env vars for byok priority
-    if (process.env.GEMINI_API_KEY) {
-        return { provider: 'gemini', apiKey: process.env.GEMINI_API_KEY, authMethod: 'env' }
-    }
-    if (process.env.OPENAI_API_KEY) {
-        return { provider: 'openai', apiKey: process.env.OPENAI_API_KEY, authMethod: 'env' }
-    }
-    if (process.env.ANTHROPIC_API_KEY) {
-        return { provider: 'anthropic', apiKey: process.env.ANTHROPIC_API_KEY, authMethod: 'env' }
-    }
-    if (process.env.OPENROUTER_API_KEY) {
-        return { provider: 'openrouter', apiKey: process.env.OPENROUTER_API_KEY, authMethod: 'env' }
-    }
-
     // wallet fallback
     if (hasDecember) {
         return {
@@ -158,8 +137,13 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
 
 export async function getAuthStatus() {
     const config = await loadConfig()
+    const hasByokConfig = !!(
+        config.activeProvider &&
+        config.providers &&
+        config.providers[config.activeProvider]
+    )
     return {
-        hasByok: !!(config.activeProvider && config.providers[config.activeProvider]),
+        hasByok: hasByokConfig,
         hasDecember: !!config.decemberToken,
         authPriority: config.authPriority || 'byok',
     }

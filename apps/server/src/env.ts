@@ -3,7 +3,7 @@ import path from 'path'
 import dotenv from 'dotenv'
 import { z } from 'zod'
 
-const envFile = process.env.NODE_ENV === 'test' || process.env.ENV === 'TEST' ? '.env.test' : '.env'
+const envFile = process.env.ENV === 'TEST' ? '.env.test' : '.env'
 
 if (!process.env.ENV_LOADED) {
     dotenv.config({
@@ -16,7 +16,6 @@ const envSchema = z
     .object({
         PORT: z.coerce.number().default(4000),
         ENV: z.enum(['DEV', 'PROD', 'TEST']).default('DEV'),
-        NODE_ENV: z.string().optional(),
         WEB_URL: z.string().url(),
         SERVER_URL: z.string().url(),
         DOCS_URL: z.string().url().optional(),

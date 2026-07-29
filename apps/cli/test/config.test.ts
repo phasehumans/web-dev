@@ -134,7 +134,7 @@ describe('config', () => {
             })
         })
 
-        test('uses environment variables if no byok config and no december proxy priority', async () => {
+        test('ignores environment variables when no byok config or december token in config', async () => {
             process.env.GEMINI_API_KEY = 'env-gemini-key'
             mockReadFile.mockImplementation(async (filePath: string) => {
                 if (filePath.includes('settings.json')) throw new Error('No workspace config')
@@ -142,26 +142,7 @@ describe('config', () => {
             })
 
             const providerConfig = await getProviderConfig()
-            expect(providerConfig).toEqual({
-                provider: 'gemini',
-                apiKey: 'env-gemini-key',
-                authMethod: 'env',
-            })
-        })
-
-        test('uses environment variables in proper fallback order', async () => {
-            process.env.OPENAI_API_KEY = 'env-openai-key'
-            mockReadFile.mockImplementation(async (filePath: string) => {
-                if (filePath.includes('settings.json')) throw new Error('No workspace config')
-                return JSON.stringify({ providers: {} })
-            })
-
-            const providerConfig = await getProviderConfig()
-            expect(providerConfig).toEqual({
-                provider: 'openai',
-                apiKey: 'env-openai-key',
-                authMethod: 'env',
-            })
+            expect(providerConfig).toBeUndefined()
         })
 
         test('uses december proxy as fallback if no env and no byok', async () => {

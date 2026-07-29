@@ -5,6 +5,7 @@ import {
     authRateLimiter,
     refreshRateLimiter,
     deviceCodeLimiter,
+    deviceTokenPollLimiter,
 } from '../../middleware/rate-limiter'
 
 import { authController } from './auth.controller'
@@ -26,7 +27,7 @@ authRouter.delete('/account', authMiddleware, authController.deleteAccount)
 
 authRouter.get('/cli-token', authMiddleware, authController.getCliToken)
 authRouter.post('/device/code', deviceCodeLimiter, authController.generateDeviceCode)
-authRouter.post('/device/token', deviceCodeLimiter, authController.pollDeviceToken)
+authRouter.post('/device/token', deviceTokenPollLimiter, authController.pollDeviceToken)
 authRouter.post('/device/verify', authMiddleware, authController.verifyUserCode)
 
 export default authRouter

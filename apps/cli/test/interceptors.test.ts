@@ -88,5 +88,44 @@ describe('setupAgentInterceptors', () => {
             resolve({ block: false })
             await expect(p).resolves.toEqual({ block: false })
         })
+
+        it('blocks file operations outside process.cwd() when nonWorkspaceAccess is false', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({ nonWorkspaceAccess: false })
+            const toolCall = {
+                name: 'view_file',
+                input: { AbsolutePath: '/etc/passwd' },
+            }
+            const result = await mockAgent.operations.ui.requestPermission(toolCall)
+            expect(result).toEqual({
+                block: true,
+                error: 'Access denied: Non-workspace access is disabled in settings',
+            })
+        })
+
+        it('allows file operations outside process.cwd() when nonWorkspaceAccess is true', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({
+                nonWorkspaceAccess: true,
+                toolPermission: 'always-proceed',
+            })
+            const toolCall = {
+                name: 'view_file',
+                input: { AbsolutePath: '/etc/passwd' },
+            }
+            const result = await mockAgent.operations.ui.requestPermission(toolCall)
+            expect(result).toEqual({ block: false })
+        })
+
+        it('allows file operations inside process.cwd() when nonWorkspaceAccess is false', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({
+                nonWorkspaceAccess: false,
+                toolPermission: 'always-proceed',
+            })
+            const toolCall = {
+                name: 'view_file',
+                input: { AbsolutePath: `${process.cwd()}/src/index.ts` },
+            }
+            const result = await mockAgent.operations.ui.requestPermission(toolCall)
+            expect(result).toEqual({ block: false })
+        })
     })
 })

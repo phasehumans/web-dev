@@ -91,7 +91,7 @@ export function ChatApp({
     return (
         <Box flexDirection="column" width="100%">
             <GlobalShortcuts {...session} agent={agent} />
-            <TaskHUD cwd={process.cwd()} />
+            <TaskHUD cwd={process.cwd()} showTasks={session.settingsShowTasks} />
             <MessageList
                 staticKey={staticKey}
                 staticMessages={staticMessages}

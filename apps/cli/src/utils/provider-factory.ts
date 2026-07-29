@@ -31,7 +31,11 @@ export function instantiateProvider(provider: string, apiKey: string): any {
         case 'zai':
             return openaiProvider('https://api.zai.ai/v1', apiKey)
         default: {
-            const proxyUrl = `http://localhost:${process.env.DECEMBER_SERVER_PORT || 3000}/api/v1`
+            if (process.env.SERVER_PORT) {
+                return openaiProvider(`http://localhost:${process.env.SERVER_PORT}/api/v1`, apiKey)
+            }
+            const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
+            const proxyUrl = `${serverUrl}/api/v1/cli`
             return openaiProvider(proxyUrl, apiKey)
         }
     }

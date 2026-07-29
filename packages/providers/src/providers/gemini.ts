@@ -165,6 +165,21 @@ export function geminiProvider(apiKey?: string): LLMProvider {
                   ]
                 : undefined
 
+            const thinkingLevel = modelOptions?.thinkingLevel
+            let thinkingConfig: { thinkingBudget?: number } | undefined
+            if (thinkingLevel && thinkingLevel !== 'off') {
+                const budgetMap: Record<string, number> = {
+                    minimal: 1024,
+                    low: 2048,
+                    medium: 4096,
+                    high: 8192,
+                }
+                const budget = budgetMap[thinkingLevel]
+                if (budget) {
+                    thinkingConfig = { thinkingBudget: budget }
+                }
+            }
+
             const responseStream = await (client.models.generateContentStream as any)({
                 model: modelOptions?.model || 'gemini-3.6-flash',
                 contents: geminiMessages,
@@ -175,6 +190,7 @@ export function geminiProvider(apiKey?: string): LLMProvider {
                     tools: geminiTools,
                     temperature: modelOptions?.temperature,
                     maxOutputTokens: modelOptions?.max_tokens,
+                    thinkingConfig,
                 },
                 abortSignal: signal,
             })

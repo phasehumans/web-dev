@@ -3,8 +3,8 @@ import http from 'node:http'
 import { openUrl } from '../utils/open'
 
 export async function loginViaBrowser(
-    baseUrl: string = process.env.DECEMBER_WEB_URL
-        ? `${process.env.DECEMBER_WEB_URL}/cli/login`
+    baseUrl: string = process.env.WEB_URL
+        ? `${process.env.WEB_URL}/cli/login`
         : 'https://trydecember.com/cli/login',
     onUrlGenerated?: (url: string) => void
 ): Promise<{ token: string; email: string | null }> {

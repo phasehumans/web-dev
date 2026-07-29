@@ -6,7 +6,11 @@ import request from 'supertest'
 import app from '../src/app'
 import { createModuleLogger, logger } from '../src/config/logger'
 import { env } from '../src/env'
-import { createRateLimiter } from '../src/middleware/rate-limiter'
+import {
+    createRateLimiter,
+    deviceCodeLimiter,
+    deviceTokenPollLimiter,
+} from '../src/middleware/rate-limiter'
 
 describe('Rate Limiter & Structured Logger Middleware Integration', () => {
     it('propagates or generates x-request-id header on HTTP responses', async () => {
@@ -96,5 +100,10 @@ describe('Rate Limiter & Structured Logger Middleware Integration', () => {
         const moduleLogger = createModuleLogger('testModule')
         expect(moduleLogger).toBeDefined()
         expect(logger).toBeDefined()
+    })
+
+    it('defines separate rate limiters for device code generation and device token polling', () => {
+        expect(deviceCodeLimiter).toBeDefined()
+        expect(deviceTokenPollLimiter).toBeDefined()
     })
 })

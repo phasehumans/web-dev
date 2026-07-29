@@ -22,7 +22,8 @@
             "@december/database": ["./packages/database/src/index.ts"],
             "@december/agent": ["./packages/agent/src/index.ts"],
             "@december/tui": ["./packages/tui/src/index.tsx"],
-            "@december/shared": ["./packages/shared/src/index.ts"]
+            "@december/shared": ["./packages/shared/src/index.ts"],
+            "@december/providers": ["./packages/providers/src/index.ts"]
         },
 
         "noUnusedLocals": false,

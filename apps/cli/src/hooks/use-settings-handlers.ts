@@ -6,16 +6,10 @@ export function useSettingsHandlers() {
     const {
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsNotifications,
-        setSettingsNotifications,
         settingsShowTasks,
         setSettingsShowTasks,
-        settingsShowTips,
-        setSettingsShowTips,
         settingsToolPermission,
         setSettingsToolPermission,
-        settingsAutoUpdate,
-        setSettingsAutoUpdate,
         setAuthMode,
         setSettingsDefaultModel,
         setSettingsMaxTokens,
@@ -42,30 +36,15 @@ export function useSettingsHandlers() {
                 setSettingsNonWorkspace(!settingsNonWorkspace)
                 updated = true
                 break
-            case 'notifications':
-                config.notifications = !settingsNotifications
-                setSettingsNotifications(!settingsNotifications)
-                updated = true
-                break
             case 'showActiveTasks':
                 config.showActiveTasks = !settingsShowTasks
                 setSettingsShowTasks(!settingsShowTasks)
-                updated = true
-                break
-            case 'showTips':
-                config.showTips = !settingsShowTips
-                setSettingsShowTips(!settingsShowTips)
                 updated = true
                 break
             case 'toolPermission':
                 config.toolPermission =
                     settingsToolPermission === 'always-proceed' ? 'always-ask' : 'always-proceed'
                 setSettingsToolPermission(config.toolPermission)
-                updated = true
-                break
-            case 'autoUpdate':
-                config.autoUpdate = !settingsAutoUpdate
-                setSettingsAutoUpdate(!settingsAutoUpdate)
                 updated = true
                 break
             case 'thinkingLevel': {
@@ -82,6 +61,13 @@ export function useSettingsHandlers() {
                     ]
                 config.thinkingLevel = nextThinkingLevel
                 setSettingsThinkingLevel(nextThinkingLevel)
+                if (agent) {
+                    agent.thinkingLevel = nextThinkingLevel
+                    agent.modelOptions = {
+                        ...agent.modelOptions,
+                        thinkingLevel: nextThinkingLevel,
+                    }
+                }
                 updated = true
                 break
             }
