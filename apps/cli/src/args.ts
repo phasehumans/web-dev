@@ -38,7 +38,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
         const provider = values.provider as string | undefined
         const sessionId = values['session-id'] as string | undefined
 
-        const knownCommands = ['handoff', 'login', 'logout', 'init']
+        const knownCommands = ['login', 'logout', 'init']
         let command: string | undefined
         let prompt: string | undefined
 
@@ -82,7 +82,6 @@ Usage:
   december                          Launch interactive TUI session
   december "<prompt>"               Execute headless agent task
   december login                    Log in via browser
-  december handoff                  Handoff current workspace to December Cloud
   december logout                   Remove saved authentication credentials
   december init                     Initialize local .december configuration
 

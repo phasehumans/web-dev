@@ -1,10 +1,8 @@
+import { getModelContextWindow } from '@december/providers'
 import { Box, Text } from 'ink'
 
 function getModelLabel(id: string) {
     return id
-}
-function getModelContextWindow(id: string) {
-    return 128000
 }
 
 export function ContextSelectMenu(props: any) {

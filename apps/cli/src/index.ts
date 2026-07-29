@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { execSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 
@@ -216,110 +215,6 @@ Guidelines:
     await agent.loadContext()
 
     const userEmail = config.decemberToken ? config.email : undefined
-
-    if (parsedArgs.command === 'handoff') {
-        console.log('Initiating Cloud Handoff...')
-        if (!config.decemberToken) {
-            console.error('You must be logged in via `december login` to use handoff.')
-            process.exit(1)
-        }
-
-        try {
-            console.log('Zipping workspace state...')
-            const archivePath = '.december-handoff.tar.gz'
-
-            const excludes = [
-                '--exclude=node_modules',
-                '--exclude=.git',
-                `--exclude=${archivePath}`,
-            ]
-            try {
-                if (fs.existsSync('.gitignore')) {
-                    const lines = fs.readFileSync('.gitignore', 'utf8').split('\n')
-                    for (const line of lines) {
-                        const t = line.trim()
-                        if (t && !t.startsWith('#'))
-                            excludes.push(`--exclude=${t.endsWith('/') ? t.slice(0, -1) : t}`)
-                    }
-                }
-                if (fs.existsSync('.decemberignore')) {
-                    const lines = fs.readFileSync('.decemberignore', 'utf8').split('\n')
-                    for (const line of lines) {
-                        const t = line.trim()
-                        if (t && !t.startsWith('#'))
-                            excludes.push(`--exclude=${t.endsWith('/') ? t.slice(0, -1) : t}`)
-                    }
-                }
-            } catch {
-                // Ignore unreadable ignore files during handoff archive creation
-            }
-
-            const excludeArgs = excludes.join(' ')
-            try {
-                execSync(`tar -czf ${archivePath} ${excludeArgs} .`, {
-                    stdio: 'inherit',
-                })
-            } catch (e: any) {
-                if (e.status !== 1) throw e
-            }
-
-            console.log('Requesting pre-signed URL from server...')
-            const serverUrl = process.env.DECEMBER_SERVER_URL || 'https://api.trydecember.com'
-            const proxyUrl = `${serverUrl}/api/v1`
-            const urlRes = await fetch(`${proxyUrl}/cli/handoff/upload-url`, {
-                headers: { Authorization: `Bearer ${config.decemberToken}` },
-            })
-            if (!urlRes.ok) throw new Error(await urlRes.text())
-            const { uploadUrl, objectKey } = (await urlRes.json()) as any
-
-            console.log('Uploading to MinIO...')
-            const fileData = fs.readFileSync(archivePath)
-
-            let uploadSuccess = false
-            let attempts = 0
-            while (!uploadSuccess && attempts < 3) {
-                attempts++
-                try {
-                    const uploadRes = await fetch(uploadUrl, {
-                        method: 'PUT',
-                        body: fileData,
-                    })
-                    if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.statusText}`)
-                    uploadSuccess = true
-                } catch (err: any) {
-                    console.error(`Upload attempt ${attempts} failed: ${err.message}`)
-                    if (attempts >= 3) {
-                        throw new Error('Failed to upload workspace after 3 attempts.')
-                    }
-                    console.log('Retrying upload...')
-                    await new Promise((r) => setTimeout(r, 2000))
-                }
-            }
-
-            console.log('Completing handoff...')
-            const sessionRes = await fetch(`${proxyUrl}/cli/handoff/complete`, {
-                method: 'POST',
-                headers: {
-                    Authorization: `Bearer ${config.decemberToken}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    title: 'Handoff from ' + process.cwd().split('/').pop(),
-                    messages: harness.getAgent().messages,
-                    objectKey,
-                }),
-            })
-            if (!sessionRes.ok) throw new Error(await sessionRes.text())
-
-            // clean up
-            fs.unlinkSync(archivePath)
-
-            console.log('Handoff complete! You can now resume this session on December Cloud.')
-        } catch (e: any) {
-            console.error('Handoff failed:', e.message)
-        }
-        process.exit(0)
-    }
 
     if (parsedArgs.command === 'login') {
         console.log('Please login via the browser...')

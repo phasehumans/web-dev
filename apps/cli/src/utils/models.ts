@@ -120,18 +120,5 @@ export const getModelLabel = (value: string) => {
     return value
 }
 
-export const getModelContextWindow = (value: string) => {
-    if (value.includes('gemini')) return 1000000
-    if (value.includes('claude')) return 200000
-    if (value.includes('o3-mini') || value.includes('o1')) return 200000
-    if (value.includes('gpt-4.5')) return 128000
-    if (value.includes('gpt-4')) return 128000
-    if (value.includes('gpt-3.5')) return 16385
-    if (value.includes('deepseek')) return 128000
-    if (value.includes('llama-3.3') || value.includes('llama-3.1')) return 128000
-    if (value.includes('128k')) return 131072
-    if (value.includes('32k')) return 32768
-    if (value.includes('8192')) return 8192
-    if (value.includes('8k')) return 8192
-    return 100000
-}
+import { getModelContextWindow } from '@december/providers'
+export { getModelContextWindow }

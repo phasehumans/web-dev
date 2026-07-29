@@ -22,13 +22,13 @@ export interface RateLimiterOptions {
     prefix?: string
 }
 
-let instanceCounter = 0
+const instanceCounter = 0
 
 export const createRateLimiter = (options: RateLimiterOptions = {}) => {
     const windowMs = options.windowMs || 15 * 60 * 1000
     const limit = options.limit || 500
     const message = options.message || 'Too many requests, please try again later.'
-    const prefix = options.prefix || `rl:${++instanceCounter}:`
+    const prefix = options.prefix || `rl:${crypto.randomUUID()}:`
 
     const store = redisClient
         ? new RedisStore({

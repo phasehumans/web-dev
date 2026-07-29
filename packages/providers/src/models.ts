@@ -22,6 +22,27 @@ export const MODEL_CONTEXT_WINDOWS: Record<string, number> = {
     'deepseek-reasoner': 128000,
 }
 
+export function getModelContextWindow(value: string): number {
+    if (!value) return 100000
+    if (MODEL_CONTEXT_WINDOWS[value]) {
+        return MODEL_CONTEXT_WINDOWS[value]
+    }
+    const lower = value.toLowerCase()
+    if (lower.includes('gemini')) return 1000000
+    if (lower.includes('claude')) return 200000
+    if (lower.includes('o3-mini') || lower.includes('o1')) return 200000
+    if (lower.includes('gpt-4.5')) return 128000
+    if (lower.includes('gpt-4')) return 128000
+    if (lower.includes('gpt-3.5')) return 16385
+    if (lower.includes('deepseek')) return 128000
+    if (lower.includes('llama-3.3') || lower.includes('llama-3.1')) return 128000
+    if (lower.includes('128k')) return 131072
+    if (lower.includes('32k')) return 32768
+    if (lower.includes('8192')) return 8192
+    if (lower.includes('8k')) return 8192
+    return 100000
+}
+
 export interface ProviderConfig<T> {
     id: string
     name: string
