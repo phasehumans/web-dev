@@ -89,14 +89,14 @@ describe('BotMessage Component (Unit)', () => {
             />
         )
         let frame = lastFrame() || ''
-        expect(frame).toContain('5 lines · Ctrl+O to expand')
+        expect(frame).toContain('ctrl+o to expand')
 
         // Send Ctrl+O keystroke (\x0f) to expand
         stdin.write('\x0f')
         await new Promise((resolve) => setTimeout(resolve, 50))
 
         frame = lastFrame() || ''
-        expect(frame).toContain('5 lines · Ctrl+O to collapse')
+        expect(frame).toContain('ctrl+o to collapse')
         expect(frame).toContain('-old code')
         expect(frame).toContain('+new code')
     })

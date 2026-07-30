@@ -1,5 +1,5 @@
 import { Agent, runAgentLoop } from '@december/agent'
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 
 import { loadConfig } from '../config'
 import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
@@ -144,6 +144,11 @@ export function useAgentSession({
         settingsFollowUpMode,
         setSettingsFollowUpMode,
     } = state
+
+    const [expandCommands, setExpandCommands] = useState(false)
+    const toggleExpandCommands = useCallback(() => {
+        setExpandCommands((prev) => !prev)
+    }, [])
 
     useEffect(() => {
         setIsAuthenticated(initialAuth)
@@ -763,5 +768,7 @@ Explain which files need to be created, modified, or deleted, and what the chang
         handleKillTask,
         toasts,
         addToast,
+        expandCommands,
+        toggleExpandCommands,
     }
 }

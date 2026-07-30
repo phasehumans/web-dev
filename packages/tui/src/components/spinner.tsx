@@ -4,10 +4,10 @@ import InkSpinner from 'ink-spinner'
 export function Spinner({ label }: { label?: string }) {
     return (
         <Box gap={1} alignItems="center">
-            <Text dimColor color="cyan">
+            <Text color="gray">
                 <InkSpinner type="dots" />
             </Text>
-            {label && <Text dimColor>{label}</Text>}
+            {label && <Text color="gray">{label}</Text>}
         </Box>
     )
 }

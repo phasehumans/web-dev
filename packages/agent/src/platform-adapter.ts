@@ -11,6 +11,8 @@ export interface PlatformAdapter {
             command: string,
             onData?: (chunk: string) => void
         ) => Promise<{ exitCode: number | null; output: string; taskId?: string }>
+        getTaskStatus?: (taskId: string) => Promise<{ status: string; output: string }>
+        killTask?: (taskId: string) => Promise<boolean>
     }
     search: {
         find: (path: string, query: string) => Promise<string>

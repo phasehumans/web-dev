@@ -116,6 +116,16 @@ export function openaiProvider(
                 const choice = chunk.choices[0]
                 if (!choice) continue
 
+                const reasoning =
+                    (choice.delta as any).reasoning_content ||
+                    (choice.delta as any).reasoning ||
+                    (choice.delta as any).thought ||
+                    (choice.delta as any).thinking
+
+                if (reasoning && typeof reasoning === 'string') {
+                    yield { type: 'thinking_delta', text: reasoning }
+                }
+
                 if (choice.delta.content) {
                     yield { type: 'text', text: choice.delta.content }
                 }

@@ -118,6 +118,13 @@ export function GlobalShortcuts(session: any) {
             setAuthMode('settings')
         } else if (key.ctrl && input === 't') {
             setAuthMode('tasks_mode')
+        } else if (
+            (key.ctrl && ((key as any).name === 'o' || input?.toLowerCase() === 'o')) ||
+            input === '\x0f'
+        ) {
+            if (session.toggleExpandCommands) {
+                session.toggleExpandCommands()
+            }
         }
     })
 

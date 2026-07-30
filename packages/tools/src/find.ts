@@ -14,8 +14,16 @@ export const FindFilesTool: Tool<FindFilesInput> = {
     inputSchema: findSchema,
     execute: async ({ pattern }, context: ToolExecuteContext) => {
         try {
-            const result = await context.operations.search.find('.', pattern)
-            if (!result) return 'No files found matching pattern.'
+            let normalizedPattern = pattern.trim()
+            if (!normalizedPattern.includes('*') && !normalizedPattern.includes('?')) {
+                if (normalizedPattern.endsWith('/') || normalizedPattern.endsWith('\\')) {
+                    normalizedPattern = `${normalizedPattern}**/*`
+                } else {
+                    normalizedPattern = `**/*${normalizedPattern}*`
+                }
+            }
+            const result = await context.operations.search.find('.', normalizedPattern)
+            if (!result) return `No files found matching pattern '${pattern}'.`
             return truncateOutput(result, 10000, 100).text
         } catch (error: any) {
             return `Error finding files: ${error.message}`

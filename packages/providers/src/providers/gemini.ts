@@ -208,7 +208,12 @@ export function geminiProvider(apiKey?: string): LLMProvider {
                 let chunkText = ''
 
                 for (const part of parts) {
-                    if (part.text && typeof part.text === 'string') {
+                    if ((part as any).thought || (part as any).thoughtText) {
+                        const thoughtContent = (part as any).thoughtText || part.text || ''
+                        if (thoughtContent) {
+                            yield { type: 'thinking_delta', text: thoughtContent }
+                        }
+                    } else if (part.text && typeof part.text === 'string') {
                         chunkText += part.text
                     }
                 }

@@ -18,14 +18,15 @@ export const EditDiffTool: Tool<EditDiffInput> = {
         try {
             const content = await context.operations.fs.readFile(path)
 
-            let formattedDiff = diff
+            let formattedDiff = diff.replace(/\r\n/g, '\n')
             if (!formattedDiff.startsWith('--- ')) {
                 formattedDiff = `--- a/${path}\n+++ b/${path}\n` + formattedDiff
             }
 
-            const updated = applyPatch(content, formattedDiff)
+            const normalizedContent = content.replace(/\r\n/g, '\n')
+            const updated = applyPatch(normalizedContent, formattedDiff)
             if (updated === false) {
-                return `Error: Failed to apply unified diff patch. Ensure the context lines match the existing file exactly.`
+                return `Error: Failed to apply unified diff patch to '${path}'. Ensure context lines match the existing file exactly, or use edit_file instead.`
             }
 
             await context.operations.fs.writeFile(path, updated)
