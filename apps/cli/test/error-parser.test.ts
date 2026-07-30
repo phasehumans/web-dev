@@ -95,4 +95,10 @@ describe('error-parser', () => {
         })
         expect(parseErrorMessage(badObj)).toBe('Unknown error occurred.')
     })
+
+    test('preserves CTA links in error messages', () => {
+        const ctaErr =
+            'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.'
+        expect(parseErrorMessage(ctaErr)).toBe(ctaErr)
+    })
 })

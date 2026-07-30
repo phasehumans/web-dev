@@ -130,7 +130,7 @@ export function useAuthHandlers(
                                     content: `Please open [${uri}](${uri}) on any device and enter code: \`${code}\``,
                                 },
                                 {
-                                    type: 'thinking',
+                                    type: 'text',
                                     content: 'Waiting for authorization...',
                                 },
                             ],

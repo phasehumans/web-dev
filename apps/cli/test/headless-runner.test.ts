@@ -156,7 +156,7 @@ describe('runHeadlessTask', () => {
         expect(result.success).toBe(false)
         expect(result.error).toBe('LLM Rate limit reached')
         expect(stderrData).toContain('[Tool Error] File not found')
-        expect(stderrData).toContain('[Agent Error: LLM Rate limit reached]')
+        expect(stderrData).toContain('[Error: LLM Rate limit reached]')
     })
 
     it('isolates askQuestion input from triggering agent.steer', async () => {

@@ -6,7 +6,7 @@ export function SmoothMarkdown({ text, isRunning }: { text: string; isRunning?: 
     const [displayedText, setDisplayedText] = useState(text)
 
     useEffect(() => {
-        if (!isRunning) {
+        if (!isRunning || !text.startsWith(displayedText)) {
             setDisplayedText(text)
             return
         }
@@ -20,7 +20,7 @@ export function SmoothMarkdown({ text, isRunning }: { text: string; isRunning?: 
 
         const interval = setInterval(() => {
             setDisplayedText((prev) => {
-                if (prev.length >= text.length) {
+                if (!text.startsWith(prev) || prev.length >= text.length) {
                     clearInterval(interval)
                     return text
                 }

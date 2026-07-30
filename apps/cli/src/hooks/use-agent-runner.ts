@@ -32,12 +32,27 @@ export async function processAgentStream({
                 const blocks = [...(msg.blocks || [])]
                 let finalMsg = { ...msg }
 
+                const isStatusMessage = (content: string) =>
+                    content === 'Working...' ||
+                    content === 'Thinking...' ||
+                    content.startsWith('Rate limit') ||
+                    content.startsWith('High demand')
+
                 for (const event of eventsToProcess) {
                     switch (event.type) {
                         case 'TurnStart':
                             blocks.push({ type: 'text', content: 'Working...' })
                             break
                         case 'AgentError': {
+                            const lastBlock = blocks[blocks.length - 1]
+                            if (
+                                lastBlock &&
+                                (lastBlock.type === 'thinking' ||
+                                    (lastBlock.type === 'text' &&
+                                        isStatusMessage(lastBlock.content)))
+                            ) {
+                                blocks.pop()
+                            }
                             const errMsg = parseErrorMessage({ message: event.error })
                             blocks.push({
                                 type: 'error',
@@ -50,9 +65,7 @@ export async function processAgentStream({
                             if (
                                 lastBlock &&
                                 lastBlock.type === 'text' &&
-                                (lastBlock.content === 'Working...' ||
-                                    lastBlock.content === 'Thinking...' ||
-                                    lastBlock.content.startsWith('Rate limit hit'))
+                                isStatusMessage(lastBlock.content)
                             ) {
                                 lastBlock.content = ''
                             }
@@ -64,9 +77,7 @@ export async function processAgentStream({
                             if (
                                 statusBlock &&
                                 statusBlock.type === 'text' &&
-                                (statusBlock.content === 'Working...' ||
-                                    statusBlock.content === 'Thinking...' ||
-                                    statusBlock.content.startsWith('Rate limit hit'))
+                                isStatusMessage(statusBlock.content)
                             ) {
                                 statusBlock.content = event.message || 'Working...'
                             } else if (event.message) {
@@ -82,11 +93,8 @@ export async function processAgentStream({
                             const lastBlock = blocks[blocks.length - 1]
                             if (lastBlock && lastBlock.type === 'text') {
                                 lastBlock.content =
-                                    (lastBlock.content === 'Working...' ||
-                                    lastBlock.content === 'Thinking...' ||
-                                    lastBlock.content.startsWith('Rate limit hit')
-                                        ? ''
-                                        : lastBlock.content) + event.content
+                                    (isStatusMessage(lastBlock.content) ? '' : lastBlock.content) +
+                                    event.content
                             } else {
                                 blocks.push({ type: 'text', content: event.content })
                             }
@@ -100,8 +108,7 @@ export async function processAgentStream({
                                 if (
                                     blocks.length > 0 &&
                                     blocks[blocks.length - 1].type === 'text' &&
-                                    (blocks[blocks.length - 1].content === 'Working...' ||
-                                        blocks[blocks.length - 1].content === 'Thinking...')
+                                    isStatusMessage(blocks[blocks.length - 1].content)
                                 ) {
                                     blocks.pop()
                                 }
