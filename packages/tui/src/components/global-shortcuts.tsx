@@ -119,7 +119,7 @@ export function GlobalShortcuts(session: any) {
         } else if (key.ctrl && input === 't') {
             setAuthMode('tasks_mode')
         } else if (
-            (key.ctrl && (key.name === 'o' || input?.toLowerCase() === 'o')) ||
+            (key.ctrl && ((key as any).name === 'o' || input?.toLowerCase() === 'o')) ||
             input === '\x0f'
         ) {
             if (session.toggleExpandCommands) {

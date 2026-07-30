@@ -109,7 +109,10 @@ function CollapsibleCommandOutput({
     const isExpanded = userExpanded || Boolean(forceExpanded)
 
     useInput((input, key) => {
-        if ((key.ctrl && (key.name === 'o' || input?.toLowerCase() === 'o')) || input === '\x0f') {
+        if (
+            (key.ctrl && ((key as any).name === 'o' || input?.toLowerCase() === 'o')) ||
+            input === '\x0f'
+        ) {
             setUserExpanded((prev) => !prev)
         }
     })
