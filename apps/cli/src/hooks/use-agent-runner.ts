@@ -36,7 +36,9 @@ export async function processAgentStream({
                     content === 'Working...' ||
                     content === 'Thinking...' ||
                     content.startsWith('Rate limit') ||
-                    content.startsWith('High demand')
+                    content.startsWith('High demand') ||
+                    content.startsWith('LLM Provider rate limit') ||
+                    content.startsWith('LLM Provider high demand')
 
                 for (const event of eventsToProcess) {
                     switch (event.type) {
@@ -73,6 +75,12 @@ export async function processAgentStream({
                             break
                         }
                         case 'AgentStatus': {
+                            const isRetryStatus =
+                                event.message?.startsWith('LLM Provider') ||
+                                event.message?.startsWith('Rate limit') ||
+                                event.message?.startsWith('High demand')
+                            const color = isRetryStatus ? '#FCA5A5' : undefined
+
                             const statusBlock = blocks[blocks.length - 1]
                             if (
                                 statusBlock &&
@@ -80,8 +88,9 @@ export async function processAgentStream({
                                 isStatusMessage(statusBlock.content)
                             ) {
                                 statusBlock.content = event.message || 'Working...'
+                                if (color) statusBlock.color = color
                             } else if (event.message) {
-                                blocks.push({ type: 'text', content: event.message })
+                                blocks.push({ type: 'text', content: event.message, color })
                             }
                             break
                         }

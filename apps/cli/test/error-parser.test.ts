@@ -101,4 +101,14 @@ describe('error-parser', () => {
             'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.'
         expect(parseErrorMessage(ctaErr)).toBe(ctaErr)
     })
+
+    test('attaches custom December rate limit notice when rate limit/quota is exhausted', () => {
+        const rawQuotaErr =
+            'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. * Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash'
+        const parsed = parseErrorMessage(rawQuotaErr)
+        expect(parsed).toContain(
+            'Rate limit or quota exhausted from LLM provider. Please upgrade your API key tier with your provider (OpenAI, Anthropic, Gemini) or switch to December Cloud Subscription at https://trydecember.com/pricing'
+        )
+        expect(parsed).toContain('generativelanguage.googleapis.com')
+    })
 })

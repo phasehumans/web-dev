@@ -79,28 +79,50 @@ export function parseErrorMessage(err: any): string {
     }
 
     const extracted = extractMessage(errMsg)
-    if (extracted && extracted !== '[object Object]') return extracted
+    let finalResult = extracted && extracted !== '[object Object]' ? extracted : ''
 
-    if (errMsg === '[object Object]' && err && typeof err === 'object') {
-        try {
-            const inspected = util.inspect(err)
-            if (inspected && inspected !== '{}' && inspected !== '{ cause: {} }') {
-                return inspected
+    if (!finalResult) {
+        if (errMsg === '[object Object]' && err && typeof err === 'object') {
+            try {
+                const inspected = util.inspect(err)
+                if (inspected && inspected !== '{}' && inspected !== '{ cause: {} }') {
+                    finalResult = inspected
+                }
+            } catch {
+                // Fall back to raw string
             }
-        } catch {
-            // Fall back to raw string
         }
     }
 
-    const result = errMsg.replace(/^\[.*?Error\]:\s*/, '').trim()
-    if (
-        result === '{\n  "cause": {}\n}' ||
-        result === '{"cause":{}}' ||
-        result === '{}' ||
-        result === '{ cause: {} }'
-    ) {
-        return 'An unknown error occurred while communicating with the model provider.'
+    if (!finalResult) {
+        const cleaned = errMsg.replace(/^\[.*?Error\]:\s*/, '').trim()
+        if (
+            cleaned === '{\n  "cause": {}\n}' ||
+            cleaned === '{"cause":{}}' ||
+            cleaned === '{}' ||
+            cleaned === '{ cause: {} }'
+        ) {
+            finalResult = 'An unknown error occurred while communicating with the model provider.'
+        } else {
+            finalResult = cleaned
+        }
     }
 
-    return result
+    const rateLimitNotice =
+        'Rate limit or quota exhausted from LLM provider. Please upgrade your API key tier with your provider (OpenAI, Anthropic, Gemini) or switch to December Cloud Subscription at https://trydecember.com/pricing\n\n'
+
+    const lowerStr = (errMsg + ' ' + (finalResult || '')).toLowerCase()
+    const isRateLimit =
+        lowerStr.includes('429') ||
+        lowerStr.includes('quota') ||
+        lowerStr.includes('rate limit') ||
+        lowerStr.includes('rate_limit') ||
+        lowerStr.includes('resource_exhausted') ||
+        lowerStr.includes('generativelanguage.googleapis.com')
+
+    if (isRateLimit && !finalResult.includes('Rate limit or quota exhausted from LLM provider')) {
+        return rateLimitNotice + finalResult
+    }
+
+    return finalResult
 }

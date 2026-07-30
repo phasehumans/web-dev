@@ -250,7 +250,7 @@ describe('Agent Loop Integration', () => {
         expect(mockLlm.calls.length).toBe(2)
         const statusEvent = events.find((e) => e.type === 'AgentStatus' && e.message)
         expect(statusEvent).toBeDefined()
-        expect((statusEvent as any).message).toContain('Rate limit hit')
+        expect((statusEvent as any).message).toContain('LLM Provider rate limit hit')
         expect((statusEvent as any).message).not.toContain('high demand')
         expect((statusEvent as any).message.endsWith('\n')).toBe(true)
         expect(
@@ -280,7 +280,7 @@ describe('Agent Loop Integration', () => {
         expect(mockLlm.calls.length).toBe(2)
         const statusEvent = events.find((e) => e.type === 'AgentStatus' && e.message)
         expect(statusEvent).toBeDefined()
-        expect((statusEvent as any).message).toContain('High demand hit')
+        expect((statusEvent as any).message).toContain('LLM Provider high demand hit')
         expect((statusEvent as any).message).not.toContain('Rate limit')
         expect((statusEvent as any).message.endsWith('\n')).toBe(true)
     }, 10000)

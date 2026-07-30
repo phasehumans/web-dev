@@ -348,10 +348,12 @@ async function streamAssistantResponse(
 
                     if (isHighDemand || isRateLimit) {
                         const delaySeconds = Math.round(Math.pow(2, error.attemptNumber - 1) * 2)
-                        const hitType = isHighDemand ? 'High demand' : 'Rate limit'
+                        const hitType = isHighDemand
+                            ? 'LLM Provider high demand'
+                            : 'LLM Provider rate limit'
                         eventQueue.push({
                             type: 'AgentStatus',
-                            message: `${hitType} hit, waiting ~${delaySeconds}s to retry... (${error.retriesLeft} retries left)\n`,
+                            message: `${hitType} hit. Retrying in ~${delaySeconds}s... (${error.retriesLeft} retries left)\n`,
                         })
                     } else {
                         const errStr = formatError(error)

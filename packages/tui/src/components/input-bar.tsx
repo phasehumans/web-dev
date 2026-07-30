@@ -30,6 +30,7 @@ type Props = {
     contextTokens?: number
     history?: string[]
     showExitConfirm?: boolean
+    toasts?: { id: string; message: string; variant?: string }[]
 }
 
 export function InputBar({
@@ -49,10 +50,18 @@ export function InputBar({
     onCopy,
     contextTokens,
     showExitConfirm = false,
+    toasts,
 }: Props) {
     const [value, setValue] = useState('')
     const toast = useToast()
     const dialog = useDialog()
+
+    const activeToast =
+        toasts && toasts.length > 0
+            ? toasts[toasts.length - 1]
+            : toast.currentToast
+              ? { message: toast.currentToast.message, variant: toast.currentToast.variant }
+              : null
 
     const {
         showCommandMenu,
@@ -230,17 +239,30 @@ export function InputBar({
             </Box>
 
             {/* status row — model left, december studio right */}
-            {!showCommandMenu && !showShortcutsMenu && !authUI && (
+            {!showCommandMenu && !showShortcutsMenu && (
                 <Box width="100%" justifyContent="space-between">
-                    <Box gap={2} alignItems="center">
-                        <Box gap={1}>
+                    <Box gap={2} alignItems="center" flexShrink={1}>
+                        <Box gap={1} flexShrink={1}>
                             <Text color="#AAAAAA">
                                 {activeModel}
                                 {hasBothAuth && authMethod
                                     ? ` (via ${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
                                     : ''}
                             </Text>
-                            {showExitConfirm ? (
+                            {activeToast ? (
+                                <Text
+                                    wrap="truncate"
+                                    color={
+                                        activeToast.variant === 'success'
+                                            ? '#6EE7B7'
+                                            : activeToast.variant === 'error'
+                                              ? '#FCA5A5'
+                                              : 'gray'
+                                    }
+                                >
+                                    · {activeToast.message.replace(/\s+/g, ' ').trim()}
+                                </Text>
+                            ) : showExitConfirm ? (
                                 <Text color="gray">· Press Ctrl+C again to exit</Text>
                             ) : (
                                 contextTokens !== undefined &&
@@ -250,7 +272,7 @@ export function InputBar({
                             )}
                         </Box>
                     </Box>
-                    <Box gap={0}>
+                    <Box gap={0} flexShrink={0} marginLeft={2}>
                         <Text color="#AAAAAA">? for shortcuts</Text>
                     </Box>
                 </Box>
