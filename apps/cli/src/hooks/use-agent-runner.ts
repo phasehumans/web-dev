@@ -167,7 +167,11 @@ export async function processAgentStream({
 
     for await (const event of stream) {
         pendingEvents.push(event)
-        if (event.type === 'TextChunk' || event.type === 'ThinkingChunk') {
+        if (
+            event.type === 'StreamChunk' ||
+            event.type === 'TextChunk' ||
+            event.type === 'ThinkingChunk'
+        ) {
             if (flushTimeout) {
                 clearTimeout(flushTimeout)
                 flushTimeout = null

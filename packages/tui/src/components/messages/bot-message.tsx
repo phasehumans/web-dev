@@ -35,52 +35,22 @@ type Props = {
 }
 
 function CollapsibleThought({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
-    const { isFocused } = useFocus({ autoFocus: false })
-    const [userExpanded, setUserExpanded] = useState<boolean | null>(null)
-
-    useInput((input, key) => {
-        if (isFocused && ((key.ctrl && input.toLowerCase() === 'o') || input === '\x0f')) {
-            setUserExpanded((prev) => (prev === null ? true : !prev))
-        }
-    })
-
-    const isExpanded = userExpanded !== null ? userExpanded : Boolean(isStreaming)
-
-    const lines = content.split(/\r?\n/)
     const words = content.trim() ? content.trim().split(/\s+/).length : 0
     const tokenCount = Math.max(1, Math.round(words * 1.33))
 
-    let borderColor = '#475569'
-    let headerText = ''
-
     if (isStreaming) {
-        borderColor = '#06b6d4'
-        headerText = `Thought process... (${tokenCount} tokens)`
-    } else if (isExpanded) {
-        borderColor = '#89b4f8'
-        headerText = `Thought process (${tokenCount} tokens)`
-    } else {
-        borderColor = '#475569'
-        headerText = `Thought process (${tokenCount} tokens)`
+        return (
+            <Box flexDirection="column" marginY={0.5}>
+                <Text color="gray">{content}</Text>
+            </Box>
+        )
     }
 
     return (
-        <Box flexDirection="row" paddingBottom={1}>
-            <Box width={2} flexShrink={0}>
-                <Text color={isFocused ? '#89b4f8' : borderColor}>│</Text>
-            </Box>
-            <Box flexDirection="column">
-                <Text color={isStreaming ? 'cyan' : isFocused ? '#89b4f8' : '#64748b'} italic>
-                    {headerText}
-                </Text>
-                <Box paddingY={0.5}>
-                    <Text color="#94a3b8" dimColor>
-                        {!isExpanded && lines.length > 2
-                            ? lines.slice(0, 2).join('\n') + '\n...'
-                            : content}
-                    </Text>
-                </Box>
-            </Box>
+        <Box flexDirection="row" marginY={0.5}>
+            <Text color="gray" italic>
+                Thoughts ({tokenCount} tokens)
+            </Text>
         </Box>
     )
 }
@@ -111,9 +81,67 @@ function StyledCommand({ command, truncate = true }: { command: string; truncate
     return <Text color="white">{displayCmd}</Text>
 }
 
+function CollapsibleCommandOutput({ command, output }: { command: string; output?: string }) {
+    const { isFocused } = useFocus({ autoFocus: true })
+    const [userExpanded, setUserExpanded] = useState<boolean>(false)
+
+    useInput((input, key) => {
+        if ((key.ctrl && input.toLowerCase() === 'o') || input === '\x0f') {
+            setUserExpanded((prev) => !prev)
+        }
+    })
+
+    const lines = output ? output.trim().split(/\r?\n/) : []
+
+    return (
+        <Box flexDirection="column" marginY={0}>
+            <Box alignItems="center" gap={1}>
+                <StyledCommand command={command} />
+                {lines.length > 0 && (
+                    <Text color="gray">
+                        ({lines.length} lines ·{' '}
+                        {userExpanded ? 'Ctrl+O to collapse' : 'Ctrl+O to expand'})
+                    </Text>
+                )}
+            </Box>
+            {userExpanded && lines.length > 0 && (
+                <Box flexDirection="column" marginTop={0} paddingX={1}>
+                    {lines.map((line, lidx) => {
+                        let color = '#d1d5db'
+                        let bgColor: string | undefined = undefined
+
+                        if (line.startsWith('+')) {
+                            color = '#6EE7B7'
+                            bgColor = '#122f1e'
+                        } else if (line.startsWith('-')) {
+                            color = '#FCA5A5'
+                            bgColor = '#3f1316'
+                        } else if (
+                            line.startsWith('@@') ||
+                            line.startsWith('diff --git') ||
+                            line.startsWith('---') ||
+                            line.startsWith('+++')
+                        ) {
+                            color = '#d1d5db'
+                        }
+
+                        return (
+                            <Box key={lidx} backgroundColor={bgColor} flexDirection="row">
+                                <Text color={color} wrap="truncate-end">
+                                    {line}
+                                </Text>
+                            </Box>
+                        )
+                    })}
+                </Box>
+            )}
+        </Box>
+    )
+}
+
 export function BotMessage({ blocks, usage }: Props) {
     return (
-        <Box flexDirection="column" paddingX={4} paddingY={0} gap={1} marginTop={1}>
+        <Box flexDirection="column" paddingX={4} paddingY={0} gap={1} marginTop={0}>
             {blocks.map((block, idx) => {
                 switch (block.type) {
                     case 'text': {
@@ -126,7 +154,7 @@ export function BotMessage({ blocks, usage }: Props) {
                             return (
                                 <Box key={idx} gap={1} alignItems="center">
                                     <Spinner />
-                                    <Text color="gray">{block.content}</Text>
+                                    <Text color="#89B4F8">{block.content}</Text>
                                 </Box>
                             )
                         }
@@ -176,7 +204,7 @@ export function BotMessage({ blocks, usage }: Props) {
                     }
                     case 'error': {
                         return (
-                            <Box key={idx} flexDirection="column" paddingLeft={1} marginY={1}>
+                            <Box key={idx} flexDirection="column" marginY={0.5}>
                                 <Text color="#FCA5A5">{block.error}</Text>
                             </Box>
                         )
@@ -184,7 +212,9 @@ export function BotMessage({ blocks, usage }: Props) {
                     case 'interrupt': {
                         return (
                             <Box key={idx} flexDirection="row" paddingY={1}>
-                                <Text>Interrupted · What should December do instead?</Text>
+                                <Text color="gray">
+                                    Interrupted · What should December do instead?
+                                </Text>
                             </Box>
                         )
                     }
@@ -207,7 +237,7 @@ export function BotMessage({ blocks, usage }: Props) {
                                     </Text>
                                 </Box>
                                 <Box paddingLeft={1} paddingTop={1}>
-                                    <Text color="#94a3b8" dimColor>
+                                    <Text color="gray">
                                         {block.summary.replace(
                                             /^\[COMPACTED HISTORY SUMMARY\]\n/,
                                             ''
@@ -229,128 +259,73 @@ export function BotMessage({ blocks, usage }: Props) {
                         }
 
                         if (!isRunning) {
-                            if (block.toolName === 'read_file' || block.toolName === 'view_file') {
-                                const lines = block.output ? block.output.split(/\r?\n/).length : 0
-                                return (
-                                    <Box key={idx} flexDirection="column">
-                                        <Box gap={1} alignItems="center">
-                                            <StyledCommand command={block.command} />
-                                        </Box>
-                                    </Box>
-                                )
-                            }
-
-                            if (
-                                block.toolName === 'edit_file' ||
-                                block.toolName === 'edit_diff' ||
+                            const isNoOutputTool =
+                                block.toolName === 'read_file' ||
+                                block.toolName === 'view_file' ||
                                 block.toolName === 'write_file' ||
                                 block.toolName === 'write_to_file' ||
-                                block.toolName === 'multi_replace_file_content' ||
-                                block.toolName === 'replace_file_content'
-                            ) {
-                                const path =
-                                    parsedInput.path ||
-                                    parsedInput.filePath ||
-                                    parsedInput.TargetFile ||
-                                    ''
-                                const diffStr =
-                                    block.toolName === 'write_file' ||
-                                    block.toolName === 'write_to_file'
-                                        ? parsedInput.content || parsedInput.CodeContent
-                                        : parsedInput.diff
-                                const isWrite =
-                                    block.toolName === 'write_file' ||
-                                    block.toolName === 'write_to_file'
-                                const lines = diffStr
-                                    ? diffStr.replace(/\r?\n$/, '').split(/\r?\n/)
-                                    : []
+                                block.toolName === 'ask_permission' ||
+                                block.toolName === 'list_permissions'
 
+                            if (isNoOutputTool) {
                                 return (
                                     <Box key={idx} flexDirection="column">
-                                        <Box gap={1} alignItems="center">
+                                        <Box alignItems="center" gap={1}>
                                             <StyledCommand command={block.command} />
                                         </Box>
-                                        {isSuccess && lines.length > 0 && !isWrite && (
-                                            <Box flexDirection="column" paddingLeft={0}>
-                                                {lines
-                                                    .slice(0, 40)
-                                                    .map((line: string, lidx: number) => {
-                                                        let prefixColor = '#d1d5db'
-                                                        let bgColor: string | undefined = undefined
-                                                        let prefix = ' '
-                                                        let rest = line
-
-                                                        if (isWrite) {
-                                                            prefixColor = '#6EE7B7'
-                                                            bgColor = '#122f1e'
-                                                            prefix = '+'
-                                                            rest = line
-                                                        } else {
-                                                            prefix = ' '
-                                                            if (line.startsWith('+')) {
-                                                                prefixColor = '#6EE7B7'
-                                                                bgColor = '#122f1e'
-                                                                prefix = '+'
-                                                                rest = line.slice(1)
-                                                            } else if (line.startsWith('-')) {
-                                                                prefixColor = '#FCA5A5'
-                                                                bgColor = '#3f1316'
-                                                                prefix = '-'
-                                                                rest = line.slice(1)
-                                                            } else if (line.startsWith('@@')) {
-                                                                prefixColor = '#a78bfa'
-                                                                prefix = '@'
-                                                                rest = line.slice(1)
-                                                            } else if (line.startsWith(' ')) {
-                                                                rest = line.slice(1)
-                                                            }
-                                                        }
-
-                                                        return (
-                                                            <Box
-                                                                key={lidx}
-                                                                backgroundColor={bgColor}
-                                                                flexDirection="row"
-                                                                paddingLeft={2}
-                                                            >
-                                                                <Box width={2} flexShrink={0}>
-                                                                    <Text color={prefixColor}>
-                                                                        {prefix}
-                                                                    </Text>
-                                                                </Box>
-                                                                <Text
-                                                                    color={
-                                                                        bgColor
-                                                                            ? 'white'
-                                                                            : '#d1d5db'
-                                                                    }
-                                                                    wrap="truncate-end"
-                                                                >
-                                                                    {rest}
-                                                                </Text>
-                                                            </Box>
-                                                        )
-                                                    })}
-                                                {lines.length > 40 && (
-                                                    <Box paddingLeft={1}>
-                                                        <Text color="#94a3b8">
-                                                            ... ({lines.length - 40} more lines)
-                                                        </Text>
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                        )}
                                     </Box>
                                 )
                             }
 
-                            // collapsed state for other completed tools
+                            let displayOutput = block.output
+                            if (
+                                block.toolName === 'replace_file_content' ||
+                                block.toolName === 'multi_replace_file_content' ||
+                                block.toolName === 'edit_file' ||
+                                block.toolName === 'edit_diff'
+                            ) {
+                                if (parsedInput.TargetContent || parsedInput.ReplacementContent) {
+                                    const target = (parsedInput.TargetContent || '')
+                                        .split(/\r?\n/)
+                                        .map((l: string) => (l.startsWith('-') ? l : `-${l}`))
+                                        .join('\n')
+                                    const replacement = (parsedInput.ReplacementContent || '')
+                                        .split(/\r?\n/)
+                                        .map((l: string) => (l.startsWith('+') ? l : `+${l}`))
+                                        .join('\n')
+                                    displayOutput = `${target}\n${replacement}`
+                                } else if (
+                                    parsedInput.ReplacementChunks &&
+                                    Array.isArray(parsedInput.ReplacementChunks)
+                                ) {
+                                    displayOutput = parsedInput.ReplacementChunks.map(
+                                        (chunk: any) => {
+                                            const t = (chunk.TargetContent || '')
+                                                .split(/\r?\n/)
+                                                .map((l: string) =>
+                                                    l.startsWith('-') ? l : `-${l}`
+                                                )
+                                                .join('\n')
+                                            const r = (chunk.ReplacementContent || '')
+                                                .split(/\r?\n/)
+                                                .map((l: string) =>
+                                                    l.startsWith('+') ? l : `+${l}`
+                                                )
+                                                .join('\n')
+                                            return `${t}\n${r}`
+                                        }
+                                    ).join('\n')
+                                } else if (parsedInput.diff) {
+                                    displayOutput = parsedInput.diff
+                                }
+                            }
+
                             return (
-                                <Box key={idx} flexDirection="column" gap={1}>
-                                    <Box alignItems="center" gap={1}>
-                                        <StyledCommand command={block.command} />
-                                    </Box>
-                                </Box>
+                                <CollapsibleCommandOutput
+                                    key={idx}
+                                    command={block.command}
+                                    output={displayOutput}
+                                />
                             )
                         }
 
@@ -397,8 +372,7 @@ export function BotMessage({ blocks, usage }: Props) {
                             <Box key={idx} flexDirection="column">
                                 <Box gap={1} alignItems="center">
                                     <Spinner />
-                                    <Text color="cyan">{statusLabel}</Text>
-                                    <StyledCommand command={block.command} truncate={false} />
+                                    <Text color="#89B4F8">{statusLabel}</Text>
                                 </Box>
                                 {block.output && (
                                     <Box
@@ -407,7 +381,6 @@ export function BotMessage({ blocks, usage }: Props) {
                                         marginTop={0.5}
                                         paddingX={1}
                                         paddingY={0.5}
-                                        backgroundColor="#1e293b"
                                     >
                                         {block.output
                                             .trim()

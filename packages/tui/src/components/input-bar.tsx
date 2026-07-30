@@ -184,7 +184,7 @@ export function InputBar({
     const sep = '─'.repeat(400)
 
     return (
-        <Box flexDirection="column" paddingX={2}>
+        <Box flexDirection="column" paddingX={2} marginTop={1}>
             {/* inline dialog — shown on right above prompt when open */}
             {dialog.isOpen && dialog.currentDialog && (
                 <Box justifyContent="flex-end">
