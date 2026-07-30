@@ -1,7 +1,6 @@
 import { Box, Text, useFocus, useInput } from 'ink'
 import React, { useState } from 'react'
 
-import { Pill } from '../pill'
 import { Spinner } from '../spinner'
 
 import { SmoothMarkdown } from './smooth-markdown'
@@ -436,16 +435,14 @@ export function BotMessage({ blocks, usage }: Props) {
                             : isDeleted
                               ? 'DELETED'
                               : 'MODIFIED'
-                        const fgColor = isCreated ? '#6EE7B7' : isDeleted ? '#FCA5A5' : '#89B4F8'
 
                         return (
                             <Box key={idx} gap={1} alignItems="center">
-                                <Pill
-                                    label={actionLabel}
-                                    backgroundColor="#303030"
-                                    color={fgColor}
-                                />
-                                <Text color="white">{block.filePath}</Text>
+                                <Text color="#fef08a">● </Text>
+                                <Text color="#fef08a" bold>
+                                    {actionLabel}
+                                </Text>
+                                <Text color="#cbd5e1">{block.filePath}</Text>
                             </Box>
                         )
                     }

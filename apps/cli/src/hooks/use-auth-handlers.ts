@@ -198,7 +198,13 @@ export function useAuthHandlers(
             {
                 id: getNextMsgId(),
                 role: 'assistant',
-                blocks: [{ type: 'text', content: `Model successfully changed to ${item.value}!` }],
+                blocks: [
+                    {
+                        type: 'status',
+                        success: true,
+                        label: `Model successfully changed to ${item.value}!`,
+                    },
+                ],
             },
         ])
     }
@@ -232,8 +238,9 @@ export function useAuthHandlers(
                     role: 'assistant',
                     blocks: [
                         {
-                            type: 'text',
-                            content: `Switched active provider to ${item.value.toUpperCase()} (using saved key).`,
+                            type: 'status',
+                            success: true,
+                            label: `Switched active provider to ${item.value.toUpperCase()} (using saved key).`,
                         },
                     ],
                 },
@@ -442,7 +449,13 @@ export function useAuthHandlers(
             {
                 id: getNextMsgId(),
                 role: 'assistant',
-                blocks: [{ type: 'text', content: `Removed credentials for: ${removedName}` }],
+                blocks: [
+                    {
+                        type: 'status',
+                        success: true,
+                        label: `Removed credentials for: ${removedName}`,
+                    },
+                ],
             },
         ])
     }
