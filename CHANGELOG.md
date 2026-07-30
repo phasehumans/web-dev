@@ -2,6 +2,27 @@
 
 ### Features
 
+- _(cli/tui)_ Optimize streaming latency and thought blocks (#300)
+
+### Bug Fixes
+
+- Rate limits display err
+- Git diff and tui chat layout
+- _(cli)_ Clarify LLM rate limit retry and attach custom guidance
+- _(cli)_ Clarify LLM rate limit retries & attach custom guidance (#284) (#303)
+- Expand and collapse shortcut
+- _(cli)_ Enhance LLM tool guidance and update command behavior
+- _(tui)_ Resolve key.name type error in Ink event handlers
+- _(cli)_ Enhance LLM tool guidance, edit_file fallback, and update command behavior (#304)
+
+### Styling
+
+- _(tui)_ Update auth banner, success status blocks, and file change indicators
+
+## [0.2.21] - 2026-07-29
+
+### Features
+
 - _(evals)_ Scaffold @december/evals package and task loader (#258)
 - _(cli)_ Extract runHeadlessTask seam and add integration test suite (#265)
 - _(cli)_ Restore console output streams and format headless events (#266)
@@ -46,6 +67,10 @@
 - _(tui)_ Add unit and integration test structure for tui (#247, #248, #249)
 - _(shared)_ Add unit and integration test structure for shared package (#246)
 - Comprehensive unit and integration test architecture across packages (#246, #247, #248, #249) (#250)
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.21
 
 ## [0.2.20] - 2026-07-25
 
