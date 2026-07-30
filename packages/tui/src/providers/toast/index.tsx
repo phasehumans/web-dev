@@ -30,9 +30,10 @@ export function useToast(): ToastContextValue {
 
 type ToastProviderProps = {
     children: ReactNode
+    onToast?: (options: ToastOptions) => void
 }
 
-export function ToastProvider({ children }: ToastProviderProps) {
+export function ToastProvider({ children, onToast }: ToastProviderProps) {
     const [currentToast, setCurrentToast] = useState<ToastOptions | null>(null)
     const timeoutHandleRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -49,17 +50,22 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
             clearCurrentTimeout()
 
-            setCurrentToast({
+            const toastObj = {
                 variant: options.variant ?? 'info',
                 ...options,
                 duration,
-            })
+            }
+
+            setCurrentToast(toastObj)
+            if (onToast) {
+                onToast(toastObj)
+            }
 
             timeoutHandleRef.current = setTimeout(() => {
                 setCurrentToast(null)
             }, duration)
         },
-        [clearCurrentTimeout]
+        [clearCurrentTimeout, onToast]
     )
 
     const value: ToastContextValue = {

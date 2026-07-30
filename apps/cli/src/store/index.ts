@@ -267,10 +267,15 @@ export const useCliStore = create<CliState>((set) => ({
 
     // cli events
     toasts: [],
-    addToast: (message, variant = 'info') =>
+    addToast: (message, variant = 'info') => {
+        const id = Date.now().toString() + Math.random().toString()
         set((state) => ({
-            toasts: [...state.toasts, { id: Date.now().toString(), message, variant }],
-        })),
+            toasts: [...state.toasts, { id, message, variant }],
+        }))
+        setTimeout(() => {
+            set((state) => ({ toasts: state.toasts.filter((t: any) => t.id !== id) }))
+        }, 3000)
+    },
     removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t: any) => t.id !== id) })),
     shouldExit: false,
     setShouldExit: (shouldExit) => set({ shouldExit }),

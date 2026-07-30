@@ -139,11 +139,13 @@ export function ChatApp({
                 hasBothAuth={session.hasBothAuth}
                 authUI={authUI}
                 agent={agent}
+                toasts={session.toasts}
                 resetChat={() => {
                     console.clear()
                     setStaticMessages([{ id: 'header-' + Date.now(), role: 'header' }])
                     setStaticKey((k) => k + 1)
                     setActiveMessages([])
+                    session.addToast?.('Started a new conversation.', 'success')
                 }}
                 planMode={planMode}
                 grillMode={grillMode}

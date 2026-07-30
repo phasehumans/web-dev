@@ -330,6 +330,15 @@ async function streamAssistantResponse(
                         error.message ||
                         String(actualError)
                     ).toLowerCase()
+                    const isHighDemand =
+                        status === 503 ||
+                        status === 529 ||
+                        msg.includes('503') ||
+                        msg.includes('529') ||
+                        msg.includes('high demand') ||
+                        msg.includes('overloaded') ||
+                        msg.includes('capacity')
+
                     const isRateLimit =
                         status === 429 ||
                         msg.includes('429') ||
@@ -337,11 +346,14 @@ async function streamAssistantResponse(
                         msg.includes('rate limit') ||
                         msg.includes('rate_limit')
 
-                    if (isRateLimit) {
+                    if (isHighDemand || isRateLimit) {
                         const delaySeconds = Math.round(Math.pow(2, error.attemptNumber - 1) * 2)
+                        const hitType = isHighDemand
+                            ? 'LLM Provider high demand'
+                            : 'LLM Provider rate limit'
                         eventQueue.push({
                             type: 'AgentStatus',
-                            message: `Rate limit hit, waiting ~${delaySeconds}s to retry... (${error.retriesLeft} retries left)`,
+                            message: `${hitType} hit. Retrying in ~${delaySeconds}s... (${error.retriesLeft} retries left)\n`,
                         })
                     } else {
                         const errStr = formatError(error)
@@ -383,13 +395,27 @@ async function streamAssistantResponse(
             return { assistantMessage, toolCalls, error: 'Aborted' }
         }
 
-        if (
+        if (errorMsg.includes('402') || errorMsg.toLowerCase().includes('insufficient credits')) {
+            errorMsg =
+                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.\n\n' +
+                errorMsg
+        } else if (
             errorMsg.includes('429') ||
             errorMsg.toLowerCase().includes('quota') ||
             errorMsg.toLowerCase().includes('rate limit')
         ) {
             errorMsg =
-                'Rate limit exhausted after multiple retries. Please wait a few minutes or provide a different API key.\n\n' +
+                'Rate limit or quota exhausted from LLM provider. Please upgrade your API key tier with your provider (OpenAI, Anthropic, Gemini) or switch to December Cloud Subscription at https://trydecember.com/pricing\n\n' +
+                errorMsg
+        } else if (
+            errorMsg.includes('503') ||
+            errorMsg.includes('529') ||
+            errorMsg.toLowerCase().includes('high demand') ||
+            errorMsg.toLowerCase().includes('overloaded') ||
+            errorMsg.toLowerCase().includes('capacity')
+        ) {
+            errorMsg =
+                'This model is currently experiencing high demand or capacity limits from the provider. Spikes in demand are usually temporary. Please try again in a few moments or switch to a different model at https://trydecember.com/pricing\n\n' +
                 errorMsg
         }
 
@@ -397,7 +423,7 @@ async function streamAssistantResponse(
 
         agent.addMessage({
             role: 'assistant',
-            content: `Failed due to API error: ${errorMsg}`,
+            content: errorMsg,
             isUI: true,
             errorMessage: errorMsg,
         })

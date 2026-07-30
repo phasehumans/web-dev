@@ -228,7 +228,7 @@ describe('Agent Loop Integration', () => {
         expect(executionOrder).toEqual(['bash-start', 'bash-end', 'write-start', 'write-end'])
     })
 
-    it('should retry on HTTP 429 rate limits and emit AgentStatus warning events', async () => {
+    it('should retry on HTTP 429 rate limits and emit AgentStatus warning events with newline', async () => {
         const mockLlm = new MockLLM()
         const rateLimitErr: any = new Error('429 Too Many Requests')
         rateLimitErr.status = 429
@@ -248,13 +248,90 @@ describe('Agent Loop Integration', () => {
         }
 
         expect(mockLlm.calls.length).toBe(2)
-        expect(
-            events.some((e) => e.type === 'AgentStatus' && e.message.includes('Rate limit hit'))
-        ).toBe(true)
+        const statusEvent = events.find((e) => e.type === 'AgentStatus' && e.message)
+        expect(statusEvent).toBeDefined()
+        expect((statusEvent as any).message).toContain('LLM Provider rate limit hit')
+        expect((statusEvent as any).message).not.toContain('high demand')
+        expect((statusEvent as any).message.endsWith('\n')).toBe(true)
         expect(
             events.some((e) => e.type === 'StreamChunk' && e.content === 'Success after retry')
         ).toBe(true)
     }, 10000)
+
+    it('should retry on HTTP 503 high demand and emit AgentStatus high demand event with newline', async () => {
+        const mockLlm = new MockLLM()
+        const highDemandErr: any = new Error('503 Service Unavailable')
+        highDemandErr.status = 503
+
+        mockLlm.pushResponse(highDemandErr)
+        mockLlm.pushResponse([{ type: 'text', text: 'Success after 503 retry' }])
+
+        const agent = new Agent({
+            llm: mockLlm,
+            tools: [],
+            operations: {} as any,
+        })
+
+        const events = []
+        for await (const event of runAgentLoop(agent, 'Test 503 retry')) {
+            events.push(event)
+        }
+
+        expect(mockLlm.calls.length).toBe(2)
+        const statusEvent = events.find((e) => e.type === 'AgentStatus' && e.message)
+        expect(statusEvent).toBeDefined()
+        expect((statusEvent as any).message).toContain('LLM Provider high demand hit')
+        expect((statusEvent as any).message).not.toContain('Rate limit')
+        expect((statusEvent as any).message.endsWith('\n')).toBe(true)
+    }, 10000)
+
+    it('should include billing CTA link when 402 insufficient credits error is raised', async () => {
+        const mockLlm = new MockLLM()
+        const creditsErr: any = new Error('Insufficient credits in December Wallet')
+        creditsErr.status = 402
+
+        mockLlm.pushResponse(creditsErr)
+
+        const agent = new Agent({
+            llm: mockLlm,
+            tools: [],
+            operations: {} as any,
+        })
+
+        const events = []
+        for await (const event of runAgentLoop(agent, 'Test 402 error')) {
+            events.push(event)
+        }
+
+        const errEvent = events.find((e) => e.type === 'AgentError')
+        expect(errEvent).toBeDefined()
+        expect((errEvent as any).error).toContain('https://trydecember.com/settings/billing')
+    })
+
+    it('should include pricing CTA link when 429 rate limit is exhausted', async () => {
+        const mockLlm = new MockLLM()
+        const rateLimitErr: any = new Error('429 Too Many Requests')
+        rateLimitErr.status = 429
+
+        for (let i = 0; i < 6; i++) {
+            mockLlm.pushResponse(rateLimitErr)
+        }
+
+        const agent = new Agent({
+            llm: mockLlm,
+            tools: [],
+            operations: {} as any,
+        })
+
+        const events = []
+        for await (const event of runAgentLoop(agent, 'Test 429 exhaustion')) {
+            events.push(event)
+        }
+
+        const errEvent = events.find((e) => e.type === 'AgentError')
+        expect(errEvent).toBeDefined()
+        expect((errEvent as any).error).toContain('https://trydecember.com/pricing')
+    }, 65000)
 
     it('should emit AgentInterrupt when aborted during execution loop', async () => {
         const mockLlm = new MockLLM()

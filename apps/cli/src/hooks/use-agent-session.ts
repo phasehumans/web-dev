@@ -93,6 +93,7 @@ export function useAgentSession({
         setPendingQuestions,
         pendingToolCall,
         setPendingToolCall,
+        toasts,
         addToast,
         setShouldExit,
         tasksData,
@@ -277,14 +278,7 @@ export function useAgentSession({
                 setActiveMessages([])
             } catch (err: any) {
                 const cleanError = parseErrorMessage(err)
-                addToast('Failed to generate grill questions.')
-                setActiveMessages([
-                    {
-                        id: getNextMsgId(),
-                        role: 'error',
-                        text: `Grill Failed: ${cleanError}`,
-                    },
-                ])
+                addToast(`Grill Failed: ${cleanError}`, 'error')
             } finally {
                 setIsStreaming(false)
             }
@@ -378,20 +372,7 @@ export function useAgentSession({
                     }
                 }
                 if (items.length === 0) {
-                    setStaticMessages((prev) => [...prev, ...activeMessages])
-                    setActiveMessages([
-                        {
-                            id: getNextMsgId(),
-                            role: 'assistant',
-                            blocks: [
-                                {
-                                    type: 'text',
-                                    content:
-                                        'No stored credentials to remove. `/logout` only removes credentials saved by `/login`.',
-                                },
-                            ],
-                        },
-                    ])
+                    addToast('No stored credentials to remove.', 'info')
                 } else {
                     setLogoutItems(items)
                     setAuthMode('logout_select')
@@ -433,7 +414,7 @@ export function useAgentSession({
                                 {
                                     type: 'text',
                                     content:
-                                        '**Authentication Required**\n\nYou are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
+                                        'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
                                 },
                             ],
                         },
@@ -467,15 +448,7 @@ export function useAgentSession({
                 }
                 sessionRepository.listSessions().then((sessions: any[]) => {
                     if (sessions.length === 0) {
-                        setStaticMessages((prev) => [...prev, ...activeMessages])
-                        setActiveMessages([
-                            { id: getNextMsgId(), role: 'user', text },
-                            {
-                                id: getNextMsgId(),
-                                role: 'assistant',
-                                blocks: [{ type: 'text', content: 'No previous sessions found.' }],
-                            },
-                        ])
+                        addToast('No previous sessions found.', 'info')
                         return
                     }
                     setSessionsData(sessions)
@@ -585,7 +558,7 @@ export function useAgentSession({
                             {
                                 type: 'text',
                                 content:
-                                    '**Authentication Required**\n\nYou are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
+                                    'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
                             },
                         ],
                     },
@@ -685,18 +658,10 @@ Explain which files need to be created, modified, or deleted, and what the chang
                     await handleSubmit(originalPrompt)
                 }
             } else {
-                addToast('Plan rejected.')
-                setActiveMessages((prev) => [
-                    ...prev,
-                    {
-                        id: getNextMsgId(),
-                        role: 'assistant',
-                        blocks: [{ type: 'text', content: '*Plan rejected by user.*' }],
-                    },
-                ])
+                addToast('Plan rejected.', 'error')
             }
         },
-        [currentPlannedPrompt, handleSubmit, addToast, setAuthMode, setActiveMessages]
+        [currentPlannedPrompt, handleSubmit, addToast, setAuthMode]
     )
 
     const handleContextSelect = () => {}
@@ -796,5 +761,7 @@ Explain which files need to be created, modified, or deleted, and what the chang
         getProviderModels,
         handleAbort,
         handleKillTask,
+        toasts,
+        addToast,
     }
 }

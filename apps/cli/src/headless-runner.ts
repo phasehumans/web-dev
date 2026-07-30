@@ -184,7 +184,7 @@ export async function runHeadlessTask(
                 case 'AgentError':
                     hasError = true
                     errorMessage = event.error
-                    writeErr(`\n[Agent Error: ${event.error}]\n`)
+                    writeErr(`\n[Error: ${event.error}]\n`)
                     break
             }
         }

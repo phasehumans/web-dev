@@ -32,12 +32,29 @@ export async function processAgentStream({
                 const blocks = [...(msg.blocks || [])]
                 let finalMsg = { ...msg }
 
+                const isStatusMessage = (content: string) =>
+                    content === 'Working...' ||
+                    content === 'Thinking...' ||
+                    content.startsWith('Rate limit') ||
+                    content.startsWith('High demand') ||
+                    content.startsWith('LLM Provider rate limit') ||
+                    content.startsWith('LLM Provider high demand')
+
                 for (const event of eventsToProcess) {
                     switch (event.type) {
                         case 'TurnStart':
                             blocks.push({ type: 'text', content: 'Working...' })
                             break
                         case 'AgentError': {
+                            const lastBlock = blocks[blocks.length - 1]
+                            if (
+                                lastBlock &&
+                                (lastBlock.type === 'thinking' ||
+                                    (lastBlock.type === 'text' &&
+                                        isStatusMessage(lastBlock.content)))
+                            ) {
+                                blocks.pop()
+                            }
                             const errMsg = parseErrorMessage({ message: event.error })
                             blocks.push({
                                 type: 'error',
@@ -50,9 +67,7 @@ export async function processAgentStream({
                             if (
                                 lastBlock &&
                                 lastBlock.type === 'text' &&
-                                (lastBlock.content === 'Working...' ||
-                                    lastBlock.content === 'Thinking...' ||
-                                    lastBlock.content.startsWith('Rate limit hit'))
+                                isStatusMessage(lastBlock.content)
                             ) {
                                 lastBlock.content = ''
                             }
@@ -60,17 +75,22 @@ export async function processAgentStream({
                             break
                         }
                         case 'AgentStatus': {
+                            const isRetryStatus =
+                                event.message?.startsWith('LLM Provider') ||
+                                event.message?.startsWith('Rate limit') ||
+                                event.message?.startsWith('High demand')
+                            const color = isRetryStatus ? '#FCA5A5' : undefined
+
                             const statusBlock = blocks[blocks.length - 1]
                             if (
                                 statusBlock &&
                                 statusBlock.type === 'text' &&
-                                (statusBlock.content === 'Working...' ||
-                                    statusBlock.content === 'Thinking...' ||
-                                    statusBlock.content.startsWith('Rate limit hit'))
+                                isStatusMessage(statusBlock.content)
                             ) {
                                 statusBlock.content = event.message || 'Working...'
+                                if (color) statusBlock.color = color
                             } else if (event.message) {
-                                blocks.push({ type: 'text', content: event.message })
+                                blocks.push({ type: 'text', content: event.message, color })
                             }
                             break
                         }
@@ -82,11 +102,8 @@ export async function processAgentStream({
                             const lastBlock = blocks[blocks.length - 1]
                             if (lastBlock && lastBlock.type === 'text') {
                                 lastBlock.content =
-                                    (lastBlock.content === 'Working...' ||
-                                    lastBlock.content === 'Thinking...' ||
-                                    lastBlock.content.startsWith('Rate limit hit')
-                                        ? ''
-                                        : lastBlock.content) + event.content
+                                    (isStatusMessage(lastBlock.content) ? '' : lastBlock.content) +
+                                    event.content
                             } else {
                                 blocks.push({ type: 'text', content: event.content })
                             }
@@ -100,8 +117,7 @@ export async function processAgentStream({
                                 if (
                                     blocks.length > 0 &&
                                     blocks[blocks.length - 1].type === 'text' &&
-                                    (blocks[blocks.length - 1].content === 'Working...' ||
-                                        blocks[blocks.length - 1].content === 'Thinking...')
+                                    isStatusMessage(blocks[blocks.length - 1].content)
                                 ) {
                                     blocks.pop()
                                 }
@@ -160,11 +176,21 @@ export async function processAgentStream({
 
     for await (const event of stream) {
         pendingEvents.push(event)
-        if (!flushTimeout) {
+        if (
+            event.type === 'StreamChunk' ||
+            event.type === 'TextChunk' ||
+            event.type === 'ThinkingChunk'
+        ) {
+            if (flushTimeout) {
+                clearTimeout(flushTimeout)
+                flushTimeout = null
+            }
+            flush()
+        } else if (!flushTimeout) {
             flushTimeout = setTimeout(() => {
                 flush()
                 flushTimeout = null
-            }, 50)
+            }, 16)
         }
     }
 

@@ -3,16 +3,43 @@ export function getToolSummary(name: string, inputStr: string): string {
         const args = JSON.parse(inputStr || '{}')
         switch (name) {
             case 'read_file':
-            case 'view_file':
-                return `Read(${args.AbsolutePath || args.filePath || args.path || ''})`.trim()
+            case 'view_file': {
+                const path =
+                    args.AbsolutePath ||
+                    args.TargetFile ||
+                    args.filePath ||
+                    args.filepath ||
+                    args.path ||
+                    args.file ||
+                    ''
+                return `Read(${path})`.trim()
+            }
             case 'write_file':
-            case 'write_to_file':
-                return `Create(${args.TargetFile || args.filePath || args.path || ''})`.trim()
+            case 'write_to_file': {
+                const path =
+                    args.TargetFile ||
+                    args.AbsolutePath ||
+                    args.filePath ||
+                    args.filepath ||
+                    args.path ||
+                    args.file ||
+                    ''
+                return `Create(${path})`.trim()
+            }
             case 'edit_file':
             case 'edit_diff':
             case 'replace_file_content':
-            case 'multi_replace_file_content':
-                return `Edit(${args.TargetFile || args.filePath || args.path || ''})`.trim()
+            case 'multi_replace_file_content': {
+                const path =
+                    args.TargetFile ||
+                    args.AbsolutePath ||
+                    args.filePath ||
+                    args.filepath ||
+                    args.path ||
+                    args.file ||
+                    ''
+                return `Edit(${path})`.trim()
+            }
             case 'list_dir':
                 return `ListDir(${args.DirectoryPath || args.dirPath || args.path || ''})`.trim()
             case 'bash':

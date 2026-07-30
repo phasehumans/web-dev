@@ -32,6 +32,7 @@ export function useAuthHandlers(
         setSettingsAuthPriority,
         setAuthMethod,
         setStaticKey,
+        addToast,
     } = useCliStore()
 
     const handleAuthMenuSelect = async (item: any) => {
@@ -40,14 +41,7 @@ export function useAuthHandlers(
         } else if (item.value === 'december_browser') {
             setAuthMode('none')
             setIsStreaming(true)
-            setStaticMessages((prev) => [...prev, ...activeMessages])
-            setActiveMessages([
-                {
-                    id: getNextMsgId(),
-                    role: 'assistant',
-                    blocks: [{ type: 'text', content: `Opening browser to log in...` }],
-                },
-            ])
+            addToast('Opening browser to log in...', 'info')
 
             try {
                 if (!onLogin) {
@@ -82,19 +76,9 @@ export function useAuthHandlers(
                     setIsAuthenticated(true)
                 }
 
-                setStaticMessages((prev) => [...prev, ...activeMessages])
-                setActiveMessages([
-                    {
-                        id: getNextMsgId(),
-                        role: 'assistant',
-                        blocks: [{ type: 'text', content: MESSAGES.AUTH.LOGIN_SUCCESS_DECEMBER }],
-                    },
-                ])
+                addToast(MESSAGES.AUTH.LOGIN_SUCCESS_DECEMBER, 'success')
             } catch (err: any) {
-                setStaticMessages((prev) => [...prev, ...activeMessages])
-                setActiveMessages([
-                    { id: getNextMsgId(), role: 'error', text: `Login failed: ${err.message}` },
-                ])
+                addToast(`Login failed: ${err.message}`, 'error')
             } finally {
                 setIsStreaming(false)
             }
@@ -130,7 +114,7 @@ export function useAuthHandlers(
                                     content: `Please open [${uri}](${uri}) on any device and enter code: \`${code}\``,
                                 },
                                 {
-                                    type: 'thinking',
+                                    type: 'text',
                                     content: 'Waiting for authorization...',
                                 },
                             ],
@@ -192,15 +176,7 @@ export function useAuthHandlers(
         await saveConfig(config)
         agent.modelOptions = { model: item.value }
         setAuthMode('none')
-
-        setStaticMessages((prev) => [...prev, ...activeMessages])
-        setActiveMessages([
-            {
-                id: getNextMsgId(),
-                role: 'assistant',
-                blocks: [{ type: 'text', content: `Model successfully changed to ${item.value}!` }],
-            },
-        ])
+        addToast(`Model changed to ${item.value}`, 'success')
     }
 
     const handleProviderSelect = async (item: any) => {
@@ -224,20 +200,7 @@ export function useAuthHandlers(
             setIsAuthenticated(true)
 
             setAuthMode('none')
-
-            setStaticMessages((prev) => [...prev, ...activeMessages])
-            setActiveMessages([
-                {
-                    id: getNextMsgId(),
-                    role: 'assistant',
-                    blocks: [
-                        {
-                            type: 'text',
-                            content: `Switched active provider to ${item.value.toUpperCase()} (using saved key).`,
-                        },
-                    ],
-                },
-            ])
+            addToast(`Switched active provider to ${item.value.toUpperCase()}`, 'success')
         } else {
             setSelectedProvider(item.value)
             setAuthMode('byok_key')
@@ -296,21 +259,7 @@ export function useAuthHandlers(
 
             setAuthMode('none')
             setApiKey('')
-
-            setStaticMessages((prev) => [...prev, ...activeMessages])
-            setActiveMessages([
-                {
-                    id: getNextMsgId(),
-                    role: 'assistant',
-                    blocks: [
-                        {
-                            type: 'status',
-                            success: true,
-                            label: MESSAGES.AUTH.API_KEY_SAVED(selectedProvider),
-                        },
-                    ],
-                },
-            ])
+            addToast(MESSAGES.AUTH.API_KEY_SAVED(selectedProvider), 'success')
         } catch (err: any) {
             const errStr = (err?.message || JSON.stringify(err) || String(err)).toLowerCase()
             if (
@@ -341,24 +290,8 @@ export function useAuthHandlers(
 
                 setAuthMode('none')
                 setApiKey('')
-
-                setStaticMessages((prev) => [...prev, ...activeMessages])
-                setActiveMessages([
-                    {
-                        id: getNextMsgId(),
-                        role: 'assistant',
-                        blocks: [
-                            {
-                                type: 'status',
-                                success: true,
-                                label: `API Key saved for ${selectedProvider}`,
-                            },
-                        ],
-                    },
-                ])
+                addToast(`API Key saved for ${selectedProvider}`, 'success')
             } else {
-                setStaticMessages((prev) => [...prev, ...activeMessages])
-
                 let cleanMessage = err?.message || String(err)
                 try {
                     const parsed = JSON.parse(cleanMessage)
@@ -379,21 +312,9 @@ export function useAuthHandlers(
                     // Keep original raw message if JSON parse fails
                 }
 
-                setActiveMessages([
-                    {
-                        id: getNextMsgId(),
-                        role: 'assistant',
-                        blocks: [
-                            {
-                                type: 'status',
-                                success: false,
-                                label: `Invalid API Key for ${selectedProvider}`,
-                            },
-                            { type: 'text', content: cleanMessage },
-                        ],
-                    },
-                ])
+                setAuthMode('none')
                 setApiKey('')
+                addToast(`Invalid API Key for ${selectedProvider}: ${cleanMessage}`, 'error')
             }
         } finally {
             setIsStreaming(false)
@@ -438,13 +359,7 @@ export function useAuthHandlers(
         }
 
         setStaticMessages((prev) => [...prev, ...activeMessages])
-        setActiveMessages([
-            {
-                id: getNextMsgId(),
-                role: 'assistant',
-                blocks: [{ type: 'text', content: `Removed credentials for: ${removedName}` }],
-            },
-        ])
+        addToast(`Removed credentials for: ${removedName}`, 'success')
     }
 
     const handleSessionSelect = async (item: any) => {
@@ -507,22 +422,10 @@ export function useAuthHandlers(
 
             setStaticMessages([{ id: 'header', role: 'header' }, ...resumedMessages])
             setStaticKey((k) => k + 1) // force ink <static> to remount and render the entire array
-            setActiveMessages([
-                {
-                    id: getNextMsgId(),
-                    role: 'assistant',
-                    blocks: [{ type: 'text', content: `Resumed session: ${item.value}` }],
-                },
-            ])
+            setActiveMessages([])
+            addToast(`Resumed session: ${item.value}`, 'success')
         } catch (err: any) {
-            setStaticMessages((prev) => [...prev, ...activeMessages])
-            setActiveMessages([
-                {
-                    id: getNextMsgId(),
-                    role: 'error',
-                    text: `Failed to resume session: ${err.message}`,
-                },
-            ])
+            addToast(`Failed to resume session: ${err.message}`, 'error')
         }
     }
 

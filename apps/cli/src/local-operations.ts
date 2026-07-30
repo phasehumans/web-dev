@@ -46,15 +46,17 @@ export const localOperations: PlatformAdapter = {
                     }, options.timeout * 1000)
                 }
 
-                const bgTimeout = setTimeout(() => {
-                    if (!resolved) {
-                        resolved = true
-                        resolve({ exitCode: null, output, taskId: task.id })
-                    }
-                }, 3000)
+                const bgTimeout = options?.waitMsBeforeAsync
+                    ? setTimeout(() => {
+                          if (!resolved) {
+                              resolved = true
+                              resolve({ exitCode: null, output, taskId: task.id })
+                          }
+                      }, options.waitMsBeforeAsync)
+                    : undefined
 
                 ;(child as any).on('close', (code: number | null) => {
-                    clearTimeout(bgTimeout)
+                    if (bgTimeout) clearTimeout(bgTimeout)
                     if (timeoutHandle) clearTimeout(timeoutHandle)
                     taskManager.markCompleted(task.id, code)
                     if (!resolved) {

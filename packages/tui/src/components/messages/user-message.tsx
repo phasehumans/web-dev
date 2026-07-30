@@ -15,14 +15,10 @@ export function UserMessage({ message }: Props) {
             flexDirection="row"
         >
             <Box marginRight={1}>
-                <Text bold color="#89B4F8">
-                    ❭
-                </Text>
+                <Text color="#89B4F8">❭</Text>
             </Box>
             <Box flexShrink={1}>
-                <Text bold color="#89B4F8">
-                    {message}
-                </Text>
+                <Text color="#89B4F8">{message}</Text>
             </Box>
         </Box>
     )
