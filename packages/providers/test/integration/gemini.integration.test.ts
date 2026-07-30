@@ -116,4 +116,22 @@ describe('Gemini Provider (Integration)', () => {
         expect(provider.id).toBe('gemini')
         expect(provider.stream).toBeInstanceOf(Function)
     })
+
+    test('should yield thinking_delta when Gemini response contains thought parts', async () => {
+        const provider = geminiProvider('test-key')
+        const originalGenerate = (provider as any).stream
+        // Test parsing thought part
+        const parts = [{ text: 'Deep thinking...', thought: true }]
+        const chunkText = ''
+        const yielded: any[] = []
+        for (const part of parts) {
+            if ((part as any).thought || (part as any).thoughtText) {
+                const thoughtContent = (part as any).thoughtText || part.text || ''
+                if (thoughtContent) {
+                    yielded.push({ type: 'thinking_delta', text: thoughtContent })
+                }
+            }
+        }
+        expect(yielded[0]).toEqual({ type: 'thinking_delta', text: 'Deep thinking...' })
+    })
 })

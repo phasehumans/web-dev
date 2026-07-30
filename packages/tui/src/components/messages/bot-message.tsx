@@ -32,11 +32,19 @@ export type MessageBlock =
 type Props = {
     blocks: MessageBlock[]
     usage?: { promptTokens: number; completionTokens: number }
+    expandCommands?: boolean
 }
 
 function CollapsibleThought({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
+    const [expanded, setExpanded] = useState<boolean>(false)
     const words = content.trim() ? content.trim().split(/\s+/).length : 0
     const tokenCount = Math.max(1, Math.round(words * 1.33))
+
+    useInput((input, key) => {
+        if ((key.ctrl && input.toLowerCase() === 'o') || input === '\x0f') {
+            setExpanded((prev) => !prev)
+        }
+    })
 
     if (isStreaming) {
         return (
@@ -47,18 +55,23 @@ function CollapsibleThought({ content, isStreaming }: { content: string; isStrea
     }
 
     return (
-        <Box flexDirection="row" marginY={0.5}>
+        <Box flexDirection="column" marginY={0.5}>
             <Text color="gray" italic>
-                Thoughts ({tokenCount} tokens)
+                Thoughts ({tokenCount} tokens{expanded ? ' · ctrl+o to collapse' : ''})
             </Text>
+            {expanded && (
+                <Box paddingLeft={1} paddingTop={0.5}>
+                    <Text color="gray">{content}</Text>
+                </Box>
+            )}
         </Box>
     )
 }
 
 function StyledCommand({ command, truncate = true }: { command: string; truncate?: boolean }) {
-    const match = command.match(/^([A-Za-z_]+)\((.*)\)$/)
+    const match = command.match(/^([A-Za-z_]+)\(([\s\S]*)\)$/)
     if (match) {
-        let args = match[2] || ''
+        let args = (match[2] || '').replace(/\r?\n/g, ' ')
         if (truncate && args.length > 80) {
             args = args.substring(0, 80) + '...'
         }
@@ -74,19 +87,29 @@ function StyledCommand({ command, truncate = true }: { command: string; truncate
             </Text>
         )
     }
-    let displayCmd = command
-    if (truncate && command.length > 80) {
-        displayCmd = command.substring(0, 80) + '...'
+    let displayCmd = command.replace(/\r?\n/g, ' ')
+    if (truncate && displayCmd.length > 80) {
+        displayCmd = displayCmd.substring(0, 80) + '...'
     }
     return <Text color="white">{displayCmd}</Text>
 }
 
-function CollapsibleCommandOutput({ command, output }: { command: string; output?: string }) {
+function CollapsibleCommandOutput({
+    command,
+    output,
+    forceExpanded,
+}: {
+    command: string
+    output?: string
+    forceExpanded?: boolean
+}) {
     const { isFocused } = useFocus({ autoFocus: true })
     const [userExpanded, setUserExpanded] = useState<boolean>(false)
 
+    const isExpanded = userExpanded || Boolean(forceExpanded)
+
     useInput((input, key) => {
-        if ((key.ctrl && input.toLowerCase() === 'o') || input === '\x0f') {
+        if ((key.ctrl && (key.name === 'o' || input?.toLowerCase() === 'o')) || input === '\x0f') {
             setUserExpanded((prev) => !prev)
         }
     })
@@ -99,12 +122,11 @@ function CollapsibleCommandOutput({ command, output }: { command: string; output
                 <StyledCommand command={command} />
                 {lines.length > 0 && (
                     <Text color="gray">
-                        ({lines.length} lines ·{' '}
-                        {userExpanded ? 'Ctrl+O to collapse' : 'Ctrl+O to expand'})
+                        ({isExpanded ? 'ctrl+o to collapse' : 'ctrl+o to expand'})
                     </Text>
                 )}
             </Box>
-            {userExpanded && lines.length > 0 && (
+            {isExpanded && lines.length > 0 && (
                 <Box flexDirection="column" marginTop={0} paddingX={1}>
                     {lines.map((line, lidx) => {
                         let color = '#d1d5db'
@@ -139,12 +161,13 @@ function CollapsibleCommandOutput({ command, output }: { command: string; output
     )
 }
 
-export function BotMessage({ blocks, usage }: Props) {
+export function BotMessage({ blocks, usage, expandCommands }: Props) {
     return (
-        <Box flexDirection="column" paddingX={4} paddingY={0} gap={1} marginTop={0}>
+        <Box flexDirection="column" paddingX={4} paddingY={0} gap={0} marginTop={0.5}>
             {blocks.map((block, idx) => {
                 switch (block.type) {
                     case 'text': {
+                        if (!block.content || block.content.trim() === '') return null
                         const isThinking =
                             block.content === 'Thinking...' ||
                             block.content === 'Working...' ||
@@ -154,7 +177,7 @@ export function BotMessage({ blocks, usage }: Props) {
                             return (
                                 <Box key={idx} gap={1} alignItems="center">
                                     <Spinner />
-                                    <Text color="#89B4F8">{block.content}</Text>
+                                    <Text color="gray">{block.content}</Text>
                                 </Box>
                             )
                         }
@@ -172,7 +195,7 @@ export function BotMessage({ blocks, usage }: Props) {
                             /(<thought(?:>| [^>]*>)[\s\S]*?<\/thought>|<thought(?:>| [^>]*>)[\s\S]*)/i
                         )
                         return (
-                            <Box key={idx} flexDirection="column">
+                            <Box key={idx} flexDirection="column" marginY={0.5}>
                                 {parts.map((part, pidx) => {
                                     if (/^<thought(?:>| [^>]*>)/i.test(part)) {
                                         const isClosed = /<\/thought>$/i.test(part)
@@ -325,6 +348,7 @@ export function BotMessage({ blocks, usage }: Props) {
                                     key={idx}
                                     command={block.command}
                                     output={displayOutput}
+                                    forceExpanded={expandCommands}
                                 />
                             )
                         }
@@ -372,7 +396,7 @@ export function BotMessage({ blocks, usage }: Props) {
                             <Box key={idx} flexDirection="column">
                                 <Box gap={1} alignItems="center">
                                     <Spinner />
-                                    <Text color="#89B4F8">{statusLabel}</Text>
+                                    <Text color="gray">{statusLabel}</Text>
                                 </Box>
                                 {block.output && (
                                     <Box

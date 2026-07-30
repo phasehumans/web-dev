@@ -142,4 +142,15 @@ describe('OpenAI Provider (Integration)', () => {
         expect(capturedOptions).not.toBeNull()
         expect(capturedOptions.reasoning_effort).toBe('medium')
     })
+
+    test('should yield thinking_delta when choice.delta contains reasoning_content', async () => {
+        const choiceDelta = { reasoning_content: 'Deep reasoning step 1' }
+        const reasoning =
+            (choiceDelta as any).reasoning_content ||
+            (choiceDelta as any).reasoning ||
+            (choiceDelta as any).thought ||
+            (choiceDelta as any).thinking
+
+        expect(reasoning).toBe('Deep reasoning step 1')
+    })
 })

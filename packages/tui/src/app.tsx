@@ -99,6 +99,7 @@ export function ChatApp({
                 isAuthenticated={isAuthenticated}
                 cliVersion={cliVersion}
                 userEmail={currentEmail || userEmail}
+                expandCommands={session.expandCommands}
             />
 
             <InputBar

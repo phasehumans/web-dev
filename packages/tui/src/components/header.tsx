@@ -35,7 +35,7 @@ export function Header({
     const branch = getGitBranch()
 
     return (
-        <Box flexDirection="column" paddingLeft={2} paddingTop={1} paddingBottom={1}>
+        <Box flexDirection="column" paddingLeft={2} paddingTop={1} paddingBottom={0}>
             <Text bold color="white">
                 ✱ December CLI {cliVersion.replace(/^v/, '')}
             </Text>

@@ -33,7 +33,7 @@ Guidelines:
 - Be extremely concise in your responses. The user is a developer who values speed and exactness.
 - ALWAYS show absolute file paths when viewing or editing files.
 - Before using a tool, you MUST enclose your thought process inside <thought>...</thought> tags.
-- At the end of your work, provide a summary of what you did, highlighting important keywords.`
+- At the end of your work, provide a concise summary of what you did (4-5 lines maximum, written as a single cohesive paragraph), highlighting key actions and results.`
         )
 
         // 3. discover project rules

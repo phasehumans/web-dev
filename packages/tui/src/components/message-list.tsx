@@ -1,4 +1,4 @@
-import { Static } from 'ink'
+import { Box } from 'ink'
 import React from 'react'
 
 import { Header } from './header'
@@ -14,6 +14,7 @@ export function MessageList({
     isAuthenticated,
     cliVersion,
     userEmail,
+    expandCommands,
 }: {
     staticKey: number
     staticMessages: Message[]
@@ -21,29 +22,29 @@ export function MessageList({
     isAuthenticated: boolean
     cliVersion?: string
     userEmail?: string
+    expandCommands?: boolean
 }) {
-    return (
-        <>
-            <Static key={staticKey} items={staticMessages} style={{ flexDirection: 'column' }}>
-                {(msg) => {
-                    if (msg.role === 'header') {
-                        return <Header key={msg.id} cliVersion={cliVersion} userEmail={userEmail} />
-                    }
-                    if (msg.role === 'user')
-                        return <UserMessage key={msg.id} message={msg.text ?? ''} />
-                    if (msg.role === 'error')
-                        return <ErrorMessage key={msg.id} message={msg.text ?? ''} />
-                    return <BotMessage key={msg.id} blocks={msg.blocks ?? []} usage={msg.usage} />
-                }}
-            </Static>
+    const allMessages = [...staticMessages, ...activeMessages]
 
-            {activeMessages.map((msg) => {
+    return (
+        <Box flexDirection="column">
+            {allMessages.map((msg) => {
+                if (msg.role === 'header') {
+                    return <Header key={msg.id} cliVersion={cliVersion} userEmail={userEmail} />
+                }
                 if (msg.role === 'user')
                     return <UserMessage key={msg.id} message={msg.text ?? ''} />
                 if (msg.role === 'error')
                     return <ErrorMessage key={msg.id} message={msg.text ?? ''} />
-                return <BotMessage key={msg.id} blocks={msg.blocks ?? []} usage={msg.usage} />
+                return (
+                    <BotMessage
+                        key={msg.id}
+                        blocks={msg.blocks ?? []}
+                        usage={msg.usage}
+                        expandCommands={expandCommands}
+                    />
+                )
             })}
-        </>
+        </Box>
     )
 }

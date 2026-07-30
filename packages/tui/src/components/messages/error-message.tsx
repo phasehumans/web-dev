@@ -6,7 +6,7 @@ type Props = {
 
 export function ErrorMessage({ message }: Props) {
     return (
-        <Box paddingX={4} paddingY={1}>
+        <Box paddingX={4} paddingY={0.5}>
             <Text color="#FCA5A5">{message}</Text>
         </Box>
     )
