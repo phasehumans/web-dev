@@ -7,13 +7,14 @@ import type { ReactNode } from 'react'
 
 type Props = {
     children: ReactNode
+    onToast?: (options: any) => void
 }
 
-export function RootLayout({ children }: Props) {
+export function RootLayout({ children, onToast }: Props) {
     return (
         <ThemeProvider>
             <KeyboardLayerProvider>
-                <ToastProvider>
+                <ToastProvider onToast={onToast}>
                     <DialogProvider>{children}</DialogProvider>
                 </ToastProvider>
             </KeyboardLayerProvider>

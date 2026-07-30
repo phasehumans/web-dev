@@ -167,11 +167,17 @@ export async function processAgentStream({
 
     for await (const event of stream) {
         pendingEvents.push(event)
-        if (!flushTimeout) {
+        if (event.type === 'TextChunk' || event.type === 'ThinkingChunk') {
+            if (flushTimeout) {
+                clearTimeout(flushTimeout)
+                flushTimeout = null
+            }
+            flush()
+        } else if (!flushTimeout) {
             flushTimeout = setTimeout(() => {
                 flush()
                 flushTimeout = null
-            }, 50)
+            }, 16)
         }
     }
 

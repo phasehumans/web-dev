@@ -249,21 +249,6 @@ export function InputBar({
                                 )
                             )}
                         </Box>
-                        {toast.currentToast && (
-                            <Box gap={1}>
-                                <Text
-                                    color={
-                                        toast.currentToast.variant === 'success'
-                                            ? '#6EE7B7'
-                                            : toast.currentToast.variant === 'error'
-                                              ? '#FCA5A5'
-                                              : 'gray'
-                                    }
-                                >
-                                    {toast.currentToast.message}
-                                </Text>
-                            </Box>
-                        )}
                     </Box>
                     <Box gap={0}>
                         <Text color="#AAAAAA">? for shortcuts</Text>

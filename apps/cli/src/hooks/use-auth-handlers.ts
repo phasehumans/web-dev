@@ -511,7 +511,13 @@ export function useAuthHandlers(
                 {
                     id: getNextMsgId(),
                     role: 'assistant',
-                    blocks: [{ type: 'text', content: `Resumed session: ${item.value}` }],
+                    blocks: [
+                        {
+                            type: 'text',
+                            content: `Resumed session: ${item.value}`,
+                            color: '#6EE7B7',
+                        },
+                    ],
                 },
             ])
         } catch (err: any) {

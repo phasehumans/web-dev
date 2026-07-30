@@ -143,7 +143,19 @@ export function ChatApp({
                     console.clear()
                     setStaticMessages([{ id: 'header-' + Date.now(), role: 'header' }])
                     setStaticKey((k) => k + 1)
-                    setActiveMessages([])
+                    setActiveMessages([
+                        {
+                            id: 'msg-' + Date.now(),
+                            role: 'assistant',
+                            blocks: [
+                                {
+                                    type: 'text',
+                                    content: 'Started a new conversation.',
+                                    color: '#6EE7B7',
+                                },
+                            ],
+                        },
+                    ])
                 }}
                 planMode={planMode}
                 grillMode={grillMode}

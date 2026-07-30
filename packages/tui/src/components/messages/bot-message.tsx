@@ -7,8 +7,8 @@ import { Spinner } from '../spinner'
 import { SmoothMarkdown } from './smooth-markdown'
 
 export type MessageBlock =
-    | { type: 'text'; content: string }
-    | { type: 'thinking'; content: string }
+    | { type: 'text'; content: string; color?: string }
+    | { type: 'thinking'; content: string; isStreaming?: boolean }
     | { type: 'compaction'; summary: string }
     | { type: 'error'; error: string }
     | { type: 'interrupt' }
@@ -28,39 +28,57 @@ export type MessageBlock =
           diff?: string
       }
     | { type: 'code'; language: string; filename?: string; code: string }
-    | { type: 'status'; label: string; success: boolean }
+    | { type: 'status'; label: string; success: boolean; hidePill?: boolean }
 
 type Props = {
     blocks: MessageBlock[]
     usage?: { promptTokens: number; completionTokens: number }
 }
 
-function CollapsibleThought({ content }: { content: string }) {
+function CollapsibleThought({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
     const { isFocused } = useFocus({ autoFocus: false })
-    const [expanded, setExpanded] = useState(false)
+    const [userExpanded, setUserExpanded] = useState<boolean | null>(null)
 
     useInput((input, key) => {
-        if (isFocused && key.return) {
-            setExpanded((prev) => !prev)
+        if (isFocused && ((key.ctrl && input.toLowerCase() === 'o') || input === '\x0f')) {
+            setUserExpanded((prev) => (prev === null ? true : !prev))
         }
     })
 
-    const lines = content.split('\n')
-    const isLarge = lines.length > 5
+    const isExpanded = userExpanded !== null ? userExpanded : Boolean(isStreaming)
+
+    const lines = content.split(/\r?\n/)
+    const words = content.trim() ? content.trim().split(/\s+/).length : 0
+    const tokenCount = Math.max(1, Math.round(words * 1.33))
+
+    let borderColor = '#475569'
+    let headerText = ''
+
+    if (isStreaming) {
+        borderColor = '#06b6d4'
+        headerText = `Thought process... (${tokenCount} tokens)`
+    } else if (isExpanded) {
+        borderColor = '#89b4f8'
+        headerText = `Thought process (${tokenCount} tokens)`
+    } else {
+        borderColor = '#475569'
+        headerText = `Thought process (${tokenCount} tokens)`
+    }
 
     return (
         <Box flexDirection="row" paddingBottom={1}>
             <Box width={2} flexShrink={0}>
-                <Text color={isFocused ? '#89B4F8' : '#475569'}>│</Text>
+                <Text color={isFocused ? '#89b4f8' : borderColor}>│</Text>
             </Box>
             <Box flexDirection="column">
-                <Text color={isFocused ? '#89B4F8' : '#64748b'} italic>
-                    Thinking...{' '}
-                    {isFocused ? (expanded ? '(Enter to collapse)' : '(Enter to expand)') : ''}
+                <Text color={isStreaming ? 'cyan' : isFocused ? '#89b4f8' : '#64748b'} italic>
+                    {headerText}
                 </Text>
                 <Box paddingY={0.5}>
-                    <Text color="#475569" dimColor>
-                        {isLarge && !expanded ? lines.slice(0, 3).join('\n') + '\n...' : content}
+                    <Text color="#94a3b8" dimColor>
+                        {!isExpanded && lines.length > 2
+                            ? lines.slice(0, 2).join('\n') + '\n...'
+                            : content}
                     </Text>
                 </Box>
             </Box>
@@ -114,6 +132,14 @@ export function BotMessage({ blocks, usage }: Props) {
                             )
                         }
 
+                        if (block.color) {
+                            return (
+                                <Box key={idx}>
+                                    <Text color={block.color}>{block.content}</Text>
+                                </Box>
+                            )
+                        }
+
                         // split by <thought> tags (case insensitive, allow attributes)
                         const parts = block.content.split(
                             /(<thought(?:>| [^>]*>)[\s\S]*?<\/thought>|<thought(?:>| [^>]*>)[\s\S]*)/i
@@ -122,6 +148,11 @@ export function BotMessage({ blocks, usage }: Props) {
                             <Box key={idx} flexDirection="column">
                                 {parts.map((part, pidx) => {
                                     if (/^<thought(?:>| [^>]*>)/i.test(part)) {
+                                        const isClosed = /<\/thought>$/i.test(part)
+                                        const isStreaming =
+                                            !isClosed &&
+                                            idx === blocks.length - 1 &&
+                                            pidx === parts.length - 1
                                         const thoughtContent = part
                                             .replace(/^<thought(?:>| [^>]*>)/i, '')
                                             .replace(/<\/thought>$/i, '')
@@ -130,6 +161,7 @@ export function BotMessage({ blocks, usage }: Props) {
                                             <CollapsibleThought
                                                 key={pidx}
                                                 content={thoughtContent}
+                                                isStreaming={isStreaming}
                                             />
                                         )
                                     }
@@ -146,7 +178,7 @@ export function BotMessage({ blocks, usage }: Props) {
                     case 'error': {
                         return (
                             <Box key={idx} flexDirection="column" paddingLeft={1} marginY={1}>
-                                <Text color="white">{block.error}</Text>
+                                <Text color="#FCA5A5">{block.error}</Text>
                             </Box>
                         )
                     }
@@ -158,18 +190,20 @@ export function BotMessage({ blocks, usage }: Props) {
                         )
                     }
                     case 'thinking': {
-                        return <CollapsibleThought key={idx} content={block.content} />
+                        const isStreaming = block.isStreaming ?? idx === blocks.length - 1
+                        return (
+                            <CollapsibleThought
+                                key={idx}
+                                content={block.content}
+                                isStreaming={isStreaming}
+                            />
+                        )
                     }
                     case 'compaction': {
                         return (
                             <Box key={idx} flexDirection="column" paddingY={1}>
                                 <Box flexDirection="row" gap={1} alignItems="center">
-                                    <Pill
-                                        label="SYSTEM"
-                                        backgroundColor="#303030"
-                                        color="#a78bfa"
-                                    />
-                                    <Text color="#a78bfa" italic>
+                                    <Text color="#fef08a" italic>
                                         Context Compacted
                                     </Text>
                                 </Box>
@@ -248,19 +282,19 @@ export function BotMessage({ blocks, usage }: Props) {
                                                         let rest = line
 
                                                         if (isWrite) {
-                                                            prefixColor = '#4ade80'
+                                                            prefixColor = '#6EE7B7'
                                                             bgColor = '#122f1e'
                                                             prefix = '+'
                                                             rest = line
                                                         } else {
                                                             prefix = ' '
                                                             if (line.startsWith('+')) {
-                                                                prefixColor = '#4ade80'
+                                                                prefixColor = '#6EE7B7'
                                                                 bgColor = '#122f1e'
                                                                 prefix = '+'
                                                                 rest = line.slice(1)
                                                             } else if (line.startsWith('-')) {
-                                                                prefixColor = '#f87171'
+                                                                prefixColor = '#FCA5A5'
                                                                 bgColor = '#3f1316'
                                                                 prefix = '-'
                                                                 rest = line.slice(1)
@@ -402,7 +436,7 @@ export function BotMessage({ blocks, usage }: Props) {
                             : isDeleted
                               ? 'DELETED'
                               : 'MODIFIED'
-                        const fgColor = isCreated ? '#4ade80' : isDeleted ? '#f87171' : '#89B4F8'
+                        const fgColor = isCreated ? '#6EE7B7' : isDeleted ? '#FCA5A5' : '#89B4F8'
 
                         return (
                             <Box key={idx} gap={1} alignItems="center">
@@ -439,12 +473,7 @@ export function BotMessage({ blocks, usage }: Props) {
                     case 'status': {
                         return (
                             <Box key={idx} gap={1} alignItems="center">
-                                <Pill
-                                    label={block.success ? 'SUCCESS' : 'FAILED'}
-                                    backgroundColor="#303030"
-                                    color={block.success ? '#4ade80' : '#f87171'}
-                                />
-                                <Text color="white" bold={block.success}>
+                                <Text color={block.success ? '#6EE7B7' : '#FCA5A5'}>
                                     {block.label}
                                 </Text>
                             </Box>
