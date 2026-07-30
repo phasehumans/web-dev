@@ -1,4 +1,4 @@
-import { execSync, exec, spawn } from 'child_process'
+import { execSync, exec } from 'child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -299,7 +299,7 @@ export const COMMANDS: Command[] = [
         description: 'Update to the latest version',
         value: '/update',
         action: (ctx) => {
-            ctx.toast.show({ message: 'Updating CLI... The app will automatically restart.' })
+            ctx.toast.show({ message: 'Updating CLI...' })
             exec('npm install -g @trydecember/cli', async (err) => {
                 if (err) {
                     ctx.toast.show({
@@ -313,14 +313,11 @@ export const COMMANDS: Command[] = [
                     await ctx.agent.saveContext()
                 }
 
-                console.clear()
-
-                const child = spawn(process.argv[0], process.argv.slice(1), {
-                    stdio: 'inherit',
-                    detached: true,
+                ctx.toast.show({
+                    variant: 'success',
+                    message:
+                        'December CLI updated successfully! Please restart the CLI in your terminal.',
                 })
-                child.unref()
-                ctx.exit()
             })
         },
     },

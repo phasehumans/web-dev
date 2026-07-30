@@ -195,7 +195,7 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                             /(<thought(?:>| [^>]*>)[\s\S]*?<\/thought>|<thought(?:>| [^>]*>)[\s\S]*)/i
                         )
                         return (
-                            <Box key={idx} flexDirection="column" marginY={0.5}>
+                            <Box key={idx} flexDirection="column">
                                 {parts.map((part, pidx) => {
                                     if (/^<thought(?:>| [^>]*>)/i.test(part)) {
                                         const isClosed = /<\/thought>$/i.test(part)

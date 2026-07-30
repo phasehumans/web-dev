@@ -24,6 +24,26 @@ describe('EditFileTool', () => {
         expect(result).toContain('Successfully edited file')
     })
 
+    test('should fall back to line-by-line whitespace trimmed matching', async () => {
+        const context = createMockContext()
+        context.operations.fs.readFile = mock(async () => 'const a = 1   \r\nconst b = 2  ')
+
+        const result = await EditFileTool.execute(
+            {
+                path: '/test.ts',
+                targetContent: 'const a = 1\nconst b = 2',
+                replacementContent: 'const a = 10\nconst b = 20',
+            },
+            context
+        )
+
+        expect(context.operations.fs.writeFile).toHaveBeenCalledWith(
+            '/test.ts',
+            'const a = 10\nconst b = 20'
+        )
+        expect(result).toContain('matched with normalized whitespace')
+    })
+
     test('should fail if targetContent is not found', async () => {
         const context = createMockContext()
         context.operations.fs.readFile = mock(async () => 'const a = 1')
