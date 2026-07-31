@@ -1,13 +1,17 @@
 import { prisma } from '@december/database'
 
-export const createSession = async (data: { userId: string; title: string; messages: any[] }) => {
+import type { CreateCliSession } from './cli.types'
+
+const createSession = async (data: CreateCliSession) => {
+    const { userId, title, messages, minioPrefix } = data
     return prisma.session.create({
         data: {
-            userId: data.userId,
-            title: data.title,
+            userId,
+            title,
             type: 'CLI',
+            minioPrefix,
             messages: {
-                create: data.messages.map((msg: any, i: number) => ({
+                create: messages.map((msg: any, i: number) => ({
                     role:
                         msg.role === 'assistant'
                             ? 'ASSISTANT'

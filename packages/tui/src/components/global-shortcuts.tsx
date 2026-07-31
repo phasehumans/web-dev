@@ -90,6 +90,14 @@ export function GlobalShortcuts(session: any) {
 
         if (authMode !== 'none') {
             if (key.escape && authMode !== 'login') {
+                if (authMode === 'grill_question') {
+                    setGrillQuestions([])
+                    setCurrentGrillIndex(0)
+                    setGrillAnswers([])
+                    setGrillPrompt(null)
+                    setCustomInputMode(false)
+                    setGrillMode(false)
+                }
                 setAuthMode('none')
             }
             return

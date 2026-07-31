@@ -14,6 +14,12 @@ export const SHORTCUTS = [
     { key: 'up/down', desc: 'Input history' },
     { key: 'ctrl+y', desc: 'Quick copy (yank)' },
     { key: 'ctrl+c', desc: 'Exit / Graceful interrupt' },
+    { key: 'ctrl+h', desc: 'Session history' },
+    { key: 'ctrl+l', desc: 'Login / Account menu' },
+    { key: 'ctrl+o', desc: 'Toggle expand commands' },
+    { key: 'ctrl+t', desc: 'Tasks mode' },
+    { key: 'alt+enter', desc: 'Insert newline' },
+    { key: 'esc', desc: 'Cancel / Close menu' },
 ]
 
 export function ShortcutsMenu({ onClose }: { onClose: () => void }) {

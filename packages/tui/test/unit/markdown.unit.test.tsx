@@ -30,12 +30,18 @@ describe('Markdown Component (Unit)', () => {
         expect(frame).toContain('Item 2')
     })
 
-    it('renders syntax highlighted code blocks with top bar', () => {
-        const { lastFrame } = render(
+    it('renders syntax highlighted code blocks with top bar and expands on Ctrl+O', async () => {
+        const { lastFrame, stdin } = render(
             <Markdown>{'```javascript\nconsole.log("test");\n```'}</Markdown>
         )
-        const frame = lastFrame()
+        let frame = lastFrame()
         expect(frame).toContain('javascript')
+        expect(frame).toContain('ctrl+o / enter to expand')
+
+        stdin.write('\x0f')
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        frame = lastFrame()
         expect(frame).toContain('console.log')
         expect(frame).toContain('test')
     })

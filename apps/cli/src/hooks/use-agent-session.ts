@@ -6,6 +6,7 @@ import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
 import { useCliStore } from '../store'
 import { taskManager } from '../task-manager'
 import { parseErrorMessage } from '../utils/error-parser'
+import { extractJsonArray } from '../utils/json-parser'
 import { getProviderModels } from '../utils/models'
 
 import { getNextMsgId, processAgentStream } from './use-agent-runner'
@@ -234,7 +235,7 @@ export function useAgentSession({
     const generateGrillQuestions = useCallback(
         async (userPrompt: string) => {
             setIsStreaming(true)
-            setStaticMessages((prev) => [...prev, ...activeMessages])
+            setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
             setActiveMessages([
                 {
                     id: getNextMsgId(),
@@ -249,7 +250,7 @@ export function useAgentSession({
             ])
 
             try {
-                const prompt = getGrillPrompt(userPrompt, agent.systemPrompt)
+                const prompt = getGrillPrompt(userPrompt)
 
                 const stream = agent.llm.stream(
                     [{ role: 'user', content: prompt }],
@@ -264,13 +265,7 @@ export function useAgentSession({
                     }
                 }
 
-                let cleanJson = accumulatedText.trim()
-                if (cleanJson.startsWith('```')) {
-                    cleanJson = cleanJson.replace(/^```[a-zA-Z]*\n/, '').replace(/\n```$/, '')
-                }
-                cleanJson = cleanJson.trim()
-
-                const questions = JSON.parse(cleanJson)
+                const questions = extractJsonArray(accumulatedText)
                 if (!Array.isArray(questions) || questions.length === 0) {
                     throw new Error('Invalid questions format returned from model.')
                 }
@@ -290,7 +285,7 @@ export function useAgentSession({
                 setIsStreaming(false)
             }
         },
-        [agent, activeMessages]
+        [agent]
     )
 
     const generatePlanFromGrill = useCallback(
@@ -311,7 +306,7 @@ export function useAgentSession({
             )
 
             setIsStreaming(true)
-            setStaticMessages((prev) => [...prev, ...activeMessages])
+            setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
             const assistantMsgId = getNextMsgId()
             setActiveMessages([
                 {
@@ -423,7 +418,12 @@ export function useAgentSession({
                             },
                         ],
                     }
-                    setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                    setStaticMessages((prev) => [
+                        ...prev,
+                        ...useCliStore.getState().activeMessages,
+                        userMsg,
+                        noticeMsg,
+                    ])
                     setActiveMessages([])
                     return
                 }
@@ -445,7 +445,12 @@ export function useAgentSession({
                         role: 'assistant',
                         blocks: [{ type: 'text', content: 'Session repository not available.' }],
                     }
-                    setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                    setStaticMessages((prev) => [
+                        ...prev,
+                        ...useCliStore.getState().activeMessages,
+                        userMsg,
+                        noticeMsg,
+                    ])
                     setActiveMessages([])
                     return
                 }
@@ -514,7 +519,7 @@ export function useAgentSession({
                         blocks: [
                             {
                                 type: 'text',
-                                content: `Opening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})`,
+                                content: `Opening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Note: BYOK (Bring Your Own Key) usage is not tracked. Only usage via December login (December Wallet) is tracked.*`,
                             },
                         ],
                     },
@@ -540,7 +545,12 @@ export function useAgentSession({
                         },
                     ],
                 }
-                setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                setStaticMessages((prev) => [
+                    ...prev,
+                    ...useCliStore.getState().activeMessages,
+                    userMsg,
+                    noticeMsg,
+                ])
                 setActiveMessages([])
                 return
             }
@@ -555,7 +565,11 @@ export function useAgentSession({
             setIsStreaming(true)
             const assistantMsgId = getNextMsgId()
             const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text }
-            setStaticMessages((prev) => [...prev, ...activeMessages, newUserMsg])
+            setStaticMessages((prev) => [
+                ...prev,
+                ...useCliStore.getState().activeMessages,
+                newUserMsg,
+            ])
             setActiveMessages([{ id: assistantMsgId, role: 'assistant', blocks: [] }])
 
             const promptToSend = text
@@ -570,7 +584,7 @@ export function useAgentSession({
                 ])
             } finally {
                 setIsStreaming(false)
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([])
             }
         },

@@ -118,6 +118,9 @@ function CollapsibleCommandOutput({
     })
 
     const lines = output ? output.trim().split(/\r?\n/) : []
+    const MAX_VISIBLE_LINES = 20
+    const visibleLines = isExpanded ? lines.slice(0, MAX_VISIBLE_LINES) : []
+    const isTruncated = isExpanded && lines.length > MAX_VISIBLE_LINES
 
     return (
         <Box flexDirection="column" marginY={0}>
@@ -131,7 +134,7 @@ function CollapsibleCommandOutput({
             </Box>
             {isExpanded && lines.length > 0 && (
                 <Box flexDirection="column" marginTop={0} paddingX={1}>
-                    {lines.map((line, lidx) => {
+                    {visibleLines.map((line, lidx) => {
                         let color = '#d1d5db'
                         let bgColor: string | undefined = undefined
 
@@ -158,6 +161,13 @@ function CollapsibleCommandOutput({
                             </Box>
                         )
                     })}
+                    {isTruncated && (
+                        <Box paddingTop={0}>
+                            <Text color="#AAAAAA">
+                                ... ({lines.length - MAX_VISIBLE_LINES} more lines)
+                            </Text>
+                        </Box>
+                    )}
                 </Box>
             )}
         </Box>

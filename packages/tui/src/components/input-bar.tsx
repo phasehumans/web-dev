@@ -123,6 +123,7 @@ export function InputBar({
         (command: Command | undefined) => {
             if (!command) return
 
+            const currentValue = value.trim()
             setValue('')
             handleContentChange('')
 
@@ -139,7 +140,14 @@ export function InputBar({
                 command.value === '/tasks' ||
                 command.value === '/usage'
             ) {
-                onSubmit(command.value)
+                if (
+                    currentValue.length > command.value.length &&
+                    currentValue.toLowerCase().startsWith(command.value.toLowerCase())
+                ) {
+                    onSubmit(currentValue)
+                } else {
+                    onSubmit(command.value)
+                }
                 return
             }
 
@@ -233,7 +241,7 @@ export function InputBar({
             </Box>
 
             {/* status row — model left, december studio right */}
-            {!showCommandMenu && !showShortcutsMenu && (
+            {!showCommandMenu && !showShortcutsMenu && !authUI && (
                 <Box width="100%" justifyContent="space-between">
                     <Box gap={2} alignItems="center" flexShrink={1}>
                         <Box gap={1} flexShrink={1}>

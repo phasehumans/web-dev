@@ -51,7 +51,7 @@ export function useAuthHandlers(
                 }
 
                 const codeMsgId = getNextMsgId()
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([
                     {
                         id: codeMsgId,
@@ -109,7 +109,7 @@ export function useAuthHandlers(
                     setSettingsAuthPriority(authStatus.authPriority)
                 }
 
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([
                     {
                         id: getNextMsgId(),
@@ -130,7 +130,7 @@ export function useAuthHandlers(
                 }
                 const errorText = `Login failed: ${cleanMsg}`
                 setAuthError(errorText)
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([{ id: getNextMsgId(), role: 'error', text: errorText }])
             } finally {
                 setIsStreaming(false)
@@ -315,7 +315,7 @@ export function useAuthHandlers(
                 setAuthError(errorText)
                 setAuthMode('none')
                 setApiKey('')
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([
                     {
                         id: getNextMsgId(),
@@ -367,7 +367,7 @@ export function useAuthHandlers(
             setAuthMethod(undefined)
         }
 
-        setStaticMessages((prev) => [...prev, ...activeMessages])
+        setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
         setActiveMessages([])
         addToast(`Removed credentials for: ${removedName}`, 'success')
     }

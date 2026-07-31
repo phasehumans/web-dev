@@ -34,21 +34,44 @@ describe('CLI Standalone Commands', () => {
         expect(config.activeProvider).toBeUndefined()
     })
 
-    it('handleInitCommand scaffolds full .december workspace files', async () => {
+    it('handleInitCommand scaffolds workspace files with AGENTS.md in root and rules/skills in .december', async () => {
         const originalCwd = process.cwd()
         try {
             process.chdir(tmpDir)
             await handleInitCommand()
 
-            const expectedFiles = ['AGENTS.md', 'rules.md', 'skills.md', 'settings.json']
+            const rootAgentsPath = path.join(tmpDir, 'AGENTS.md')
+            const agentsExists = await fs
+                .access(rootAgentsPath)
+                .then(() => true)
+                .catch(() => false)
+            expect(agentsExists).toBe(true)
 
-            for (const file of expectedFiles) {
+            const agentsContent = await fs.readFile(rootAgentsPath, 'utf-8')
+            expect(agentsContent).toBe('')
+
+            const decFiles = ['rules.md', 'skills.md', 'settings.json']
+            for (const file of decFiles) {
                 const exists = await fs
                     .access(path.join(tmpDir, '.december', file))
                     .then(() => true)
                     .catch(() => false)
                 expect(exists).toBe(true)
             }
+
+            const rulesContent = await fs.readFile(
+                path.join(tmpDir, '.december', 'rules.md'),
+                'utf-8'
+            )
+            expect(rulesContent).not.toContain('#')
+            expect(rulesContent).toBe('Add rules in this file for the agent to use as context.\n')
+
+            const skillsContent = await fs.readFile(
+                path.join(tmpDir, '.december', 'skills.md'),
+                'utf-8'
+            )
+            expect(skillsContent).not.toContain('#')
+            expect(skillsContent).toBe('Add skills in this file for the agent to use as context.\n')
         } finally {
             process.chdir(originalCwd)
         }
