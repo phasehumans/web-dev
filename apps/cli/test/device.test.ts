@@ -89,7 +89,7 @@ describe('loginViaDeviceCode', () => {
     })
 
     it('should throw Unable to connect error on network failure', async () => {
-        global.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed'))
+        global.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed')) as any
 
         await expect(loginViaDeviceCode('https://api.mock', vi.fn())).rejects.toThrow(
             'Unable to connect. Is the computer able to access the url?'

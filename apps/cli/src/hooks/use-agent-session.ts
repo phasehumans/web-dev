@@ -39,6 +39,9 @@ export function useAgentSession({
     onLogin?: (
         onCode: (code: string, uri: string) => void
     ) => Promise<{ token: string; email: string | null }>
+    onLoginHeadless?: (
+        onCode: (code: string, uri: string) => void
+    ) => Promise<{ token: string; email: string | null }>
 }) {
     const state = useCliStore()
     const {
