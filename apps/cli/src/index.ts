@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-import fs from 'fs'
-import path from 'path'
 
 import { AgentHarness } from '@december/agent'
 
@@ -10,7 +8,6 @@ function AppWrapper(props: any) {
 }
 
 import { openaiProvider } from '@december/providers'
-import { configureMCP } from '@december/tools'
 import {
     BashTool,
     ReadFileTool,
@@ -24,7 +21,6 @@ import {
     ManageTaskTool,
     BrowserTool,
     GitHubTool,
-    MCPTool,
     WebSearchTool,
     readWikiTool,
     updateWikiTool,
@@ -39,7 +35,7 @@ import React from 'react'
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
-import { loginViaBrowser, loginViaDeviceCode } from './auth'
+import { loginViaDeviceCode } from './auth'
 export { parseCliArgs, getHelpText } from './args'
 import { handleLogoutCommand, handleInitCommand } from './commands'
 export { handleLogoutCommand, handleInitCommand } from './commands'
@@ -98,20 +94,6 @@ async function main() {
     const sessionRepository = new FileSessionRepository()
     const sessionId = `session-${Date.now()}`
 
-    try {
-        const mcpConfigPath = path.join(process.cwd(), 'mcp.json')
-        const decMcpPath = path.join(process.cwd(), '.december', 'mcp.json')
-        if (fs.existsSync(mcpConfigPath)) {
-            const mcpConfig = JSON.parse(fs.readFileSync(mcpConfigPath, 'utf8'))
-            configureMCP(mcpConfig.mcpServers || mcpConfig)
-        } else if (fs.existsSync(decMcpPath)) {
-            const mcpConfig = JSON.parse(fs.readFileSync(decMcpPath, 'utf8'))
-            configureMCP(mcpConfig.mcpServers || mcpConfig)
-        }
-    } catch (err: any) {
-        console.warn('Failed to parse mcp.json:', err.message)
-    }
-
     const config = await loadConfig()
 
     const harness = new AgentHarness({
@@ -141,7 +123,6 @@ Guidelines:
             ManageTaskTool,
             BrowserTool,
             GitHubTool,
-            MCPTool,
             WebSearchTool,
             readWikiTool,
             updateWikiTool,
@@ -173,8 +154,15 @@ Guidelines:
     const userEmail = config.decemberToken ? config.email : undefined
 
     if (parsedArgs.command === 'login') {
-        console.log('Please login via the browser...')
-        await loginViaBrowser()
+        console.log('Generating device code for December login...')
+        const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
+            console.log(`Please open ${uri} on any device and enter code: ${code}`)
+        })
+        const configToSave = await loadConfig()
+        configToSave.decemberToken = token
+        if (email) configToSave.email = email
+        await saveConfig(configToSave)
+        console.log('Successfully logged in via device code!')
         process.exit(0)
     }
 
@@ -197,8 +185,7 @@ Guidelines:
                 cliVersion: pkg.version,
                 userEmail,
                 sessionRepository,
-                onLogin: (onUrlGenerated) => loginViaBrowser(undefined, onUrlGenerated),
-                onLoginHeadless: (onCode: (code: string, uri: string) => void) =>
+                onLogin: (onCode: (code: string, uri: string) => void) =>
                     loginViaDeviceCode(undefined, onCode),
             })
         ),

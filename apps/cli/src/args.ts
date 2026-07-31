@@ -81,7 +81,7 @@ AI coding assistant that lives in your terminal.
 Usage:
   december                          Launch interactive TUI session
   december "<prompt>"               Execute headless agent task
-  december login                    Log in via browser
+  december login                    Log in to December (via Device Code)
   december logout                   Remove saved authentication credentials
   december init                     Initialize local .december configuration
 

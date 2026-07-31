@@ -200,16 +200,10 @@ export const COMMANDS: Command[] = [
                 const agentsFile = path.join(decDir, 'AGENTS.md')
                 const rulesFile = path.join(decDir, 'rules.md')
                 const skillsFile = path.join(decDir, 'skills.md')
-                const mcpFile = path.join(decDir, 'mcp.json')
 
                 fs.writeFileSync(agentsFile, '# AGENTS.md\n')
                 fs.writeFileSync(rulesFile, '# Rules\n')
                 fs.writeFileSync(skillsFile, '# Skills\n')
-
-                fs.writeFileSync(
-                    mcpFile,
-                    '{\n  "mcpServers": {\n    // Add your Model Context Protocol (MCP) servers here\n    // "example-server": {\n    //   "command": "node",\n    //   "args": ["path/to/server.js"]\n    // }\n  }\n}\n'
-                )
 
                 ctx.toast.show({
                     variant: 'success',
@@ -227,9 +221,7 @@ export const COMMANDS: Command[] = [
         name: 'login',
         description: 'Configure API keys or Connect via December Cloud',
         value: '/login',
-        action: (ctx) => {
-            ctx.toast.show({ message: 'Opening browser to sign in...' })
-        },
+        action: () => {},
     },
     {
         name: 'logout',
@@ -258,14 +250,6 @@ export const COMMANDS: Command[] = [
                 ctx.resetChat?.()
                 ctx.toast.show({ variant: 'success', message: 'Started a new conversation.' })
             }
-        },
-    },
-    {
-        name: 'plan',
-        description: 'Switch to plan mode',
-        value: '/plan',
-        action: (ctx) => {
-            // forwarded to chat screen
         },
     },
     {

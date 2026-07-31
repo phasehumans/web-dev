@@ -29,4 +29,4 @@ To submit a pull request:
 4. Ensure `bun verify` and `bun test` pass cleanly.
 5. Open a Pull Request targeting `main` with a summary of changes.
 
-If you face any difficulties or need help, contact us via email at `phasehumans@gmail.com` or reach out on [Twitter](https://x.com/phasehumans).
+If you face any difficulties or need help, contact us via email at `team@trydecember.com` or reach out on [Twitter](https://x.com/phasehumans).

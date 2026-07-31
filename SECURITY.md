@@ -5,7 +5,7 @@ Security is a top priority for December. Responsible disclosure of security vuln
 Where to Report:
 
 - **Private Security Advisory**: [Create a Security Advisory](https://github.com/phasehumans/december/security/advisories/new)
-- **Email**: `phasehumans@gmail.com`
+- **Email**: `team@trydecember.com`
 - Do not report security vulnerabilities in public GitHub issues
 
 What to Include:

@@ -31,14 +31,14 @@ export interface CliState {
     setSelectedProvider: (provider: string) => void
     apiKey: string
     setApiKey: (key: string) => void
+    authError: string | null
+    setAuthError: (err: string | null) => void
     openRouterModels: { label: string; value: string }[]
     setOpenRouterModels: (models: { label: string; value: string }[]) => void
 
     // chat feature
     currentPlannedPrompt: string | null
     setCurrentPlannedPrompt: (prompt: string | null) => void
-    planMode: boolean
-    setPlanMode: (mode: boolean) => void
     grillMode: boolean
     setGrillMode: (mode: boolean) => void
     grillQuestions: { question: string; options: string[] }[]
@@ -159,14 +159,14 @@ export const useCliStore = create<CliState>((set) => ({
     setSelectedProvider: (selectedProvider) => set({ selectedProvider }),
     apiKey: '',
     setApiKey: (apiKey) => set({ apiKey }),
+    authError: null,
+    setAuthError: (authError) => set({ authError }),
     openRouterModels: [],
     setOpenRouterModels: (openRouterModels) => set({ openRouterModels }),
 
     // chat
     currentPlannedPrompt: null,
     setCurrentPlannedPrompt: (currentPlannedPrompt) => set({ currentPlannedPrompt }),
-    planMode: false,
-    setPlanMode: (planMode) => set({ planMode }),
     grillMode: false,
     setGrillMode: (grillMode) => set({ grillMode }),
     grillQuestions: [],

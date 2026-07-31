@@ -40,13 +40,7 @@ describe('CLI Standalone Commands', () => {
             process.chdir(tmpDir)
             await handleInitCommand()
 
-            const expectedFiles = [
-                'AGENTS.md',
-                'rules.md',
-                'skills.md',
-                'mcp.json',
-                'settings.json',
-            ]
+            const expectedFiles = ['AGENTS.md', 'rules.md', 'skills.md', 'settings.json']
 
             for (const file of expectedFiles) {
                 const exists = await fs
@@ -55,11 +49,6 @@ describe('CLI Standalone Commands', () => {
                     .catch(() => false)
                 expect(exists).toBe(true)
             }
-
-            const mcpContent = JSON.parse(
-                await fs.readFile(path.join(tmpDir, '.december', 'mcp.json'), 'utf-8')
-            )
-            expect(mcpContent.mcpServers).toBeDefined()
         } finally {
             process.chdir(originalCwd)
         }

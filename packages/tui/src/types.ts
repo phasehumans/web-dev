@@ -10,7 +10,6 @@ export type AuthMode =
     | 'none'
     | 'menu'
     | 'context_select'
-    | 'december_login_select'
     | 'byok_provider'
     | 'byok_key'
     | 'model_select'

@@ -4,7 +4,6 @@ import type { Message } from '@december/tui'
 
 export function useChat() {
     const [currentPlannedPrompt, setCurrentPlannedPrompt] = useState<string | null>(null)
-    const [planMode, setPlanMode] = useState(false)
     const [grillMode, setGrillMode] = useState(false)
 
     const [grillQuestions, setGrillQuestions] = useState<{ question: string; options: string[] }[]>(

@@ -34,7 +34,7 @@ export const sendOTP = async (email: string, otp: string) => {
 
     try {
         await resend.emails.send({
-            from: `December <${fromEmail}>`,
+            from: `December<${fromEmail}>`,
             to: email,
             subject: 'Your Verification Code',
             html: `

@@ -3,7 +3,6 @@ import React from 'react'
 import { ByokKeyMenu } from './byok-key-menu'
 import { ByokProviderMenu } from './byok-provider-menu'
 import { ContextSelectMenu } from './context-select-menu'
-import { DecemberLoginSelectMenu } from './december-login-select-menu'
 import { GrillQuestionMenu } from './grill-question-menu'
 import { LogoutSelectMenu } from './logout-select-menu'
 import { MenuMenu } from './menu-menu'
@@ -18,8 +17,6 @@ export function AuthMenus(props: any) {
     switch (props.authMode) {
         case 'menu':
             return <MenuMenu {...props} />
-        case 'december_login_select':
-            return <DecemberLoginSelectMenu {...props} />
         case 'byok_provider':
             return <ByokProviderMenu {...props} />
         case 'byok_key':

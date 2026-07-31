@@ -20,10 +20,9 @@ export class AgentHarness {
         // 1. discover skills
         const skills = this.discoverSkills()
 
-        // 2. parse potential slash commands and adjust prompt
-        const { systemPrompt } = this.parseSlashCommands(
+        const systemPrompt =
             config.baseSystemPrompt ||
-                `You are December, an autonomous, expert coding agent. You help the user by exploring codebases, executing terminal commands, editing files, and resolving complex tasks.
+            `You are December, an autonomous, expert coding agent. You help the user by exploring codebases, executing terminal commands, editing files, and resolving complex tasks.
 
 You operate across two environments seamlessly: locally via a terminal CLI, and remotely via a secure cloud sandbox.
 
@@ -38,7 +37,6 @@ Guidelines:
 - ALWAYS show absolute file paths when viewing or editing files.
 - Before using a tool, you MUST enclose your thought process inside <thought>...</thought> tags.
 - At the end of your work, provide a concise summary of what you did (4-5 lines maximum, written as a single cohesive paragraph), highlighting key actions and results.`
-        )
 
         // 3. discover project rules
         const rules = this.discoverRules()
@@ -105,12 +103,6 @@ Guidelines:
         }
 
         return rules
-    }
-
-    private parseSlashCommands(prompt: string): { systemPrompt: string } {
-        let finalPrompt = prompt
-        finalPrompt += `\n\nSlash Commands Available:\n- /plan: Instructs the agent to output a detailed step-by-step plan before execution.\n- /schedule: Instructs the agent to configure a background timer or cron job.`
-        return { systemPrompt: finalPrompt }
     }
 
     public getAgent(): Agent {

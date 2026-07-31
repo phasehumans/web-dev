@@ -2,6 +2,7 @@ import { loadConfig, saveConfig, getProviderConfig } from '../config'
 import { MESSAGES } from '../constants/messages'
 import { useCliStore } from '../store'
 import { getToolSummary } from '../utils/formatters'
+import { getProviderModels } from '../utils/models'
 import { instantiateProvider } from '../utils/provider-factory'
 
 import { getNextMsgId } from './use-agent-runner'
@@ -10,7 +11,9 @@ import type { Message, MessageBlock } from '@december/tui'
 
 export function useAuthHandlers(
     agent: any,
-    onLogin?: (onUrl?: (url: string) => void) => Promise<{ token: string; email: string | null }>,
+    onLogin?: (
+        onCode: (code: string, uri: string) => void
+    ) => Promise<{ token: string; email: string | null }>,
     onLoginHeadless?: (
         onCode: (code: string, uri: string) => void
     ) => Promise<{ token: string; email: string | null }>
@@ -32,65 +35,19 @@ export function useAuthHandlers(
         setSettingsAuthPriority,
         setAuthMethod,
         setStaticKey,
+        setAuthError,
         addToast,
     } = useCliStore()
 
     const handleAuthMenuSelect = async (item: any) => {
-        if (item.value === 'december') {
-            setAuthMode('december_login_select')
-        } else if (item.value === 'december_browser') {
+        if (item.value === 'december' || item.value === 'december_headless') {
             setAuthMode('none')
             setIsStreaming(true)
-            addToast('Opening browser to log in...', 'info')
 
             try {
-                if (!onLogin) {
+                const loginFn = onLogin || onLoginHeadless
+                if (!loginFn) {
                     throw new Error('Login functionality is not provided by the host environment.')
-                }
-                const { token, email } = await onLogin((url: string) => {
-                    setActiveMessages([
-                        {
-                            id: getNextMsgId(),
-                            role: 'assistant',
-                            blocks: [
-                                {
-                                    type: 'text',
-                                    content: `Opening browser to log in...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})`,
-                                },
-                            ],
-                        },
-                    ])
-                })
-                const config = await loadConfig()
-                config.decemberToken = token
-                if (email) {
-                    config.email = email
-                    setCurrentEmail(email)
-                }
-                await saveConfig(config)
-
-                const providerConfig = await getProviderConfig()
-                if (providerConfig) {
-                    const provider = instantiateProvider('openrouter', providerConfig.apiKey)
-                    agent.setLLM(provider)
-                    setIsAuthenticated(true)
-                }
-
-                addToast(MESSAGES.AUTH.LOGIN_SUCCESS_DECEMBER, 'success')
-            } catch (err: any) {
-                addToast(`Login failed: ${err.message}`, 'error')
-            } finally {
-                setIsStreaming(false)
-            }
-        } else if (item.value === 'december_headless') {
-            setAuthMode('none')
-            setIsStreaming(true)
-
-            try {
-                if (!onLoginHeadless) {
-                    throw new Error(
-                        'Headless login functionality is not provided by the host environment.'
-                    )
                 }
 
                 const codeMsgId = getNextMsgId()
@@ -122,7 +79,7 @@ export function useAuthHandlers(
                     ])
                 }
 
-                const { token, email } = await onLoginHeadless(onCode)
+                const { token, email } = await loginFn(onCode)
 
                 const config = await loadConfig()
                 config.decemberToken = token
@@ -157,10 +114,20 @@ export function useAuthHandlers(
                     },
                 ])
             } catch (err: any) {
+                let cleanMsg = err?.message || String(err)
+                if (
+                    cleanMsg.includes('fetch failed') ||
+                    cleanMsg.includes('ECONNREFUSED') ||
+                    cleanMsg.includes('ENOTFOUND') ||
+                    cleanMsg.includes('Failed to fetch') ||
+                    cleanMsg.includes('Unable to connect')
+                ) {
+                    cleanMsg = 'Unable to connect. Is the computer able to access the url?'
+                }
+                const errorText = `Login failed: ${cleanMsg}`
+                setAuthError(errorText)
                 setStaticMessages((prev) => [...prev, ...activeMessages])
-                setActiveMessages([
-                    { id: getNextMsgId(), role: 'error', text: `Login failed: ${err.message}` },
-                ])
+                setActiveMessages([{ id: getNextMsgId(), role: 'error', text: errorText }])
             } finally {
                 setIsStreaming(false)
             }
@@ -210,26 +177,17 @@ export function useAuthHandlers(
     const handleKeySubmit = async (key: string) => {
         if (isStreaming) return
         setIsStreaming(true)
+        setAuthError(null)
 
         let testProvider: any
         let testModel: string | undefined
 
         try {
             testProvider = instantiateProvider(selectedProvider, key)
-            if (
-                selectedProvider !== 'openai' &&
-                selectedProvider !== 'anthropic' &&
-                selectedProvider !== 'google' &&
-                selectedProvider !== 'gemini' &&
-                selectedProvider !== 'openrouter' &&
-                selectedProvider !== 'deepseek' &&
-                selectedProvider !== 'groq' &&
-                selectedProvider !== 'huggingface' &&
-                selectedProvider !== 'moonshot' &&
-                selectedProvider !== 'mistral' &&
-                selectedProvider !== 'xai' &&
-                selectedProvider !== 'zai'
-            ) {
+            const providerModels = getProviderModels(selectedProvider)
+            if (providerModels && providerModels.length > 0) {
+                testModel = providerModels[0].value
+            } else {
                 testModel = 'gpt-4o'
             }
 
@@ -293,28 +251,52 @@ export function useAuthHandlers(
                 addToast(`API Key saved for ${selectedProvider}`, 'success')
             } else {
                 let cleanMessage = err?.message || String(err)
-                try {
-                    const parsed = JSON.parse(cleanMessage)
-                    if (parsed.error?.message) {
-                        cleanMessage = parsed.error.message
-                        try {
-                            const doubleParsed = JSON.parse(cleanMessage)
-                            if (doubleParsed.error?.message) {
-                                cleanMessage = doubleParsed.error.message
+                if (
+                    cleanMessage.includes('fetch failed') ||
+                    cleanMessage.includes('ECONNREFUSED') ||
+                    cleanMessage.includes('ENOTFOUND') ||
+                    cleanMessage.includes('Failed to fetch') ||
+                    cleanMessage.includes('Unable to connect')
+                ) {
+                    cleanMessage = 'Unable to connect. Is the computer able to access the url?'
+                } else {
+                    try {
+                        const parsed = JSON.parse(cleanMessage)
+                        if (parsed.error?.message) {
+                            cleanMessage = parsed.error.message
+                            try {
+                                const doubleParsed = JSON.parse(cleanMessage)
+                                if (doubleParsed.error?.message) {
+                                    cleanMessage = doubleParsed.error.message
+                                }
+                            } catch {
+                                // Keep original cleanMessage if double parse fails
                             }
-                        } catch {
-                            // Keep original cleanMessage if double parse fails
+                        } else if (parsed.message) {
+                            cleanMessage = parsed.message
                         }
-                    } else if (parsed.message) {
-                        cleanMessage = parsed.message
+                    } catch {
+                        // Keep original raw message if JSON parse fails
                     }
-                } catch {
-                    // Keep original raw message if JSON parse fails
                 }
 
+                const errorText =
+                    cleanMessage === 'Unable to connect. Is the computer able to access the url?'
+                        ? `Login failed: ${cleanMessage}`
+                        : `Invalid API Key for ${selectedProvider}: ${cleanMessage}`
+
+                setAuthError(errorText)
                 setAuthMode('none')
                 setApiKey('')
-                addToast(`Invalid API Key for ${selectedProvider}: ${cleanMessage}`, 'error')
+                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setActiveMessages([
+                    {
+                        id: getNextMsgId(),
+                        role: 'error',
+                        text: errorText,
+                    },
+                ])
+                addToast(errorText, 'error')
             }
         } finally {
             setIsStreaming(false)
@@ -359,6 +341,7 @@ export function useAuthHandlers(
         }
 
         setStaticMessages((prev) => [...prev, ...activeMessages])
+        setActiveMessages([])
         addToast(`Removed credentials for: ${removedName}`, 'success')
     }
 

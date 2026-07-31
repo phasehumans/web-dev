@@ -15,7 +15,6 @@ export { Pill } from './components/pill'
 export { TaskHUD } from './components/task-hud'
 
 export * from './components/menus/menu-menu'
-export * from './components/menus/december-login-select-menu'
 export * from './components/menus/byok-provider-menu'
 export * from './components/menus/byok-key-menu'
 export * from './components/menus/model-select-menu'
