@@ -2,6 +2,18 @@
 
 ### Features
 
+- _(cli,server)_ Fix and improve model, provider, BYOK, and cloud wallet switching
+- _(cli,server)_ Fix and improve model, provider, BYOK, and cloud wallet switching (#308)
+
+### Bug Fixes
+
+- Remove login via december browser mode
+- _(cli)_ Resolve typescript errors in chat hook and device test
+
+## [0.2.22] - 2026-07-30
+
+### Features
+
 - _(cli/tui)_ Optimize streaming latency and thought blocks (#300)
 
 ### Bug Fixes
@@ -18,6 +30,10 @@
 ### Styling
 
 - _(tui)_ Update auth banner, success status blocks, and file change indicators
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.22
 
 ## [0.2.21] - 2026-07-29
 
