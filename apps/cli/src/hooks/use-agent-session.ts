@@ -36,7 +36,9 @@ export function useAgentSession({
     cliVersion?: string
     userEmail?: string
     sessionRepository?: any
-    onLogin?: () => Promise<{ token: string; email: string | null }>
+    onLogin?: (
+        onCode: (code: string, uri: string) => void
+    ) => Promise<{ token: string; email: string | null }>
     onLoginHeadless?: (
         onCode: (code: string, uri: string) => void
     ) => Promise<{ token: string; email: string | null }>
@@ -61,12 +63,12 @@ export function useAgentSession({
         setSelectedProvider,
         apiKey,
         setApiKey,
+        authError,
+        setAuthError,
         openRouterModels,
         setOpenRouterModels,
         currentPlannedPrompt,
         setCurrentPlannedPrompt,
-        planMode,
-        setPlanMode,
         grillMode,
         setGrillMode,
         grillQuestions,
@@ -247,7 +249,7 @@ export function useAgentSession({
             ])
 
             try {
-                const prompt = getGrillPrompt(userPrompt)
+                const prompt = getGrillPrompt(userPrompt, agent.systemPrompt)
 
                 const stream = agent.llm.stream(
                     [{ role: 'user', content: prompt }],
@@ -409,21 +411,20 @@ export function useAgentSession({
                 const { getAuthStatus } = await import('../config')
                 const status = await getAuthStatus()
                 if (!isAuthenticated || (!status.hasByok && !status.hasDecember)) {
-                    setStaticMessages((prev) => [...prev, ...activeMessages])
-                    setActiveMessages([
-                        { id: getNextMsgId(), role: 'user', text },
-                        {
-                            id: getNextMsgId(),
-                            role: 'assistant',
-                            blocks: [
-                                {
-                                    type: 'text',
-                                    content:
-                                        'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
-                                },
-                            ],
-                        },
-                    ])
+                    const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
+                    const noticeMsg: Message = {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content:
+                                    'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
+                            },
+                        ],
+                    }
+                    setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                    setActiveMessages([])
                     return
                 }
                 loadConfig().then(async (config) => {
@@ -438,17 +439,14 @@ export function useAgentSession({
 
             if (text.trim() === '/resume') {
                 if (!sessionRepository) {
-                    setStaticMessages((prev) => [...prev, ...activeMessages])
-                    setActiveMessages([
-                        { id: getNextMsgId(), role: 'user', text },
-                        {
-                            id: getNextMsgId(),
-                            role: 'assistant',
-                            blocks: [
-                                { type: 'text', content: 'Session repository not available.' },
-                            ],
-                        },
-                    ])
+                    const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
+                    const noticeMsg: Message = {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [{ type: 'text', content: 'Session repository not available.' }],
+                    }
+                    setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                    setActiveMessages([])
                     return
                 }
                 sessionRepository.listSessions().then((sessions: any[]) => {
@@ -465,23 +463,6 @@ export function useAgentSession({
                 return
             }
 
-            // intercept /plan commands anywhere in the text
-            const planMatch = text.trim().match(/(.*?)(?:\s|^)\/plan(?:\s(.*))?$/s)
-            if (planMatch) {
-                const before = planMatch[1] || ''
-                const after = planMatch[2] || ''
-                const planPromptText = `${before} ${after}`.trim()
-
-                if (planPromptText.length > 0) {
-                    text = planPromptText
-                    // fallthrough to handlemessage but with isplanningturn = true (set below)
-                } else {
-                    setPlanMode(!planMode)
-                    setGrillMode(false)
-                    return
-                }
-            }
-
             // intercept /grill-me or /grill commands anywhere in the text
             const grillMatch = text.trim().match(/(.*?)(?:\s|^)\/(grill-me|grill)(?:\s(.*))?$/s)
             if (grillMatch) {
@@ -493,7 +474,6 @@ export function useAgentSession({
                     await generateGrillQuestions(grillPromptText)
                 } else {
                     setGrillMode(!grillMode)
-                    setPlanMode(false)
                 }
                 return
             }
@@ -503,11 +483,6 @@ export function useAgentSession({
                 setGrillMode(false)
                 await generateGrillQuestions(text.trim())
                 return
-            }
-
-            const isPlanningTurn = planMode || !!planMatch
-            if (isPlanningTurn) {
-                setPlanMode(false)
             }
 
             if (text.trim() === '/settings') {
@@ -553,21 +528,20 @@ export function useAgentSession({
             }
 
             if (!isAuthenticated) {
-                setStaticMessages((prev) => [...prev, ...activeMessages])
-                setActiveMessages([
-                    { id: getNextMsgId(), role: 'user', text },
-                    {
-                        id: getNextMsgId(),
-                        role: 'assistant',
-                        blocks: [
-                            {
-                                type: 'text',
-                                content:
-                                    'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
-                            },
-                        ],
-                    },
-                ])
+                const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
+                const noticeMsg: Message = {
+                    id: getNextMsgId(),
+                    role: 'assistant',
+                    blocks: [
+                        {
+                            type: 'text',
+                            content:
+                                'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
+                        },
+                    ],
+                }
+                setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                setActiveMessages([])
                 return
             }
 
@@ -578,24 +552,13 @@ export function useAgentSession({
                 return
             }
 
-            if (isPlanningTurn) {
-                setCurrentPlannedPrompt(text)
-            }
-
             setIsStreaming(true)
             const assistantMsgId = getNextMsgId()
             const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text }
             setStaticMessages((prev) => [...prev, ...activeMessages, newUserMsg])
             setActiveMessages([{ id: assistantMsgId, role: 'assistant', blocks: [] }])
 
-            const promptToSend = isPlanningTurn
-                ? `You are currently in PLANNING MODE.
-Please review the user's request: "${text}"
-Create a detailed, step-by-step implementation plan to accomplish this request.
-Do NOT execute any tools. Only describe the plan.
-Start your response with '### Implementation Plan' and list the concrete steps.
-Explain which files need to be created, modified, or deleted, and what the changes will be.`
-                : text
+            const promptToSend = text
 
             try {
                 const stream = runAgentLoop(agent, promptToSend)
@@ -607,9 +570,8 @@ Explain which files need to be created, modified, or deleted, and what the chang
                 ])
             } finally {
                 setIsStreaming(false)
-                if (isPlanningTurn) {
-                    setAuthMode('plan_approve')
-                }
+                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setActiveMessages([])
             }
         },
         [
@@ -626,7 +588,6 @@ Explain which files need to be created, modified, or deleted, and what the chang
             authMode,
             currentGrillIndex,
             grillMode,
-            planMode,
         ]
     )
 
@@ -676,8 +637,6 @@ Explain which files need to be created, modified, or deleted, and what the chang
         setCurrentPlannedPrompt,
         grillMode,
         setGrillMode,
-        planMode,
-        setPlanMode,
         tasksData,
         setTasksData,
         taskSelectedIndex,
@@ -721,6 +680,8 @@ Explain which files need to be created, modified, or deleted, and what the chang
         setSelectedProvider,
         apiKey,
         setApiKey,
+        authError,
+        setAuthError,
         openRouterModels,
         setOpenRouterModels,
         sessionItems,

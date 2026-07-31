@@ -3,9 +3,9 @@ import { getToolSummary } from '../utils/formatters'
 
 import type { Message } from '@december/tui'
 
-let msgId = 0
-export function getNextMsgId() {
-    return ++msgId
+let msgIdCounter = 0
+export function getNextMsgId(): string {
+    return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}-${++msgIdCounter}`
 }
 
 export async function processAgentStream({
@@ -15,7 +15,7 @@ export async function processAgentStream({
 }: {
     stream: any
     setActiveMessages: any
-    assistantMsgId: number
+    assistantMsgId: string | number
 }) {
     let pendingEvents: any[] = []
     let flushTimeout: NodeJS.Timeout | null = null

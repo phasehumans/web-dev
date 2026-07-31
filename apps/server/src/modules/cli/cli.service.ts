@@ -52,6 +52,25 @@ const generateHandoffUrl = async (data: GenerateHandoffUrl) => {
     }
 }
 
+const OPENROUTER_MODEL_MAP: Record<string, string> = {
+    'gemini-3.6-flash': 'google/gemini-3.6-flash',
+    'gemini-3.5-flash': 'google/gemini-3.5-flash',
+    'gemini-3.5-flash-lite': 'google/gemini-3.5-flash-lite',
+    'gemini-3.1-pro': 'google/gemini-3.1-pro',
+    'claude-3-7-sonnet-latest': 'anthropic/claude-3.7-sonnet',
+    'claude-3-5-sonnet-latest': 'anthropic/claude-3.5-sonnet',
+    'claude-3-5-haiku-latest': 'anthropic/claude-3.5-haiku',
+    'claude-3-opus-latest': 'anthropic/claude-3-opus',
+    'o3-mini': 'openai/o3-mini',
+    o1: 'openai/o1',
+    'o1-mini': 'openai/o1-mini',
+    'gpt-4o': 'openai/gpt-4o',
+    'gpt-4o-mini': 'openai/gpt-4o-mini',
+    'gpt-4.5-preview': 'openai/gpt-4.5-preview',
+    'deepseek-reasoner': 'deepseek/deepseek-r1',
+    'deepseek-chat': 'deepseek/deepseek-chat',
+}
+
 const proxyChatCompletions = async (data: ProxyChatCompletions) => {
     const { userId, body, res } = data
     body.stream = true
@@ -59,6 +78,10 @@ const proxyChatCompletions = async (data: ProxyChatCompletions) => {
         body.stream_options = { include_usage: true }
     } else {
         body.stream_options.include_usage = true
+    }
+
+    if (body.model && OPENROUTER_MODEL_MAP[body.model]) {
+        body.model = OPENROUTER_MODEL_MAP[body.model]
     }
 
     const openRouterKey = env.OPENROUTER_API_KEY

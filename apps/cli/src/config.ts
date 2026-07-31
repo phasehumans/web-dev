@@ -110,7 +110,12 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
 
     // if preferred is december and it exists, use it first
     if (config.authPriority === 'december' && hasDecember) {
-        return { provider: 'december_proxy', apiKey: config.decemberToken!, authMethod: 'december' }
+        return {
+            provider: 'december_proxy',
+            apiKey: config.decemberToken!,
+            model: config.activeModel,
+            authMethod: 'december',
+        }
     }
 
     // wallet vs byok priority: byok via config file takes precedence.
@@ -128,6 +133,7 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
         return {
             provider: 'december_proxy',
             apiKey: config.decemberToken!,
+            model: config.activeModel,
             authMethod: 'december',
         }
     }

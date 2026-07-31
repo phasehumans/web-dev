@@ -29,7 +29,6 @@ export async function handleInitCommand(): Promise<void> {
         { name: 'AGENTS.md', content: DEFAULT_AGENTS_MD },
         { name: 'rules.md', content: DEFAULT_RULES_MD },
         { name: 'skills.md', content: DEFAULT_SKILLS_MD },
-        { name: 'mcp.json', content: JSON.stringify({ mcpServers: {} }, null, 2) + '\n' },
         {
             name: 'settings.json',
             content: JSON.stringify({ thinkingLevel: 'low', steeringMode: 'all' }, null, 2) + '\n',

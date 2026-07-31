@@ -93,16 +93,20 @@ Do NOT continue the conversation. Do NOT respond to any questions. ONLY output t
 ### Blocked
 - [Issues preventing progress, failing tests, or missing API keys]
 
-## Key Decisions
+## File & Code State
+- **Modified/Created Files**: [Exact absolute file paths touched or created]
+- **Active Symbols & Line References**: [Key classes, functions, interfaces, or line ranges under active work]
+
+## Key Decisions & Architecture
 - **[Decision]**: [Brief rationale on architectural or code choices]
 
 ## Next Steps
 1. [Ordered list of exactly what December needs to do next to resume work]
 
-## Critical Context
-- [Any terminal outputs, specific error codes, or snippets needed to continue]
+## Critical Context & Tracebacks
+- [Exact terminal outputs, error messages, failing test tracebacks, or unexecuted plan steps needed to continue]
 
-Keep each section concise. You MUST preserve exact file paths, function names, and error logs.`
+Keep each section concise. You MUST preserve exact file paths, function names, line numbers, and error logs.`
 
     const UPDATE_SUMMARY_PROMPT = `The messages above are NEW conversation messages that must be incorporated into the existing memory summary provided below:
 
@@ -113,11 +117,12 @@ ${previousSummaryText}
 Update the structured summary with the new information. 
 RULES:
 - PRESERVE all existing information, constraints, and goals from the previous summary.
-- ADD new progress, decisions, and context.
+- ADD new progress, decisions, file state, and critical context.
 - UPDATE the Progress section: move items from "In Progress" to "Done" as they are completed.
+- UPDATE "File & Code State": list all modified/created files and active symbols/line numbers.
 - UPDATE "Next Steps" based strictly on the current state of the code.
 - If a blocker was resolved, remove it from the "Blocked" list.
-- PRESERVE exact file paths, function names, and error messages.
+- PRESERVE exact file paths, function names, line numbers, and error messages.
 
 Use this EXACT format:
 
@@ -138,16 +143,20 @@ Use this EXACT format:
 ### Blocked
 - [Issues preventing progress, failing tests, or missing API keys]
 
-## Key Decisions
+## File & Code State
+- **Modified/Created Files**: [Exact absolute file paths touched or created]
+- **Active Symbols & Line References**: [Key classes, functions, interfaces, or line ranges under active work]
+
+## Key Decisions & Architecture
 - **[Decision]**: [Brief rationale on architectural or code choices]
 
 ## Next Steps
 1. [Ordered list of exactly what December needs to do next to resume work]
 
-## Critical Context
-- [Any terminal outputs, specific error codes, or snippets needed to continue]
+## Critical Context & Tracebacks
+- [Exact terminal outputs, error messages, failing test tracebacks, or unexecuted plan steps needed to continue]
 
-Keep each section concise. You MUST preserve exact file paths, function names, and error logs.`
+Keep each section concise. You MUST preserve exact file paths, function names, line numbers, and error logs.`
 
     const userPrompt = `${historyText}\n\n${hasPreviousSummary ? UPDATE_SUMMARY_PROMPT : INITIAL_SUMMARY_PROMPT}`
 

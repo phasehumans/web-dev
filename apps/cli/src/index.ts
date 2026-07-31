@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-import fs from 'fs'
-import path from 'path'
 
 import { AgentHarness } from '@december/agent'
 
@@ -10,7 +8,6 @@ function AppWrapper(props: any) {
 }
 
 import { openaiProvider } from '@december/providers'
-import { configureMCP } from '@december/tools'
 import {
     BashTool,
     ReadFileTool,
@@ -24,7 +21,6 @@ import {
     ManageTaskTool,
     BrowserTool,
     GitHubTool,
-    MCPTool,
     WebSearchTool,
     readWikiTool,
     updateWikiTool,
@@ -39,11 +35,11 @@ import React from 'react'
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
-import { loginViaBrowser, loginViaDeviceCode } from './auth'
+import { loginViaDeviceCode } from './auth'
 export { parseCliArgs, getHelpText } from './args'
 import { handleLogoutCommand, handleInitCommand } from './commands'
 export { handleLogoutCommand, handleInitCommand } from './commands'
-import { getProviderConfig, loadConfig, getAuthStatus } from './config'
+import { getProviderConfig, loadConfig, saveConfig, getAuthStatus } from './config'
 import { FileSessionRepository } from './file-session-repository'
 import { runHeadlessTask, suppressConsole } from './headless-runner'
 export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
@@ -98,35 +94,9 @@ async function main() {
     const sessionRepository = new FileSessionRepository()
     const sessionId = `session-${Date.now()}`
 
-    try {
-        const mcpConfigPath = path.join(process.cwd(), 'mcp.json')
-        const decMcpPath = path.join(process.cwd(), '.december', 'mcp.json')
-        if (fs.existsSync(mcpConfigPath)) {
-            const mcpConfig = JSON.parse(fs.readFileSync(mcpConfigPath, 'utf8'))
-            configureMCP(mcpConfig.mcpServers || mcpConfig)
-        } else if (fs.existsSync(decMcpPath)) {
-            const mcpConfig = JSON.parse(fs.readFileSync(decMcpPath, 'utf8'))
-            configureMCP(mcpConfig.mcpServers || mcpConfig)
-        }
-    } catch (err: any) {
-        console.warn('Failed to parse mcp.json:', err.message)
-    }
-
     const config = await loadConfig()
 
     const harness = new AgentHarness({
-        baseSystemPrompt: `You are December, an autonomous, expert coding agent. You help the user by exploring codebases, executing terminal commands, editing files, and resolving complex tasks.
-Guidelines:
-- Plan carefully before making broad changes.
-- Code & Symbol Search: Use 'grep_search' to find functions, error strings, symbols, or imports across files instead of reading files one by one.
-- File Discovery: Use 'find_files' with glob patterns (e.g. "**/*.ts") to locate matching files instead of stepping through folders with list_dir.
-- File Editing: Use 'edit_file' or 'edit_diff' when modifying existing files to preserve untouched lines. Use 'write_file' primarily for creating new files.
-- Web & Docs: Use 'web_search' to look up current documentation, library APIs, or external error tracebacks.
-- Background Tasks: Use 'manage_task' to monitor or stop background processes started by bash.
-- Be extremely concise in your responses. The user is a developer who values speed and exactness.
-- ALWAYS show absolute file paths when viewing or editing files.
-- Before using a tool, you MUST enclose your thought process inside <thought>...</thought> tags.
-- At the end of your work, provide a concise summary of what you did (4-5 lines maximum, written as a single cohesive paragraph), highlighting key actions and results.`,
         llm: llm,
         tools: [
             BashTool,
@@ -141,7 +111,6 @@ Guidelines:
             ManageTaskTool,
             BrowserTool,
             GitHubTool,
-            MCPTool,
             WebSearchTool,
             readWikiTool,
             updateWikiTool,
@@ -150,7 +119,11 @@ Guidelines:
         ],
         operations: localOperations,
         modelOptions: {
-            model: parsedArgs.model || providerConfig?.model || 'gemini-3.6-flash',
+            model:
+                parsedArgs.model ||
+                providerConfig?.model ||
+                config.activeModel ||
+                'gemini-3.6-flash',
             thinkingLevel: config.thinkingLevel || 'medium',
         },
         sessionRepository,
@@ -173,8 +146,15 @@ Guidelines:
     const userEmail = config.decemberToken ? config.email : undefined
 
     if (parsedArgs.command === 'login') {
-        console.log('Please login via the browser...')
-        await loginViaBrowser()
+        console.log('Generating device code for December login...')
+        const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
+            console.log(`Please open ${uri} on any device and enter code: ${code}`)
+        })
+        const configToSave = await loadConfig()
+        configToSave.decemberToken = token
+        if (email) configToSave.email = email
+        await saveConfig(configToSave)
+        console.log('Successfully logged in via device code!')
         process.exit(0)
     }
 
@@ -197,8 +177,7 @@ Guidelines:
                 cliVersion: pkg.version,
                 userEmail,
                 sessionRepository,
-                onLogin: (onUrlGenerated) => loginViaBrowser(undefined, onUrlGenerated),
-                onLoginHeadless: (onCode: (code: string, uri: string) => void) =>
+                onLogin: (onCode: (code: string, uri: string) => void) =>
                     loginViaDeviceCode(undefined, onCode),
             })
         ),

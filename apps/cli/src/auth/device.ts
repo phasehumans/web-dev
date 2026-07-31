@@ -1,5 +1,9 @@
+import { openUrl } from '../utils/open'
+
 export async function loginViaDeviceCode(
-    baseUrl: string = process.env.SERVER_URL || 'https://api.trydecember.com',
+    baseUrl: string = process.env.SERVER_URL ||
+        process.env.WEB_URL ||
+        'https://api.trydecember.com',
     onCodeGenerated: (userCode: string, verificationUri: string) => void
 ): Promise<{ token: string; email: string | null }> {
     return new Promise(async (resolve, reject) => {
@@ -25,6 +29,13 @@ export async function loginViaDeviceCode(
             const { deviceCode, userCode, verificationUri, expiresIn, interval } = genData.data
 
             onCodeGenerated(userCode, verificationUri)
+
+            // Auto-open browser after 5 seconds
+            setTimeout(() => {
+                openUrl(verificationUri).catch(() => {
+                    // Intentionally swallowed: fallback handled if browser cannot be opened in headless/SSH environment
+                })
+            }, 5000)
 
             // 2. poll for token
             const startTime = Date.now()
@@ -66,8 +77,19 @@ export async function loginViaDeviceCode(
             }
 
             setTimeout(poll, pollInterval)
-        } catch (err) {
-            reject(err)
+        } catch (err: any) {
+            const msg = err?.message || String(err)
+            if (
+                msg.includes('fetch failed') ||
+                msg.includes('ECONNREFUSED') ||
+                msg.includes('ENOTFOUND') ||
+                msg.includes('Failed to fetch') ||
+                msg.includes('connect')
+            ) {
+                reject(new Error('Unable to connect. Is the computer able to access the url?'))
+            } else {
+                reject(err)
+            }
         }
     })
 }

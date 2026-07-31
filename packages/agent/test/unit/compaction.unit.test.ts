@@ -58,6 +58,8 @@ describe('compactContextIfNeeded (Unit)', () => {
         expect(result[1]!.content).toContain('Updated Summary Content')
         expect(llm.calls.length).toBe(1)
         expect(llm.calls[0]!.messages[1]!.content).toContain('NEW conversation messages')
+        expect(llm.calls[0]!.messages[1]!.content).toContain('File & Code State')
+        expect(llm.calls[0]!.messages[1]!.content).toContain('Critical Context & Tracebacks')
     })
 
     test('uses MODEL_CONTEXT_WINDOWS when model option is provided', async () => {

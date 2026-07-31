@@ -43,12 +43,12 @@ export function InputBar({
     authUI,
     agent,
     resetChat,
-    planMode = false,
     grillMode = false,
     customInputMode = false,
     onInterrupt,
     onCopy,
     contextTokens,
+    history,
     showExitConfirm = false,
     toasts,
 }: Props) {
@@ -89,9 +89,6 @@ export function InputBar({
         if ((key.backspace || key.delete) && value.length === 0 && grillMode) {
             onSubmit('/grill-me')
         }
-        if ((key.backspace || key.delete) && value.length === 0 && planMode) {
-            onSubmit('/plan')
-        }
         if (key.ctrl && input === 'c') {
             if (onInterrupt) onInterrupt()
             return
@@ -131,7 +128,6 @@ export function InputBar({
 
             // forward auth commands to chat component
             if (
-                command.value === '/plan' ||
                 command.value === '/grill-me' ||
                 command.value === '/login' ||
                 command.value === '/logout' ||
@@ -210,7 +206,6 @@ export function InputBar({
             {/* content: prompt */}
             <Box width="100%" paddingRight={4}>
                 <Text color={disabled ? '#555555' : '#89B4F8'}>{`❭ `}</Text>
-                {planMode && <Text color="#89B4F8">/plan </Text>}
                 {grillMode && <Text color="#89B4F8">/grill-me </Text>}
                 {(!authUI || customInputMode) && (
                     <TextArea
@@ -220,13 +215,12 @@ export function InputBar({
                         placeholder={
                             customInputMode
                                 ? 'Type your custom answer...'
-                                : planMode
+                                : grillMode
                                   ? ''
-                                  : grillMode
-                                    ? ''
-                                    : placeholder
+                                  : placeholder
                         }
                         focus={!disabled && !dialog.isOpen}
+                        history={history}
                     />
                 )}
             </Box>

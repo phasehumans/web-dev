@@ -1,8 +1,13 @@
 import { Agent } from '@december/agent'
-import { MessageList, InputBar, TaskHUD, GlobalShortcuts } from '@december/tui'
-import { AuthMenus, AskQuestionMenu } from '@december/tui'
 import { Box } from 'ink'
 import { useState, useCallback, useEffect } from 'react'
+
+import { GlobalShortcuts } from './components/global-shortcuts'
+import { InputBar } from './components/input-bar'
+import { AskQuestionMenu } from './components/menus/ask-question-menu'
+import { AuthMenus } from './components/menus/auth-menus'
+import { MessageList } from './components/message-list'
+import { TaskHUD } from './components/task-hud'
 
 export function ChatApp({
     agent,
@@ -11,7 +16,6 @@ export function ChatApp({
     userEmail,
     sessionRepository,
     onLogin,
-    onLoginHeadless,
     session,
 }: {
     agent: Agent
@@ -19,8 +23,7 @@ export function ChatApp({
     cliVersion?: string
     userEmail?: string
     sessionRepository?: any
-    onLogin?: () => Promise<{ token: string; email: string | null }>
-    onLoginHeadless?: (
+    onLogin?: (
         onCode: (code: string, uri: string) => void
     ) => Promise<{ token: string; email: string | null }>
     session: any
@@ -42,7 +45,6 @@ export function ChatApp({
         isAuthenticated,
         currentEmail,
         authMode,
-        planMode,
         grillMode,
         setStaticMessages,
         setStaticKey,
@@ -148,7 +150,6 @@ export function ChatApp({
                     setActiveMessages([])
                     session.addToast?.('Started a new conversation.', 'success')
                 }}
-                planMode={planMode}
                 grillMode={grillMode}
                 customInputMode={false}
                 showExitConfirm={exitConfirm}

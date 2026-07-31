@@ -76,32 +76,41 @@ export const DeviceActivate: React.FC = () => {
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#141414] font-roboto overflow-y-auto">
             <div className="w-full flex items-center justify-center p-6 md:p-10 lg:p-12 relative bg-[#141414]">
                 <div className="w-full max-w-[380px] relative z-10 flex flex-col">
-                    <div className="flex flex-col items-center text-center mb-8">
-                        <div className="w-[42px] h-[42px] mb-6">
-                            <Icons.DecemberLogo
-                                className="w-full h-full"
-                                stroke="white"
-                                strokeWidth={1}
-                            />
+                    {status === 'success' ? (
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-[42px] h-[42px] mb-6">
+                                <Icons.DecemberLogo
+                                    className="w-full h-full"
+                                    stroke="white"
+                                    strokeWidth={1}
+                                />
+                            </div>
+                            <h2 className="text-[22px] font-normal text-white tracking-tight mb-2">
+                                Device Authorized!
+                            </h2>
+                            <p className="text-[13px] text-[#A3A3A3]">
+                                You can now close this tab and return to your terminal.
+                            </p>
                         </div>
-                        <h2 className="text-[22px] font-normal text-white tracking-tight mb-1">
-                            Activate Device
-                        </h2>
-                        <p className="text-[13px] text-[#A3A3A3]">
-                            Enter the code displayed on your terminal.
-                        </p>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        {status === 'success' ? (
-                            <div className="flex flex-col items-center justify-center bg-[#222222] border border-[#333333] p-6 rounded-2xl">
-                                <div className="text-white text-lg mb-2">Device Authorized!</div>
-                                <p className="text-[13px] text-[#A3A3A3] text-center">
-                                    You can now close this tab and return to your terminal.
+                    ) : (
+                        <>
+                            <div className="flex flex-col items-center text-center mb-8">
+                                <div className="w-[42px] h-[42px] mb-6">
+                                    <Icons.DecemberLogo
+                                        className="w-full h-full"
+                                        stroke="white"
+                                        strokeWidth={1}
+                                    />
+                                </div>
+                                <h2 className="text-[22px] font-normal text-white tracking-tight mb-1">
+                                    Activate Device
+                                </h2>
+                                <p className="text-[13px] text-[#A3A3A3]">
+                                    Enter the code displayed on your terminal.
                                 </p>
                             </div>
-                        ) : (
-                            <>
+
+                            <div className="flex flex-col gap-4">
                                 <input
                                     type="text"
                                     value={userCode}
@@ -133,9 +142,9 @@ export const DeviceActivate: React.FC = () => {
                                         {errorMessage}
                                     </p>
                                 )}
-                            </>
-                        )}
-                    </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 

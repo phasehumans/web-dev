@@ -1,16 +1,26 @@
 export const getGrillPrompt = (
-    userPrompt: string
-) => `You are a product manager interviewing a developer.
+    userPrompt: string,
+    projectContext?: string
+) => `You are a principal software architect interviewing a developer to align on a technical specification before implementation.
+
 The user wants to implement: "${userPrompt}"
-Generate 5 to 8 questions to clarify the requirements and align on a detailed implementation plan.
-Each question must have exactly 3 options.
-Return the output as a strict JSON array of objects with the following schema:
+
+${projectContext ? `<project_context>\n${projectContext}\n</project_context>\n` : ''}
+Generate 5 to 8 targeted, high-impact multiple-choice questions to clarify requirements, architectural choices, tech stack decisions, edge cases, and potential breaking changes.
+
+Requirements for questions:
+1. Focus on technical depth: probe architectural tradeoffs, API design, state management, edge cases, and error handling.
+2. Each question MUST have exactly 3 distinct, concrete options representing clear design choices.
+3. Leverage the provided project context (if available) to tailor choices specifically to the existing codebase patterns.
+
+Return the output strictly as a JSON array of objects with the following schema:
 [
   {
     "question": "Question text?",
-    "options": ["Option 1", "Option 2", "Option 3"]
+    "options": ["Option 1 (Design choice A)", "Option 2 (Design choice B)", "Option 3 (Design choice C)"]
   }
 ]
+
 Do not include any other text, markdown formatting, or code blocks. Return raw JSON only.`
 
 export const getPlanPrompt = (

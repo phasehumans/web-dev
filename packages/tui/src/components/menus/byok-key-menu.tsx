@@ -20,6 +20,11 @@ export function ByokKeyMenu(props: any) {
                     mask="*"
                 />
             </Box>
+            {props.authError && (
+                <Box marginTop={1}>
+                    <Text color="#FCA5A5">{props.authError}</Text>
+                </Box>
+            )}
             <Box paddingTop={1}>
                 <Box gap={1}>
                     <Text color="#89B4F8">enter</Text>

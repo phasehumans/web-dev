@@ -96,10 +96,6 @@ export function ShortcutsMenu({ onClose }: { onClose: () => void }) {
                         <Text color="#AAAAAA">Navigate</Text>
                     </Box>
                     <Box gap={1}>
-                        <Text color="#89B4F8">←/→</Text>
-                        <Text color="#AAAAAA">Switch View</Text>
-                    </Box>
-                    <Box gap={1}>
                         <Text color="#89B4F8">esc</Text>
                         <Text color="#AAAAAA">Close</Text>
                     </Box>

@@ -87,4 +87,12 @@ describe('loginViaDeviceCode', () => {
         // Check polling URL
         expect(fetchMock.mock.calls[1][0]).toBe('https://api.mock/api/v1/auth/device/token')
     })
+
+    it('should throw Unable to connect error on network failure', async () => {
+        global.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed')) as any
+
+        await expect(loginViaDeviceCode('https://api.mock', vi.fn())).rejects.toThrow(
+            'Unable to connect. Is the computer able to access the url?'
+        )
+    })
 })

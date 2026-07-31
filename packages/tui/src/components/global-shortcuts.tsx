@@ -19,8 +19,6 @@ export function GlobalShortcuts(session: any) {
         setSessionRenameMode,
         customInputMode,
         setCustomInputMode,
-        planMode,
-        setPlanMode,
         grillMode,
         setGrillMode,
         setGrillQuestions,
@@ -79,14 +77,6 @@ export function GlobalShortcuts(session: any) {
             return
         }
 
-        if (planMode) {
-            if (key.escape) {
-                setPlanMode(false)
-                setCurrentPlannedPrompt(null)
-            }
-            return
-        }
-
         if (grillMode) {
             if (key.escape) {
                 setGrillMode(false)
@@ -114,8 +104,6 @@ export function GlobalShortcuts(session: any) {
             setAuthMode('login')
         } else if (key.ctrl && input === 'h') {
             setAuthMode('sessions')
-        } else if (key.ctrl && input === 'k') {
-            setAuthMode('settings')
         } else if (key.ctrl && input === 't') {
             setAuthMode('tasks_mode')
         } else if (

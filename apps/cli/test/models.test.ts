@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest'
 
-import { getProviderModels, getModelLabel, getModelContextWindow } from '../src/utils/models'
+import {
+    getProviderModels,
+    getModelLabel,
+    getModelContextWindow,
+    isValidModelForProvider,
+    getDefaultModelForProvider,
+} from '../src/utils/models'
 
 describe('models utils', () => {
     describe('getProviderModels', () => {
@@ -40,6 +46,23 @@ describe('models utils', () => {
         it('returns default model when provider is unknown', () => {
             const models = getProviderModels('unknown-provider')
             expect(models).toEqual([{ label: 'Default', value: 'default' }])
+        })
+    })
+
+    describe('isValidModelForProvider', () => {
+        it('validates model existence for provider', () => {
+            expect(isValidModelForProvider('anthropic', 'claude-3-7-sonnet-latest')).toBe(true)
+            expect(isValidModelForProvider('anthropic', 'gpt-4o')).toBe(false)
+            expect(isValidModelForProvider('openai', 'gpt-4o')).toBe(true)
+            expect(isValidModelForProvider('december_proxy', 'gemini-3.6-flash')).toBe(true)
+        })
+    })
+
+    describe('getDefaultModelForProvider', () => {
+        it('returns first available model for provider', () => {
+            expect(getDefaultModelForProvider('anthropic')).toBe('claude-3-7-sonnet-latest')
+            expect(getDefaultModelForProvider('openai')).toBe('o3-mini')
+            expect(getDefaultModelForProvider('december_proxy')).toBe('gemini-3.6-flash')
         })
     })
 

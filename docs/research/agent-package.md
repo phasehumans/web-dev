@@ -81,7 +81,7 @@ The `@december/agent` package builds its execution engine around nine fundamenta
 ### 8. System Harness & Workspace Discoverer
 
 - **File**: [`packages/agent/src/harness/agent-harness.ts:L13-L123`](file:///home/chaitanya/code/december/packages/agent/src/harness/agent-harness.ts#L13-L123)
-- **Role**: Scans `.december/skills/` and `.december/rules/` within the user workspace, formats instructions inside `<project_context>` tags, appends slash command definitions (`/plan`, `/schedule`), and constructs the complete system prompt.
+- **Role**: Scans `.december/skills/` and `.december/rules/` within the user workspace, formats instructions inside `<project_context>` tags, and constructs the complete system prompt.
 
 ### 9. Event Streaming Proxy
 

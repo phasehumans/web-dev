@@ -28,17 +28,16 @@ export function MessageList({
 
     return (
         <Box flexDirection="column">
-            {allMessages.map((msg) => {
+            {allMessages.map((msg, index) => {
+                const key = msg.id != null ? `${msg.id}-${index}` : `msg-idx-${index}`
                 if (msg.role === 'header') {
-                    return <Header key={msg.id} cliVersion={cliVersion} userEmail={userEmail} />
+                    return <Header key={key} cliVersion={cliVersion} userEmail={userEmail} />
                 }
-                if (msg.role === 'user')
-                    return <UserMessage key={msg.id} message={msg.text ?? ''} />
-                if (msg.role === 'error')
-                    return <ErrorMessage key={msg.id} message={msg.text ?? ''} />
+                if (msg.role === 'user') return <UserMessage key={key} message={msg.text ?? ''} />
+                if (msg.role === 'error') return <ErrorMessage key={key} message={msg.text ?? ''} />
                 return (
                     <BotMessage
-                        key={msg.id}
+                        key={key}
                         blocks={msg.blocks ?? []}
                         usage={msg.usage}
                         expandCommands={expandCommands}

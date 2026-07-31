@@ -18,7 +18,6 @@ describe('ChatApp TUI Integration', () => {
             isAuthenticated: true,
             currentEmail: 'user@example.com',
             authMode: 'none',
-            planMode: false,
             grillMode: false,
             setStaticMessages: mock(),
             setStaticKey: mock(),

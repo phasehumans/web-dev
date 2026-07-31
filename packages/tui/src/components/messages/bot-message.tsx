@@ -288,8 +288,6 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                             const isNoOutputTool =
                                 block.toolName === 'read_file' ||
                                 block.toolName === 'view_file' ||
-                                block.toolName === 'write_file' ||
-                                block.toolName === 'write_to_file' ||
                                 block.toolName === 'ask_permission' ||
                                 block.toolName === 'list_permissions'
 
@@ -308,31 +306,47 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                                 block.toolName === 'replace_file_content' ||
                                 block.toolName === 'multi_replace_file_content' ||
                                 block.toolName === 'edit_file' ||
-                                block.toolName === 'edit_diff'
+                                block.toolName === 'edit_diff' ||
+                                block.toolName === 'write_file' ||
+                                block.toolName === 'write_to_file'
                             ) {
-                                if (parsedInput.TargetContent || parsedInput.ReplacementContent) {
-                                    const target = (parsedInput.TargetContent || '')
+                                const targetContent =
+                                    parsedInput.targetContent ?? parsedInput.TargetContent
+                                const replacementContent =
+                                    parsedInput.replacementContent ?? parsedInput.ReplacementContent
+
+                                if (
+                                    targetContent !== undefined ||
+                                    replacementContent !== undefined
+                                ) {
+                                    const target = (targetContent || '')
                                         .split(/\r?\n/)
                                         .map((l: string) => (l.startsWith('-') ? l : `-${l}`))
                                         .join('\n')
-                                    const replacement = (parsedInput.ReplacementContent || '')
+                                    const replacement = (replacementContent || '')
                                         .split(/\r?\n/)
                                         .map((l: string) => (l.startsWith('+') ? l : `+${l}`))
                                         .join('\n')
-                                    displayOutput = `${target}\n${replacement}`
+                                    displayOutput = [target, replacement].filter(Boolean).join('\n')
                                 } else if (
                                     parsedInput.ReplacementChunks &&
                                     Array.isArray(parsedInput.ReplacementChunks)
                                 ) {
                                     displayOutput = parsedInput.ReplacementChunks.map(
                                         (chunk: any) => {
-                                            const t = (chunk.TargetContent || '')
+                                            const tContent =
+                                                chunk.targetContent ?? chunk.TargetContent ?? ''
+                                            const rContent =
+                                                chunk.replacementContent ??
+                                                chunk.ReplacementContent ??
+                                                ''
+                                            const t = tContent
                                                 .split(/\r?\n/)
                                                 .map((l: string) =>
                                                     l.startsWith('-') ? l : `-${l}`
                                                 )
                                                 .join('\n')
-                                            const r = (chunk.ReplacementContent || '')
+                                            const r = rContent
                                                 .split(/\r?\n/)
                                                 .map((l: string) =>
                                                     l.startsWith('+') ? l : `+${l}`
@@ -343,6 +357,20 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                                     ).join('\n')
                                 } else if (parsedInput.diff) {
                                     displayOutput = parsedInput.diff
+                                } else if (
+                                    block.toolName === 'write_file' ||
+                                    block.toolName === 'write_to_file'
+                                ) {
+                                    const code =
+                                        parsedInput.codeContent ??
+                                        parsedInput.CodeContent ??
+                                        parsedInput.content ??
+                                        parsedInput.code ??
+                                        ''
+                                    displayOutput = (code || '')
+                                        .split(/\r?\n/)
+                                        .map((l: string) => (l.startsWith('+') ? l : `+${l}`))
+                                        .join('\n')
                                 }
                             }
 
