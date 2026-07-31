@@ -99,6 +99,10 @@ export function useAuthHandlers(
                         providerConfig.apiKey
                     )
                     agent.setLLM(provider)
+                    const activeModel =
+                        providerConfig.model || config.activeModel || 'gemini-3.6-flash'
+                    agent.modelOptions = { ...agent.modelOptions, model: activeModel }
+                    setSelectedProvider(providerConfig.provider)
                     setIsAuthenticated(true)
                     setAuthMethod(providerConfig.authMethod)
                     setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
@@ -141,7 +145,9 @@ export function useAuthHandlers(
         const config = await loadConfig()
         config.activeModel = item.value
         await saveConfig(config)
-        agent.modelOptions = { model: item.value }
+        if (agent) {
+            agent.modelOptions = { ...agent.modelOptions, model: item.value }
+        }
         setAuthMode('none')
         addToast(`Model changed to ${item.value}`, 'success')
     }
@@ -151,10 +157,21 @@ export function useAuthHandlers(
         if (config.providers && config.providers[item.value]) {
             const key = config.providers[item.value]
             config.activeProvider = item.value
+
+            const { isValidModelForProvider, getDefaultModelForProvider } =
+                await import('../utils/models')
+            let targetModel = config.activeModel
+            if (!isValidModelForProvider(item.value, targetModel)) {
+                targetModel = getDefaultModelForProvider(item.value)
+                config.activeModel = targetModel
+            }
             await saveConfig(config)
 
             const llm = instantiateProvider(item.value, key)
-            agent.setLLM(llm)
+            if (agent) {
+                agent.setLLM(llm)
+                agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+            }
 
             const { getAuthStatus, getProviderConfig } = await import('../config')
             const authStatus = await getAuthStatus()
@@ -165,9 +182,13 @@ export function useAuthHandlers(
             setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
             setSettingsAuthPriority(authStatus.authPriority)
             setIsAuthenticated(true)
+            setSelectedProvider(item.value)
 
             setAuthMode('none')
-            addToast(`Switched active provider to ${item.value.toUpperCase()}`, 'success')
+            addToast(
+                `Switched active provider to ${item.value.toUpperCase()} (${targetModel})`,
+                'success'
+            )
         } else {
             setSelectedProvider(item.value)
             setAuthMode('byok_key')
@@ -202,9 +223,12 @@ export function useAuthHandlers(
             config.activeModel = testModel
             await saveConfig(config)
 
-            agent.setLLM(testProvider)
-            agent.modelOptions = { model: testModel }
+            if (agent) {
+                agent.setLLM(testProvider)
+                agent.modelOptions = { ...agent.modelOptions, model: testModel }
+            }
             setIsAuthenticated(true)
+            setSelectedProvider(selectedProvider)
 
             const { getAuthStatus, getProviderConfig } = await import('../config')
             const authStatus = await getAuthStatus()
@@ -233,9 +257,12 @@ export function useAuthHandlers(
                 config.activeModel = testModel
                 await saveConfig(config)
 
-                agent.setLLM(testProvider)
-                agent.modelOptions = { model: testModel }
+                if (agent) {
+                    agent.setLLM(testProvider)
+                    agent.modelOptions = { ...agent.modelOptions, model: testModel }
+                }
                 setIsAuthenticated(true)
+                setSelectedProvider(selectedProvider)
 
                 const { getAuthStatus, getProviderConfig } = await import('../config')
                 const authStatus = await getAuthStatus()

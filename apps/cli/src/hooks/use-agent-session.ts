@@ -246,7 +246,7 @@ export function useAgentSession({
             ])
 
             try {
-                const prompt = getGrillPrompt(userPrompt)
+                const prompt = getGrillPrompt(userPrompt, agent.systemPrompt)
 
                 const stream = agent.llm.stream(
                     [{ role: 'user', content: prompt }],

@@ -44,5 +44,22 @@ describe('AgentHarness (Unit)', () => {
         expect(systemPrompt).toContain('December Agents Guide')
         expect(systemPrompt).toContain('Workspace Rules')
         expect(systemPrompt).toContain('Custom skill content.')
+        expect(systemPrompt).toContain('Inspect Logs & Stack Traces First')
+        expect(systemPrompt).toContain('Root Cause Resolution')
+        expect(systemPrompt).toContain('Execution & Verification')
+    })
+
+    test('uses DEFAULT_BASE_SYSTEM_PROMPT when baseSystemPrompt is omitted', () => {
+        const harness = new AgentHarness({
+            llm: new MockLLM(),
+            tools: [],
+            operations: {} as any,
+            workspaceDir: tmpDir,
+        })
+
+        const systemPrompt = harness.getAgent().systemPrompt
+        expect(systemPrompt).toContain('You are December, an autonomous, expert coding agent.')
+        expect(systemPrompt).toContain('Inspect Logs & Stack Traces First')
+        expect(systemPrompt).toContain('Root Cause Resolution')
     })
 })

@@ -98,13 +98,26 @@ export function useSettingsHandlers() {
                         newProviderConfig.apiKey
                     )
                     agent.setLLM(llm)
+
+                    const { isValidModelForProvider, getDefaultModelForProvider } =
+                        await import('../utils/models')
+                    let targetModel = newProviderConfig.model || config.activeModel
+                    if (!isValidModelForProvider(newProviderConfig.provider, targetModel)) {
+                        targetModel = getDefaultModelForProvider(newProviderConfig.provider)
+                        config.activeModel = targetModel
+                        await saveConfig(config)
+                    }
+
+                    agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+                    const { useCliStore } = await import('../store')
+                    useCliStore.getState().setSelectedProvider(newProviderConfig.provider)
                     setAuthMethod(newProviderConfig.authMethod)
                     addToast(
-                        `Auth priority set to ${newPriority === 'december' ? 'December Cloud' : 'BYOK'} (Hot Reloaded!)`
+                        `Auth priority set to ${newPriority === 'december' ? 'December Cloud Wallet' : 'BYOK'} (${newProviderConfig.provider} / ${targetModel})`
                     )
                 } else {
                     addToast(
-                        `Auth priority set to ${newPriority === 'december' ? 'December Cloud' : 'BYOK'}`
+                        `Auth priority set to ${newPriority === 'december' ? 'December Cloud Wallet' : 'BYOK'}`
                     )
                 }
                 break

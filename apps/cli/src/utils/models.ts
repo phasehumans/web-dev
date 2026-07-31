@@ -123,6 +123,7 @@ export const getModelLabel = (value: string) => {
         'mistral',
         'xai',
         'zai',
+        'december_proxy',
     ]
     for (const p of allProviders) {
         const models = getProviderModels(p)
@@ -130,6 +131,20 @@ export const getModelLabel = (value: string) => {
         if (found) return found.label
     }
     return value
+}
+
+export const isValidModelForProvider = (provider: string, model?: string): boolean => {
+    if (!model) return false
+    const models = getProviderModels(provider)
+    return models.some((m) => m.value === model)
+}
+
+export const getDefaultModelForProvider = (provider: string): string => {
+    const models = getProviderModels(provider)
+    if (models && models.length > 0 && models[0].value !== 'default') {
+        return models[0].value
+    }
+    return 'gemini-3.6-flash'
 }
 
 import { getModelContextWindow } from '@december/providers'

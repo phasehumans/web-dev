@@ -102,6 +102,7 @@ describe('config', () => {
                     authPriority: 'december',
                     decemberToken: 'dec-token',
                     activeProvider: 'openai',
+                    activeModel: 'claude-3-7-sonnet-latest',
                     providers: { openai: 'sk-test' },
                 })
             })
@@ -110,6 +111,7 @@ describe('config', () => {
             expect(providerConfig).toEqual({
                 provider: 'december_proxy',
                 apiKey: 'dec-token',
+                model: 'claude-3-7-sonnet-latest',
                 authMethod: 'december',
             })
         })
@@ -150,6 +152,7 @@ describe('config', () => {
                 if (filePath.includes('settings.json')) throw new Error('No workspace config')
                 return JSON.stringify({
                     decemberToken: 'dec-token',
+                    activeModel: 'gemini-3.6-flash',
                     providers: {},
                 })
             })
@@ -158,6 +161,7 @@ describe('config', () => {
             expect(providerConfig).toEqual({
                 provider: 'december_proxy',
                 apiKey: 'dec-token',
+                model: 'gemini-3.6-flash',
                 authMethod: 'december',
             })
         })
