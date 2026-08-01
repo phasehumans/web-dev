@@ -34,7 +34,17 @@ export function MessageList({
                     return <Header key={key} cliVersion={cliVersion} userEmail={userEmail} />
                 }
                 if (msg.role === 'user') return <UserMessage key={key} message={msg.text ?? ''} />
-                if (msg.role === 'error') return <ErrorMessage key={key} message={msg.text ?? ''} />
+                if (msg.role === 'error') {
+                    const prevRole = index > 0 ? allMessages[index - 1]?.role : null
+                    const hasTopMargin = prevRole !== 'user'
+                    return (
+                        <ErrorMessage
+                            key={key}
+                            message={msg.text ?? ''}
+                            hasTopMargin={hasTopMargin}
+                        />
+                    )
+                }
                 return (
                     <BotMessage
                         key={key}

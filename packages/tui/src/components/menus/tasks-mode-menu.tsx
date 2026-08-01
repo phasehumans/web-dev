@@ -5,13 +5,12 @@ export function TasksModeMenu(props: any) {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'running':
-                return '#2ECC71'
+                return '#fef08a'
             case 'completed':
-                return '#3498DB'
+                return '#6EE7B7'
             case 'failed':
-                return '#E74C3C'
             case 'killed':
-                return '#F1C40F'
+                return '#FCA5A5'
             default:
                 return 'white'
         }

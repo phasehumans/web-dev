@@ -31,6 +31,7 @@ type Props = {
     history?: string[]
     showExitConfirm?: boolean
     toasts?: { id: string; message: string; variant?: string }[]
+    queuedPrompts?: string[]
 }
 
 export function InputBar({
@@ -51,6 +52,7 @@ export function InputBar({
     history,
     showExitConfirm = false,
     toasts,
+    queuedPrompts,
 }: Props) {
     const [value, setValue] = useState('')
     const toast = useToast()
@@ -138,7 +140,8 @@ export function InputBar({
                 command.value === '/settings' ||
                 command.value === '/context' ||
                 command.value === '/tasks' ||
-                command.value === '/usage'
+                command.value === '/usage' ||
+                command.value === '/feedback'
             ) {
                 if (
                     currentValue.length > command.value.length &&
@@ -204,6 +207,15 @@ export function InputBar({
                     <InlineDialog config={dialog.currentDialog} close={dialog.close} />
                 </Box>
             )}
+            {/* queued prompts indicator */}
+            {queuedPrompts && queuedPrompts.length > 0 && (
+                <Box width="100%" marginBottom={0}>
+                    <Text color="#89B4F8">
+                        {`Queued (${queuedPrompts.length}): "${queuedPrompts[0]}"`}
+                        {queuedPrompts.length > 1 ? ` (+${queuedPrompts.length - 1} more)` : ''}
+                    </Text>
+                </Box>
+            )}
             {/* top separator */}
             <Box overflow="hidden" height={1} width="100%">
                 <Text color="#555555" wrap="truncate">
@@ -248,7 +260,7 @@ export function InputBar({
                             <Text color="#AAAAAA">
                                 {activeModel}
                                 {hasBothAuth && authMethod
-                                    ? ` (via ${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
+                                    ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
                                     : ''}
                             </Text>
                             {activeToast ? (

@@ -113,4 +113,4 @@ In the refactored architecture, we completely separate workspace environments an
     - **Standalone Sessions:** Nullable `projectId` allows independent sessions.
     - **Workspace State & Settings:** Sessions track runtime state (`vmStatus`: `PROVISIONING`, `RUNNING`, `STOPPED`, `FAILED`), configuration settings via `SessionSettings`, and reviews via `ReviewComment`.
 - **The Wiki Feature (Documentation Management):** Organized at the Project (Folder) level via `WikiPage`. Equipped with `read_wiki` and `update_wiki` tools.
-- **The Review Feature (PR & Feedback Loops):** Organized at the active `Session` level via `ReviewComment`. Backed by the December GitHub App and tools (`create_pr_review`, `submit_pr`).
+- **The Review Feature (PR & Feedback Loops):** Organized at the active `Session` level via `ReviewComment`. Backed by the `gh` CLI via `BashTool` and `GitHubTool` REST API.

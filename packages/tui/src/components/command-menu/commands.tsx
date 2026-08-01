@@ -57,6 +57,14 @@ export const COMMANDS: Command[] = [
         },
     },
     {
+        name: 'feedback',
+        description: 'Submit feedback, report a bug, or request a feature',
+        value: '/feedback',
+        action: (ctx) => {
+            // forwarded to chat screen
+        },
+    },
+    {
         name: 'fork',
         description: 'Create a branch of the current conversation at this point',
         value: '/fork',

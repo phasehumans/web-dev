@@ -385,16 +385,6 @@ export function useAuthHandlers(
                 } else if (msg.role === 'assistant') {
                     const blocks: MessageBlock[] = []
 
-                    if (msg.errorMessage) {
-                        const { parseErrorMessage } = await import('../utils/error-parser')
-                        blocks.push({
-                            type: 'error',
-                            error: parseErrorMessage({ message: msg.errorMessage }),
-                        })
-                    } else if (msg.content) {
-                        blocks.push({ type: 'text', content: msg.content })
-                    }
-
                     if (msg.toolCalls && msg.toolCalls.length > 0) {
                         for (const tc of msg.toolCalls) {
                             const toolMsg = agent.messages.find(
@@ -418,6 +408,16 @@ export function useAuthHandlers(
                                 output: toolMsg?.content || '',
                             })
                         }
+                    }
+
+                    if (msg.errorMessage) {
+                        const { parseErrorMessage } = await import('../utils/error-parser')
+                        blocks.push({
+                            type: 'error',
+                            error: parseErrorMessage({ message: msg.errorMessage }),
+                        })
+                    } else if (msg.content) {
+                        blocks.push({ type: 'text', content: msg.content })
                     }
 
                     if (blocks.length > 0) {

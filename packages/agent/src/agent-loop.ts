@@ -397,7 +397,7 @@ async function streamAssistantResponse(
 
         if (errorMsg.includes('402') || errorMsg.toLowerCase().includes('insufficient credits')) {
             errorMsg =
-                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.\n\n' +
+                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.\n' +
                 errorMsg
         } else if (
             errorMsg.includes('429') ||
@@ -405,7 +405,7 @@ async function streamAssistantResponse(
             errorMsg.toLowerCase().includes('rate limit')
         ) {
             errorMsg =
-                'Rate limit or quota exhausted from LLM provider. Please upgrade your API key tier with your provider (OpenAI, Anthropic, Gemini) or switch to December Cloud Subscription at https://trydecember.com/pricing\n\n' +
+                'Rate limit or quota exhausted from LLM provider. Please upgrade your API key tier with your provider (OpenAI, Anthropic, Gemini) or switch to December Cloud Subscription at https://trydecember.com/pricing\n' +
                 errorMsg
         } else if (
             errorMsg.includes('503') ||
@@ -415,7 +415,7 @@ async function streamAssistantResponse(
             errorMsg.toLowerCase().includes('capacity')
         ) {
             errorMsg =
-                'This model is currently experiencing high demand or capacity limits from the provider. Spikes in demand are usually temporary. Please try again in a few moments or switch to a different model at https://trydecember.com/pricing\n\n' +
+                'This model is currently experiencing high demand or capacity limits from the provider. Spikes in demand are usually temporary. Please try again in a few moments or switch to a different model at https://trydecember.com/pricing\n' +
                 errorMsg
         }
 

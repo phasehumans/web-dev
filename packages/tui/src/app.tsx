@@ -148,8 +148,10 @@ export function ChatApp({
                     setStaticMessages([{ id: 'header-' + Date.now(), role: 'header' }])
                     setStaticKey((k) => k + 1)
                     setActiveMessages([])
+                    session.setQueuedPrompts?.([])
                     session.addToast?.('Started a new conversation.', 'success')
                 }}
+                queuedPrompts={session.queuedPrompts}
                 grillMode={grillMode}
                 customInputMode={false}
                 showExitConfirm={exitConfirm}

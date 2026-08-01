@@ -17,7 +17,6 @@ export function ByokKeyMenu(props: any) {
                     value={apiKey}
                     onChange={setApiKey}
                     onSubmit={handleKeySubmit}
-                    mask="*"
                 />
             </Box>
             {props.authError && (

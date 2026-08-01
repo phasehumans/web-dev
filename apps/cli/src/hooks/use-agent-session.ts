@@ -92,6 +92,8 @@ export function useAgentSession({
         setActiveMessages,
         isStreaming,
         setIsStreaming,
+        queuedPrompts,
+        setQueuedPrompts,
         pendingQuestions,
         setPendingQuestions,
         pendingToolCall,
@@ -519,7 +521,30 @@ export function useAgentSession({
                         blocks: [
                             {
                                 type: 'text',
-                                content: `Opening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Note: BYOK (Bring Your Own Key) usage is not tracked. Only usage via December login (December Wallet) is tracked.*`,
+                                content: `\nOpening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Note: BYOK (Bring Your Own Key) usage is not tracked. Only usage via December login (December Wallet) is tracked.*`,
+                            },
+                        ],
+                    },
+                ])
+                import('../utils/open')
+                    .then((openUtils) => {
+                        openUtils.openUrl(url)
+                    })
+                    .catch(console.error)
+                return
+            }
+
+            if (text.trim() === '/feedback') {
+                const url = 'https://github.com/phasehumans/december/issues'
+                setActiveMessages((prev) => [
+                    ...prev,
+                    {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: `\nOpening GitHub issues...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Have feedback, found a bug, or have a feature request? Let us know on GitHub issues!*`,
                             },
                         ],
                     },
@@ -557,35 +582,43 @@ export function useAgentSession({
 
             // normal chat logic
             if (isStreaming) {
-                agent.steer({ role: 'user', content: text, isUI: true })
-                setActiveMessages((prev) => [...prev, { id: getNextMsgId(), role: 'user', text }])
+                setQueuedPrompts((prev) => [...prev, text.trim()])
                 return
             }
 
-            setIsStreaming(true)
-            const assistantMsgId = getNextMsgId()
-            const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text }
-            setStaticMessages((prev) => [
-                ...prev,
-                ...useCliStore.getState().activeMessages,
-                newUserMsg,
-            ])
-            setActiveMessages([{ id: assistantMsgId, role: 'assistant', blocks: [] }])
-
-            const promptToSend = text
-
-            try {
-                const stream = runAgentLoop(agent, promptToSend)
-                await processAgentStream({ stream, setActiveMessages, assistantMsgId })
-            } catch (err: any) {
-                setActiveMessages((prev) => [
+            let currentText: string | undefined = text.trim()
+            while (currentText) {
+                setIsStreaming(true)
+                const assistantMsgId = getNextMsgId()
+                const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text: currentText }
+                setStaticMessages((prev) => [
                     ...prev,
-                    { id: getNextMsgId(), role: 'error', text: err.message },
+                    ...useCliStore.getState().activeMessages,
+                    newUserMsg,
                 ])
-            } finally {
-                setIsStreaming(false)
-                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
-                setActiveMessages([])
+                setActiveMessages([{ id: assistantMsgId, role: 'assistant', blocks: [] }])
+
+                try {
+                    const stream = runAgentLoop(agent, currentText)
+                    await processAgentStream({ stream, setActiveMessages, assistantMsgId })
+                } catch (err: any) {
+                    setActiveMessages((prev) => [
+                        ...prev,
+                        { id: getNextMsgId(), role: 'error', text: err.message },
+                    ])
+                } finally {
+                    setIsStreaming(false)
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([])
+                }
+
+                const nextQueue = useCliStore.getState().queuedPrompts
+                if (nextQueue.length > 0) {
+                    currentText = nextQueue[0]
+                    useCliStore.getState().setQueuedPrompts(nextQueue.slice(1))
+                } else {
+                    currentText = undefined
+                }
             }
         },
         [
@@ -602,14 +635,16 @@ export function useAgentSession({
             authMode,
             currentGrillIndex,
             grillMode,
+            setQueuedPrompts,
         ]
     )
 
     const handleAbort = useCallback(() => {
         if (isStreaming && agent) {
             agent.abort()
+            setQueuedPrompts([])
         }
-    }, [isStreaming, agent])
+    }, [isStreaming, agent, setQueuedPrompts])
 
     const {
         handleSettingsMainSelect,
@@ -745,5 +780,7 @@ export function useAgentSession({
         addToast,
         expandCommands,
         toggleExpandCommands,
+        queuedPrompts,
+        setQueuedPrompts,
     }
 }

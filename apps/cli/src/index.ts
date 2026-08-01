@@ -20,12 +20,7 @@ import {
     AskQuestionTool,
     ManageTaskTool,
     BrowserTool,
-    GitHubTool,
     WebSearchTool,
-    readWikiTool,
-    updateWikiTool,
-    createPrReviewTool,
-    submitPrTool,
 } from '@december/tools'
 import { ChatApp as App } from '@december/tui'
 import { RootLayout } from '@december/tui'
@@ -110,12 +105,7 @@ async function main() {
             AskQuestionTool,
             ManageTaskTool,
             BrowserTool,
-            GitHubTool,
             WebSearchTool,
-            readWikiTool,
-            updateWikiTool,
-            createPrReviewTool,
-            submitPrTool,
         ],
         operations: localOperations,
         modelOptions: {

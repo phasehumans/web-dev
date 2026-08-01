@@ -40,4 +40,25 @@ describe('useCliStore activeMessages handling', () => {
         expect(finalStatic[2].blocks?.[0].content).toBe('Hello human!')
         expect(useCliStore.getState().activeMessages).toHaveLength(0)
     })
+
+    it('queues prompts sequentially in FIFO order and allows clearing state', () => {
+        const store = useCliStore.getState()
+        expect(store.queuedPrompts).toEqual([])
+
+        store.setQueuedPrompts((prev) => [...prev, 'Second prompt'])
+        store.setQueuedPrompts((prev) => [...prev, 'Third prompt'])
+
+        expect(useCliStore.getState().queuedPrompts).toEqual(['Second prompt', 'Third prompt'])
+
+        // Consume first queued prompt
+        const nextPrompt = useCliStore.getState().queuedPrompts[0]
+        store.setQueuedPrompts((prev) => prev.slice(1))
+
+        expect(nextPrompt).toBe('Second prompt')
+        expect(useCliStore.getState().queuedPrompts).toEqual(['Third prompt'])
+
+        // Clear remaining
+        store.setQueuedPrompts([])
+        expect(useCliStore.getState().queuedPrompts).toEqual([])
+    })
 })

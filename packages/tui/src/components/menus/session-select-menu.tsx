@@ -150,7 +150,12 @@ export function SessionSelectMenu(props: any) {
                 }
 
                 const isCustomName = !session.id.startsWith('session-')
-                const title = isCustomName ? session.id : session.preview || session.id
+                const rawTitle = isCustomName ? session.id : session.preview || session.id
+                const singleLineTitle = (rawTitle || '').replace(/\s+/g, ' ').trim()
+                const title =
+                    singleLineTitle.length > 50
+                        ? singleLineTitle.slice(0, 50) + '...'
+                        : singleLineTitle
                 const timeStr = timeAgo(session.updatedAt).padStart(10)
 
                 return (
