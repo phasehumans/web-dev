@@ -1,15 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-    Volume1,
-    Volume2,
-    VolumeX,
-    FilePlus,
-    Trash2,
-    Loader2,
-    ExternalLink,
-    FileText,
-    Save,
-} from 'lucide-react'
+import { Volume1, Volume2, VolumeX, FilePlus, Trash2, Loader2, FileText, Save } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -80,50 +70,50 @@ export const ProfileGeneralSettings: React.FC<ProfileGeneralSettingsProps> = ({
     const queryClient = useQueryClient()
     const navigate = useNavigate()
 
-    // --- design ---
-    const designQuery = useQuery({
-        queryKey: ['profile', 'design'],
-        queryFn: profileAPI.getdesign,
+    // --- rules ---
+    const rulesQuery = useQuery({
+        queryKey: ['profile', 'rules'],
+        queryFn: profileAPI.getRules,
     })
 
-    const [designText, setdesignText] = useState('')
-    const [designActive, setdesignActive] = useState(false)
-    const [designDirty, setdesignDirty] = useState(false)
+    const [rulesText, setRulesText] = useState('')
+    const [rulesActive, setRulesActive] = useState(false)
+    const [rulesDirty, setRulesDirty] = useState(false)
 
     useEffect(() => {
-        if (designQuery.data?.design) {
-            setdesignText(designQuery.data.design)
-            setdesignActive(true)
+        if (rulesQuery.data?.rules) {
+            setRulesText(rulesQuery.data.rules)
+            setRulesActive(true)
         }
-    }, [designQuery.data])
+    }, [rulesQuery.data])
 
-    const updatedesignMutation = useMutation({
-        mutationFn: profileAPI.updatedesign,
+    const updateRulesMutation = useMutation({
+        mutationFn: profileAPI.updateRules,
         onSuccess: () => {
-            setdesignDirty(false)
-            queryClient.invalidateQueries({ queryKey: ['profile', 'design'] })
+            setRulesDirty(false)
+            queryClient.invalidateQueries({ queryKey: ['profile', 'rules'] })
             queryClient.invalidateQueries({ queryKey: ['profile'] })
         },
     })
 
-    const deletedesignMutation = useMutation({
-        mutationFn: profileAPI.deletedesign,
+    const deleteRulesMutation = useMutation({
+        mutationFn: profileAPI.deleteRules,
         onSuccess: () => {
-            setdesignText('')
-            setdesignActive(false)
-            setdesignDirty(false)
-            queryClient.invalidateQueries({ queryKey: ['profile', 'design'] })
+            setRulesText('')
+            setRulesActive(false)
+            setRulesDirty(false)
+            queryClient.invalidateQueries({ queryKey: ['profile', 'rules'] })
             queryClient.invalidateQueries({ queryKey: ['profile'] })
         },
     })
 
-    const defaultdesignContent = `---
-name: Custom Design
-description: Persistent instructions defining custom rules for how december should generate layouts and components.
+    const defaultRulesContent = `---
+name: Custom Rules
+description: Persistent instructions defining custom rules for how december should operate.
 ---
 
-# Custom Design Rules
-Use this template file to specify coding styles, design tokens, responsive grids, and layout rules for december to follow.`
+# Custom Rules
+Use this template file to specify coding styles, design tokens, architecture patterns, and custom behavior rules for december to follow.`
 
     return (
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
@@ -239,41 +229,30 @@ Use this template file to specify coding styles, design tokens, responsive grids
                 </div>
             </div>
 
-            {/* custom design */}
+            {/* custom rules */}
             <div className="flex flex-col mb-10">
-                <h1 className="text-[16px] font-medium mb-4">Custom Design</h1>
+                <h1 className="text-[16px] font-medium mb-4">Custom Rules</h1>
                 <div className="flex flex-col gap-4 border-t border-[#242323] pt-6">
                     <p className="text-[13px] text-[#7B7A79] mb-4 leading-relaxed">
-                        Create reusable design guidelines that december can apply during
-                        conversations. Each design has a design.md that defines custom layout rules
-                        and triggers.{' '}
-                        <a
-                            href="/docs#custom-design"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                navigate('/docs#custom-design')
-                            }}
-                            className="inline-flex items-center gap-1.5 text-[#87B2F4] hover:text-[#87B2F4]/80 transition-colors"
-                        >
-                            View sample design.md in docs
-                            <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
+                        Create reusable guidelines and custom rules that december can apply during
+                        conversations. Each rules configuration defines persistent instructions for
+                        december.
                     </p>
 
-                    {!designActive ? (
+                    {!rulesActive ? (
                         <div>
                             <button
                                 onClick={() => {
-                                    setdesignActive(true)
-                                    if (!designText) {
-                                        setdesignText(defaultdesignContent)
-                                        setdesignDirty(true)
+                                    setRulesActive(true)
+                                    if (!rulesText) {
+                                        setRulesText(defaultRulesContent)
+                                        setRulesDirty(true)
                                     }
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer w-fit"
                             >
                                 <FilePlus className="w-3.5 h-3.5" />
-                                <span>Create design.md</span>
+                                <span>Create rules.md</span>
                             </button>
                         </div>
                     ) : (
@@ -283,11 +262,11 @@ Use this template file to specify coding styles, design tokens, responsive grids
                                 <div className="flex items-center gap-2">
                                     <FileText className="w-4 h-4 text-[#87B2F4]" />
                                     <span className="text-[13px] font-medium text-[#D6D5C9]">
-                                        design.md
+                                        rules.md
                                     </span>
                                 </div>
                                 <span className="text-[11px] font-mono text-[#7B7A79] bg-[#181818] px-2 py-0.5 rounded border border-[#282828]">
-                                    {designText.length} chars
+                                    {rulesText.length} chars
                                 </span>
                             </div>
 
@@ -295,26 +274,26 @@ Use this template file to specify coding styles, design tokens, responsive grids
                             <textarea
                                 className="w-full h-[450px] bg-[#181818] p-4 text-[13px] text-[#D6D5C9] placeholder:text-[#7B7A79] font-mono leading-[1.7] resize-none focus:outline-none transition-colors caret-[#87B2F4] selection:bg-[#2B2B2B] no-scrollbar border-none"
                                 spellCheck={false}
-                                value={designText}
+                                value={rulesText}
                                 onChange={(e) => {
-                                    setdesignText(e.target.value)
-                                    setdesignDirty(true)
+                                    setRulesText(e.target.value)
+                                    setRulesDirty(true)
                                 }}
-                                placeholder="Enter custom layout rules and instructions..."
+                                placeholder="Enter custom rules and instructions..."
                             ></textarea>
 
                             {/* Editor Footer Bar */}
                             <div className="flex items-center justify-between px-4 py-2.5 bg-[#202020] border-t border-[#282828]">
                                 <span className="text-[12px] text-[#7B7A79]">
-                                    Persistent layout rules for december
+                                    Persistent rules for december
                                 </span>
                                 <div className="flex items-center gap-2.5">
                                     <button
-                                        onClick={() => deletedesignMutation.mutate()}
-                                        disabled={deletedesignMutation.isPending}
+                                        onClick={() => deleteRulesMutation.mutate()}
+                                        disabled={deleteRulesMutation.isPending}
                                         className="flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] font-medium text-[#7B7A79] hover:text-red-400 transition-colors rounded-lg disabled:opacity-30 cursor-pointer"
                                     >
-                                        {deletedesignMutation.isPending ? (
+                                        {deleteRulesMutation.isPending ? (
                                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                         ) : (
                                             <Trash2 className="w-3.5 h-3.5" />
@@ -323,16 +302,16 @@ Use this template file to specify coding styles, design tokens, responsive grids
                                     </button>
                                     <button
                                         onClick={() => {
-                                            if (designText.trim()) {
-                                                updatedesignMutation.mutate({
-                                                    design: designText,
+                                            if (rulesText.trim()) {
+                                                updateRulesMutation.mutate({
+                                                    rules: rulesText,
                                                 })
                                             }
                                         }}
-                                        disabled={!designDirty || updatedesignMutation.isPending}
+                                        disabled={!rulesDirty || updateRulesMutation.isPending}
                                         className="px-4 py-1.5 rounded-lg bg-[#181818] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
                                     >
-                                        {updatedesignMutation.isPending ? (
+                                        {updateRulesMutation.isPending ? (
                                             <Loader2 className="w-3.5 h-3.5 animate-spin text-[#87B2F4]" />
                                         ) : (
                                             <Save className="w-3.5 h-3.5 text-[#87B2F4]" />

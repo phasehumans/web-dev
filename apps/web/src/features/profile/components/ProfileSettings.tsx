@@ -168,7 +168,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         </button>
                         <button
                             onClick={() =>
-                                navigate(`/settings/${getSlugForProfileTab('Connections')}`)
+                                navigate(`/settings/${getSlugForProfileTab('Integrations')}`)
                             }
                             className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
                                 activeTab === 'Connections' || activeTab === 'Integrations'
@@ -177,7 +177,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             }`}
                         >
                             <Link2 className="w-[18px] h-[18px]" strokeWidth={1.5} />
-                            Connections
+                            Integrations
                         </button>
                         <button
                             onClick={() =>

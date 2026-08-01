@@ -11,6 +11,7 @@ import {
     updateUsernameSchema,
     dismissOnboardingCardSchema,
     submitFeedbackSchema,
+    updateRulesSchema,
 } from './setting.schema'
 import { settingService } from './setting.service'
 
@@ -170,6 +171,42 @@ const submitFeedback = asyncHandler(async (req: Request, res: Response) => {
     return sendSuccess(res, 'feedback submitted successfully', result)
 })
 
+const getRules = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId as string | undefined
+
+    if (!userId) {
+        throw new AppError('unauthorized', 401)
+    }
+
+    const result = await settingService.getRules({ userId })
+    return sendSuccess(res, 'rules fetched successfully', result)
+})
+
+const updateRules = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId as string | undefined
+
+    if (!userId) {
+        throw new AppError('unauthorized', 401)
+    }
+
+    const parseData = updateRulesSchema.parse(req.body)
+    const { rules } = parseData
+
+    const result = await settingService.updateRules({ userId, rules })
+    return sendSuccess(res, 'rules updated successfully', result)
+})
+
+const deleteRules = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId as string | undefined
+
+    if (!userId) {
+        throw new AppError('unauthorized', 401)
+    }
+
+    const result = await settingService.deleteRules({ userId })
+    return sendSuccess(res, 'rules deleted successfully', result)
+})
+
 export const settingController = {
     getMe,
     getProfile,
@@ -182,4 +219,7 @@ export const settingController = {
     completeOnboarding,
     dismissOnboardingCard,
     submitFeedback,
+    getRules,
+    updateRules,
+    deleteRules,
 }

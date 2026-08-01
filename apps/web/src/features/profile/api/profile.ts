@@ -27,7 +27,7 @@ export type Profile = {
     chatSuggestions?: boolean
     generationSound?: 'FIRST_GENERATION' | 'ALWAYS' | 'NEVER'
     memories?: string | null
-    design?: string | null
+    rules?: string | null
     avatarUrl?: string | null
     creditBalance?: number
     hasCompletedOnboarding?: boolean
@@ -249,25 +249,25 @@ const deleteMemories = () => {
     })
 }
 
-// --- design ---
+// --- rules ---
 
-type UpdatedesignInput = {
-    design: string
+type UpdateRulesInput = {
+    rules: string
 }
 
-const getdesign = () => {
-    return apiRequest<{ design: string | null }>('/setting/design')
+const getRules = () => {
+    return apiRequest<{ rules: string | null }>('/setting/rules')
 }
 
-const updatedesign = (data: UpdatedesignInput) => {
-    return apiRequest<{ design: string | null }>('/setting/design', {
+const updateRules = (data: UpdateRulesInput) => {
+    return apiRequest<{ rules: string | null }>('/setting/rules', {
         method: 'POST',
         body: JSON.stringify(data),
     })
 }
 
-const deletedesign = () => {
-    return apiRequest<void>('/setting/design', {
+const deleteRules = () => {
+    return apiRequest<void>('/setting/rules', {
         method: 'DELETE',
     })
 }
@@ -391,9 +391,9 @@ export const profileAPI = {
     getMemories,
     updateMemories,
     deleteMemories,
-    getdesign,
-    updatedesign,
-    deletedesign,
+    getRules,
+    updateRules,
+    deleteRules,
     getGithubRepos,
     getGithubConnectUrl,
     getVercelConnectUrl,

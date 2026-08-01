@@ -71,8 +71,15 @@ export const useNavigationController = () => {
         clearOpenedProject()
         resetGenerationFlow()
         setImportState({ status: 'idle', message: null })
-        window.location.href = '/'
-    }, [activeProjectId, setMessages, clearOpenedProject, resetGenerationFlow, setImportState])
+        navigate('/')
+    }, [
+        activeProjectId,
+        setMessages,
+        clearOpenedProject,
+        resetGenerationFlow,
+        setImportState,
+        navigate,
+    ])
 
     const handleHomeClick = React.useCallback(() => {
         if (activeProjectId) {

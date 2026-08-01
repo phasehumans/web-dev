@@ -55,3 +55,16 @@ export type SubmitFeedback = {
     rating: 'sad' | 'neutral' | 'happy' | null
     feedback: string
 }
+
+export type GetRules = {
+    userId: string
+}
+
+export type UpdateRules = {
+    userId: string
+    rules: string
+}
+
+export type DeleteRules = {
+    userId: string
+}

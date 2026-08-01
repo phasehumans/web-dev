@@ -155,7 +155,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 'theme',
                 'dark mode',
                 'light mode',
-                'custom design',
+                'custom rules',
                 'shortcuts',
                 'appearance',
                 'display',
@@ -404,7 +404,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             onClick={onClose}
         >
             <div
-                className="w-full max-w-[640px] bg-[#1E1E1E] border border-[#282828] rounded-xl shadow-[0_0_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
+                className="w-full max-w-[648px] bg-[#1E1E1E] border border-[#282828] rounded-[14px] shadow-[0_0_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Search input */}
@@ -420,7 +420,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 </div>
 
                 {/* Results list */}
-                <div className="flex flex-col py-2 max-h-[420px] overflow-y-auto no-scrollbar">
+                <div className="flex flex-col py-2 max-h-[428px] overflow-y-auto no-scrollbar">
                     {categories.map((category) => {
                         const categoryItems = displayedItems.filter(
                             (item) => item.category === category

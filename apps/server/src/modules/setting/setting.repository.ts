@@ -209,6 +209,35 @@ async function findUserByEmail(email: string) {
     })
 }
 
+async function findUserRules(id: string) {
+    return prisma.user.findUnique({
+        where: { id },
+        select: {
+            rules: true,
+        },
+    })
+}
+
+async function updateUserRules(id: string, rules: string) {
+    return prisma.user.update({
+        where: { id },
+        data: { rules },
+        select: {
+            rules: true,
+        },
+    })
+}
+
+async function deleteUserRules(id: string) {
+    return prisma.user.update({
+        where: { id },
+        data: { rules: null },
+        select: {
+            rules: true,
+        },
+    })
+}
+
 export const settingRepository = {
     findUserByIdForInfo,
     findUserByIdForProfile,
@@ -232,4 +261,8 @@ export const settingRepository = {
     updateFeedbackCardDone,
     createFeedback,
     findUserByEmail,
+
+    findUserRules,
+    updateUserRules,
+    deleteUserRules,
 }

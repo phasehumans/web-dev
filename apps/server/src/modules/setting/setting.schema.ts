@@ -61,3 +61,7 @@ export const submitFeedbackSchema = z.object({
     rating: z.enum(['sad', 'neutral', 'happy']).nullable(),
     feedback: z.string({ message: 'feedback is required' }).min(1, 'feedback cannot be empty'),
 })
+
+export const updateRulesSchema = z.object({
+    rules: z.string({ message: 'rules is required' }),
+})

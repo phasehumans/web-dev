@@ -28,6 +28,7 @@ export const settingSelect = {
     notifySecurityAlerts: true,
     chatSuggestions: true,
     generationSound: true,
+    rules: true,
 
     creditBalance: true,
     isDeleted: true,
@@ -49,6 +50,9 @@ import type {
     CompleteOnboarding,
     DismissOnboardingCard,
     SubmitFeedback,
+    GetRules,
+    UpdateRules,
+    DeleteRules,
 } from './setting.types'
 
 const getMe = async (data: GetMe) => {
@@ -296,6 +300,42 @@ const submitFeedback = async (data: SubmitFeedback) => {
     return updatedUser
 }
 
+const getRules = async (data: GetRules) => {
+    const { userId } = data
+    const user = await settingRepository.findUserByIdForExistCheck(userId)
+
+    if (!user) {
+        throw new AppError('user not found', 404)
+    }
+
+    const result = await settingRepository.findUserRules(userId)
+    return result
+}
+
+const updateRules = async (data: UpdateRules) => {
+    const { userId, rules } = data
+    const user = await settingRepository.findUserByIdForExistCheck(userId)
+
+    if (!user) {
+        throw new AppError('user not found', 404)
+    }
+
+    const result = await settingRepository.updateUserRules(userId, rules)
+    return result
+}
+
+const deleteRules = async (data: DeleteRules) => {
+    const { userId } = data
+    const user = await settingRepository.findUserByIdForExistCheck(userId)
+
+    if (!user) {
+        throw new AppError('user not found', 404)
+    }
+
+    const result = await settingRepository.deleteUserRules(userId)
+    return result
+}
+
 export const settingService = {
     getMe,
     getProfile,
@@ -308,4 +348,7 @@ export const settingService = {
     completeOnboarding,
     dismissOnboardingCard,
     submitFeedback,
+    getRules,
+    updateRules,
+    deleteRules,
 }

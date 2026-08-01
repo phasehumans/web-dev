@@ -21,4 +21,8 @@ settingRouter.post('/suggestions', settingController.chatSuggestions)
 settingRouter.post('/sound', settingController.generationSound)
 settingRouter.post('/feedback', settingController.submitFeedback)
 
+settingRouter.get('/rules', settingController.getRules)
+settingRouter.post('/rules', settingController.updateRules)
+settingRouter.delete('/rules', settingController.deleteRules)
+
 export default settingRouter
