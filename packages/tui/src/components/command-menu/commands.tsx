@@ -57,6 +57,14 @@ export const COMMANDS: Command[] = [
         },
     },
     {
+        name: 'feedback',
+        description: 'Submit feedback, report a bug, or request a feature',
+        value: '/feedback',
+        action: (ctx) => {
+            // forwarded to chat screen
+        },
+    },
+    {
         name: 'fork',
         description: 'Create a branch of the current conversation at this point',
         value: '/fork',
@@ -183,27 +191,43 @@ export const COMMANDS: Command[] = [
 
     {
         name: 'init',
-        description: 'Create a .december folder with initial rules, skills, and configuration',
+        description: 'Create initial rules, skills, and AGENTS.md configuration',
         value: '/init',
         action: (ctx) => {
             try {
                 const rootDir = process.cwd()
                 const decDir = path.join(rootDir, '.december')
 
-                if (fs.existsSync(decDir)) {
+                const agentsFile = path.join(rootDir, 'AGENTS.md')
+                const rulesFile = path.join(decDir, 'rules.md')
+                const skillsFile = path.join(decDir, 'skills.md')
+
+                if (
+                    fs.existsSync(agentsFile) &&
+                    fs.existsSync(rulesFile) &&
+                    fs.existsSync(skillsFile)
+                ) {
                     ctx.toast.show({ message: 'December workspace is already initialized.' })
                     return
                 }
 
                 fs.mkdirSync(decDir, { recursive: true })
 
-                const agentsFile = path.join(decDir, 'AGENTS.md')
-                const rulesFile = path.join(decDir, 'rules.md')
-                const skillsFile = path.join(decDir, 'skills.md')
-
-                fs.writeFileSync(agentsFile, '# AGENTS.md\n')
-                fs.writeFileSync(rulesFile, '# Rules\n')
-                fs.writeFileSync(skillsFile, '# Skills\n')
+                if (!fs.existsSync(agentsFile)) {
+                    fs.writeFileSync(agentsFile, '')
+                }
+                if (!fs.existsSync(rulesFile)) {
+                    fs.writeFileSync(
+                        rulesFile,
+                        'Add rules in this file for the agent to use as context.\n'
+                    )
+                }
+                if (!fs.existsSync(skillsFile)) {
+                    fs.writeFileSync(
+                        skillsFile,
+                        'Add skills in this file for the agent to use as context.\n'
+                    )
+                }
 
                 ctx.toast.show({
                     variant: 'success',

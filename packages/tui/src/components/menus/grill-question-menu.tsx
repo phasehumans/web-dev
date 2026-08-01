@@ -27,6 +27,11 @@ export function GrillQuestionMenu(props: any) {
         return (
             <Box flexDirection="column" paddingX={1}>
                 <Box marginBottom={1} flexDirection="column">
+                    {q.docSource && (
+                        <Text color="#7DD3FC" bold>
+                            [Doc Grounding: {q.docSource}]
+                        </Text>
+                    )}
                     <Text color="#89B4F8" bold>
                         Question {currentGrillIndex + 1}/{grillQuestions.length}:
                     </Text>
@@ -65,7 +70,10 @@ export function GrillQuestionMenu(props: any) {
                                 onChange={setCustomAnswer}
                                 onSubmit={(value) => {
                                     const answer = value.trim()
-                                    if (answer.length === 0) return
+                                    if (answer.length === 0) {
+                                        setCustomInputMode(false)
+                                        return
+                                    }
 
                                     setCustomInputMode(false)
                                     setCustomAnswer('')

@@ -42,5 +42,46 @@ describe('ChatApp TUI Integration', () => {
         const frame = lastFrame()
         expect(frame).toContain('December CLI')
         expect(frame).toContain('Ask December to build...')
+        expect(frame).toContain('? for shortcuts')
+    })
+
+    it('does not render model and shortcuts hint when menu (authUI) is active', () => {
+        const mockAgent = {
+            abort: mock(),
+            modelOptions: { model: 'gemini-3.6-flash' },
+        } as any
+
+        const mockSession = {
+            staticKey: 0,
+            staticMessages: [{ id: 'header-1', role: 'header' }],
+            activeMessages: [],
+            isAuthenticated: true,
+            currentEmail: 'user@example.com',
+            authMode: 'settings_main',
+            grillMode: false,
+            setStaticMessages: mock(),
+            setStaticKey: mock(),
+            setActiveMessages: mock(),
+            setAuthMode: mock(),
+            handleSubmit: mock(),
+            authMethod: 'API Key',
+            hasBothAuth: false,
+            getProviderModels: mock(async () => []),
+        }
+
+        const { lastFrame } = renderWithProviders(
+            <ChatApp
+                agent={mockAgent}
+                isAuthenticated={true}
+                cliVersion="0.2.20"
+                userEmail="user@example.com"
+                session={mockSession}
+            />
+        )
+
+        const frame = lastFrame()
+        expect(frame).toContain('Settings')
+        expect(frame).not.toContain('? for shortcuts')
+        expect(frame).not.toContain('gemini-3.6-flash')
     })
 })

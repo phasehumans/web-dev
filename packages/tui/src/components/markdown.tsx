@@ -113,58 +113,60 @@ const renderToken = (token: any, index: number): React.ReactNode => {
 }
 
 function CodeBlock({ token }: { token: any }) {
-    const { isFocused } = useFocus()
+    const { isFocused } = useFocus({ autoFocus: true })
     const [expanded, setExpanded] = useState(false)
 
     useInput((input, key) => {
-        if (isFocused && key.return) {
+        if (
+            (key.ctrl && ((key as any).name === 'o' || input?.toLowerCase() === 'o')) ||
+            input === '\x0f' ||
+            (isFocused && key.return)
+        ) {
             setExpanded((prev) => !prev)
         }
     })
 
-    const lines = token.text.split('\n')
-    const isLarge = lines.length > 30
-
+    const lines = token.text.split(/\r?\n/)
     const lang = token.lang || 'typescript'
     const barWidth = 60
     const topBarLength = Math.max(0, barWidth - lang.length - 4)
     const topBar = `┌── ${lang} ${'─'.repeat(topBarLength)}`
     const bottomBar = `└${'─'.repeat(barWidth - 1)}`
 
-    let contentToHighlight = token.text
-    if (isLarge && !expanded) {
-        contentToHighlight = lines.slice(0, 15).join('\n')
-    }
+    const MAX_VISIBLE_LINES = 20
+    const visibleLines = expanded ? lines.slice(0, MAX_VISIBLE_LINES) : []
+    const isTruncated = expanded && lines.length > MAX_VISIBLE_LINES
 
     const highlighted = React.useMemo(() => {
-        return highlight(contentToHighlight, {
+        if (visibleLines.length === 0) return ''
+        return highlight(visibleLines.join('\n'), {
             language: lang,
             ignoreIllegals: true,
         })
-    }, [contentToHighlight, lang])
+    }, [visibleLines, lang])
 
     return (
         <Box flexDirection="column" paddingY={1}>
-            <Text color={isFocused ? '#89B4F8' : '#475569'}>{topBar}</Text>
-            <Box flexDirection="column" paddingLeft={2}>
-                <Text>{highlighted}</Text>
+            <Box alignItems="center" gap={1}>
+                <Text color={isFocused ? '#89B4F8' : '#475569'}>{topBar}</Text>
+                <Text color="gray">
+                    ({expanded ? 'ctrl+o / enter to collapse' : 'ctrl+o / enter to expand'})
+                </Text>
             </Box>
-            {isLarge && !expanded ? (
-                <Box flexDirection="column" paddingLeft={2}>
-                    <Text color="#475569">...</Text>
-                    <Text color={isFocused ? '#89B4F8' : '#888888'}>
-                        {isFocused
-                            ? '> Press Enter to expand (' + (lines.length - 15) + ' more lines)'
-                            : '... (truncated, tab to focus)'}
-                    </Text>
-                </Box>
-            ) : isLarge && expanded ? (
-                <Box flexDirection="column" paddingLeft={2}>
-                    <Text color={isFocused ? '#89B4F8' : '#888888'}>
-                        {isFocused ? '> Press Enter to collapse' : ''}
-                    </Text>
-                </Box>
-            ) : null}
+            {expanded && (
+                <>
+                    <Box flexDirection="column" paddingLeft={2}>
+                        <Text>{highlighted}</Text>
+                    </Box>
+                    {isTruncated && (
+                        <Box flexDirection="column" paddingLeft={2}>
+                            <Text color="#AAAAAA">
+                                ... ({lines.length - MAX_VISIBLE_LINES} more lines)
+                            </Text>
+                        </Box>
+                    )}
+                </>
+            )}
             <Text color={isFocused ? '#89B4F8' : '#475569'}>{bottomBar}</Text>
         </Box>
     )

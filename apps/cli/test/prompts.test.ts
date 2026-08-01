@@ -6,7 +6,7 @@ describe('CLI Prompts (Unit)', () => {
     test('getGrillPrompt generates structured JSON instructions without context', () => {
         const prompt = getGrillPrompt('Add Dark Mode')
         expect(prompt).toContain('The user wants to implement: "Add Dark Mode"')
-        expect(prompt).toContain('5 to 8 targeted, high-impact multiple-choice questions')
+        expect(prompt).toContain('exactly 10 targeted, high-impact multiple-choice questions')
         expect(prompt).toContain('Return the output strictly as a JSON array')
         expect(prompt).not.toContain('<project_context>')
     })

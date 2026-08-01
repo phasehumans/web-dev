@@ -61,6 +61,8 @@ export interface CliState {
     setActiveMessages: (msgs: Message[] | ((prev: Message[]) => Message[])) => void
     isStreaming: boolean
     setIsStreaming: (isStreaming: boolean) => void
+    queuedPrompts: string[]
+    setQueuedPrompts: (prompts: string[] | ((prev: string[]) => string[])) => void
 
     // sessions feature
     sessionItems: { label: string; value: string }[]
@@ -198,6 +200,11 @@ export const useCliStore = create<CliState>((set) => ({
         })),
     isStreaming: false,
     setIsStreaming: (isStreaming) => set({ isStreaming }),
+    queuedPrompts: [],
+    setQueuedPrompts: (updater) =>
+        set((state) => ({
+            queuedPrompts: typeof updater === 'function' ? updater(state.queuedPrompts) : updater,
+        })),
 
     // sessions
     sessionItems: [],

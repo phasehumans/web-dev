@@ -6,7 +6,7 @@ export const getGrillPrompt = (
 The user wants to implement: "${userPrompt}"
 
 ${projectContext ? `<project_context>\n${projectContext}\n</project_context>\n` : ''}
-Generate 5 to 8 targeted, high-impact multiple-choice questions to clarify requirements, architectural choices, tech stack decisions, edge cases, and potential breaking changes.
+Generate exactly 10 targeted, high-impact multiple-choice questions to clarify requirements, architectural choices, tech stack decisions, edge cases, and potential breaking changes.
 
 Requirements for questions:
 1. Focus on technical depth: probe architectural tradeoffs, API design, state management, edge cases, and error handling.

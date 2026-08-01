@@ -51,7 +51,7 @@ export function useAuthHandlers(
                 }
 
                 const codeMsgId = getNextMsgId()
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([
                     {
                         id: codeMsgId,
@@ -109,7 +109,7 @@ export function useAuthHandlers(
                     setSettingsAuthPriority(authStatus.authPriority)
                 }
 
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([
                     {
                         id: getNextMsgId(),
@@ -130,7 +130,7 @@ export function useAuthHandlers(
                 }
                 const errorText = `Login failed: ${cleanMsg}`
                 setAuthError(errorText)
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([{ id: getNextMsgId(), role: 'error', text: errorText }])
             } finally {
                 setIsStreaming(false)
@@ -315,7 +315,7 @@ export function useAuthHandlers(
                 setAuthError(errorText)
                 setAuthMode('none')
                 setApiKey('')
-                setStaticMessages((prev) => [...prev, ...activeMessages])
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
                 setActiveMessages([
                     {
                         id: getNextMsgId(),
@@ -367,7 +367,7 @@ export function useAuthHandlers(
             setAuthMethod(undefined)
         }
 
-        setStaticMessages((prev) => [...prev, ...activeMessages])
+        setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
         setActiveMessages([])
         addToast(`Removed credentials for: ${removedName}`, 'success')
     }
@@ -384,16 +384,6 @@ export function useAuthHandlers(
                     resumedMessages.push({ id: getNextMsgId(), role: 'user', text: msg.content })
                 } else if (msg.role === 'assistant') {
                     const blocks: MessageBlock[] = []
-
-                    if (msg.errorMessage) {
-                        const { parseErrorMessage } = await import('../utils/error-parser')
-                        blocks.push({
-                            type: 'error',
-                            error: parseErrorMessage({ message: msg.errorMessage }),
-                        })
-                    } else if (msg.content) {
-                        blocks.push({ type: 'text', content: msg.content })
-                    }
 
                     if (msg.toolCalls && msg.toolCalls.length > 0) {
                         for (const tc of msg.toolCalls) {
@@ -418,6 +408,16 @@ export function useAuthHandlers(
                                 output: toolMsg?.content || '',
                             })
                         }
+                    }
+
+                    if (msg.errorMessage) {
+                        const { parseErrorMessage } = await import('../utils/error-parser')
+                        blocks.push({
+                            type: 'error',
+                            error: parseErrorMessage({ message: msg.errorMessage }),
+                        })
+                    } else if (msg.content) {
+                        blocks.push({ type: 'text', content: msg.content })
                     }
 
                     if (blocks.length > 0) {

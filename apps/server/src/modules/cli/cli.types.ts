@@ -24,3 +24,10 @@ export type CliHandoffPayload = {
     messages?: any[]
     objectKey?: string
 }
+
+export type CreateCliSession = {
+    userId: string
+    title: string
+    messages: any[]
+    minioPrefix?: string
+}

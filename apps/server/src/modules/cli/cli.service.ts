@@ -160,11 +160,12 @@ const proxyChatCompletions = async (data: ProxyChatCompletions) => {
 }
 
 const completeHandoff = async (data: CompleteHandoff) => {
-    const { userId, title, messages } = data
+    const { userId, title, messages, objectKey } = data
     const session = await cliRepository.createSession({
         userId,
         title: title || 'Handoff Session',
         messages: messages || [],
+        minioPrefix: objectKey,
     })
 
     return session

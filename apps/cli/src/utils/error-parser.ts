@@ -109,7 +109,7 @@ export function parseErrorMessage(err: any): string {
     }
 
     const rateLimitNotice =
-        'Rate limit or quota exhausted from LLM provider. Please upgrade your API key tier with your provider (OpenAI, Anthropic, Gemini) or switch to December Cloud Subscription at https://trydecember.com/pricing\n\n'
+        'Rate limit or quota exhausted from LLM provider. Please upgrade your API key tier with your provider (OpenAI, Anthropic, Gemini) or switch to December Cloud Subscription at https://trydecember.com/pricing\n'
 
     const lowerStr = (errMsg + ' ' + (finalResult || '')).toLowerCase()
     const isRateLimit =

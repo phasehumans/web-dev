@@ -93,8 +93,8 @@ export class AgentHarness {
         try {
             const candidateFiles = [
                 path.join(this.config.workspaceDir, 'AGENTS.md'),
-                path.join(this.config.workspaceDir, '.december', 'AGENTS.md'),
                 path.join(this.config.workspaceDir, '.december', 'rules.md'),
+                path.join(this.config.workspaceDir, '.december', 'AGENTS.md'),
             ]
 
             for (const rulePath of candidateFiles) {

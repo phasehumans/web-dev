@@ -11,7 +11,7 @@ export function UserMessage({ message }: Props) {
             paddingRight={4}
             paddingY={0}
             marginTop={1}
-            marginBottom={0.5}
+            marginBottom={1}
             flexDirection="row"
         >
             <Box marginRight={1}>

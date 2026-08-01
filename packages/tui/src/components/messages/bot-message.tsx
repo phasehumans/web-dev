@@ -118,6 +118,9 @@ function CollapsibleCommandOutput({
     })
 
     const lines = output ? output.trim().split(/\r?\n/) : []
+    const MAX_VISIBLE_LINES = 20
+    const visibleLines = isExpanded ? lines.slice(0, MAX_VISIBLE_LINES) : []
+    const isTruncated = isExpanded && lines.length > MAX_VISIBLE_LINES
 
     return (
         <Box flexDirection="column" marginY={0}>
@@ -131,7 +134,7 @@ function CollapsibleCommandOutput({
             </Box>
             {isExpanded && lines.length > 0 && (
                 <Box flexDirection="column" marginTop={0} paddingX={1}>
-                    {lines.map((line, lidx) => {
+                    {visibleLines.map((line, lidx) => {
                         let color = '#d1d5db'
                         let bgColor: string | undefined = undefined
 
@@ -158,6 +161,13 @@ function CollapsibleCommandOutput({
                             </Box>
                         )
                     })}
+                    {isTruncated && (
+                        <Box paddingTop={0}>
+                            <Text color="#AAAAAA">
+                                ... ({lines.length - MAX_VISIBLE_LINES} more lines)
+                            </Text>
+                        </Box>
+                    )}
                 </Box>
             )}
         </Box>
@@ -166,8 +176,23 @@ function CollapsibleCommandOutput({
 
 export function BotMessage({ blocks, usage, expandCommands }: Props) {
     return (
-        <Box flexDirection="column" paddingX={4} paddingY={0} gap={0} marginTop={0.5}>
+        <Box flexDirection="column" paddingX={4} paddingY={0} gap={0} marginTop={0}>
             {blocks.map((block, idx) => {
+                let prevBlock: MessageBlock | null = null
+                for (let i = idx - 1; i >= 0; i--) {
+                    const b = blocks[i]
+                    if (!b) continue
+                    if (b.type === 'text' && (!b.content || b.content.trim() === '')) continue
+                    prevBlock = b
+                    break
+                }
+                const needsTopMargin = Boolean(
+                    prevBlock &&
+                    (prevBlock.type === 'command' ||
+                        prevBlock.type === 'thinking' ||
+                        prevBlock.type === 'compaction')
+                )
+
                 switch (block.type) {
                     case 'text': {
                         if (!block.content || block.content.trim() === '') return null
@@ -178,16 +203,20 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                         if (isThinking) {
                             if (idx !== blocks.length - 1) return null
                             return (
-                                <Box key={idx} gap={1} alignItems="center">
-                                    <Spinner />
-                                    <Text color="gray">{block.content}</Text>
+                                <Box key={idx} flexDirection="column">
+                                    {needsTopMargin && <Text> </Text>}
+                                    <Box gap={1} alignItems="center">
+                                        <Spinner />
+                                        <Text color="gray">{block.content}</Text>
+                                    </Box>
                                 </Box>
                             )
                         }
 
                         if (block.color) {
                             return (
-                                <Box key={idx}>
+                                <Box key={idx} flexDirection="column">
+                                    {needsTopMargin && <Text> </Text>}
                                     <Text color={block.color}>{block.content}</Text>
                                 </Box>
                             )
@@ -199,6 +228,7 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                         )
                         return (
                             <Box key={idx} flexDirection="column">
+                                {needsTopMargin && <Text> </Text>}
                                 {parts.map((part, pidx) => {
                                     if (/^<thought(?:>| [^>]*>)/i.test(part)) {
                                         const isClosed = /<\/thought>$/i.test(part)
@@ -230,7 +260,8 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                     }
                     case 'error': {
                         return (
-                            <Box key={idx} flexDirection="column" marginY={0.5}>
+                            <Box key={idx} flexDirection="column">
+                                {needsTopMargin && <Text> </Text>}
                                 <Text color="#FCA5A5">{block.error}</Text>
                             </Box>
                         )

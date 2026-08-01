@@ -6,6 +6,7 @@ import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
 import { useCliStore } from '../store'
 import { taskManager } from '../task-manager'
 import { parseErrorMessage } from '../utils/error-parser'
+import { extractJsonArray } from '../utils/json-parser'
 import { getProviderModels } from '../utils/models'
 
 import { getNextMsgId, processAgentStream } from './use-agent-runner'
@@ -91,6 +92,8 @@ export function useAgentSession({
         setActiveMessages,
         isStreaming,
         setIsStreaming,
+        queuedPrompts,
+        setQueuedPrompts,
         pendingQuestions,
         setPendingQuestions,
         pendingToolCall,
@@ -234,7 +237,7 @@ export function useAgentSession({
     const generateGrillQuestions = useCallback(
         async (userPrompt: string) => {
             setIsStreaming(true)
-            setStaticMessages((prev) => [...prev, ...activeMessages])
+            setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
             setActiveMessages([
                 {
                     id: getNextMsgId(),
@@ -249,7 +252,7 @@ export function useAgentSession({
             ])
 
             try {
-                const prompt = getGrillPrompt(userPrompt, agent.systemPrompt)
+                const prompt = getGrillPrompt(userPrompt)
 
                 const stream = agent.llm.stream(
                     [{ role: 'user', content: prompt }],
@@ -264,13 +267,7 @@ export function useAgentSession({
                     }
                 }
 
-                let cleanJson = accumulatedText.trim()
-                if (cleanJson.startsWith('```')) {
-                    cleanJson = cleanJson.replace(/^```[a-zA-Z]*\n/, '').replace(/\n```$/, '')
-                }
-                cleanJson = cleanJson.trim()
-
-                const questions = JSON.parse(cleanJson)
+                const questions = extractJsonArray(accumulatedText)
                 if (!Array.isArray(questions) || questions.length === 0) {
                     throw new Error('Invalid questions format returned from model.')
                 }
@@ -290,7 +287,7 @@ export function useAgentSession({
                 setIsStreaming(false)
             }
         },
-        [agent, activeMessages]
+        [agent]
     )
 
     const generatePlanFromGrill = useCallback(
@@ -311,7 +308,7 @@ export function useAgentSession({
             )
 
             setIsStreaming(true)
-            setStaticMessages((prev) => [...prev, ...activeMessages])
+            setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
             const assistantMsgId = getNextMsgId()
             setActiveMessages([
                 {
@@ -423,7 +420,12 @@ export function useAgentSession({
                             },
                         ],
                     }
-                    setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                    setStaticMessages((prev) => [
+                        ...prev,
+                        ...useCliStore.getState().activeMessages,
+                        userMsg,
+                        noticeMsg,
+                    ])
                     setActiveMessages([])
                     return
                 }
@@ -445,7 +447,12 @@ export function useAgentSession({
                         role: 'assistant',
                         blocks: [{ type: 'text', content: 'Session repository not available.' }],
                     }
-                    setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                    setStaticMessages((prev) => [
+                        ...prev,
+                        ...useCliStore.getState().activeMessages,
+                        userMsg,
+                        noticeMsg,
+                    ])
                     setActiveMessages([])
                     return
                 }
@@ -514,7 +521,30 @@ export function useAgentSession({
                         blocks: [
                             {
                                 type: 'text',
-                                content: `Opening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})`,
+                                content: `\nOpening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Note: BYOK (Bring Your Own Key) usage is not tracked. Only usage via December login (December Wallet) is tracked.*`,
+                            },
+                        ],
+                    },
+                ])
+                import('../utils/open')
+                    .then((openUtils) => {
+                        openUtils.openUrl(url)
+                    })
+                    .catch(console.error)
+                return
+            }
+
+            if (text.trim() === '/feedback') {
+                const url = 'https://github.com/phasehumans/december/issues'
+                setActiveMessages((prev) => [
+                    ...prev,
+                    {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: `\nOpening GitHub issues...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Have feedback, found a bug, or have a feature request? Let us know on GitHub issues!*`,
                             },
                         ],
                     },
@@ -540,38 +570,55 @@ export function useAgentSession({
                         },
                     ],
                 }
-                setStaticMessages((prev) => [...prev, ...activeMessages, userMsg, noticeMsg])
+                setStaticMessages((prev) => [
+                    ...prev,
+                    ...useCliStore.getState().activeMessages,
+                    userMsg,
+                    noticeMsg,
+                ])
                 setActiveMessages([])
                 return
             }
 
             // normal chat logic
             if (isStreaming) {
-                agent.steer({ role: 'user', content: text, isUI: true })
-                setActiveMessages((prev) => [...prev, { id: getNextMsgId(), role: 'user', text }])
+                setQueuedPrompts((prev) => [...prev, text.trim()])
                 return
             }
 
-            setIsStreaming(true)
-            const assistantMsgId = getNextMsgId()
-            const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text }
-            setStaticMessages((prev) => [...prev, ...activeMessages, newUserMsg])
-            setActiveMessages([{ id: assistantMsgId, role: 'assistant', blocks: [] }])
-
-            const promptToSend = text
-
-            try {
-                const stream = runAgentLoop(agent, promptToSend)
-                await processAgentStream({ stream, setActiveMessages, assistantMsgId })
-            } catch (err: any) {
-                setActiveMessages((prev) => [
+            let currentText: string | undefined = text.trim()
+            while (currentText) {
+                setIsStreaming(true)
+                const assistantMsgId = getNextMsgId()
+                const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text: currentText }
+                setStaticMessages((prev) => [
                     ...prev,
-                    { id: getNextMsgId(), role: 'error', text: err.message },
+                    ...useCliStore.getState().activeMessages,
+                    newUserMsg,
                 ])
-            } finally {
-                setIsStreaming(false)
-                setStaticMessages((prev) => [...prev, ...activeMessages])
-                setActiveMessages([])
+                setActiveMessages([{ id: assistantMsgId, role: 'assistant', blocks: [] }])
+
+                try {
+                    const stream = runAgentLoop(agent, currentText)
+                    await processAgentStream({ stream, setActiveMessages, assistantMsgId })
+                } catch (err: any) {
+                    setActiveMessages((prev) => [
+                        ...prev,
+                        { id: getNextMsgId(), role: 'error', text: err.message },
+                    ])
+                } finally {
+                    setIsStreaming(false)
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([])
+                }
+
+                const nextQueue = useCliStore.getState().queuedPrompts
+                if (nextQueue.length > 0) {
+                    currentText = nextQueue[0]
+                    useCliStore.getState().setQueuedPrompts(nextQueue.slice(1))
+                } else {
+                    currentText = undefined
+                }
             }
         },
         [
@@ -588,14 +635,16 @@ export function useAgentSession({
             authMode,
             currentGrillIndex,
             grillMode,
+            setQueuedPrompts,
         ]
     )
 
     const handleAbort = useCallback(() => {
         if (isStreaming && agent) {
             agent.abort()
+            setQueuedPrompts([])
         }
-    }, [isStreaming, agent])
+    }, [isStreaming, agent, setQueuedPrompts])
 
     const {
         handleSettingsMainSelect,
@@ -731,5 +780,7 @@ export function useAgentSession({
         addToast,
         expandCommands,
         toggleExpandCommands,
+        queuedPrompts,
+        setQueuedPrompts,
     }
 }
