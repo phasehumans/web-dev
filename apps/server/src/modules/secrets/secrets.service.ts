@@ -9,7 +9,9 @@ import type {
     EncryptData,
     DecryptData,
     CreateSecret,
+    BulkCreateSecrets,
     GetSecrets,
+    GetSecretValue,
     DeleteSecret,
 } from './secrets.types'
 
@@ -40,9 +42,19 @@ const decrypt = (data: DecryptData): string => {
 }
 
 const createSecret = async (data: CreateSecret) => {
-    const { userId, name, value } = data
+    const { userId, name, value, note } = data
     const encryptedValue = encrypt({ text: value })
-    return secretsRepository.upsertSecret(userId, name, encryptedValue)
+    return secretsRepository.upsertSecret(userId, name, encryptedValue, note)
+}
+
+const bulkCreateSecrets = async (data: BulkCreateSecrets) => {
+    const { userId, secrets } = data
+    const itemsToUpsert = secrets.map((item) => ({
+        name: item.name,
+        encryptedValue: encrypt({ text: item.value }),
+        note: item.note,
+    }))
+    return secretsRepository.bulkUpsertSecrets(userId, itemsToUpsert)
 }
 
 const getSecrets = async (data: GetSecrets) => {
@@ -50,8 +62,25 @@ const getSecrets = async (data: GetSecrets) => {
     return secretsRepository.findSecretsByUser(userId)
 }
 
+const getSecretValue = async (data: GetSecretValue) => {
+    const { userId, name } = data
+    const secret = await secretsRepository.findSecretByName(userId, name)
+    if (!secret) throw new AppError('Secret not found', 404)
+    const decryptedValue = decrypt({ encryptedText: secret.value })
+    return {
+        id: secret.id,
+        name: secret.name,
+        value: decryptedValue,
+        note: secret.note,
+        createdAt: secret.createdAt,
+        updatedAt: secret.updatedAt,
+    }
+}
+
 const deleteSecret = async (data: DeleteSecret) => {
     const { userId, name } = data
+    const existing = await secretsRepository.findSecretByName(userId, name)
+    if (!existing) throw new AppError('Secret not found', 404)
     return secretsRepository.deleteSecret(userId, name)
 }
 
@@ -59,6 +88,8 @@ export const secretsService = {
     encrypt,
     decrypt,
     createSecret,
+    bulkCreateSecrets,
     getSecrets,
+    getSecretValue,
     deleteSecret,
 }

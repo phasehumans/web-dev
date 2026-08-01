@@ -1,81 +1,114 @@
-import { Search, Plus, Eye, EyeOff, Copy, Check, Trash2, FileText } from 'lucide-react'
-import React, { useState } from 'react'
+import { Search, Plus, Eye, EyeOff, Copy, Check, Trash2, FileText, Loader2 } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
 
-interface SecretItem {
-    id: string
-    name: string
-    value: string
-    type: 'Organization' | 'Personal'
-    note: string
-    updatedBy: string
-    updatedAt: string
-}
-
-const INITIAL_SECRETS: SecretItem[] = [
-    {
-        id: 'sec-1',
-        name: 'ANTHROPIC_API_KEY',
-        value: 'sk-ant-api03-xxxx-xxxx-xxxx-xxxx',
-        type: 'Personal',
-        note: 'Claude 3.5 Sonnet API key',
-        updatedBy: 'you',
-        updatedAt: '2 days ago',
-    },
-    {
-        id: 'sec-2',
-        name: 'DATABASE_URL',
-        value: 'postgresql://postgres:pass@localhost:5432/db',
-        type: 'Personal',
-        note: 'Primary database connection URL',
-        updatedBy: 'you',
-        updatedAt: '1 week ago',
-    },
-]
+import { secretsAPI, type SecretSummary } from '../api/secrets'
 
 export const ProfileSecretsSettings: React.FC = () => {
-    const [secrets, setSecrets] = useState<SecretItem[]>(INITIAL_SECRETS)
-    const [activeTab, setActiveTab] = useState<'Organization' | 'Personal'>('Organization')
+    const [secrets, setSecrets] = useState<SecretSummary[]>([])
+    const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({})
+    const [revealedNames, setRevealedNames] = useState<Record<string, boolean>>({})
+    const [copiedName, setCopiedName] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
-    const [revealedIds, setRevealedIds] = useState<Record<string, boolean>>({})
-    const [copiedId, setCopiedId] = useState<string | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     // Modal state for Add Secret
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [newName, setNewName] = useState('')
     const [newValue, setNewValue] = useState('')
     const [newNote, setNewNote] = useState('')
-    const [newType, setNewType] = useState<'Organization' | 'Personal'>('Organization')
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Modal state for Bulk Add Secrets
     const [isBulkAddOpen, setIsBulkAddOpen] = useState(false)
     const [bulkContent, setBulkContent] = useState('')
 
-    const orgCount = secrets.filter((s) => s.type === 'Organization').length
-    const personalCount = secrets.filter((s) => s.type === 'Personal').length
+    const loadSecrets = async () => {
+        setIsLoading(true)
+        setError(null)
+        try {
+            const data = await secretsAPI.getSecrets()
+            setSecrets(data.secrets || [])
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to fetch secrets'
+            setError(msg)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        loadSecrets()
+    }, [])
 
     const filteredSecrets = secrets.filter((s) => {
-        const matchesTab = s.type === activeTab
         const matchesQuery =
             s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            s.note.toLowerCase().includes(searchQuery.toLowerCase())
-        return matchesTab && matchesQuery
+            (s.note && s.note.toLowerCase().includes(searchQuery.toLowerCase()))
+        return matchesQuery
     })
 
-    const toggleReveal = (id: string) => {
-        setRevealedIds((prev) => ({ ...prev, [id]: !prev[id] }))
+    const toggleReveal = async (name: string) => {
+        const currentlyRevealed = Boolean(revealedNames[name])
+        if (currentlyRevealed) {
+            setRevealedNames((prev) => ({ ...prev, [name]: false }))
+            return
+        }
+
+        if (!decryptedValues[name]) {
+            try {
+                const res = await secretsAPI.getSecretValue(name)
+                setDecryptedValues((prev) => ({ ...prev, [name]: res.secret.value }))
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : 'Failed to fetch secret value'
+                setError(msg)
+                return
+            }
+        }
+        setRevealedNames((prev) => ({ ...prev, [name]: true }))
     }
 
-    const handleCopy = (id: string, val: string) => {
-        navigator.clipboard.writeText(val)
-        setCopiedId(id)
-        setTimeout(() => setCopiedId(null), 2000)
+    const handleCopy = async (name: string) => {
+        let val = decryptedValues[name]
+        if (!val) {
+            try {
+                const res = await secretsAPI.getSecretValue(name)
+                val = res.secret.value
+                setDecryptedValues((prev) => ({ ...prev, [name]: val }))
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : 'Failed to fetch secret value'
+                setError(msg)
+                return
+            }
+        }
+        if (val) {
+            await navigator.clipboard.writeText(val)
+            setCopiedName(name)
+            setTimeout(() => setCopiedName(null), 2000)
+        }
     }
 
-    const handleDelete = (id: string) => {
-        setSecrets((prev) => prev.filter((s) => s.id !== id))
+    const handleDelete = async (name: string) => {
+        try {
+            await secretsAPI.deleteSecret(name)
+            setSecrets((prev) => prev.filter((s) => s.name !== name))
+            setDecryptedValues((prev) => {
+                const copy = { ...prev }
+                delete copy[name]
+                return copy
+            })
+            setRevealedNames((prev) => {
+                const copy = { ...prev }
+                delete copy[name]
+                return copy
+            })
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to delete secret'
+            setError(msg)
+        }
     }
 
-    const handleAddSecret = (e: React.FormEvent) => {
+    const handleAddSecret = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!newName.trim() || !newValue.trim()) return
 
@@ -84,31 +117,35 @@ export const ProfileSecretsSettings: React.FC = () => {
             .toUpperCase()
             .replace(/[^A-Z0-9_]/g, '_')
 
-        const created: SecretItem = {
-            id: `sec-${Date.now()}`,
-            name: formattedName,
-            value: newValue.trim(),
-            type: newType,
-            note: newNote.trim() || '—',
-            updatedBy: 'you',
-            updatedAt: 'Just now',
+        setIsSubmitting(true)
+        setError(null)
+        try {
+            await secretsAPI.createSecret({
+                name: formattedName,
+                value: newValue.trim(),
+                note: newNote.trim() || undefined,
+            })
+            setNewName('')
+            setNewValue('')
+            setNewNote('')
+            setIsAddOpen(false)
+            await loadSecrets()
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to add secret'
+            setError(msg)
+        } finally {
+            setIsSubmitting(false)
         }
-
-        setSecrets((prev) => [...prev, created])
-        setNewName('')
-        setNewValue('')
-        setNewNote('')
-        setIsAddOpen(false)
     }
 
-    const handleBulkAddSecrets = (e: React.FormEvent) => {
+    const handleBulkAddSecrets = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!bulkContent.trim()) return
 
         const lines = bulkContent.split('\n')
-        const newItems: SecretItem[] = []
+        const items: Array<{ name: string; value: string; note?: string }> = []
 
-        lines.forEach((line, index) => {
+        lines.forEach((line) => {
             const trimmed = line.trim()
             if (!trimmed || trimmed.startsWith('#')) return
 
@@ -116,26 +153,46 @@ export const ProfileSecretsSettings: React.FC = () => {
             if (eqIndex > 0) {
                 const rawKey = trimmed.substring(0, eqIndex).trim()
                 const rawVal = trimmed.substring(eqIndex + 1).trim()
-
                 const formattedKey = rawKey.toUpperCase().replace(/[^A-Z0-9_]/g, '_')
-                newItems.push({
-                    id: `sec-${Date.now()}-${index}`,
-                    name: formattedKey,
-                    value: rawVal,
-                    type: activeTab,
-                    note: 'Bulk imported secret',
-                    updatedBy: 'you',
-                    updatedAt: 'Just now',
-                })
+
+                if (formattedKey && rawVal) {
+                    items.push({
+                        name: formattedKey,
+                        value: rawVal,
+                        note: 'Bulk imported secret',
+                    })
+                }
             }
         })
 
-        if (newItems.length > 0) {
-            setSecrets((prev) => [...prev, ...newItems])
-        }
+        if (items.length === 0) return
 
-        setBulkContent('')
-        setIsBulkAddOpen(false)
+        setIsSubmitting(true)
+        setError(null)
+        try {
+            await secretsAPI.bulkCreateSecrets({ secrets: items })
+            setBulkContent('')
+            setIsBulkAddOpen(false)
+            await loadSecrets()
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to bulk import secrets'
+            setError(msg)
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    const formatDate = (dateStr: string) => {
+        try {
+            const d = new Date(dateStr)
+            return d.toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+            })
+        } catch {
+            return dateStr
+        }
     }
 
     return (
@@ -149,42 +206,14 @@ export const ProfileSecretsSettings: React.FC = () => {
                         <code className="bg-[#202020] border border-[#282828] text-[#D6D5C9] px-1.5 py-0.5 rounded font-mono text-[12px]">
                             $SERVICE_USERNAME
                         </code>
-                        .{' '}
-                        <a
-                            href="https://docs.gemini.com"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[#87B2F4] hover:underline"
-                        >
-                            Learn more
-                        </a>
+                        . Secrets are encrypted at rest and injected into your sandbox sessions.
                     </p>
-                    {/* Organization / Personal Tabs */}
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setActiveTab('Organization')}
-                            className={`px-3 py-1 rounded-lg text-[12.5px] font-medium transition-colors flex items-center gap-1.5 ${
-                                activeTab === 'Organization'
-                                    ? 'bg-[#202020] text-white border border-[#282828]'
-                                    : 'text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#202020]'
-                            }`}
-                        >
-                            <span>Organization</span>
-                            <span className="text-[11px] opacity-70">{orgCount}</span>
-                        </button>
 
-                        <button
-                            onClick={() => setActiveTab('Personal')}
-                            className={`px-3 py-1 rounded-lg text-[12.5px] font-medium transition-colors flex items-center gap-1.5 ${
-                                activeTab === 'Personal'
-                                    ? 'bg-[#202020] text-white border border-[#282828]'
-                                    : 'text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#202020]'
-                            }`}
-                        >
-                            <span>Personal</span>
-                            <span className="text-[11px] opacity-70">{personalCount}</span>
-                        </button>
-                    </div>
+                    {error && (
+                        <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-lg text-[13px] text-red-300">
+                            {error}
+                        </div>
+                    )}
 
                     {/* Controls Row: Search Input + Action Buttons */}
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -210,10 +239,7 @@ export const ProfileSecretsSettings: React.FC = () => {
                             </button>
 
                             <button
-                                onClick={() => {
-                                    setNewType(activeTab)
-                                    setIsAddOpen(true)
-                                }}
+                                onClick={() => setIsAddOpen(true)}
                                 className="px-4 py-1.5 rounded-lg bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                             >
                                 <Plus className="w-3.5 h-3.5" />
@@ -226,15 +252,18 @@ export const ProfileSecretsSettings: React.FC = () => {
                     <div className="bg-[#191919] border border-[#242323] rounded-xl overflow-hidden mt-1">
                         {/* Table Header */}
                         <div className="grid grid-cols-12 bg-[#202020] border-b border-[#242323] px-4 py-2.5 text-[12px] font-medium text-[#7B7A79]">
-                            <div className="col-span-3">Name</div>
-                            <div className="col-span-2">Type</div>
-                            <div className="col-span-3">Note</div>
-                            <div className="col-span-2">Updated by</div>
-                            <div className="col-span-2 text-right">Updated at</div>
+                            <div className="col-span-4">Name</div>
+                            <div className="col-span-4">Note</div>
+                            <div className="col-span-4 text-right">Updated at</div>
                         </div>
 
-                        {/* Table Rows or Empty State */}
-                        {filteredSecrets.length === 0 ? (
+                        {/* Table Rows or Loading/Empty State */}
+                        {isLoading ? (
+                            <div className="p-12 flex flex-col items-center justify-center gap-2 text-center text-[#7B7A79]">
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span className="text-[13px]">Loading secrets...</span>
+                            </div>
+                        ) : filteredSecrets.length === 0 ? (
                             <div className="p-12 flex flex-col items-center justify-center gap-2 text-center">
                                 <h3 className="text-[14px] font-medium text-white">
                                     No secrets found
@@ -246,42 +275,37 @@ export const ProfileSecretsSettings: React.FC = () => {
                         ) : (
                             <div className="flex flex-col divide-y divide-[#242323]">
                                 {filteredSecrets.map((sec) => {
-                                    const isRevealed = Boolean(revealedIds[sec.id])
+                                    const isRevealed = Boolean(revealedNames[sec.name])
+                                    const decryptedVal = decryptedValues[sec.name]
+
                                     return (
                                         <div
                                             key={sec.id}
                                             className="grid grid-cols-12 items-center px-4 py-3 hover:bg-[#202020] transition-colors text-[13px]"
                                         >
                                             {/* Name */}
-                                            <div className="col-span-3 font-mono font-medium text-white truncate pr-2">
-                                                ${sec.name}
-                                            </div>
-
-                                            {/* Type */}
-                                            <div className="col-span-2">
-                                                <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[#202020] text-[#8F8E8D] border border-[#282828]">
-                                                    {sec.type}
-                                                </span>
+                                            <div className="col-span-4 font-mono font-medium text-white truncate pr-2 flex flex-col gap-0.5">
+                                                <span>${sec.name}</span>
+                                                {isRevealed && decryptedVal && (
+                                                    <span className="text-[11px] text-[#87B2F4] font-mono select-all truncate">
+                                                        {decryptedVal}
+                                                    </span>
+                                                )}
                                             </div>
 
                                             {/* Note */}
-                                            <div className="col-span-3 text-[#7B7A79] truncate pr-2">
-                                                {sec.note}
-                                            </div>
-
-                                            {/* Updated by */}
-                                            <div className="col-span-2 text-[#7B7A79] capitalize">
-                                                {sec.updatedBy}
+                                            <div className="col-span-4 text-[#7B7A79] truncate pr-2">
+                                                {sec.note || '—'}
                                             </div>
 
                                             {/* Updated at & Actions */}
-                                            <div className="col-span-2 flex items-center justify-end gap-1.5">
+                                            <div className="col-span-4 flex items-center justify-end gap-1.5">
                                                 <span className="text-[12px] text-[#7B7A79] mr-1">
-                                                    {sec.updatedAt}
+                                                    {formatDate(sec.updatedAt)}
                                                 </span>
 
                                                 <button
-                                                    onClick={() => toggleReveal(sec.id)}
+                                                    onClick={() => toggleReveal(sec.name)}
                                                     className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
                                                     title={
                                                         isRevealed ? 'Hide Secret' : 'Reveal Secret'
@@ -295,11 +319,11 @@ export const ProfileSecretsSettings: React.FC = () => {
                                                 </button>
 
                                                 <button
-                                                    onClick={() => handleCopy(sec.id, sec.value)}
+                                                    onClick={() => handleCopy(sec.name)}
                                                     className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
                                                     title="Copy Secret Value"
                                                 >
-                                                    {copiedId === sec.id ? (
+                                                    {copiedName === sec.name ? (
                                                         <Check className="w-3.5 h-3.5 text-[#34D399]" />
                                                     ) : (
                                                         <Copy className="w-3.5 h-3.5" />
@@ -307,7 +331,7 @@ export const ProfileSecretsSettings: React.FC = () => {
                                                 </button>
 
                                                 <button
-                                                    onClick={() => handleDelete(sec.id)}
+                                                    onClick={() => handleDelete(sec.name)}
                                                     className="p-1 rounded text-[#7B7A79] hover:text-red-400 hover:bg-[#242323] transition-colors"
                                                     title="Delete Secret"
                                                 >
@@ -376,29 +400,6 @@ export const ProfileSecretsSettings: React.FC = () => {
                                 />
                             </div>
 
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[13px] font-medium text-[#D6D5C9]">
-                                    Scope
-                                </label>
-                                <div className="flex items-center gap-3">
-                                    {(['Organization', 'Personal'] as const).map((type) => (
-                                        <label
-                                            key={type}
-                                            className="flex items-center gap-2 text-[13px] text-[#D6D5C9] cursor-pointer"
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="secretScope"
-                                                checked={newType === type}
-                                                onChange={() => setNewType(type)}
-                                                className="accent-[#87B2F4]"
-                                            />
-                                            <span>{type}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-
                             <div className="flex items-center justify-end gap-3 mt-2">
                                 <button
                                     type="button"
@@ -409,9 +410,14 @@ export const ProfileSecretsSettings: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 rounded-xl text-[13px] font-medium bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] transition-colors flex items-center gap-1.5"
+                                    disabled={isSubmitting}
+                                    className="px-4 py-2 rounded-xl text-[13px] font-medium bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] transition-colors flex items-center gap-1.5 disabled:opacity-50"
                                 >
-                                    <Plus className="w-3.5 h-3.5" />
+                                    {isSubmitting ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        <Plus className="w-3.5 h-3.5" />
+                                    )}
                                     Save Secret
                                 </button>
                             </div>
@@ -453,9 +459,14 @@ export const ProfileSecretsSettings: React.FC = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 rounded-xl text-[13px] font-medium bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] transition-colors flex items-center gap-1.5"
+                                    disabled={isSubmitting}
+                                    className="px-4 py-2 rounded-xl text-[13px] font-medium bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] transition-colors flex items-center gap-1.5 disabled:opacity-50"
                                 >
-                                    <FileText className="w-3.5 h-3.5" />
+                                    {isSubmitting ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        <FileText className="w-3.5 h-3.5" />
+                                    )}
                                     Import Secrets
                                 </button>
                             </div>

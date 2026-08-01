@@ -2,6 +2,18 @@
 
 ### Features
 
+- _(cli,tui)_ Add /feedback command, prompt queueing, and refine layout spacing (closes #302)
+- _(cli,tui)_ Add /feedback command, prompt queueing, and refine layout spacing (#310)
+- _(settings)_ Migrate custom design to custom rules and remove MCP section
+
+### Bug Fixes
+
+- Git diffs and codeblocks render
+
+## [0.2.23] - 2026-07-31
+
+### Features
+
 - _(cli,server)_ Fix and improve model, provider, BYOK, and cloud wallet switching
 - _(cli,server)_ Fix and improve model, provider, BYOK, and cloud wallet switching (#308)
 
@@ -9,6 +21,10 @@
 
 - Remove login via december browser mode
 - _(cli)_ Resolve typescript errors in chat hook and device test
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.23
 
 ## [0.2.22] - 2026-07-30
 
