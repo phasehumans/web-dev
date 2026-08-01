@@ -1,7 +1,47 @@
+import { Queue } from 'bullmq'
+import Redis from 'ioredis'
+
 import * as reviewRepository from './review.repository'
 
 export interface IGithubBotDispatcher {
     dispatchReview(reviewId: string, prUrl: string): Promise<void>
+}
+
+export class E2BGithubBotDispatcher implements IGithubBotDispatcher {
+    private simulated = new SimulatedGithubBotDispatcher()
+
+    async dispatchReview(reviewId: string, prUrl: string): Promise<void> {
+        try {
+            await reviewRepository.updateReview(reviewId, { status: 'IN_PROGRESS' })
+
+            const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+                lazyConnect: true,
+                maxRetriesPerRequest: 1,
+                enableOfflineQueue: false,
+            })
+            redis.on('error', () => {})
+
+            if (redis.status === 'ready') {
+                const agentJobsQueue = new Queue('agent_jobs', { connection: redis as any })
+                await agentJobsQueue.add('pr_review', {
+                    reviewId,
+                    prUrl,
+                    taskType: 'pr_review',
+                })
+                redis.disconnect()
+                return
+            }
+
+            redis.disconnect()
+            await this.simulated.dispatchReview(reviewId, prUrl)
+        } catch (e: any) {
+            console.warn(
+                `[E2BGithubBotDispatcher] Queue dispatch fallback for ${reviewId}:`,
+                e?.message || e
+            )
+            await this.simulated.dispatchReview(reviewId, prUrl)
+        }
+    }
 }
 
 export class SimulatedGithubBotDispatcher implements IGithubBotDispatcher {
@@ -93,7 +133,7 @@ export class SimulatedGithubBotDispatcher implements IGithubBotDispatcher {
     }
 }
 
-export const defaultBotDispatcher: IGithubBotDispatcher = new SimulatedGithubBotDispatcher()
+export const defaultBotDispatcher: IGithubBotDispatcher = new E2BGithubBotDispatcher()
 
 export async function triggerAsyncReview(reviewId: string, prUrl: string) {
     return defaultBotDispatcher.dispatchReview(reviewId, prUrl)

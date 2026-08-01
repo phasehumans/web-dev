@@ -77,11 +77,15 @@ export function initSocket(httpServer: any) {
 
         socket.on('join_session', (sessionId: string) => {
             console.log(`[Socket] User ${socket.data.userId} joined session ${sessionId}`)
+            socket.data.activeSessionId = sessionId
             socket.join(`session:${sessionId}`)
         })
 
         socket.on('leave_session', (sessionId: string) => {
             socket.leave(`session:${sessionId}`)
+            if (socket.data.activeSessionId === sessionId) {
+                delete socket.data.activeSessionId
+            }
         })
 
         socket.on('join_session_terminal', (data: { sessionId: string } | string) => {
@@ -107,8 +111,21 @@ export function initSocket(httpServer: any) {
             }
         })
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', async () => {
             console.log(`[Socket] User disconnected: ${socket.data.userId} (socket: ${socket.id})`)
+            const activeSessionId = socket.data.activeSessionId
+            if (activeSessionId) {
+                await pubClient
+                    .publish(
+                        `session_events:${activeSessionId}`,
+                        JSON.stringify({
+                            type: 'ClientDisconnect',
+                            sessionId: activeSessionId,
+                            timestamp: Date.now(),
+                        })
+                    )
+                    .catch(() => {})
+            }
         })
 
         // custom application-level heartbeat

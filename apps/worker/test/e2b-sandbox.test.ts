@@ -294,4 +294,25 @@ describe('E2BSandboxService (Unit & Integration)', () => {
         const paused = await E2BSandboxService.pauseSandbox({ sessionId: 'sess-archive-1' })
         expect(paused).toBe(true)
     })
+
+    it('should trigger grace period timer on handleDisconnect', async () => {
+        const mockSandbox = {
+            sandboxId: 'sb-disconnect-1',
+            pause: async () => {},
+        }
+
+        E2BSandboxService.setMockClient({ create: async () => mockSandbox })
+
+        await E2BSandboxService.provisionSandbox({
+            sessionId: 'sess-disconnect-1',
+            backoffDelays: [1, 1, 1],
+        })
+
+        await E2BSandboxService.handleDisconnect({
+            sessionId: 'sess-disconnect-1',
+            gracePeriodMs: 10,
+        })
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+    })
 })
