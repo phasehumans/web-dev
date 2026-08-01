@@ -56,6 +56,36 @@ export const useSessionController = (
     const lastSavedCanvasRef = React.useRef<string | null>(null)
     const lastAutoFixSignatureRef = React.useRef<string | null>(null)
 
+    React.useEffect(() => {
+        if (!activeProjectId) return
+
+        const handleBeforeUnload = () => {
+            const url = `/api/v1/sessions/${activeProjectId}/disconnect`
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(url)
+            } else {
+                fetch(url, { method: 'POST', keepalive: true }).catch(() => {})
+            }
+        }
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                const url = `/api/v1/sessions/${activeProjectId}/disconnect`
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(url)
+                }
+            }
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
+        }
+    }, [activeProjectId])
+
     const requireAuthOr = React.useCallback(
         (action: () => void) => {
             if (!isAuthenticated) {

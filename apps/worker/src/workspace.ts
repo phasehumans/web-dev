@@ -27,7 +27,11 @@ export async function compressWorkspace(workspaceDir: string, zipPath: string): 
         archive.on('error', (err: any) => reject(err))
 
         archive.pipe(output)
-        archive.directory(workspaceDir, false)
+        archive.glob('**/*', {
+            cwd: workspaceDir,
+            ignore: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/.git/**'],
+            dot: true,
+        })
         archive.finalize()
     })
 }

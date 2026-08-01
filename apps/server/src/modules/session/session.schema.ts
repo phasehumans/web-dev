@@ -75,3 +75,16 @@ export const removeCollaboratorParamsSchema = z.object({
     id: z.string().uuid('Invalid session ID'),
     email: z.string().email('please enter a valid email address'),
 })
+
+export const disconnectSessionParamsSchema = z.object({
+    id: z.string().uuid('Invalid session ID'),
+})
+
+export const rehydrateSessionParamsSchema = z.object({
+    id: z.string().uuid('Invalid session ID'),
+})
+
+export const proxyPreviewParamsSchema = z.object({
+    id: z.string().uuid('Invalid session ID'),
+    port: z.preprocess((val) => Number(val), z.number().min(1).max(65535)),
+})

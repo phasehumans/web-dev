@@ -2,10 +2,10 @@ import { prisma } from '@december/database'
 
 export const runtimeRepository = {
     async updateSessionPreviewImage(data: { sessionId: string; key: string }) {
-        // no previewimagekey field in session schema, we just keep the image in s3
+        // no previewimagekey field in session schema, we keep the image in s3
     },
 
-    async findSessionForPreview(data: { sessionId: string; userId: string }) {
+    async findSessionForStart(data: { sessionId: string; userId: string }) {
         const { sessionId, userId } = data
         return prisma.session.findFirst({
             where: {
@@ -18,8 +18,14 @@ export const runtimeRepository = {
             select: {
                 id: true,
                 githubRepoUrl: true,
+                vmStatus: true,
+                updatedAt: true,
             },
         })
+    },
+
+    async findSessionForPreview(data: { sessionId: string; userId: string }) {
+        return this.findSessionForStart(data)
     },
 
     async findSessionImport(data: { sessionId: string }) {
@@ -41,6 +47,8 @@ export const runtimeRepository = {
             },
             select: {
                 id: true,
+                vmStatus: true,
+                updatedAt: true,
             },
         })
     },
@@ -57,6 +65,8 @@ export const runtimeRepository = {
             },
             select: {
                 id: true,
+                vmStatus: true,
+                updatedAt: true,
             },
         })
     },

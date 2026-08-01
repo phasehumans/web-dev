@@ -76,6 +76,7 @@ app.use('/api/v1/wiki', wikiRouter)
 app.use('/api/wiki', wikiRouter)
 app.use('/api/v1/schedule', scheduleRouter)
 app.use('/api/v1/session', sessionRouter)
+app.use('/api/v1/sessions', sessionRouter)
 app.use('/api/v1/secrets', secretsRouter)
 app.use('/api/v1/githubapp', githubAppRouter)
 

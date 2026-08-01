@@ -129,7 +129,7 @@ export async function* runAgentLoop(
     ;(async () => {
         try {
             eventQueue.push({ type: 'AgentStart' })
-            await runOuterLoop(agent, eventQueue, abortController.signal)
+            await runOuterLoop(agent, eventQueue, abortController.signal as any)
             eventQueue.push({ type: 'AgentEnd' })
         } catch (e: any) {
             console.error('Agent Loop Error:', e)

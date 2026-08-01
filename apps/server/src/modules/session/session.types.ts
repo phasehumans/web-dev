@@ -82,3 +82,20 @@ export type RemoveCollaborator = {
     sessionId: string
     email: string
 }
+
+export type DisconnectSession = {
+    userId: string
+    sessionId: string
+}
+
+export type RehydrateSession = {
+    userId: string
+    sessionId: string
+}
+
+export type ProxyPreview = {
+    userId: string
+    sessionId: string
+    port: number
+    reqPath?: string
+}
