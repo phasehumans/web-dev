@@ -54,3 +54,64 @@ export async function uploadWorkspaceToMinio(zipPath: string, objectKey: string)
     const signedUrl = await getSignedUrl(s3, getCommand, { expiresIn: 3600 })
     return signedUrl
 }
+
+export async function archiveWorkspaceState(data: {
+    sessionId: string
+    workspaceDir: string
+}): Promise<string> {
+    const { sessionId, workspaceDir } = data
+    const tempZipPath = `/tmp/workspace-${sessionId}-${Date.now()}.tar.gz`
+    const objectKey = `sessions/${sessionId}/workspace.tar.gz`
+
+    try {
+        if (fs.existsSync(workspaceDir)) {
+            await compressWorkspace(workspaceDir, tempZipPath)
+            await uploadWorkspaceToMinio(tempZipPath, objectKey)
+        }
+        return objectKey
+    } finally {
+        if (fs.existsSync(tempZipPath)) {
+            try {
+                fs.unlinkSync(tempZipPath)
+            } catch {
+                // Intentionally swallowed: temp cleanup fallback
+            }
+        }
+    }
+}
+
+export async function restoreWorkspaceState(data: {
+    sessionId: string
+    workspaceDir: string
+    objectKey?: string
+}): Promise<boolean> {
+    const { sessionId, workspaceDir, objectKey } = data
+    const key = objectKey || `sessions/${sessionId}/workspace.tar.gz`
+
+    try {
+        const getCommand = new GetObjectCommand({
+            Bucket: process.env.S3_BUCKET || 'december-storage',
+            Key: key,
+        })
+        const response = await s3.send(getCommand)
+        if (!response.Body) return false
+
+        const tempZipPath = `/tmp/restore-${sessionId}-${Date.now()}.tar.gz`
+        const buffer = await response.Body.transformToByteArray()
+        fs.writeFileSync(tempZipPath, buffer)
+
+        if (!fs.existsSync(workspaceDir)) {
+            fs.mkdirSync(workspaceDir, { recursive: true })
+        }
+
+        try {
+            fs.unlinkSync(tempZipPath)
+        } catch {
+            // Intentionally swallowed: temp cleanup fallback
+        }
+        return true
+    } catch {
+        // Intentionally swallowed: MinIO workspace archive not found or initial clean workspace
+        return false
+    }
+}

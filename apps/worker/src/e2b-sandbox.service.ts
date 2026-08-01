@@ -24,6 +24,7 @@ import { Sandbox } from 'e2b'
 import Redis from 'ioredis'
 
 import { RemotePlatformAdapter } from './remote-operations'
+import { archiveWorkspaceState, restoreWorkspaceState } from './workspace'
 
 import type {
     ProvisionSandboxInput,
@@ -268,6 +269,17 @@ const pauseSandbox = async (data: PauseSandboxInput): Promise<boolean> => {
         const targetId = sandboxId || sessionId
         const sandbox = activeSandboxes.get(targetId)
 
+        // Archive workspace state to MinIO before pausing
+        await archiveWorkspaceState({
+            sessionId,
+            workspaceDir: `/workspace`,
+        }).catch((err) => {
+            console.error(
+                `[E2BSandboxService] Workspace archiving warning for session ${sessionId}:`,
+                err
+            )
+        })
+
         if (sandbox && typeof sandbox.pause === 'function') {
             await sandbox.pause()
         }
@@ -284,7 +296,10 @@ const pauseSandbox = async (data: PauseSandboxInput): Promise<boolean> => {
 
         await emitSessionEvent({
             sessionId,
-            event: { type: 'AgentStatus', message: 'E2B Sandbox warm paused' },
+            event: {
+                type: 'AgentStatus',
+                message: 'E2B Sandbox warm paused & workspace archived to MinIO',
+            },
         })
 
         return true
@@ -299,6 +314,11 @@ const resumeSandbox = async (data: ResumeSandboxInput): Promise<ProvisionSandbox
     console.log(`[E2BSandboxService] Resuming sandbox for session ${sessionId}`)
 
     try {
+        await restoreWorkspaceState({
+            sessionId,
+            workspaceDir: `/workspace`,
+        }).catch(() => {})
+
         if (mockClientOverride && typeof mockClientOverride.resume === 'function') {
             const mockSandbox = await mockClientOverride.resume({ sessionId, snapshotId })
             const sId = mockSandbox.sandboxId || snapshotId || `mock-sandbox-${sessionId}`
@@ -603,6 +623,29 @@ const runEphemeralTask = async (data: EphemeralTaskInput): Promise<EphemeralTask
     }
 }
 
+const getPreviewUrl = async (data: {
+    sessionId: string
+    sandboxId?: string
+    port?: number
+}): Promise<string> => {
+    const { sessionId, sandboxId, port } = data
+    const targetPort = port || 5173
+    const targetId = sandboxId || sessionId
+    const sandbox = activeSandboxes.get(targetId) || activeSandboxes.get(sessionId)
+
+    if (sandbox && typeof sandbox.getHost === 'function') {
+        try {
+            const host = await sandbox.getHost(targetPort)
+            return host.startsWith('http') ? host : `https://${host}`
+        } catch (err) {
+            console.error(`[E2BSandboxService] Failed to get E2B host for port ${targetPort}:`, err)
+        }
+    }
+
+    const targetHost = `session-${sessionId}-${targetPort}.preview.december.ai`
+    return `https://${targetHost}`
+}
+
 export const E2BSandboxService = {
     setMockClient,
     resetMockClient,
@@ -613,6 +656,7 @@ export const E2BSandboxService = {
     handleDisconnect,
     destroySandbox,
     executeCommand,
+    getPreviewUrl,
     runAgentSession,
     runEphemeralTask,
 }

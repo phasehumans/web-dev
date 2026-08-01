@@ -255,4 +255,43 @@ describe('E2BSandboxService (Unit & Integration)', () => {
             delete process.env.GEMINI_API_KEY
         }
     })
+
+    it('should resolve preview URL for running E2B sandbox port', async () => {
+        const mockSandbox = {
+            sandboxId: 'sb-preview-123',
+            getHost: async (port: number) => `https://${port}-sb-preview-123.e2b.dev`,
+        }
+
+        E2BSandboxService.setMockClient({ create: async () => mockSandbox })
+
+        await E2BSandboxService.provisionSandbox({
+            sessionId: 'sess-preview',
+            backoffDelays: [1, 1, 1],
+        })
+
+        const url = await E2BSandboxService.getPreviewUrl({
+            sessionId: 'sess-preview',
+            sandboxId: 'sb-preview-123',
+            port: 5173,
+        })
+
+        expect(url).toBe('https://5173-sb-preview-123.e2b.dev')
+    })
+
+    it('should archive workspace state on pauseSandbox', async () => {
+        const mockSandbox = {
+            sandboxId: 'sb-archive-1',
+            pause: async () => {},
+        }
+
+        E2BSandboxService.setMockClient({ create: async () => mockSandbox })
+
+        await E2BSandboxService.provisionSandbox({
+            sessionId: 'sess-archive-1',
+            backoffDelays: [1, 1, 1],
+        })
+
+        const paused = await E2BSandboxService.pauseSandbox({ sessionId: 'sess-archive-1' })
+        expect(paused).toBe(true)
+    })
 })

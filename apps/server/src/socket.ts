@@ -28,8 +28,8 @@ export function initSocket(httpServer: any) {
         adapter: createAdapter(pubClient, subClient),
     })
 
-    // subscribe to all session events from redis (worker)
-    redisSubClient.psubscribe('session_events:*', (err, count) => {
+    // subscribe to all session events & terminal streams from redis (worker)
+    redisSubClient.psubscribe('session_events:*', 'session_terminal_data:*', (err, count) => {
         if (err) console.error('Failed to psubscribe:', err)
         else console.log(`[Socket] Subscribed to ${count} Redis pattern(s)`)
     })
@@ -43,6 +43,9 @@ export function initSocket(httpServer: any) {
             } catch (err) {
                 console.error(`[Socket] Failed to parse Redis message on ${channel}`, err)
             }
+        } else if (pattern === 'session_terminal_data:*') {
+            const sessionId = channel.replace('session_terminal_data:', '')
+            io.to(`session_terminal:${sessionId}`).emit('TERMINAL_DATA', message)
         }
     })
 
@@ -79,6 +82,29 @@ export function initSocket(httpServer: any) {
 
         socket.on('leave_session', (sessionId: string) => {
             socket.leave(`session:${sessionId}`)
+        })
+
+        socket.on('join_session_terminal', (data: { sessionId: string } | string) => {
+            const sId = typeof data === 'string' ? data : data?.sessionId
+            if (sId) {
+                console.log(
+                    `[Socket] User ${socket.data.userId} joined terminal room for session ${sId}`
+                )
+                socket.join(`session_terminal:${sId}`)
+            }
+        })
+
+        socket.on('leave_session_terminal', (data: { sessionId: string } | string) => {
+            const sId = typeof data === 'string' ? data : data?.sessionId
+            if (sId) {
+                socket.leave(`session_terminal:${sId}`)
+            }
+        })
+
+        socket.on('TERMINAL_INPUT', async (data: { sessionId: string; data: string }) => {
+            if (data?.sessionId && data?.data) {
+                await pubClient.publish(`session_terminal_input:${data.sessionId}`, data.data)
+            }
         })
 
         socket.on('disconnect', () => {

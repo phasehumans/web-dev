@@ -47,7 +47,7 @@ export const TerminalWorkspace: React.FC<TerminalWorkspaceProps> = ({ previewSes
 
         let socket: any = null
         if (previewSessionId) {
-            xterm.writeln(`Connecting to Firecracker VM session ${previewSessionId}...`)
+            xterm.writeln(`Connecting to E2B Sandbox session ${previewSessionId}...`)
 
             // connect to actual websocket for terminal stream
             import('socket.io-client').then(({ io }) => {
