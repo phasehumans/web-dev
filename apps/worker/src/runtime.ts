@@ -1,13 +1,14 @@
-// Clean sandbox execution interface placeholder (E2B sandbox engine implemented in Ticket #314)
+import { E2BSandboxService } from './e2b-sandbox.service'
 
 export async function createVM(vmId: string, workspaceZipUrl?: string): Promise<boolean> {
-    console.log(`[Worker] Sandbox create requested for session ${vmId}`)
-    return true
+    const result = await E2BSandboxService.provisionSandbox({
+        sessionId: vmId,
+    })
+    return !!result.sandboxId
 }
 
 export async function destroyVM(vmId: string): Promise<boolean> {
-    console.log(`[Worker] Sandbox destroy requested for session ${vmId}`)
-    return true
+    return E2BSandboxService.destroySandbox({ sandboxId: vmId })
 }
 
 export function startAgentSession(
@@ -17,8 +18,13 @@ export function startAgentSession(
     token: string,
     apiHostUrl: string
 ): any {
-    console.log(`[Worker] Starting agent session for ${sessionId}`)
-    return (async function* () {})()
+    return E2BSandboxService.runAgentSession({
+        sessionId,
+        prompt: systemPrompt,
+        workspaceDir,
+        token,
+        apiHostUrl,
+    })
 }
 
 export async function executeCommand(
@@ -26,6 +32,10 @@ export async function executeCommand(
     command: string,
     onData: (chunk: string) => void
 ): Promise<number> {
-    console.log(`[Worker] Executing command on sandbox ${vmId}: ${command}`)
-    return 0
+    const result = await E2BSandboxService.executeCommand({
+        sandboxId: vmId,
+        command,
+        onData,
+    })
+    return result.exitCode
 }

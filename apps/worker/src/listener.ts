@@ -15,8 +15,9 @@ export async function processGrpcStream(sessionId: string, stream: any) {
                 await updateCredits(sessionId, parsedEvent)
             }
         }
-    } catch (e) {
-        console.error(`Stream ended for ${sessionId}`)
+    } catch (e: any) {
+        // Stream ended or connection closed: log exception safely
+        console.error(`Stream ended for ${sessionId}: ${e?.message || e}`)
     } finally {
         await prisma.session.update({
             where: { id: sessionId },
