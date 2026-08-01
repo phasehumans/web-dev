@@ -84,10 +84,6 @@ container-start:
 container-stop:
     bash scripts/container.sh stop
 
-# Setup Linux Firecracker network sandbox (requires root/sudo)
-sandbox-setup:
-    sudo bash scripts/network_sandbox.sh
-
 # Clean build artifacts and Turbo cache
 clean:
     bun run clean

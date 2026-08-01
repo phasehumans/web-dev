@@ -16,7 +16,6 @@ pnpm-lock.yaml
 **/.tmp/
 **/.cache/
 **/.vite/
-/runtime/target/
 
 # Environments & configs
 .env
@@ -37,7 +36,6 @@ packages/database/src/generated/
 docker-compose.override.yml
 infra/minio/data/
 infra/postgres/data/
-runtime/data
 
 # Tool generated files
 **/.december-imports/
@@ -50,11 +48,3 @@ infra/nginx/deployments/*
 Thumbs.db
 .DS_Store
 TODO.md
-# Firecracker & Rust build artifacts
-ubuntu-rootfs.ext4
-ubuntu-base.tar
-**/target/
-firecracker
-vmlinux.bin
-release-*/
-apps/sidecar/december-agent

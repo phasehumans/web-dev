@@ -1,44 +1,13 @@
-import path from 'path'
-
-import * as grpc from '@grpc/grpc-js'
-import * as protoLoader from '@grpc/proto-loader'
-
-const PROTO_PATH = path.resolve(__dirname, '../../../packages/proto/runtime.proto')
-
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
-    keepCase: true,
-    longs: String,
-    enums: String,
-    defaults: true,
-    oneofs: true,
-})
-
-const runtimeProto = grpc.loadPackageDefinition(packageDefinition).december as any
-const runtimeService = runtimeProto.runtime.RuntimeService
-
-// assumes the rust vmm daemon runs on localhost:50051 on the host machine
-const client = new runtimeService('localhost:50051', grpc.credentials.createInsecure())
+// Clean sandbox execution interface placeholder (E2B sandbox engine implemented in Ticket #314)
 
 export async function createVM(vmId: string, workspaceZipUrl?: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-        client.CreateVM(
-            { vm_id: vmId, workspace_zip_url: workspaceZipUrl || '' },
-            (err: any, response: any) => {
-                if (err) return reject(err)
-                if (!response.success) return reject(new Error(response.error_message))
-                resolve(true)
-            }
-        )
-    })
+    console.log(`[Worker] Sandbox create requested for session ${vmId}`)
+    return true
 }
 
 export async function destroyVM(vmId: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-        client.DestroyVM({ vm_id: vmId }, (err: any, response: any) => {
-            if (err) return reject(err)
-            resolve(response.success)
-        })
-    })
+    console.log(`[Worker] Sandbox destroy requested for session ${vmId}`)
+    return true
 }
 
 export function startAgentSession(
@@ -48,41 +17,15 @@ export function startAgentSession(
     token: string,
     apiHostUrl: string
 ): any {
-    const config = {
-        vm_id: sessionId,
-        workspace_directory: workspaceDir,
-        prompts: [systemPrompt],
-        provider_settings: JSON.stringify({ id: 'openai' }),
-        temp_jwt_token: token,
-        api_host_url: apiHostUrl,
-    }
-    const call = client.StartAgentSession(config)
-    return call
+    console.log(`[Worker] Starting agent session for ${sessionId}`)
+    return (async function* () {})()
 }
 
-export function executeCommand(
+export async function executeCommand(
     vmId: string,
     command: string,
     onData: (chunk: string) => void
 ): Promise<number> {
-    return new Promise((resolve, reject) => {
-        const call = client.ExecuteCommand({ vm_id: vmId, command })
-
-        call.on('data', (response: any) => {
-            if (response.chunk) {
-                onData(response.chunk)
-            }
-            if (response.exit_code !== undefined && response.exit_code !== 0 && !response.chunk) {
-                resolve(response.exit_code)
-            }
-        })
-
-        call.on('end', () => {
-            resolve(0) // default success exit code if stream ends normally
-        })
-
-        call.on('error', (err: any) => {
-            reject(err)
-        })
-    })
+    console.log(`[Worker] Executing command on sandbox ${vmId}: ${command}`)
+    return 0
 }

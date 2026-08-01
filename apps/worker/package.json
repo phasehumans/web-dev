@@ -16,8 +16,6 @@
         "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
         "@december/tools": "workspace:*",
-        "@grpc/grpc-js": "1.14.4",
-        "@grpc/proto-loader": "0.8.1",
         "archiver": "8.0.0",
         "bullmq": "^5.0.0",
         "dotenv": "17.4.2",
