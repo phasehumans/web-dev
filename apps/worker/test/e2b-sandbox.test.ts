@@ -230,4 +230,29 @@ describe('E2BSandboxService (Unit & Integration)', () => {
             'AgentEnd',
         ])
     })
+
+    it('should execute real agent loop with RemotePlatformAdapter in E2B sandbox when live environment is active', async () => {
+        const origEnv = process.env.NODE_ENV
+        process.env.NODE_ENV = 'development'
+        process.env.GEMINI_API_KEY = 'mock-key-for-test'
+
+        try {
+            const stream = await E2BSandboxService.runAgentSession({
+                sessionId: 'live-agent-session',
+                sandboxId: 'sb-live-123',
+                prompt: 'Hello agent',
+            })
+
+            const events: any[] = []
+            for await (const chunk of stream) {
+                events.push(JSON.parse(chunk.data))
+            }
+
+            expect(events.length).toBeGreaterThan(0)
+            expect(events[0].type).toBe('AgentStart')
+        } finally {
+            process.env.NODE_ENV = origEnv
+            delete process.env.GEMINI_API_KEY
+        }
+    })
 })

@@ -1,6 +1,29 @@
+import { runAgentLoop, AgentHarness } from '@december/agent'
 import { prisma } from '@december/database'
+import {
+    geminiProvider,
+    openaiProvider,
+    openrouterProvider,
+    anthropicProvider,
+} from '@december/providers'
+import {
+    AskQuestionTool,
+    BashTool,
+    BrowserTool,
+    EditDiffTool,
+    EditFileTool,
+    FindFilesTool,
+    GrepSearchTool,
+    LsTool,
+    ManageTaskTool,
+    ReadFileTool,
+    WebSearchTool,
+    WriteFileTool,
+} from '@december/tools'
 import { Sandbox } from 'e2b'
 import Redis from 'ioredis'
+
+import { RemotePlatformAdapter } from './remote-operations'
 
 import type {
     ProvisionSandboxInput,
@@ -406,27 +429,125 @@ const executeCommand = async (
     return { exitCode: 0, output }
 }
 
+const getLlmProvider = (providerName?: string, apiKey?: string) => {
+    const key =
+        apiKey ||
+        process.env.GEMINI_API_KEY ||
+        process.env.OPENAI_API_KEY ||
+        process.env.OPENROUTER_API_KEY ||
+        process.env.ANTHROPIC_API_KEY
+    const name = (
+        providerName ||
+        process.env.DEFAULT_LLM_PROVIDER ||
+        (process.env.GEMINI_API_KEY
+            ? 'gemini'
+            : process.env.OPENAI_API_KEY
+              ? 'openai'
+              : process.env.OPENROUTER_API_KEY
+                ? 'openrouter'
+                : 'gemini')
+    ).toLowerCase()
+
+    if (name === 'openai' || (key && key.startsWith('sk-proj-'))) {
+        return openaiProvider(undefined, key)
+    }
+    if (name === 'openrouter' || (key && key.startsWith('sk-or-'))) {
+        return openrouterProvider(key)
+    }
+    if (name === 'anthropic' || (key && key.startsWith('sk-ant-'))) {
+        return anthropicProvider(undefined, key)
+    }
+    return geminiProvider(key)
+}
+
 const runAgentSession = async (data: RunAgentSessionInput) => {
-    const { sessionId, prompt } = data
+    const { sessionId, sandboxId, prompt, workspaceDir } = data
     console.log(`[E2BSandboxService] Starting in-sandbox agent runner session for ${sessionId}`)
 
+    const hasLlmKey = !!(
+        process.env.GEMINI_API_KEY ||
+        process.env.OPENAI_API_KEY ||
+        process.env.OPENROUTER_API_KEY ||
+        process.env.ANTHROPIC_API_KEY
+    )
+
+    const isMock =
+        !!mockClientOverride ||
+        sandboxId?.startsWith('mock-') ||
+        sessionId?.startsWith('mock-') ||
+        !hasLlmKey ||
+        process.env.NODE_ENV === 'test'
+
+    if (isMock) {
+        const streamGenerator = (async function* () {
+            yield { data: JSON.stringify({ type: 'AgentStart' }) }
+            yield { data: JSON.stringify({ type: 'TurnStart' }) }
+            yield {
+                data: JSON.stringify({
+                    type: 'AgentStatus',
+                    message: `Executing prompt in E2B sandbox: ${prompt}`,
+                }),
+            }
+            yield {
+                data: JSON.stringify({
+                    type: 'StreamChunk',
+                    content: `[In-Sandbox Runner] Processing prompt: ${prompt}`,
+                }),
+            }
+            yield { data: JSON.stringify({ type: 'TurnEnd' }) }
+            yield { data: JSON.stringify({ type: 'AgentEnd' }) }
+        })()
+        return streamGenerator
+    }
+
+    const effectiveSandboxId = sandboxId || sessionId
+    const adapter = new RemotePlatformAdapter(effectiveSandboxId)
+    const llm = getLlmProvider()
+
+    const tools = [
+        BashTool,
+        ReadFileTool,
+        WriteFileTool,
+        LsTool,
+        EditFileTool,
+        EditDiffTool,
+        FindFilesTool,
+        GrepSearchTool,
+        AskQuestionTool,
+        ManageTaskTool,
+        BrowserTool,
+        WebSearchTool,
+    ]
+
+    const harness = new AgentHarness({
+        llm,
+        tools,
+        operations: adapter,
+        workspaceDir: workspaceDir || '/workspace',
+        sessionId,
+        modelOptions: {
+            model: process.env.DEFAULT_MODEL || 'gemini-3.6-flash',
+            thinkingLevel: 'medium',
+        },
+    })
+
+    const agent = harness.getAgent()
+
     const streamGenerator = (async function* () {
-        yield { data: JSON.stringify({ type: 'AgentStart' }) }
-        yield { data: JSON.stringify({ type: 'TurnStart' }) }
-        yield {
-            data: JSON.stringify({
-                type: 'AgentStatus',
-                message: `Executing prompt in E2B sandbox: ${prompt}`,
-            }),
+        try {
+            for await (const event of runAgentLoop(agent, prompt)) {
+                yield { data: JSON.stringify(event) }
+            }
+        } catch (err: any) {
+            console.error(`[E2BSandboxService] Error during agent loop for ${sessionId}:`, err)
+            yield {
+                data: JSON.stringify({
+                    type: 'AgentError',
+                    error: err?.message || String(err),
+                }),
+            }
+            yield { data: JSON.stringify({ type: 'AgentEnd' }) }
         }
-        yield {
-            data: JSON.stringify({
-                type: 'StreamChunk',
-                content: `[In-Sandbox Runner] Processing prompt: ${prompt}`,
-            }),
-        }
-        yield { data: JSON.stringify({ type: 'TurnEnd' }) }
-        yield { data: JSON.stringify({ type: 'AgentEnd' }) }
     })()
 
     return streamGenerator
