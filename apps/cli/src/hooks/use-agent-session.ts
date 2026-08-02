@@ -521,7 +521,7 @@ export function useAgentSession({
                         blocks: [
                             {
                                 type: 'text',
-                                content: `\nOpening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Note: BYOK (Bring Your Own Key) usage is not tracked. Only usage via December login (December Wallet) is tracked.*`,
+                                content: `\nOpening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})`,
                             },
                         ],
                     },

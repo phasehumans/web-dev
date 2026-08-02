@@ -2,6 +2,25 @@
 
 ### Features
 
+- _(e2b)_ Implement spec #312 E2B Cloud MicroVM Sandbox & Extended Agent Architecture
+- _(e2b)_ E2B Cloud MicroVM Sandbox & Extended Agent Architecture (#321)
+- _(worker)_ Implement in-sandbox agent execution via RemotePlatformAdapter (#323)
+- _(cloud)_ Implement HMR preview, terminal streams & MinIO workspace archiving (#324, #325)
+- _(cloud)_ Ephemeral PR review sandboxing & disconnect grace period (#324, #326, #327)
+- _(tui)_ Refactor MessageList with Ink <Static> to resolve CLI scroll lag (#333)
+
+### Bug Fixes
+
+- _(tui)_ Restore banner on session resume and Ctrl+O expansion for past messages
+
+### Refactor
+
+- _(runtime)_ Clean removal of legacy firecracker architecture (#313)
+
+## [0.2.24] - 2026-08-01
+
+### Features
+
 - _(cli,tui)_ Add /feedback command, prompt queueing, and refine layout spacing (closes #302)
 - _(cli,tui)_ Add /feedback command, prompt queueing, and refine layout spacing (#310)
 - _(settings)_ Migrate custom design to custom rules and remove MCP section
@@ -9,6 +28,10 @@
 ### Bug Fixes
 
 - Git diffs and codeblocks render
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.24
 
 ## [0.2.23] - 2026-07-31
 

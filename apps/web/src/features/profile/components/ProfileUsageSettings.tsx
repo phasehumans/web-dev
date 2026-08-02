@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronLeft, ChevronRight, Info } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 
 import { useCreditsHistory, useBillingOverview } from '@/features/billing/hooks/useBillingData'
@@ -137,14 +137,6 @@ export const ProfileUsageSettings: React.FC = () => {
             <div className="flex flex-col mb-8">
                 <h1 className="text-[16px] font-medium mb-4">Usage</h1>
                 <div className="flex flex-col border-t border-[#242323] pt-6">
-                    <div className="mb-6 flex items-center gap-2.5 rounded-lg border border-[#242323] bg-[#141318] p-3 text-[13px] text-[#9E9D9B]">
-                        <Info className="h-4 w-4 shrink-0 text-[#7B7A79]" />
-                        <span>
-                            <strong className="text-[#D6D5C9]">Note:</strong> BYOK (Bring Your Own
-                            Key) usage is not tracked. Only usage via December login (December
-                            Wallet) is tracked.
-                        </span>
-                    </div>
                     {/* controls row */}
                     <div className="flex items-center justify-between mb-6">
                         {/* quick filters */}

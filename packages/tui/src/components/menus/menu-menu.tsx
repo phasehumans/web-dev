@@ -12,8 +12,8 @@ export function MenuMenu(props: any) {
             </Box>
             <SelectInput
                 items={[
-                    { label: 'Login via December (Cloud Wallet)', value: 'december' },
                     { label: 'Bring Your Own Key (BYOK)', value: 'byok' },
+                    { label: 'Login via December (Cloud Wallet)', value: 'december' },
                 ]}
                 onSelect={handleAuthMenuSelect}
                 indicatorComponent={CustomIndicator}

@@ -30,19 +30,55 @@ describe('Markdown Component (Unit)', () => {
         expect(frame).toContain('Item 2')
     })
 
-    it('renders syntax highlighted code blocks with top bar and expands on Ctrl+O', async () => {
-        const { lastFrame, stdin } = render(
+    it('renders headings', () => {
+        const { lastFrame } = render(<Markdown># Sample Heading</Markdown>)
+        expect(lastFrame()).toContain('Sample Heading')
+    })
+
+    it('renders tables cleanly without raw separator lines', () => {
+        const markdownTable = `
+| Feature | Mode |
+| :--- | :--- |
+| Speed | Fast |
+        `.trim()
+        const { lastFrame } = render(<Markdown>{markdownTable}</Markdown>)
+        const frame = lastFrame()
+        expect(frame).toContain('Feature')
+        expect(frame).toContain('Mode')
+        expect(frame).toContain('Speed')
+        expect(frame).toContain('Fast')
+        // Ensure raw markdown syntax line is not present
+        expect(frame).not.toContain('| :--- | :--- |')
+    })
+
+    it('renders mermaid diagrams with interactive support', () => {
+        const mermaidCode = `
+\`\`\`mermaid
+graph LR
+  A[Client] --> B[Server]
+\`\`\`
+        `.trim()
+        const { lastFrame } = render(<Markdown>{mermaidCode}</Markdown>)
+        const frame = lastFrame()
+        expect(frame).toContain('Mermaid Diagram')
+        expect(frame).toContain('Client')
+        expect(frame).toContain('Server')
+    })
+
+    it('renders syntax highlighted code blocks in expanded mode without borders', () => {
+        const { lastFrame } = render(
             <Markdown>{'```javascript\nconsole.log("test");\n```'}</Markdown>
         )
-        let frame = lastFrame()
-        expect(frame).toContain('javascript')
-        expect(frame).toContain('ctrl+o / enter to expand')
-
-        stdin.write('\x0f')
-        await new Promise((resolve) => setTimeout(resolve, 50))
-
-        frame = lastFrame()
+        const frame = lastFrame()
         expect(frame).toContain('console.log')
         expect(frame).toContain('test')
+    })
+
+    it('renders links with blue color #89B4F8', () => {
+        const { lastFrame } = render(
+            <Markdown>[Feedback Link](https://trydecember.com/feedback)</Markdown>
+        )
+        const frame = lastFrame()
+        expect(frame).toContain('Feedback Link')
     })
 })

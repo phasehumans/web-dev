@@ -506,23 +506,13 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                         )
                     }
                     case 'code': {
-                        const borderLength = Math.max(10, 60 - (block.filename?.length ?? 0))
-                        const borderLine = '─'.repeat(borderLength)
                         return (
-                            <Box key={idx} flexDirection="column" paddingLeft={1}>
-                                <Text color="#4A5568" wrap="truncate">
-                                    {block.filename
-                                        ? `┌── ${block.filename} ${borderLine}`
-                                        : `┌${borderLine}`}
-                                </Text>
-                                <Box flexDirection="column" paddingLeft={2}>
-                                    {block.code.split(/\r?\n/).map((line, lidx) => (
-                                        <Text key={lidx} color="#E2E8F0">
-                                            {line}
-                                        </Text>
-                                    ))}
-                                </Box>
-                                <Text color="#4A5568">└──</Text>
+                            <Box key={idx} flexDirection="column" paddingLeft={2} paddingY={0.5}>
+                                {block.code.split(/\r?\n/).map((line, lidx) => (
+                                    <Text key={lidx} color="#E2E8F0">
+                                        {line}
+                                    </Text>
+                                ))}
                             </Box>
                         )
                     }
