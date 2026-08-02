@@ -1,4 +1,4 @@
-import { Box, Static } from 'ink'
+import { Box } from 'ink'
 import React from 'react'
 
 import { Header } from './header'
@@ -53,31 +53,12 @@ export function MessageList({
     userEmail?: string
     expandCommands?: boolean
 }) {
+    const allMessages = [...staticMessages, ...activeMessages]
+
     return (
         <Box flexDirection="column">
-            {staticMessages.length > 0 && (
-                <Static items={staticMessages}>
-                    {(msg, index) =>
-                        renderSingleMessage(
-                            msg,
-                            index,
-                            staticMessages,
-                            cliVersion,
-                            userEmail,
-                            expandCommands
-                        )
-                    }
-                </Static>
-            )}
-            {activeMessages.map((msg, index) =>
-                renderSingleMessage(
-                    msg,
-                    staticMessages.length + index,
-                    [...staticMessages, ...activeMessages],
-                    cliVersion,
-                    userEmail,
-                    expandCommands
-                )
+            {allMessages.map((msg, index) =>
+                renderSingleMessage(msg, index, allMessages, cliVersion, userEmail, expandCommands)
             )}
         </Box>
     )

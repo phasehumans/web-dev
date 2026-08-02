@@ -59,4 +59,39 @@ describe('MessageList Component (Unit)', () => {
         const frame = lastFrame()
         expect(frame).toContain('API rate limit exceeded')
     })
+
+    it('renders header banner on session resume and passes expandCommands to past messages', () => {
+        const staticMessages = [
+            { id: 'header', role: 'header' as const },
+            {
+                id: 'past-cmd',
+                role: 'assistant' as const,
+                blocks: [
+                    {
+                        type: 'command' as const,
+                        command: 'git status',
+                        output: 'On branch main\nnothing to commit',
+                        status: 'success' as const,
+                    },
+                ],
+            },
+        ]
+
+        const { lastFrame } = renderWithProviders(
+            <MessageList
+                staticKey={1}
+                staticMessages={staticMessages}
+                activeMessages={[]}
+                isAuthenticated={true}
+                cliVersion="0.2.24"
+                expandCommands={true}
+            />
+        )
+
+        const frame = lastFrame()
+        expect(frame).toContain('December CLI 0.2.24')
+        expect(frame).toContain('Tips for getting started')
+        expect(frame).toContain('git status')
+        expect(frame).toContain('On branch main')
+    })
 })
