@@ -28,7 +28,6 @@ export function ChatApp({
     ) => Promise<{ token: string; email: string | null }>
     session: any
 }) {
-    const [inputHistory, setInputHistory] = useState<string[]>([])
     const [exitConfirm, setExitConfirm] = useState(false)
 
     useEffect(() => {
@@ -75,9 +74,6 @@ export function ChatApp({
 
     const handleFormSubmit = useCallback(
         (text: string) => {
-            if (text && !text.startsWith('/')) {
-                setInputHistory((prev) => [...prev, text])
-            }
             session.handleSubmit(text)
         },
         [session.handleSubmit]
@@ -106,7 +102,6 @@ export function ChatApp({
 
             <InputBar
                 onSubmit={handleFormSubmit}
-                history={inputHistory}
                 disabled={authMode !== 'none'}
                 onInterrupt={() => {
                     if (session.isStreaming) {

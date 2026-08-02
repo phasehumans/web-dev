@@ -7,19 +7,10 @@ type Props = {
     onSubmit: (value: string) => void
     placeholder?: string
     focus?: boolean
-    history?: string[]
 }
 
-export function TextArea({
-    value,
-    onChange,
-    onSubmit,
-    placeholder = '',
-    focus = true,
-    history = [],
-}: Props) {
+export function TextArea({ value, onChange, onSubmit, placeholder = '', focus = true }: Props) {
     const [cursorOffset, setCursorOffset] = useState(value.length)
-    const [historyIndex, setHistoryIndex] = useState(-1)
 
     useEffect(() => {
         if (cursorOffset > value.length) {
@@ -40,7 +31,6 @@ export function TextArea({
                 setCursorOffset((prev) => prev + 1)
             } else {
                 onSubmit(value)
-                setHistoryIndex(-1)
             }
             return
         }
@@ -63,17 +53,7 @@ export function TextArea({
                 const newOffset = cursorOffset - currentLineLength - 1 - (prevLineLength - newCol)
                 setCursorOffset(Math.max(0, newOffset))
             } else {
-                if (history && history.length > 0) {
-                    const nextIdx = Math.min(history.length - 1, historyIndex + 1)
-                    if (nextIdx !== historyIndex) {
-                        setHistoryIndex(nextIdx)
-                        const hVal = history[history.length - 1 - nextIdx] || ''
-                        onChange(hVal)
-                        setCursorOffset(hVal.length)
-                    }
-                } else {
-                    setCursorOffset(0)
-                }
+                setCursorOffset(0)
             }
             return
         }
@@ -89,15 +69,7 @@ export function TextArea({
                 const newOffset = cursorOffset + postLineZeroLength + 1 + newCol
                 setCursorOffset(Math.min(value.length, newOffset))
             } else {
-                if (historyIndex >= 0) {
-                    const nextIdx = historyIndex - 1
-                    setHistoryIndex(nextIdx)
-                    const hVal = nextIdx >= 0 ? history[history.length - 1 - nextIdx] || '' : ''
-                    onChange(hVal)
-                    setCursorOffset(hVal.length)
-                } else {
-                    setCursorOffset(value.length)
-                }
+                setCursorOffset(value.length)
             }
             return
         }

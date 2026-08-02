@@ -28,7 +28,6 @@ type Props = {
     onInterrupt?: () => void
     onCopy?: () => void
     contextTokens?: number
-    history?: string[]
     showExitConfirm?: boolean
     toasts?: { id: string; message: string; variant?: string }[]
     queuedPrompts?: string[]
@@ -49,7 +48,6 @@ export function InputBar({
     onInterrupt,
     onCopy,
     contextTokens,
-    history,
     showExitConfirm = false,
     toasts,
     queuedPrompts,
@@ -240,7 +238,6 @@ export function InputBar({
                                   : placeholder
                         }
                         focus={!disabled && !dialog.isOpen}
-                        history={history}
                     />
                 )}
             </Box>
