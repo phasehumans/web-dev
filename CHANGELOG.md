@@ -2,6 +2,28 @@
 
 ### Features
 
+- _(cli)_ Implement lazy CLI boot and fast flag handling (#335)
+- _(tui)_ Implement stream token frame-budget throttler (#336)
+- _(agent)_ Implement partitioned read/write parallel tool scheduler (#337)
+- _(providers)_ Add Anthropic ephemeral prompt caching integration (#338)
+- _(tui)_ Add optimistic input, grace micro-states & memoization (#339, #340)
+- _(cli)_ Optimize TTFT performance, adaptive reasoning, and npm update checker
+- _(cli)_ Optimize TTFT performance, adaptive reasoning budget router, and npm update checker (#347)
+
+### Refactor
+
+- _(tui)_ Use single-word status labels (Connecting, Preparing, Thinking)
+- _(tui)_ Remove connecting loader & support full action status states
+
+### Testing
+
+- _(providers)_ Add extensive unit test suite for models, OpenAI, and Gemini
+- _(tools,providers)_ Add extensive unit & integration tests and cleanup redundant files
+
+## [0.2.25] - 2026-08-02
+
+### Features
+
 - _(e2b)_ Implement spec #312 E2B Cloud MicroVM Sandbox & Extended Agent Architecture
 - _(e2b)_ E2B Cloud MicroVM Sandbox & Extended Agent Architecture (#321)
 - _(worker)_ Implement in-sandbox agent execution via RemotePlatformAdapter (#323)
@@ -16,6 +38,10 @@
 ### Refactor
 
 - _(runtime)_ Clean removal of legacy firecracker architecture (#313)
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.25
 
 ## [0.2.24] - 2026-08-01
 

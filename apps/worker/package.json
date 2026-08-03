@@ -1,6 +1,6 @@
 {
     "name": "@december/worker",
-    "version": "0.2.25",
+    "version": "0.2.26",
     "private": true,
     "scripts": {
         "dev": "bun --watch src/index.ts",

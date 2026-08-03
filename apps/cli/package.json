@@ -3,7 +3,7 @@
     "module": "src/index.ts",
     "type": "module",
     "private": false,
-    "version": "0.2.25",
+    "version": "0.2.26",
     "description": "Turn ideas into reality.",
     "author": "Chaitanya Sonawane",
     "license": "Apache-2.0",
