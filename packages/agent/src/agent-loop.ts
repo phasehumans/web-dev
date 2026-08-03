@@ -245,6 +245,8 @@ async function streamAssistantResponse(
                 toolCalls = []
                 if (signal.aborted) throw new AbortError(new Error('Aborted'))
 
+                eventQueue.push({ type: 'AgentStatus', message: 'Preparing context...' })
+
                 const compactionResult = await agent.conversation.compactIfNeeded(
                     agent.llm,
                     undefined,
@@ -270,6 +272,8 @@ async function streamAssistantResponse(
                     ...agent.modelOptions,
                     thinkingLevel: agent.thinkingLevel,
                 }
+
+                eventQueue.push({ type: 'AgentStatus', message: 'Connecting to model...' })
 
                 const generator = agent.llm.stream(
                     providerMessages,

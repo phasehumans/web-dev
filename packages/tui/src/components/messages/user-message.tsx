@@ -1,10 +1,11 @@
 import { Box, Text } from 'ink'
+import React from 'react'
 
 type Props = {
     message: string
 }
 
-export function UserMessage({ message }: Props) {
+export const UserMessage = React.memo(function UserMessage({ message }: Props) {
     return (
         <Box
             paddingLeft={2}
@@ -22,4 +23,4 @@ export function UserMessage({ message }: Props) {
             </Box>
         </Box>
     )
-}
+})

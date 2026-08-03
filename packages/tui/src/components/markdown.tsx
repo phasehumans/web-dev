@@ -191,7 +191,7 @@ const renderToken = (token: any, index: number): React.ReactNode => {
     }
 }
 
-function CodeBlock({ token }: { token: any }) {
+const CodeBlock = React.memo(function CodeBlock({ token }: { token: any }) {
     const lang = token.lang || 'typescript'
 
     const highlighted = React.useMemo(() => {
@@ -207,14 +207,19 @@ function CodeBlock({ token }: { token: any }) {
             <Text>{highlighted}</Text>
         </Box>
     )
-}
+})
 
-export function Markdown({ children }: Props) {
+export const Markdown = React.memo(function Markdown({ children }: Props) {
+    const tokens = React.useMemo(() => {
+        if (!children) return []
+        return marked.lexer(children).filter((t) => t.type !== 'space')
+    }, [children])
+
     if (!children) return null
-    const tokens = marked.lexer(children).filter((t) => t.type !== 'space')
+
     return (
         <Box flexDirection="column" gap={1}>
             {tokens.map((token, index) => renderToken(token, index))}
         </Box>
     )
-}
+})

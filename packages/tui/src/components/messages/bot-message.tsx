@@ -174,7 +174,7 @@ function CollapsibleCommandOutput({
     )
 }
 
-export function BotMessage({ blocks, usage, expandCommands }: Props) {
+export const BotMessage = React.memo(function BotMessage({ blocks, usage, expandCommands }: Props) {
     return (
         <Box flexDirection="column" paddingX={4} paddingY={0} gap={0} marginTop={0}>
             {blocks.map((block, idx) => {
@@ -531,4 +531,4 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
             })}
         </Box>
     )
-}
+})
