@@ -48,8 +48,8 @@ export class AgentHarness {
         // 3. discover project rules
         const rules = this.discoverRules()
 
-        // 4. assemble final system prompt with skills and rules
-        let finalPrompt = `${systemPrompt}\n\nCurrent date: ${new Date().toISOString().split('T')[0]}\nCurrent working directory: ${config.workspaceDir}`
+        // 4. assemble final system prompt: static prefix first (for KV prompt cache hits), dynamic metadata last
+        let finalPrompt = `${systemPrompt}`
 
         if (skills.length > 0) {
             finalPrompt += `\n\nAvailable Skills:\n${skills.join('\n')}`
@@ -62,6 +62,9 @@ export class AgentHarness {
             }
             finalPrompt += `</project_context>`
         }
+
+        // Dynamic environment context placed at the end to keep static prefix identical for prompt caching
+        finalPrompt += `\n\nCurrent date: ${new Date().toISOString().split('T')[0]}\nCurrent working directory: ${config.workspaceDir}`
 
         // 4. initialize core agent
         this.agent = new Agent({

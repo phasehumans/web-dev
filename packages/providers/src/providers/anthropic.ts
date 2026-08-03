@@ -94,11 +94,17 @@ export function anthropicProvider(
                 }
             }
 
-            const antTools: Anthropic.Tool[] | undefined = tools?.map((t) => ({
-                name: t.name,
-                description: t.description,
-                input_schema: t.inputSchema,
-            }))
+            const antTools: Anthropic.Tool[] | undefined = tools?.map((t, idx) => {
+                const toolDef: Anthropic.Tool = {
+                    name: t.name,
+                    description: t.description,
+                    input_schema: t.inputSchema,
+                }
+                if (tools && idx === tools.length - 1) {
+                    ;(toolDef as any).cache_control = { type: 'ephemeral' }
+                }
+                return toolDef
+            })
 
             const formattedSystem: Anthropic.TextBlockParam[] | undefined = systemPrompt
                 ? [
@@ -111,10 +117,12 @@ export function anthropicProvider(
                 : undefined
 
             const thinkingLevel = modelOptions?.thinkingLevel
-            let thinking: { type: 'enabled'; budget_tokens: number } | undefined
+            let thinking: { type: 'enabled' | 'adaptive'; budget_tokens?: number } | undefined
             let maxTokens = modelOptions?.max_tokens || 4096
 
-            if (thinkingLevel && thinkingLevel !== 'off') {
+            if (thinkingLevel === 'auto') {
+                thinking = { type: 'adaptive' }
+            } else if (thinkingLevel && thinkingLevel !== 'off') {
                 const budgetMap: Record<string, number> = {
                     minimal: 1024,
                     low: 2048,

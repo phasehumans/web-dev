@@ -122,19 +122,7 @@ export async function processAgentStream({
                             break
                         }
                         case 'ThinkingChunk': {
-                            const lastThinkBlock = blocks[blocks.length - 1]
-                            if (lastThinkBlock && lastThinkBlock.type === 'thinking') {
-                                lastThinkBlock.content += event.content
-                            } else {
-                                if (
-                                    blocks.length > 0 &&
-                                    blocks[blocks.length - 1].type === 'text' &&
-                                    isStatusMessage(blocks[blocks.length - 1].content)
-                                ) {
-                                    blocks.pop()
-                                }
-                                blocks.push({ type: 'thinking', content: event.content })
-                            }
+                            // Intentionally suppressed from chat display to optimize UI rendering performance
                             break
                         }
                         case 'ToolCallStart':

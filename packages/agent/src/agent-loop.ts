@@ -4,8 +4,78 @@ import { safeParseJson } from '@december/shared'
 import pRetry, { AbortError } from 'p-retry'
 
 import { Agent } from './agent'
+import { trimToolSchema } from './utils/schema-trimmer'
 
-import type { AgentEvent, ToolCall, ToolResult } from '@december/shared'
+import type { AgentEvent, AgentMessage, ToolCall, ToolResult } from '@december/shared'
+
+export function getAdaptiveThinkingLevel(
+    messages: AgentMessage[],
+    configuredLevel?: string
+): 'off' | 'minimal' | 'low' | 'medium' | 'high' {
+    const userMsgs = messages.filter((m) => m.role === 'user' && !m.isUI)
+    if (userMsgs.length === 0) return 'off'
+    const lastUserMsg = userMsgs[userMsgs.length - 1]
+    if (!lastUserMsg || typeof lastUserMsg.content !== 'string') return 'off'
+
+    const text = lastUserMsg.content.trim()
+    if (!text) return 'off'
+
+    // Tier 1: Off for Slash commands and simple greetings
+    if (text.startsWith('/')) return 'off'
+
+    const lower = text.toLowerCase()
+    const simpleGreetings = [
+        'hi',
+        'hello',
+        'hey',
+        'thanks',
+        'thank you',
+        'yes',
+        'no',
+        'ok',
+        'okay',
+        'bye',
+        'who are you',
+        'what can you do',
+        'ping',
+        'status',
+        'help',
+    ]
+
+    if (
+        simpleGreetings.includes(lower) ||
+        (text.length < 15 && !text.includes('```') && !text.includes('\n'))
+    ) {
+        return 'off'
+    }
+
+    // Tier 2: Minimal for simple lookups / read-only questions without code edits
+    const isLookup = /^(read|view|show|find|search|list|check|where|what is|how to)\b/i.test(text)
+    if (
+        isLookup &&
+        text.length < 100 &&
+        !text.includes('```') &&
+        !text.includes('fix') &&
+        !text.includes('refactor')
+    ) {
+        return 'minimal'
+    }
+
+    // Tier 4: High for explicit refactoring, multi-file changes, or complex debugging
+    const isHeavy = /\b(refactor|debug|architect|rewrite|migrate|fix tests?|fix error)\b/i.test(
+        text
+    )
+    if (isHeavy || text.length > 300) {
+        return 'high'
+    }
+
+    // Tier 3: Medium (or configured default) for standard code edits
+    return (configuredLevel as any) || 'medium'
+}
+
+export function isSimpleConversationalTurn(messages: AgentMessage[]): boolean {
+    return getAdaptiveThinkingLevel(messages) === 'off'
+}
 
 class AsyncQueue<T> {
     private queue: T[] = []
@@ -260,17 +330,31 @@ async function streamAssistantResponse(
                         summary: compactionResult.summary || '',
                     })
                 }
-                const toolsArray = Array.from(agent.tools.values()).map((t) => ({
+                const isConversational = isSimpleConversationalTurn(agent.messages)
+
+                // Dynamic Tool Masking: omit heavy tool schemas on simple conversational turns
+                const activeTools = isConversational
+                    ? Array.from(agent.tools.values()).filter((t) =>
+                          ['read_file', 'ls', 'ask_question'].includes(t.name)
+                      )
+                    : Array.from(agent.tools.values())
+
+                const toolsArray = activeTools.map((t) => ({
                     name: t.name,
-                    description: t.description,
-                    inputSchema: t.inputSchema,
+                    description: t.description ? t.description.replace(/\s+/g, ' ').trim() : '',
+                    inputSchema: trimToolSchema(t.inputSchema),
                 }))
 
                 const providerMessages = agent.convertToLlm(agent.messages) as any
 
+                const effectiveThinkingLevel = getAdaptiveThinkingLevel(
+                    agent.messages,
+                    agent.thinkingLevel
+                )
+
                 const providerModelOptions = {
                     ...agent.modelOptions,
-                    thinkingLevel: agent.thinkingLevel,
+                    thinkingLevel: effectiveThinkingLevel,
                 }
 
                 eventQueue.push({ type: 'AgentStatus', message: 'Thinking...' })

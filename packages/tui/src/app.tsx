@@ -13,19 +13,23 @@ export function ChatApp({
     agent,
     isAuthenticated: initialAuth,
     cliVersion,
+    latestVersion,
     userEmail,
     sessionRepository,
     onLogin,
+    onUpdateSuccess,
     session,
 }: {
     agent: Agent
     isAuthenticated: boolean
     cliVersion?: string
+    latestVersion?: string
     userEmail?: string
     sessionRepository?: any
     onLogin?: (
         onCode: (code: string, uri: string) => void
     ) => Promise<{ token: string; email: string | null }>
+    onUpdateSuccess?: () => Promise<void>
     session: any
 }) {
     const [exitConfirm, setExitConfirm] = useState(false)
@@ -96,6 +100,7 @@ export function ChatApp({
                 activeMessages={activeMessages}
                 isAuthenticated={isAuthenticated}
                 cliVersion={cliVersion}
+                latestVersion={latestVersion}
                 userEmail={currentEmail || userEmail}
                 expandCommands={session.expandCommands}
             />
@@ -146,6 +151,7 @@ export function ChatApp({
                     session.setQueuedPrompts?.([])
                     session.addToast?.('Started a new conversation.', 'success')
                 }}
+                onUpdateSuccess={onUpdateSuccess}
                 queuedPrompts={session.queuedPrompts}
                 grillMode={grillMode}
                 customInputMode={false}

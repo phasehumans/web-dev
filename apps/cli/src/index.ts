@@ -159,8 +159,29 @@ async function main() {
     })
 
     function AppWrapper(props: any) {
+        const [latestVersion, setLatestVersion] = React.useState<string | undefined>(undefined)
+        React.useEffect(() => {
+            import('./utils/version-check')
+                .then(({ checkForLatestVersion }) => {
+                    checkForLatestVersion(pkg.version).then((v) => {
+                        if (v) setLatestVersion(v)
+                    })
+                })
+                .catch(() => {})
+        }, [])
+
+        const handleUpdateSuccess = React.useCallback(async () => {
+            const { clearVersionCheckCache } = await import('./utils/version-check')
+            await clearVersionCheckCache()
+        }, [])
+
         const session = useAgentSession(props)
-        return React.createElement(App, { ...props, session })
+        return React.createElement(App, {
+            ...props,
+            latestVersion,
+            onUpdateSuccess: handleUpdateSuccess,
+            session,
+        })
     }
 
     const userEmail = config.decemberToken ? config.email : undefined

@@ -13,12 +13,20 @@ function renderSingleMessage(
     index: number,
     allMessages: Message[],
     cliVersion?: string,
+    latestVersion?: string,
     userEmail?: string,
     expandCommands?: boolean
 ) {
     const key = msg.id != null ? `${msg.id}-${index}` : `msg-idx-${index}`
     if (msg.role === 'header') {
-        return <Header key={key} cliVersion={cliVersion} userEmail={userEmail} />
+        return (
+            <Header
+                key={key}
+                cliVersion={cliVersion}
+                latestVersion={latestVersion}
+                userEmail={userEmail}
+            />
+        )
     }
     if (msg.role === 'user') return <UserMessage key={key} message={msg.text ?? ''} />
     if (msg.role === 'error') {
@@ -42,6 +50,7 @@ export function MessageList({
     activeMessages,
     isAuthenticated,
     cliVersion,
+    latestVersion,
     userEmail,
     expandCommands,
 }: {
@@ -50,6 +59,7 @@ export function MessageList({
     activeMessages: Message[]
     isAuthenticated: boolean
     cliVersion?: string
+    latestVersion?: string
     userEmail?: string
     expandCommands?: boolean
 }) {
@@ -58,7 +68,15 @@ export function MessageList({
     return (
         <Box flexDirection="column">
             {allMessages.map((msg, index) =>
-                renderSingleMessage(msg, index, allMessages, cliVersion, userEmail, expandCommands)
+                renderSingleMessage(
+                    msg,
+                    index,
+                    allMessages,
+                    cliVersion,
+                    latestVersion,
+                    userEmail,
+                    expandCommands
+                )
             )}
         </Box>
     )

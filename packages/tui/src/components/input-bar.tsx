@@ -22,6 +22,7 @@ type Props = {
     authUI?: React.ReactNode
     agent?: any
     resetChat?: () => void
+    onUpdateSuccess?: () => Promise<void>
     planMode?: boolean
     grillMode?: boolean
     customInputMode?: boolean
@@ -43,6 +44,7 @@ export function InputBar({
     authUI,
     agent,
     resetChat,
+    onUpdateSuccess,
     grillMode = false,
     customInputMode = false,
     onInterrupt,
@@ -159,10 +161,11 @@ export function InputBar({
                     dialog,
                     agent,
                     resetChat,
+                    onUpdateSuccess,
                 })
             }
         },
-        [toast, dialog, agent, resetChat, handleContentChange, onSubmit]
+        [toast, dialog, agent, resetChat, onUpdateSuccess, handleContentChange, onSubmit]
     )
 
     const handleSubmit = useCallback(

@@ -26,9 +26,11 @@ function getCwd(): string {
 
 export function Header({
     cliVersion = '0.1.0',
+    latestVersion,
     userEmail,
 }: {
     cliVersion?: string
+    latestVersion?: string
     userEmail?: string
 }) {
     const cwd = getCwd()
@@ -52,6 +54,9 @@ export function Header({
                 <Text color="gray">
                     Use /handoff to continue this session in December (trydecember.com)
                 </Text>
+                {latestVersion && (
+                    <Text color="gray">Run /update to upgrade to {latestVersion}</Text>
+                )}
             </Box>
         </Box>
     )

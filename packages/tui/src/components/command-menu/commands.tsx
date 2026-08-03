@@ -321,6 +321,10 @@ export const COMMANDS: Command[] = [
                     await ctx.agent.saveContext()
                 }
 
+                if (ctx.onUpdateSuccess) {
+                    await ctx.onUpdateSuccess()
+                }
+
                 ctx.toast.show({
                     variant: 'success',
                     message:

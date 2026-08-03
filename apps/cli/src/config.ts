@@ -39,6 +39,10 @@ export interface DecemberConfig {
     steeringMode?: 'all' | 'one-at-a-time'
     followUpMode?: 'all' | 'one-at-a-time'
     authPriority?: 'byok' | 'december'
+    versionCheckCache?: {
+        latestVersion: string
+        checkedAt: number
+    }
 }
 
 const CONFIG_DIR = path.join(os.homedir(), '.config', 'december')
