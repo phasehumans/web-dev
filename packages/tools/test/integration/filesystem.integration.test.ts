@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { describe, expect, test, beforeEach, afterEach } from 'bun:test'
 
 import { EditFileTool } from '../../src/edit'
+import { EditDiffTool } from '../../src/edit_diff'
 import { LsTool } from '../../src/ls'
 import { ReadFileTool } from '../../src/read'
 import { WriteFileTool } from '../../src/write'
@@ -57,6 +58,18 @@ describe('Filesystem Tools Integration', () => {
 
         const updatedContent = await Bun.file(filePath).text()
         expect(updatedContent).toContain('line2_updated')
+    })
+
+    test('edit_diff tool applies unified patch to real file', async () => {
+        const filePath = join(testDir, 'diff.txt')
+        await fsWriteFile(filePath, 'alpha\nbeta\ngamma', 'utf-8')
+
+        const diff = `@@ -1,3 +1,3 @@\n alpha\n-beta\n+beta_patched\n gamma`
+        const diffRes = await EditDiffTool.execute({ path: filePath, diff }, context)
+
+        expect(diffRes).toContain('Successfully patched file')
+        const updatedContent = await Bun.file(filePath).text()
+        expect(updatedContent).toBe('alpha\nbeta_patched\ngamma')
     })
 
     test('ls tool lists files in temporary directory', async () => {
