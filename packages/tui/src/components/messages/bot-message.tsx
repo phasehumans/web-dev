@@ -198,8 +198,16 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                         if (!block.content || block.content.trim() === '') return null
                         const isThinking =
                             block.content === 'Thinking...' ||
+                            block.content === 'Searching...' ||
+                            block.content === 'Reading...' ||
+                            block.content === 'Planning...' ||
+                            block.content === 'Coding...' ||
+                            block.content === 'Executing...' ||
+                            block.content === 'Testing...' ||
+                            block.content === 'Verifying...' ||
+                            block.content === 'Refining...' ||
+                            block.content === 'Finalizing...' ||
                             block.content === 'Working...' ||
-                            block.content === 'Connecting...' ||
                             block.content === 'Preparing...' ||
                             block.content === 'Compacting...' ||
                             block.content === 'Generating...'

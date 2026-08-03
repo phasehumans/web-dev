@@ -33,9 +33,17 @@ export async function processAgentStream({
                 let finalMsg = { ...msg }
 
                 const isStatusMessage = (content: string) =>
-                    content === 'Working...' ||
                     content === 'Thinking...' ||
-                    content === 'Connecting...' ||
+                    content === 'Searching...' ||
+                    content === 'Reading...' ||
+                    content === 'Planning...' ||
+                    content === 'Coding...' ||
+                    content === 'Executing...' ||
+                    content === 'Testing...' ||
+                    content === 'Verifying...' ||
+                    content === 'Refining...' ||
+                    content === 'Finalizing...' ||
+                    content === 'Working...' ||
                     content === 'Preparing...' ||
                     content === 'Compacting...' ||
                     content === 'Generating...' ||
@@ -47,7 +55,7 @@ export async function processAgentStream({
                 for (const event of eventsToProcess) {
                     switch (event.type) {
                         case 'TurnStart':
-                            blocks.push({ type: 'text', content: 'Connecting...' })
+                            blocks.push({ type: 'text', content: 'Thinking...' })
                             break
                         case 'AgentError': {
                             const lastBlock = blocks[blocks.length - 1]

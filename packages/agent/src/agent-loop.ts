@@ -273,7 +273,7 @@ async function streamAssistantResponse(
                     thinkingLevel: agent.thinkingLevel,
                 }
 
-                eventQueue.push({ type: 'AgentStatus', message: 'Connecting...' })
+                eventQueue.push({ type: 'AgentStatus', message: 'Thinking...' })
 
                 const generator = agent.llm.stream(
                     providerMessages,
