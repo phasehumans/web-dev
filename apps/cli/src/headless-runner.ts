@@ -152,7 +152,7 @@ export async function runHeadlessTask(
                     writeOut(event.content)
                     break
                 case 'ThinkingChunk':
-                    writeOut(event.content)
+                    // Intentionally suppressed from stdout to optimize output performance
                     break
                 case 'AgentStatus':
                     writeOut(`\n[Status: ${event.message}]\n`)

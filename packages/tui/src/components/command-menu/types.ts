@@ -7,6 +7,7 @@ export type CommandContext = {
     dialog: DialogContextValue
     agent?: any // we use any here to avoid a circular dependency if not careful, or we can import agent type. let's try importing agent type.
     resetChat?: () => void
+    onUpdateSuccess?: () => Promise<void>
 }
 
 export type Command = {

@@ -174,7 +174,7 @@ function CollapsibleCommandOutput({
     )
 }
 
-export function BotMessage({ blocks, usage, expandCommands }: Props) {
+export const BotMessage = React.memo(function BotMessage({ blocks, usage, expandCommands }: Props) {
     return (
         <Box flexDirection="column" paddingX={4} paddingY={0} gap={0} marginTop={0}>
             {blocks.map((block, idx) => {
@@ -198,7 +198,18 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
                         if (!block.content || block.content.trim() === '') return null
                         const isThinking =
                             block.content === 'Thinking...' ||
+                            block.content === 'Searching...' ||
+                            block.content === 'Reading...' ||
+                            block.content === 'Planning...' ||
+                            block.content === 'Coding...' ||
+                            block.content === 'Executing...' ||
+                            block.content === 'Testing...' ||
+                            block.content === 'Verifying...' ||
+                            block.content === 'Refining...' ||
+                            block.content === 'Finalizing...' ||
                             block.content === 'Working...' ||
+                            block.content === 'Preparing...' ||
+                            block.content === 'Compacting...' ||
                             block.content === 'Generating...'
                         if (isThinking) {
                             if (idx !== blocks.length - 1) return null
@@ -531,4 +542,4 @@ export function BotMessage({ blocks, usage, expandCommands }: Props) {
             })}
         </Box>
     )
-}
+})

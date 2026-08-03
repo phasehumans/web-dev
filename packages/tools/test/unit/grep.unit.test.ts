@@ -3,25 +3,34 @@ import { describe, expect, test, mock } from 'bun:test'
 import { GrepSearchTool } from '../../src/grep'
 import { createMockContext } from '../mock-context'
 
-describe('GrepSearchTool', () => {
+describe('GrepSearchTool (Unit)', () => {
     test('should search files successfully', async () => {
         const context = createMockContext()
-        context.operations.search.grep = mock(async () => 'file.ts:1: hello')
+        context.operations.search.grep = mock(async () => 'file1.ts:1:const x = 1')
 
-        const result = await GrepSearchTool.execute({ directory: './src', query: 'hello' }, context)
+        const result = await GrepSearchTool.execute({ query: 'const x' }, context)
+        expect(context.operations.search.grep).toHaveBeenCalledWith('.', 'const x')
+        expect(result).toBe('file1.ts:1:const x = 1')
+    })
 
-        expect(context.operations.search.grep).toHaveBeenCalledWith('./src', 'hello')
-        expect(result).toContain('file.ts:1: hello')
+    test('should handle empty grep matches gracefully', async () => {
+        const context = createMockContext()
+        context.operations.search.grep = mock(async () => '')
+
+        const result = await GrepSearchTool.execute({ query: 'missing' }, context)
+        expect(result).toBe('No matches found.')
     })
 
     test('should handle search errors gracefully', async () => {
         const context = createMockContext()
         context.operations.search.grep = mock(async () => {
-            throw new Error('grep not found')
+            throw new Error('Grep failed')
         })
 
-        const result = await GrepSearchTool.execute({ directory: '.', query: 'test' }, context)
-        expect(result).toContain('Error running grep')
-        expect(result).toContain('grep not found')
+        const result = await GrepSearchTool.execute(
+            { query: 'test', directory: '/invalid' },
+            context
+        )
+        expect(result).toBe('Error running grep: Grep failed')
     })
 })

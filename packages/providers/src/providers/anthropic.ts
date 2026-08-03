@@ -4,11 +4,17 @@ import { safeParseJson } from '@december/shared'
 import { createProvider } from '../models.ts'
 import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
-export function anthropicProvider(baseURL?: string, apiKey?: string): LLMProvider {
-    const client = new Anthropic({
-        baseURL,
-        apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
-    })
+export function anthropicProvider(
+    baseURL?: string,
+    apiKey?: string,
+    customClient?: Anthropic
+): LLMProvider {
+    const client =
+        customClient ||
+        new Anthropic({
+            baseURL,
+            apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
+        })
 
     return createProvider(
         {
@@ -59,22 +65,64 @@ export function anthropicProvider(baseURL?: string, apiKey?: string): LLMProvide
                 } else {
                     antMessages.push({
                         role: msg.role as 'user',
-                        content: msg.content,
+                        content: [
+                            {
+                                type: 'text',
+                                text: msg.content,
+                            },
+                        ],
                     })
                 }
             }
 
-            const antTools: Anthropic.Tool[] | undefined = tools?.map((t) => ({
-                name: t.name,
-                description: t.description,
-                input_schema: t.inputSchema,
-            }))
+            // Apply ephemeral prompt caching directive to the last message turn
+            if (antMessages.length > 0) {
+                const lastMsg = antMessages[antMessages.length - 1]
+                if (typeof lastMsg.content === 'string') {
+                    lastMsg.content = [
+                        {
+                            type: 'text',
+                            text: lastMsg.content,
+                            cache_control: { type: 'ephemeral' },
+                        },
+                    ]
+                } else if (Array.isArray(lastMsg.content) && lastMsg.content.length > 0) {
+                    const lastBlock = lastMsg.content[lastMsg.content.length - 1]
+                    if (lastBlock && typeof lastBlock === 'object') {
+                        ;(lastBlock as any).cache_control = { type: 'ephemeral' }
+                    }
+                }
+            }
+
+            const antTools: Anthropic.Tool[] | undefined = tools?.map((t, idx) => {
+                const toolDef: Anthropic.Tool = {
+                    name: t.name,
+                    description: t.description,
+                    input_schema: t.inputSchema,
+                }
+                if (tools && idx === tools.length - 1) {
+                    ;(toolDef as any).cache_control = { type: 'ephemeral' }
+                }
+                return toolDef
+            })
+
+            const formattedSystem: Anthropic.TextBlockParam[] | undefined = systemPrompt
+                ? [
+                      {
+                          type: 'text',
+                          text: systemPrompt,
+                          cache_control: { type: 'ephemeral' },
+                      },
+                  ]
+                : undefined
 
             const thinkingLevel = modelOptions?.thinkingLevel
-            let thinking: { type: 'enabled'; budget_tokens: number } | undefined
+            let thinking: { type: 'enabled' | 'adaptive'; budget_tokens?: number } | undefined
             let maxTokens = modelOptions?.max_tokens || 4096
 
-            if (thinkingLevel && thinkingLevel !== 'off') {
+            if (thinkingLevel === 'auto') {
+                thinking = { type: 'adaptive' }
+            } else if (thinkingLevel && thinkingLevel !== 'off') {
                 const budgetMap: Record<string, number> = {
                     minimal: 1024,
                     low: 2048,
@@ -92,7 +140,7 @@ export function anthropicProvider(baseURL?: string, apiKey?: string): LLMProvide
                 {
                     model: modelOptions?.model || 'claude-3-5-sonnet-20241022',
                     messages: antMessages,
-                    system: systemPrompt,
+                    system: formattedSystem as any,
                     tools: antTools,
                     stream: true,
                     max_tokens: maxTokens,

@@ -6,13 +6,16 @@ import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../type
 export function openaiProvider(
     baseURL?: string,
     apiKey?: string,
-    defaultHeaders?: Record<string, string>
+    defaultHeaders?: Record<string, string>,
+    customClient?: OpenAI
 ): LLMProvider {
-    const client = new OpenAI({
-        baseURL,
-        apiKey: apiKey || process.env.OPENAI_API_KEY,
-        defaultHeaders,
-    })
+    const client =
+        customClient ||
+        new OpenAI({
+            baseURL,
+            apiKey: apiKey || process.env.OPENAI_API_KEY || 'dummy-key',
+            defaultHeaders,
+        })
 
     return createProvider(
         {

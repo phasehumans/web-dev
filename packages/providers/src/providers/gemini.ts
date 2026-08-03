@@ -44,10 +44,12 @@ function sanitizeSchemaForGemini(schema: any): any {
     return result
 }
 
-export function geminiProvider(apiKey?: string): LLMProvider {
-    const client = new GoogleGenAI({
-        apiKey: apiKey || process.env.GEMINI_API_KEY,
-    })
+export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLMProvider {
+    const client =
+        customClient ||
+        new GoogleGenAI({
+            apiKey: apiKey || process.env.GEMINI_API_KEY || 'dummy-key',
+        })
 
     return createProvider(
         {
@@ -167,7 +169,11 @@ export function geminiProvider(apiKey?: string): LLMProvider {
 
             const thinkingLevel = modelOptions?.thinkingLevel
             let thinkingConfig: { thinkingBudget?: number } | undefined
-            if (thinkingLevel && thinkingLevel !== 'off') {
+            if (thinkingLevel === 'off') {
+                thinkingConfig = { thinkingBudget: 0 }
+            } else if (thinkingLevel === 'auto') {
+                thinkingConfig = { thinkingBudget: -1 }
+            } else if (thinkingLevel) {
                 const budgetMap: Record<string, number> = {
                     minimal: 1024,
                     low: 2048,

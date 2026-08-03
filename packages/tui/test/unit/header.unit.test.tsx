@@ -17,4 +17,10 @@ describe('Header Component (Unit)', () => {
         expect(frame).toContain('1.0.0')
         expect(frame).toContain('test@example.com')
     })
+
+    it('renders 3rd tip line when latestVersion is available', () => {
+        const { lastFrame } = render(<Header cliVersion="0.2.25" latestVersion="0.2.26" />)
+        const frame = lastFrame()
+        expect(frame).toContain('Run /update to upgrade to 0.2.26')
+    })
 })

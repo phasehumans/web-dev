@@ -33,8 +33,20 @@ export async function processAgentStream({
                 let finalMsg = { ...msg }
 
                 const isStatusMessage = (content: string) =>
-                    content === 'Working...' ||
                     content === 'Thinking...' ||
+                    content === 'Searching...' ||
+                    content === 'Reading...' ||
+                    content === 'Planning...' ||
+                    content === 'Coding...' ||
+                    content === 'Executing...' ||
+                    content === 'Testing...' ||
+                    content === 'Verifying...' ||
+                    content === 'Refining...' ||
+                    content === 'Finalizing...' ||
+                    content === 'Working...' ||
+                    content === 'Preparing...' ||
+                    content === 'Compacting...' ||
+                    content === 'Generating...' ||
                     content.startsWith('Rate limit') ||
                     content.startsWith('High demand') ||
                     content.startsWith('LLM Provider rate limit') ||
@@ -43,7 +55,7 @@ export async function processAgentStream({
                 for (const event of eventsToProcess) {
                     switch (event.type) {
                         case 'TurnStart':
-                            blocks.push({ type: 'text', content: 'Working...' })
+                            blocks.push({ type: 'text', content: 'Thinking...' })
                             break
                         case 'AgentError': {
                             const lastBlock = blocks[blocks.length - 1]
@@ -110,19 +122,7 @@ export async function processAgentStream({
                             break
                         }
                         case 'ThinkingChunk': {
-                            const lastThinkBlock = blocks[blocks.length - 1]
-                            if (lastThinkBlock && lastThinkBlock.type === 'thinking') {
-                                lastThinkBlock.content += event.content
-                            } else {
-                                if (
-                                    blocks.length > 0 &&
-                                    blocks[blocks.length - 1].type === 'text' &&
-                                    isStatusMessage(blocks[blocks.length - 1].content)
-                                ) {
-                                    blocks.pop()
-                                }
-                                blocks.push({ type: 'thinking', content: event.content })
-                            }
+                            // Intentionally suppressed from chat display to optimize UI rendering performance
                             break
                         }
                         case 'ToolCallStart':
@@ -174,13 +174,19 @@ export async function processAgentStream({
         )
     }
 
+    const FRAME_BUDGET_MS = 33 // ~30 FPS frame budget for terminal rendering
+
     for await (const event of stream) {
         pendingEvents.push(event)
-        if (
-            event.type === 'StreamChunk' ||
-            event.type === 'TextChunk' ||
-            event.type === 'ThinkingChunk'
-        ) {
+
+        const isImmediateEvent =
+            event.type === 'TurnStart' ||
+            event.type === 'AgentError' ||
+            event.type === 'AgentInterrupt' ||
+            event.type === 'ToolCallStart' ||
+            event.type === 'ToolCallResult'
+
+        if (isImmediateEvent) {
             if (flushTimeout) {
                 clearTimeout(flushTimeout)
                 flushTimeout = null
@@ -190,13 +196,12 @@ export async function processAgentStream({
             flushTimeout = setTimeout(() => {
                 flush()
                 flushTimeout = null
-            }, 16)
+            }, FRAME_BUDGET_MS)
         }
     }
 
     if (flushTimeout) {
         clearTimeout(flushTimeout)
-        flushTimeout = null
     }
     flush()
 }
