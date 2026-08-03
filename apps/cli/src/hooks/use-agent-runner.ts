@@ -174,13 +174,19 @@ export async function processAgentStream({
         )
     }
 
+    const FRAME_BUDGET_MS = 33 // ~30 FPS frame budget for terminal rendering
+
     for await (const event of stream) {
         pendingEvents.push(event)
-        if (
-            event.type === 'StreamChunk' ||
-            event.type === 'TextChunk' ||
-            event.type === 'ThinkingChunk'
-        ) {
+
+        const isImmediateEvent =
+            event.type === 'TurnStart' ||
+            event.type === 'AgentError' ||
+            event.type === 'AgentInterrupt' ||
+            event.type === 'ToolCallStart' ||
+            event.type === 'ToolCallResult'
+
+        if (isImmediateEvent) {
             if (flushTimeout) {
                 clearTimeout(flushTimeout)
                 flushTimeout = null
@@ -190,7 +196,7 @@ export async function processAgentStream({
             flushTimeout = setTimeout(() => {
                 flush()
                 flushTimeout = null
-            }, 16)
+            }, FRAME_BUDGET_MS)
         }
     }
 
