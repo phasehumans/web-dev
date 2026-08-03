@@ -48,21 +48,24 @@ export const handlers = [
     }),
 
     // Google Gemini Generate Content Mock
-    http.post('https://generativelanguage.googleapis.com/*', () => {
-        return HttpResponse.json({
-            candidates: [
-                {
-                    content: {
-                        parts: [
-                            {
-                                text: 'Mocked Gemini response from MSW',
-                            },
-                        ],
-                        role: 'model',
+    http.post(
+        ({ request }) => request.url.includes('generativelanguage.googleapis.com'),
+        () => {
+            return HttpResponse.json({
+                candidates: [
+                    {
+                        content: {
+                            parts: [
+                                {
+                                    text: 'Mocked Gemini response from MSW',
+                                },
+                            ],
+                            role: 'model',
+                        },
+                        finishReason: 'STOP',
                     },
-                    finishReason: 'STOP',
-                },
-            ],
-        })
-    }),
+                ],
+            })
+        }
+    ),
 ]

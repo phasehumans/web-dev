@@ -44,10 +44,12 @@ function sanitizeSchemaForGemini(schema: any): any {
     return result
 }
 
-export function geminiProvider(apiKey?: string): LLMProvider {
-    const client = new GoogleGenAI({
-        apiKey: apiKey || process.env.GEMINI_API_KEY,
-    })
+export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLMProvider {
+    const client =
+        customClient ||
+        new GoogleGenAI({
+            apiKey: apiKey || process.env.GEMINI_API_KEY || 'dummy-key',
+        })
 
     return createProvider(
         {
