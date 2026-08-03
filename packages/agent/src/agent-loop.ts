@@ -438,18 +438,31 @@ async function executeToolCalls(
     eventQueue: AsyncQueue<AgentEvent>,
     signal: AbortSignal
 ) {
-    const isSequentialBatch = toolCalls.some((tc) => {
+    const isSequentialTool = (tc: ToolCall) => {
         const tool = agent.tools.get(tc.name)
         return (
             tool?.executionMode === 'sequential' ||
             ['bash', 'write_file', 'edit_file', 'edit_diff'].includes(tc.name)
         )
-    })
+    }
 
-    if (isSequentialBatch) {
-        await executeToolCallsSequential(agent, toolCalls, eventQueue, signal)
-    } else {
-        await executeToolCallsParallel(agent, toolCalls, eventQueue, signal)
+    const parallelReadCalls: ToolCall[] = []
+    const sequentialWriteCalls: ToolCall[] = []
+
+    for (const tc of toolCalls) {
+        if (isSequentialTool(tc)) {
+            sequentialWriteCalls.push(tc)
+        } else {
+            parallelReadCalls.push(tc)
+        }
+    }
+
+    if (parallelReadCalls.length > 0) {
+        await executeToolCallsParallel(agent, parallelReadCalls, eventQueue, signal)
+    }
+
+    if (sequentialWriteCalls.length > 0 && !signal.aborted) {
+        await executeToolCallsSequential(agent, sequentialWriteCalls, eventQueue, signal)
     }
 }
 
@@ -465,7 +478,7 @@ async function executeSingleTool(
     let resultStr = ''
     let errorStr = undefined
 
-    if (agent.operations.ui?.requestPermission) {
+    if (agent.operations?.ui?.requestPermission) {
         const hookRes = await agent.operations.ui.requestPermission(toolCall)
         if (hookRes?.block) {
             errorStr = `Tool execution blocked: ${hookRes.reason || 'No reason provided'}`
