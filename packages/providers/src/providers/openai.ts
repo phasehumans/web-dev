@@ -3,6 +3,14 @@ import { OpenAI } from 'openai'
 import { createProvider } from '../models.ts'
 import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
+export function resolveOpenAIModel(model?: string): string {
+    let name = model || 'gpt-4o'
+    if (name.startsWith('openai/')) {
+        name = name.slice('openai/'.length)
+    }
+    return name
+}
+
 export function openaiProvider(
     baseURL?: string,
     apiKey?: string,
@@ -91,7 +99,7 @@ export function openaiProvider(
 
             const stream = await client.chat.completions.create(
                 {
-                    model: modelOptions?.model || 'gpt-4o',
+                    model: resolveOpenAIModel(modelOptions?.model),
                     messages: oaiMessages,
                     tools: oaiTools,
                     stream: true,

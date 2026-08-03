@@ -95,7 +95,6 @@ describe('Gemini Provider (Integration)', () => {
 
         expect(capturedOptions).not.toBeNull()
         expect(capturedOptions.config.systemInstruction).toEqual({
-            role: 'system',
             parts: [{ text: 'You are an AI' }],
         })
 

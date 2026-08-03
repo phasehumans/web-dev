@@ -2,6 +2,10 @@ export const getProviderModels = (provider: string) => {
     switch (provider) {
         case 'anthropic':
             return [
+                { label: 'Claude Fable 5', value: 'claude-fable-5' },
+                { label: 'Claude Opus 5', value: 'claude-opus-5' },
+                { label: 'Claude Sonnet 5', value: 'claude-sonnet-5' },
+                { label: 'Claude Haiku 4.5', value: 'claude-haiku-4-5-20251001' },
                 { label: 'Claude 3.7 Sonnet', value: 'claude-3-7-sonnet-latest' },
                 { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet-latest' },
                 { label: 'Claude 3.5 Haiku', value: 'claude-3-5-haiku-latest' },
@@ -14,7 +18,6 @@ export const getProviderModels = (provider: string) => {
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
                 { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
                 { label: 'Gemini 3.5 Flash Lite', value: 'gemini-3.5-flash-lite' },
-                { label: 'Gemini 3.1 Pro', value: 'gemini-3.1-pro' },
                 { label: 'Gemini 3 Pro Preview', value: 'gemini-3-pro-preview' },
                 { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
                 { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
@@ -25,14 +28,17 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'openai':
             return [
+                { label: 'GPT-5.6 Sol', value: 'gpt-5.6-sol' },
+                { label: 'GPT-5.6 Terra', value: 'gpt-5.6-terra' },
+                { label: 'GPT-5.6 Luna', value: 'gpt-5.6-luna' },
+                { label: 'GPT-5.5 Instant', value: 'gpt-5.5-instant' },
+                { label: 'GPT-5.4 Mini', value: 'gpt-5.4-mini' },
                 { label: 'o3-mini', value: 'o3-mini' },
                 { label: 'o1', value: 'o1' },
                 { label: 'o1-mini', value: 'o1-mini' },
-                { label: 'GPT-4.5 Preview', value: 'gpt-4.5-preview' },
                 { label: 'GPT-4o', value: 'gpt-4o' },
                 { label: 'GPT-4o Mini', value: 'gpt-4o-mini' },
                 { label: 'GPT-4 Turbo', value: 'gpt-4-turbo' },
-                { label: 'GPT-3.5 Turbo', value: 'gpt-3.5-turbo' },
             ]
         case 'openrouter':
             return [

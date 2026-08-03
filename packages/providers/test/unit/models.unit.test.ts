@@ -6,6 +6,7 @@ describe('Models Utility & Context Windows (Unit)', () => {
     it('returns exact context window size for known model names in lookup map', () => {
         expect(getModelContextWindow('gemini-3.6-flash')).toBe(1000000)
         expect(getModelContextWindow('gemini-3.5-flash')).toBe(1000000)
+        expect(getModelContextWindow('gemini-3-pro-preview')).toBe(1000000)
         expect(getModelContextWindow('gemini-3.1-pro')).toBe(1000000)
         expect(getModelContextWindow('claude-3-7-sonnet-latest')).toBe(200000)
         expect(getModelContextWindow('claude-3-5-sonnet-20241022')).toBe(200000)

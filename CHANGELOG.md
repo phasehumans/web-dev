@@ -1,4 +1,4 @@
-## [unreleased]
+## [0.2.26] - 2026-08-03
 
 ### Features
 
@@ -19,6 +19,10 @@
 
 - _(providers)_ Add extensive unit test suite for models, OpenAI, and Gemini
 - _(tools,providers)_ Add extensive unit & integration tests and cleanup redundant files
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.26
 
 ## [0.2.25] - 2026-08-02
 

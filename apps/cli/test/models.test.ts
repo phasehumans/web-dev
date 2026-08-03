@@ -14,11 +14,12 @@ describe('models utils', () => {
             const models = getProviderModels('anthropic')
             expect(models).toEqual(
                 expect.arrayContaining([
+                    expect.objectContaining({ value: 'claude-fable-5' }),
                     expect.objectContaining({ value: 'claude-3-7-sonnet-latest' }),
                     expect.objectContaining({ value: 'claude-3-5-sonnet-latest' }),
                 ])
             )
-            expect(models.length).toBe(5)
+            expect(models.length).toBe(9)
         })
 
         it('returns google models when provider is google', () => {
@@ -26,21 +27,22 @@ describe('models utils', () => {
             expect(models).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({ value: 'gemini-3.6-flash' }),
-                    expect.objectContaining({ value: 'gemini-3.1-pro' }),
+                    expect.objectContaining({ value: 'gemini-3-pro-preview' }),
                 ])
             )
-            expect(models.length).toBe(11)
+            expect(models.length).toBe(10)
         })
 
         it('returns openai models when provider is openai', () => {
             const models = getProviderModels('openai')
             expect(models).toEqual(
                 expect.arrayContaining([
+                    expect.objectContaining({ value: 'gpt-5.6-sol' }),
                     expect.objectContaining({ value: 'o3-mini' }),
                     expect.objectContaining({ value: 'gpt-4o' }),
                 ])
             )
-            expect(models.length).toBe(8)
+            expect(models.length).toBe(11)
         })
 
         it('returns default model when provider is unknown', () => {
@@ -60,8 +62,8 @@ describe('models utils', () => {
 
     describe('getDefaultModelForProvider', () => {
         it('returns first available model for provider', () => {
-            expect(getDefaultModelForProvider('anthropic')).toBe('claude-3-7-sonnet-latest')
-            expect(getDefaultModelForProvider('openai')).toBe('o3-mini')
+            expect(getDefaultModelForProvider('anthropic')).toBe('claude-fable-5')
+            expect(getDefaultModelForProvider('openai')).toBe('gpt-5.6-sol')
             expect(getDefaultModelForProvider('december_proxy')).toBe('gemini-3.6-flash')
         })
     })

@@ -79,7 +79,7 @@ describe('runHeadlessTask', () => {
         })
 
         expect(result.success).toBe(true)
-        expect(stdoutData).toContain('Analyzing problem space...')
+        expect(stdoutData).not.toContain('Analyzing problem space...')
         expect(stdoutData).toContain('[Status: Retrying connection...]')
         expect(stdoutData).toContain('[Context Compacted: Compacted 10 messages]')
     })

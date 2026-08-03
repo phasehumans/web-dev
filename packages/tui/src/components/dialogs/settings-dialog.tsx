@@ -127,7 +127,7 @@ export function SettingsDialog({ close, toast }: Props) {
                 label: `Default Model: [${defaultModel}]`,
                 value:
                     defaultModel === 'gemini-3.6-flash'
-                        ? 'model:gemini-3.1-pro'
+                        ? 'model:gemini-3-pro-preview'
                         : 'model:gemini-3.6-flash',
             },
             {

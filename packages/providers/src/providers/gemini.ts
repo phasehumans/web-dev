@@ -44,6 +44,17 @@ function sanitizeSchemaForGemini(schema: any): any {
     return result
 }
 
+export function resolveGeminiModel(model?: string): string {
+    let name = model || 'gemini-3.6-flash'
+    if (name.startsWith('google/')) {
+        name = name.slice('google/'.length)
+    }
+    if (name === 'gemini-3.1-pro') {
+        return 'gemini-3-pro-preview'
+    }
+    return name
+}
+
 export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLMProvider {
     const client =
         customClient ||
@@ -169,11 +180,7 @@ export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLM
 
             const thinkingLevel = modelOptions?.thinkingLevel
             let thinkingConfig: { thinkingBudget?: number } | undefined
-            if (thinkingLevel === 'off') {
-                thinkingConfig = { thinkingBudget: 0 }
-            } else if (thinkingLevel === 'auto') {
-                thinkingConfig = { thinkingBudget: -1 }
-            } else if (thinkingLevel) {
+            if (thinkingLevel && thinkingLevel !== 'off' && thinkingLevel !== 'auto') {
                 const budgetMap: Record<string, number> = {
                     minimal: 1024,
                     low: 2048,
@@ -187,11 +194,11 @@ export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLM
             }
 
             const responseStream = await (client.models.generateContentStream as any)({
-                model: modelOptions?.model || 'gemini-3.6-flash',
+                model: resolveGeminiModel(modelOptions?.model),
                 contents: geminiMessages,
                 config: {
                     systemInstruction: systemPrompt
-                        ? { role: 'system', parts: [{ text: systemPrompt }] }
+                        ? { parts: [{ text: systemPrompt }] }
                         : undefined,
                     tools: geminiTools,
                     temperature: modelOptions?.temperature,

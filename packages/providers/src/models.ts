@@ -4,14 +4,24 @@ export const MODEL_CONTEXT_WINDOWS: Record<string, number> = {
     'gemini-3.6-flash': 1000000,
     'gemini-3.5-flash': 1000000,
     'gemini-3.5-flash-lite': 1000000,
+    'gemini-3-pro-preview': 1000000,
     'gemini-3.1-pro': 1000000,
     'gemini-2.5-pro': 1000000,
     'gemini-2.5-flash': 1000000,
+    'claude-fable-5': 200000,
+    'claude-opus-5': 200000,
+    'claude-sonnet-5': 200000,
+    'claude-haiku-4-5-20251001': 200000,
     'claude-3-7-sonnet-latest': 200000,
     'claude-3-5-sonnet-20241022': 200000,
     'claude-3-5-sonnet-latest': 200000,
     'claude-3-5-haiku-latest': 200000,
     'claude-3-haiku-20240307': 200000,
+    'gpt-5.6-sol': 200000,
+    'gpt-5.6-terra': 200000,
+    'gpt-5.6-luna': 200000,
+    'gpt-5.5-instant': 128000,
+    'gpt-5.4-mini': 128000,
     'o3-mini': 200000,
     o1: 200000,
     'o1-mini': 128000,
@@ -31,6 +41,7 @@ export function getModelContextWindow(value: string): number {
     if (lower.includes('gemini')) return 1000000
     if (lower.includes('claude')) return 200000
     if (lower.includes('o3-mini') || lower.includes('o1')) return 200000
+    if (lower.includes('gpt-5')) return 200000
     if (lower.includes('gpt-4.5')) return 128000
     if (lower.includes('gpt-4')) return 128000
     if (lower.includes('gpt-3.5')) return 16385

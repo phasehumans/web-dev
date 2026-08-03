@@ -4,6 +4,20 @@ import { safeParseJson } from '@december/shared'
 import { createProvider } from '../models.ts'
 import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
+export function resolveAnthropicModel(model?: string): string {
+    let name = model || 'claude-3-5-sonnet-20241022'
+    if (name.startsWith('anthropic/')) {
+        name = name.slice('anthropic/'.length)
+    }
+    const aliasMap: Record<string, string> = {
+        'claude-3-7-sonnet-latest': 'claude-3-7-sonnet-20250219',
+        'claude-3-5-sonnet-latest': 'claude-3-5-sonnet-20241022',
+        'claude-3-5-haiku-latest': 'claude-3-5-haiku-20241022',
+        'claude-3-opus-latest': 'claude-3-opus-20240229',
+    }
+    return aliasMap[name] || name
+}
+
 export function anthropicProvider(
     baseURL?: string,
     apiKey?: string,
@@ -138,7 +152,7 @@ export function anthropicProvider(
 
             const stream = await client.messages.create(
                 {
-                    model: modelOptions?.model || 'claude-3-5-sonnet-20241022',
+                    model: resolveAnthropicModel(modelOptions?.model),
                     messages: antMessages,
                     system: formattedSystem as any,
                     tools: antTools,

@@ -149,7 +149,12 @@ describe('Anthropic Provider (Integration)', () => {
             },
         ])
         expect(capturedOptions.tools).toEqual([
-            { name: 'calc', description: 'calculate', input_schema: {} },
+            {
+                name: 'calc',
+                description: 'calculate',
+                input_schema: {},
+                cache_control: { type: 'ephemeral' },
+            },
         ])
     })
 

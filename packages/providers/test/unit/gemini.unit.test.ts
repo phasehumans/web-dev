@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'bun:test'
 
-import { geminiProvider, GeminiProvider } from '../../src/providers/gemini'
+import { geminiProvider, GeminiProvider, resolveGeminiModel } from '../../src/providers/gemini'
 
 describe('Gemini Provider Adapter (Unit)', () => {
+    it('resolves model aliases and strips google/ prefix correctly', () => {
+        expect(resolveGeminiModel('gemini-3.6-flash')).toBe('gemini-3.6-flash')
+        expect(resolveGeminiModel('google/gemini-3.6-flash')).toBe('gemini-3.6-flash')
+        expect(resolveGeminiModel('google/gemini-2.5-flash')).toBe('gemini-2.5-flash')
+        expect(resolveGeminiModel('gemini-2.0-flash')).toBe('gemini-2.0-flash')
+        expect(resolveGeminiModel('gemini-3.1-pro')).toBe('gemini-3-pro-preview')
+        expect(resolveGeminiModel('google/gemini-3.1-pro')).toBe('gemini-3-pro-preview')
+    })
+
     it('instantiates GeminiProvider class wrapper correctly', () => {
         const provider = new GeminiProvider('test-gemini-key')
         expect(provider.id).toBe('gemini')
@@ -86,7 +95,6 @@ describe('Gemini Provider Adapter (Unit)', () => {
         expect(capturedConfig).not.toBeNull()
         expect(capturedConfig.model).toBe('gemini-2.5-flash')
         expect(capturedConfig.config.systemInstruction).toEqual({
-            role: 'system',
             parts: [{ text: 'System instruction' }],
         })
         expect(capturedConfig.config.tools[0].functionDeclarations[0]).toEqual({

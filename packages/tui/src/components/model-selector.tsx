@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 const MODELS = [
     { id: 'gemini-3.6-flash', label: 'gemini-3.6-flash' },
-    { id: 'gemini-3.1-pro', label: 'gemini-3.1-pro' },
+    { id: 'gemini-3-pro-preview', label: 'gemini-3-pro-preview' },
     { id: 'claude-3-7-sonnet-latest', label: 'claude-3-7-sonnet-latest' },
     { id: 'claude-3-5-sonnet-latest', label: 'claude-3-5-sonnet-latest' },
     { id: 'o3-mini', label: 'o3-mini' },
