@@ -35,9 +35,10 @@ export async function processAgentStream({
                 const isStatusMessage = (content: string) =>
                     content === 'Working...' ||
                     content === 'Thinking...' ||
-                    content === 'Connecting to model...' ||
-                    content === 'Preparing context...' ||
-                    content === 'Model thinking...' ||
+                    content === 'Connecting...' ||
+                    content === 'Preparing...' ||
+                    content === 'Compacting...' ||
+                    content === 'Generating...' ||
                     content.startsWith('Rate limit') ||
                     content.startsWith('High demand') ||
                     content.startsWith('LLM Provider rate limit') ||
@@ -46,7 +47,7 @@ export async function processAgentStream({
                 for (const event of eventsToProcess) {
                     switch (event.type) {
                         case 'TurnStart':
-                            blocks.push({ type: 'text', content: 'Connecting to model...' })
+                            blocks.push({ type: 'text', content: 'Connecting...' })
                             break
                         case 'AgentError': {
                             const lastBlock = blocks[blocks.length - 1]
