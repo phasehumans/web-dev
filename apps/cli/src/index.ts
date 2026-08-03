@@ -1,47 +1,14 @@
 #!/usr/bin/env node
 
-import { AgentHarness } from '@december/agent'
-
-function AppWrapper(props: any) {
-    const session = useAgentSession(props)
-    return React.createElement(App, { ...props, session })
-}
-
-import { openaiProvider } from '@december/providers'
-import {
-    BashTool,
-    ReadFileTool,
-    WriteFileTool,
-    LsTool,
-    EditFileTool,
-    EditDiffTool,
-    FindFilesTool,
-    GrepSearchTool,
-    AskQuestionTool,
-    ManageTaskTool,
-    BrowserTool,
-    WebSearchTool,
-} from '@december/tools'
-import { ChatApp as App } from '@december/tui'
-import { RootLayout } from '@december/tui'
-import { render } from 'ink'
-import React from 'react'
-
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
-import { loginViaDeviceCode } from './auth'
-export { parseCliArgs, getHelpText } from './args'
 import { handleLogoutCommand, handleInitCommand } from './commands'
+
+export { parseCliArgs, getHelpText } from './args'
 export { handleLogoutCommand, handleInitCommand } from './commands'
-import { getProviderConfig, loadConfig, saveConfig, getAuthStatus } from './config'
-import { FileSessionRepository } from './file-session-repository'
-import { runHeadlessTask, suppressConsole } from './headless-runner'
 export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
 export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
-import { useAgentSession } from './hooks/use-agent-session'
-import { localOperations } from './local-operations'
-import { instantiateProvider } from './utils/provider-factory'
 
 async function main() {
     process.title = 'december'
@@ -69,14 +36,62 @@ async function main() {
         process.exit(0)
     }
 
-    // suppress noisy sdk console logs that corrupt the ink tui layout
+    if (parsedArgs.command === 'login') {
+        const { loginViaDeviceCode } = await import('./auth')
+        const { loadConfig, saveConfig } = await import('./config')
+        console.log('Generating device code for December login...')
+        const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
+            console.log(`Please open ${uri} on any device and enter code: ${code}`)
+        })
+        const configToSave = await loadConfig()
+        configToSave.decemberToken = token
+        if (email) configToSave.email = email
+        await saveConfig(configToSave)
+        console.log('Successfully logged in via device code!')
+        process.exit(0)
+    }
+
+    // Lazy load heavy dependencies ONLY when running an interactive session or headless task
+    const [
+        { AgentHarness },
+        { openaiProvider },
+        toolsModule,
+        tuiModule,
+        inkModule,
+        reactModule,
+        { FileSessionRepository },
+        { getProviderConfig, loadConfig, getAuthStatus },
+        { runHeadlessTask, suppressConsole },
+        { useAgentSession },
+        { localOperations },
+        { instantiateProvider },
+    ] = await Promise.all([
+        import('@december/agent'),
+        import('@december/providers'),
+        import('@december/tools'),
+        import('@december/tui'),
+        import('ink'),
+        import('react'),
+        import('./file-session-repository'),
+        import('./config'),
+        import('./headless-runner'),
+        import('./hooks/use-agent-session'),
+        import('./local-operations'),
+        import('./utils/provider-factory'),
+    ])
+
+    const React = reactModule.default || reactModule
+    const { render } = inkModule
+    const { ChatApp: App, RootLayout } = tuiModule
+
+    // Suppress noisy sdk console logs that corrupt the ink tui layout
     suppressConsole()
 
     const providerConfig = await getProviderConfig()
     const authStatus = await getAuthStatus()
 
-    // if not authenticated, we pass a dummy provider so the agent can boot.
-    // the tui will intercept prompts and force them to /login
+    // If not authenticated, pass a dummy provider so the agent can boot.
+    // The TUI will intercept prompts and force them to /login
     let llm: any
     if (providerConfig) {
         llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
@@ -94,18 +109,18 @@ async function main() {
     const harness = new AgentHarness({
         llm: llm,
         tools: [
-            BashTool,
-            ReadFileTool,
-            WriteFileTool,
-            LsTool,
-            EditFileTool,
-            EditDiffTool,
-            FindFilesTool,
-            GrepSearchTool,
-            AskQuestionTool,
-            ManageTaskTool,
-            BrowserTool,
-            WebSearchTool,
+            toolsModule.BashTool,
+            toolsModule.ReadFileTool,
+            toolsModule.WriteFileTool,
+            toolsModule.LsTool,
+            toolsModule.EditFileTool,
+            toolsModule.EditDiffTool,
+            toolsModule.FindFilesTool,
+            toolsModule.GrepSearchTool,
+            toolsModule.AskQuestionTool,
+            toolsModule.ManageTaskTool,
+            toolsModule.BrowserTool,
+            toolsModule.WebSearchTool,
         ],
         operations: localOperations,
         modelOptions: {
@@ -121,7 +136,7 @@ async function main() {
         workspaceDir: process.cwd(),
         hooks: {
             beforeToolCall: async (toolCall) => {
-                // future integration: hook into the tui to request user approval for destructive bash commands
+                // Future integration: hook into the TUI to request user approval for destructive bash commands
             },
         },
         thinkingLevel: config.thinkingLevel || 'medium',
@@ -131,28 +146,24 @@ async function main() {
 
     const agent = harness.getAgent()
 
-    await agent.loadContext()
-
-    const userEmail = config.decemberToken ? config.email : undefined
-
-    if (parsedArgs.command === 'login') {
-        console.log('Generating device code for December login...')
-        const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
-            console.log(`Please open ${uri} on any device and enter code: ${code}`)
-        })
-        const configToSave = await loadConfig()
-        configToSave.decemberToken = token
-        if (email) configToSave.email = email
-        await saveConfig(configToSave)
-        console.log('Successfully logged in via device code!')
-        process.exit(0)
-    }
-
     if (parsedArgs.prompt) {
+        await agent.loadContext()
         console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
         const result = await runHeadlessTask(parsedArgs.prompt, { agent })
         process.exit(result.success ? 0 : 1)
     }
+
+    // Non-blocking session context loading during TUI mounting
+    agent.loadContext().catch((err: any) => {
+        // Log silently or ignore context load errors on fresh sessions
+    })
+
+    function AppWrapper(props: any) {
+        const session = useAgentSession(props)
+        return React.createElement(App, { ...props, session })
+    }
+
+    const userEmail = config.decemberToken ? config.email : undefined
 
     render(
         React.createElement(
@@ -168,7 +179,9 @@ async function main() {
                 userEmail,
                 sessionRepository,
                 onLogin: (onCode: (code: string, uri: string) => void) =>
-                    loginViaDeviceCode(undefined, onCode),
+                    import('./auth').then(({ loginViaDeviceCode }) =>
+                        loginViaDeviceCode(undefined, onCode)
+                    ),
             })
         ),
         { exitOnCtrlC: false }
