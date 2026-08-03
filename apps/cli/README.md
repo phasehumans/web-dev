@@ -4,7 +4,7 @@ December is an AI coding assistant that lives in your terminal. It understands y
 
 **Also available on the web at <a href="https://trydecember.com" target="_blank">trydecember.com</a>**
 
-<img src="https://github.com/user-attachments/assets/a514c6df-9c8e-4f42-b53c-da8056869263" alt="December" width="100%" />
+<img src="https://github.com/user-attachments/assets/68a4d571-2242-4212-8d80-6157269d8b37" alt="December" width="100%" />
 
 - **Writes code & runs commands:** Ask it to build features, fix bugs, or run tests. It does the work for you.
 - **Cloud Handoff:** Use _/handoff_ to continue your session on **<a href="https://trydecember.com" target="_blank">trydecember.com</a>**
@@ -22,4 +22,4 @@ npm install -g @trydecember/cli
 
 ### Feedback & Bugs
 
-Found a bug or have a feature request? Open an issue on [GitHub](https://github.com/phasehumans/december/issues) or email us at [team@trydecember.com](mailto:team@trydecember.com)
+Found a bug or have a feature request? [Open an issue](https://github.com/phasehumans/december/issues) or email us at [team@trydecember.com](mailto:team@trydecember.com)
