@@ -120,9 +120,15 @@ describe('Anthropic Provider (Integration)', () => {
         await it.next()
 
         expect(capturedOptions).not.toBeNull()
-        expect(capturedOptions.system).toBe('You are an AI')
+        expect(capturedOptions.system).toEqual([
+            {
+                type: 'text',
+                text: 'You are an AI',
+                cache_control: { type: 'ephemeral' },
+            },
+        ])
         expect(capturedOptions.messages).toEqual([
-            { role: 'user', content: 'hello' },
+            { role: 'user', content: [{ type: 'text', text: 'hello' }] },
             {
                 role: 'assistant',
                 content: [
@@ -130,7 +136,17 @@ describe('Anthropic Provider (Integration)', () => {
                     { type: 'tool_use', id: 't1', name: 'calc', input: {} },
                 ],
             },
-            { role: 'user', content: [{ type: 'tool_result', tool_use_id: 't1', content: '42' }] },
+            {
+                role: 'user',
+                content: [
+                    {
+                        type: 'tool_result',
+                        tool_use_id: 't1',
+                        content: '42',
+                        cache_control: { type: 'ephemeral' },
+                    },
+                ],
+            },
         ])
         expect(capturedOptions.tools).toEqual([
             { name: 'calc', description: 'calculate', input_schema: {} },
