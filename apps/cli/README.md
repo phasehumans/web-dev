@@ -4,7 +4,7 @@ December is an AI coding assistant that lives in your terminal. It understands y
 
 **Also available on the web at <a href="https://trydecember.com" target="_blank">trydecember.com</a>**
 
-<img src="https://github.com/user-attachments/assets/68a4d571-2242-4212-8d80-6157269d8b37" alt="December" width="100%" />
+<img src="https://github.com/user-attachments/assets/585e6ff5-0403-45f5-89c3-c2d3d168962c" alt="December" width="100%" />
 
 - **Writes code & runs commands:** Ask it to build features, fix bugs, or run tests. It does the work for you.
 - **Cloud Handoff:** Use _/handoff_ to continue your session on **<a href="https://trydecember.com" target="_blank">trydecember.com</a>**
