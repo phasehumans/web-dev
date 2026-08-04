@@ -1,3 +1,9 @@
+## [unreleased]
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.2.29
+
 ## [0.2.28] - 2026-08-03
 
 ### Miscellaneous Tasks
