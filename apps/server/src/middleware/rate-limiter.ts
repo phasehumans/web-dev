@@ -9,13 +9,14 @@ import { extractToken } from '../modules/auth/auth.utils'
 export interface RateLimiterOptions {
     windowMs?: number
     limit?: number
+    max?: number
     message?: string
     prefix?: string
 }
 
 export const createRateLimiter = (options: RateLimiterOptions = {}) => {
     const windowMs = options.windowMs || 15 * 60 * 1000
-    const limit = options.limit || 500
+    const limit = options.limit || options.max || 500
     const message = options.message || 'Too many requests, please try again later.'
     const prefix = options.prefix || 'rl:default:'
 

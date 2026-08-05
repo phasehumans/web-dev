@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { authMiddleware } from '../../middleware/auth.middleware'
-import { createRateLimiter } from '../../middleware/ratelimit'
+import { createRateLimiter } from '../../middleware/rate-limiter'
 
 import { billingController } from './billing.controller'
 
