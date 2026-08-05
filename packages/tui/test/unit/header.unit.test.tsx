@@ -21,6 +21,6 @@ describe('Header Component (Unit)', () => {
     it('renders 3rd tip line when latestVersion is available', () => {
         const { lastFrame } = render(<Header cliVersion="0.2.25" latestVersion="0.2.26" />)
         const frame = lastFrame()
-        expect(frame).toContain('Run /update to upgrade to 0.2.26')
+        expect(frame).toContain('Run /update to install December CLI 0.2.26')
     })
 })

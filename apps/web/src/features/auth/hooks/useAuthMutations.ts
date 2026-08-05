@@ -2,6 +2,7 @@ import { useGoogleLogin } from '@react-oauth/google'
 import { useMutation } from '@tanstack/react-query'
 
 import { authAPI } from '@/features/auth/api/auth'
+import { getGithubClientId } from '@/shared/utils/env'
 
 type UseAuthMutationsOptions = {
     onRequireOtp: () => void
@@ -160,29 +161,9 @@ export const useAuthMutations = ({
     })
 
     const githubLogin = () => {
-        const clientId =
-            (typeof process !== 'undefined' ? process.env.GITHUB_CLIENT_ID : undefined) ||
-            'Ov23liFGkTAwCW7E8gtk'
+        const clientId = getGithubClientId()
         const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&state=auth&scope=user:email%20repo`
-
-        const popup = window.open(url, 'github-login', 'width=500,height=600')
-
-        const handleMessage = (event: MessageEvent) => {
-            if (event.origin !== window.location.origin) return
-
-            if (event.data.type === 'GITHUB_LOGIN_SUCCESS') {
-                const { code } = event.data
-                githubMutation.mutate({ code })
-                popup?.close()
-                window.removeEventListener('message', handleMessage)
-            } else if (event.data.type === 'GITHUB_LOGIN_FAILED') {
-                setErrorMessage('GitHub Login Failed')
-                popup?.close()
-                window.removeEventListener('message', handleMessage)
-            }
-        }
-
-        window.addEventListener('message', handleMessage)
+        window.location.href = url
     }
 
     const isAuthPending =

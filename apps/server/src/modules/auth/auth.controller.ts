@@ -169,6 +169,11 @@ const github = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError(errorMsg.toLowerCase(), 400)
     }
 
+    if (tokenResponse.data?.error) {
+        const errorDesc = tokenResponse.data.error_description || tokenResponse.data.error
+        throw new AppError(`github oauth error: ${errorDesc}`, 400)
+    }
+
     const { access_token } = tokenResponse.data
 
     if (!access_token) throw new AppError('github access token not found', 400)
@@ -192,6 +197,10 @@ const github = asyncHandler(async (req: Request, res: Response) => {
             },
         })
     } catch (error: any) {
+        throw new AppError('failed to fetch github user emails', 400)
+    }
+
+    if (!Array.isArray(emailsResponse.data)) {
         throw new AppError('failed to fetch github user emails', 400)
     }
 

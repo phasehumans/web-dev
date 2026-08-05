@@ -233,7 +233,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                     {isAuthenticated &&
                         profile &&
                         (!profile.welcomeCardDone ||
-                            !profile.githubCardDone ||
+                            (!profile.githubAppInstall && !profile.githubCardDone) ||
                             !profile.feedbackCardDone) && (
                             <div className="mt-8 w-full hidden md:flex flex-col gap-3.5 select-none animate-in fade-in duration-300">
                                 <div className="flex flex-col gap-0.5 text-left px-1.5">
@@ -280,7 +280,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                     )}
 
                                     {/* Card 2: Connect GitHub */}
-                                    {!profile.githubCardDone && (
+                                    {!profile.githubAppInstall && !profile.githubCardDone && (
                                         <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#1F1F1F] border border-[#313131] min-h-[148px] text-left transition-all duration-300 hover:border-white/10">
                                             <button
                                                 onClick={() => handleDismissCard('github')}

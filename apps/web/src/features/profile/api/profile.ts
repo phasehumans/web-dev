@@ -12,6 +12,7 @@ export type Profile = {
     receiveNotification: boolean
     googleId: string | null
     githubConnected: boolean
+    githubAppInstall?: boolean
     githubUsername?: string
     vercelConnected?: boolean
     vercelTeamId?: string | null
