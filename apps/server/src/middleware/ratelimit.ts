@@ -4,6 +4,7 @@ interface RateLimitConfig {
     windowMs: number
     max: number
     message?: string
+    prefix?: string
 }
 
 export const createRateLimiter = (config: RateLimitConfig) => {
@@ -11,5 +12,6 @@ export const createRateLimiter = (config: RateLimitConfig) => {
         windowMs: config.windowMs,
         limit: config.max,
         message: config.message,
+        prefix: config.prefix || 'rl:custom:',
     })
 }

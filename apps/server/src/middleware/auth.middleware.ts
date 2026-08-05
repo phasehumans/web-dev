@@ -3,26 +3,36 @@ import jwt from 'jsonwebtoken'
 
 import { env } from '../env'
 import { sessionCache } from '../modules/auth/auth.cache'
+import { extractToken } from '../modules/auth/auth.utils'
 
 import type { TokenPayload } from '../modules/auth/auth.types'
 import type { Request, Response, NextFunction } from 'express'
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+export const parseAuthToken = (req: Request, _res: Response, next: NextFunction) => {
     try {
-        let token: string | undefined
-
-        const authHeader = req.headers.authorization
-
-        if (authHeader && !Array.isArray(authHeader)) {
-            const [scheme, extractedToken] = authHeader.split(' ')
-            if (scheme === 'Bearer' && extractedToken) {
-                token = extractedToken
+        const token = extractToken(req)
+        if (token) {
+            const secret = env.ACCESS_TOKEN_SECRET
+            const decoded = jwt.verify(token, secret) as TokenPayload | string
+            if (typeof decoded !== 'string' && decoded.userId && decoded.sessionId) {
+                req.tokenUser = {
+                    userId: decoded.userId,
+                    sessionId: decoded.sessionId,
+                }
+                if (!req.user) {
+                    req.user = req.tokenUser
+                }
             }
         }
+    } catch {
+        // Intentionally swallowed: optional pre-parsing for downstream rate limiting and routing
+    }
+    next()
+}
 
-        if (!token) {
-            token = req.cookies?.accessToken
-        }
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const token = extractToken(req)
 
         if (!token) {
             return res.status(401).json({
@@ -32,7 +42,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         }
 
         const secret = env.ACCESS_TOKEN_SECRET
-
         const decoded = jwt.verify(token, secret) as TokenPayload | string
 
         if (typeof decoded === 'string') {
@@ -42,7 +51,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             })
         }
 
-        let session = sessionCache.get(decoded.sessionId)
+        let session = await sessionCache.get(decoded.sessionId)
 
         if (!session) {
             session = await prisma.authSession.findUnique({
@@ -64,7 +73,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             })
 
             if (session) {
-                sessionCache.set(decoded.sessionId, session)
+                await sessionCache.set(decoded.sessionId, session)
             }
         }
 
@@ -96,7 +105,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             })
         }
 
-        if (session.expiresAt < new Date()) {
+        const sessionExpiresAt = new Date(session.expiresAt)
+        if (sessionExpiresAt < new Date()) {
             return res.status(401).json({
                 success: false,
                 message: 'Session expired',

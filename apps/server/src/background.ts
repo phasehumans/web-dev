@@ -50,6 +50,4 @@ const sweepWorker = new Worker(
     { connection: redisConnection as any }
 )
 
-authService.startSessionCleanupScheduler()
-
 console.log('[Background] Background workers initialized.')

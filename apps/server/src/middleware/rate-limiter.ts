@@ -1,19 +1,10 @@
 import rateLimit from 'express-rate-limit'
-import Redis from 'ioredis'
 import jwt from 'jsonwebtoken'
 import RedisStore from 'rate-limit-redis'
 
+import { redisClient } from '../config/redis'
 import { env } from '../env'
-
-let redisClient: Redis | undefined
-
-if (env.REDIS_URL) {
-    try {
-        redisClient = new Redis(env.REDIS_URL)
-    } catch {
-        // Fallback to memory store if Redis initialization fails
-    }
-}
+import { extractToken } from '../modules/auth/auth.utils'
 
 export interface RateLimiterOptions {
     windowMs?: number
@@ -22,13 +13,11 @@ export interface RateLimiterOptions {
     prefix?: string
 }
 
-const instanceCounter = 0
-
 export const createRateLimiter = (options: RateLimiterOptions = {}) => {
     const windowMs = options.windowMs || 15 * 60 * 1000
     const limit = options.limit || 500
     const message = options.message || 'Too many requests, please try again later.'
-    const prefix = options.prefix || `rl:${crypto.randomUUID()}:`
+    const prefix = options.prefix || 'rl:default:'
 
     const store = redisClient
         ? new RedisStore({
@@ -46,13 +35,14 @@ export const createRateLimiter = (options: RateLimiterOptions = {}) => {
         ...(store ? { store } : {}),
         validate: { keyGeneratorIpFallback: false, xForwardedForHeader: false },
         keyGenerator: (req) => {
-            if ((req as any).user?.userId) {
-                return `user:${(req as any).user.userId}`
+            const user = (req as any).tokenUser || (req as any).user
+            if (user?.userId) {
+                return `user:${user.userId}`
             }
-            const authHeader = req.headers.authorization
-            if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+
+            const token = extractToken(req)
+            if (token) {
                 try {
-                    const token = authHeader.substring(7)
                     const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as {
                         userId?: string
                     } | null
@@ -63,17 +53,13 @@ export const createRateLimiter = (options: RateLimiterOptions = {}) => {
                     // Invalid/expired signature - fall through to API key / IP keying
                 }
             }
+
             const apiKey = req.headers['x-api-key']
             if (apiKey && typeof apiKey === 'string') {
                 return `token:${apiKey}`
             }
-            const rawHeader = req.headers['x-forwarded-for']
-            const forwardedIp = Array.isArray(rawHeader)
-                ? rawHeader[0]
-                : typeof rawHeader === 'string'
-                  ? rawHeader.split(',')[0]?.trim()
-                  : undefined
-            const clientIp = forwardedIp || req.ip || req.socket.remoteAddress || 'unknown'
+
+            const clientIp = req.ip || req.socket.remoteAddress || 'unknown'
             return `ip:${clientIp}`
         },
         handler: (req, res) => {
