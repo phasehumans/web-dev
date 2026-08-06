@@ -94,7 +94,7 @@
             "prettier --write"
         ]
     },
-    "version": "0.3.1",
+    "version": "0.3.2",
     "author": "Chaitanya Sonawane",
     "license": "Apache-2.0"
 }

@@ -1,5 +1,33 @@
 ## [unreleased]
 
+### Features
+
+- _(auth)_ Add redis session cache and rate limit fixes (#349)
+
+### Bug Fixes
+
+- Login with github, and seperate githubApp install field
+- _(canvas)_ Resolve schema contract and service standards
+- _(cli)_ Resolve handoff response unwrapping and sse stream line buffering (#350)
+- _(cli)_ Resolve CLI handoff integration and SSE stream buffering (#350) (#351)
+
+### Refactor
+
+- _(server)_ Consolidate rate limiter middleware into single file
+
+### Testing
+
+- _(auth)_ Add unit and integration tests
+- _(cli)_ Add unit and integration test coverage for server CLI module
+
+## [0.3.1] - 2026-08-04
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.1
+
+## [0.2.29] - 2026-08-04
+
 ### Miscellaneous Tasks
 
 - _(release)_ V0.2.29
