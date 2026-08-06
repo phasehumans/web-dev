@@ -677,6 +677,7 @@ export const useCanvasController = (
             markInteraction()
             e.preventDefault()
             e.stopPropagation()
+            e.currentTarget.setPointerCapture(e.pointerId)
             setSelectedId(null)
             setIsErasing(true)
             didEraseRef.current = false

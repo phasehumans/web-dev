@@ -100,16 +100,25 @@ export const billingRepository = {
         providerPaymentId: string
     ) {
         return prisma.$transaction(async (tx) => {
-            // acquire row-level lock on the user record to prevent race conditions during concurrent wallet transactions
+            // Acquire row lock on user record
             await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
 
-            await tx.walletTransaction.update({
-                where: { id: transactionId },
+            // Atomically update transaction status only if it is currently PENDING
+            const updateCount = await tx.walletTransaction.updateMany({
+                where: {
+                    id: transactionId,
+                    status: 'PENDING',
+                },
                 data: {
                     status: 'SUCCESS',
                     providerPaymentId,
                 },
             })
+
+            if (updateCount.count === 0) {
+                // If updateCount is 0, another concurrent request already completed or marked this transaction as SUCCESS/FAILED
+                throw new AppError('transaction already processed or invalid status', 400)
+            }
 
             const updatedUser = await tx.user.update({
                 where: { id: userId },

@@ -66,9 +66,15 @@ export const webClipRequestSchema = z.object({
             'URL must start with http:// or https://'
         ),
     sessionId: z.string().uuid().optional(),
+    projectId: z.string().uuid().optional(),
 })
 
-export const saveCanvasSchema = z.object({
-    sessionId: z.string().uuid(),
-    canvasState: canvasDocumentSchema,
-})
+export const saveCanvasSchema = z
+    .object({
+        sessionId: z.string().uuid().optional(),
+        projectId: z.string().uuid().optional(),
+        canvasState: canvasDocumentSchema,
+    })
+    .refine((data) => data.sessionId || data.projectId, {
+        message: 'Either sessionId or projectId must be provided',
+    })
