@@ -25,7 +25,7 @@ const loadRazorpayScript = () => {
 
 export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => {
     const queryClient = useQueryClient()
-    const [amountStr, setAmountStr] = useState('5')
+    const [amountStr, setAmountStr] = useState('20')
     const [error, setError] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -42,8 +42,8 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
         }
 
         const amountNum = parseInt(cleanVal, 10)
-        if (amountNum < 2 || amountNum > 20) {
-            setError('Amount must be a whole number between $2 and $20.')
+        if (amountNum < 20 || amountNum > 100) {
+            setError('Amount must be a whole number between $20 and $100.')
         }
     }
 
@@ -54,8 +54,8 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
         }
 
         const amount = parseInt(amountStr, 10)
-        if (isNaN(amount) || amount < 2 || amount > 20) {
-            setError('Amount must be a whole number between $2 and $20.')
+        if (isNaN(amount) || amount < 20 || amount > 100) {
+            setError('Amount must be a whole number between $20 and $100.')
             return
         }
 
@@ -140,7 +140,7 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
             isOpen={true}
             onClose={onClose}
             title="Add Wallet Credits"
-            description="Enter a USD amount to top up your credits. Minimum $2, maximum $20."
+            description="Enter a USD amount to top up your credits. Minimum $20, maximum $100."
             variant="premium"
         >
             <div className="flex flex-col gap-6 py-2">
@@ -164,7 +164,7 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
                             value={amountStr}
                             onChange={(e) => handleAmountChange(e.target.value)}
                             className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-xl pl-9 pr-4 py-4 text-white text-2xl font-mono font-medium focus:outline-none focus:border-white transition-colors shadow-inner"
-                            placeholder="5"
+                            placeholder="20"
                             disabled={isProcessing || !!successMessage}
                             autoComplete="off"
                         />

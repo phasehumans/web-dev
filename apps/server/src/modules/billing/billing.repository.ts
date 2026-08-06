@@ -216,14 +216,35 @@ export const billingRepository = {
                 },
             })
 
-            await tx.redeemCode.update({
-                where: { id: dbCode.id },
-                data: {
-                    redemptionCount: {
-                        increment: 1,
+            // Atomically update redemptionCount ensuring maxRedemptions limit isn't exceeded concurrently
+            if (dbCode.maxRedemptions !== null) {
+                const updateCode = await tx.redeemCode.updateMany({
+                    where: {
+                        id: dbCode.id,
+                        redemptionCount: {
+                            lt: dbCode.maxRedemptions,
+                        },
                     },
-                },
-            })
+                    data: {
+                        redemptionCount: {
+                            increment: 1,
+                        },
+                    },
+                })
+
+                if (updateCode.count === 0) {
+                    throw new AppError('this redeem code has reached its maximum redemptions', 400)
+                }
+            } else {
+                await tx.redeemCode.update({
+                    where: { id: dbCode.id },
+                    data: {
+                        redemptionCount: {
+                            increment: 1,
+                        },
+                    },
+                })
+            }
 
             return {
                 creditAmount: dbCode.creditAmount,

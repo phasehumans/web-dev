@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt'
 import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 import { getUsername } from '../../shared/username'
-import { sendNotificationToUser } from '../notification/notification.service'
+import { notificationService } from '../notification/notification.service'
 
 import { sessionCache } from './auth.cache'
 import { authRepository } from './auth.repository'
@@ -158,7 +158,7 @@ const verifyOtp = async (data: VerifyOtp) => {
     })
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId: user.id,
             title: 'Welcome to December',
             message:
@@ -335,7 +335,7 @@ const google = async (data: Google) => {
         })
 
         try {
-            await sendNotificationToUser({
+            await notificationService.sendNotificationToUser({
                 userId: user.id,
                 title: 'Welcome to December',
                 message:
@@ -409,7 +409,7 @@ const github = async (data: Github) => {
         })
 
         try {
-            await sendNotificationToUser({
+            await notificationService.sendNotificationToUser({
                 userId: user.id,
                 title: 'Welcome to December',
                 message:

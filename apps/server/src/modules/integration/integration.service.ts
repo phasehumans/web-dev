@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { AppError } from '../../shared/appError'
-import { sendNotificationToUser } from '../notification/notification.service'
+import { notificationService } from '../notification/notification.service'
 
 import { integrationRepository } from './integration.repository'
 
@@ -58,7 +58,7 @@ const connectVercel = async (data: ConnectVercel) => {
     })
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Vercel Connected',
             message: 'Successfully connected with Vercel integration!',
@@ -107,7 +107,7 @@ const connectSupabase = async (data: ConnectSupabase) => {
     })
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Supabase Connected',
             message: 'Successfully connected with Supabase integration!',
@@ -156,7 +156,7 @@ const connectNotion = async (data: ConnectNotion) => {
     })
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Notion Connected',
             message: `Successfully connected with Notion integration (${notionData.workspace_name})!`,
@@ -186,7 +186,7 @@ const connectGithub = async (data: ConnectGithub) => {
         })
 
         try {
-            await sendNotificationToUser({
+            await notificationService.sendNotificationToUser({
                 userId,
                 title: 'GitHub Connected',
                 message: `Successfully connected with GitHub integration as @${username}!`,

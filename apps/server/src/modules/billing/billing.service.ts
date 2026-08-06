@@ -2,7 +2,7 @@ import crypto from 'crypto'
 
 import { razorpay } from '../../config/razorpay'
 import { AppError } from '../../shared/appError'
-import { sendNotificationToUser } from '../notification/notification.service'
+import { notificationService } from '../notification/notification.service'
 
 import { billingRepository } from './billing.repository'
 import { getRazorpayKeyId, verifyRazorpayOrderPayment } from './billing.utils'
@@ -130,7 +130,7 @@ const verifyRazorpayPayment = async (data: VerifyRazorpayPayment) => {
     )
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Credits Added',
             message: `Successfully added $${(transaction.amountInCents / 100).toFixed(2)} to your wallet!`,
@@ -214,7 +214,7 @@ const redeemCode = async (data: RedeemCode) => {
     const result = await billingRepository.redeemCode({ userId, codeHash })
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Code Redeemed Successfully',
             message: `Successfully claimed $${(result.creditAmount / 100).toFixed(2)} in gifted credits!`,
@@ -239,7 +239,7 @@ const addCredits = async (data: AddCredits) => {
     const updatedUser = await billingRepository.addCredits(userId, amountInCents)
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Credits Added Successfully',
             message: `Successfully purchased $${(amountInCents / 100).toFixed(2)} in credits using ${paymentMethod.toUpperCase()}!`,

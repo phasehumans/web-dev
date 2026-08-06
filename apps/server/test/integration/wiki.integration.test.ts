@@ -3,8 +3,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
 import jwt from 'jsonwebtoken'
 import request from 'supertest'
 
-import app from '../src/app'
-import { env } from '../src/env'
+import app from '../../src/app'
+import { env } from '../../src/env'
 
 describe('Wiki API Endpoints (/api/v1/wiki)', () => {
     let testUserId: string
