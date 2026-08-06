@@ -150,8 +150,8 @@ export const COMMANDS: Command[] = [
                 const urlRes = await fetch(`${proxyUrl}/cli/handoff/upload-url`, {
                     headers: { Authorization: `Bearer ${config.decemberToken}` },
                 })
-                if (!urlRes.ok) throw new Error(await urlRes.text())
-                const { uploadUrl, objectKey } = (await urlRes.json()) as any
+                const urlJson = (await urlRes.json()) as any
+                const { uploadUrl, objectKey } = urlJson.data || urlJson
 
                 ctx.toast.show({ variant: 'info', message: 'Uploading to MinIO...' })
 

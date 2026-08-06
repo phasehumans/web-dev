@@ -2,7 +2,7 @@ import { AppError } from '../../shared/appError'
 import { asyncHandler } from '../../shared/asyncHandler'
 import { sendSuccess } from '../../shared/response'
 
-import { CompleteHandoffSchema } from './cli.schema'
+import { ChatCompletionsSchema, CompleteHandoffSchema } from './cli.schema'
 import { cliService } from './cli.service'
 
 import type { Request, Response } from 'express'
@@ -13,7 +13,7 @@ const chatCompletions = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError('Unauthorized', 401)
     }
 
-    const body = req.body
+    const body = ChatCompletionsSchema.parse(req.body)
 
     const hasBalance = await cliService.verifyWalletBalance({ userId })
     if (!hasBalance) {
