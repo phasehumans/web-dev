@@ -11,7 +11,7 @@ const getNotifications = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.userId as string | undefined
 
     if (!userId) {
-        throw new AppError('unauthorized', 400)
+        throw new AppError('unauthorized', 401)
     }
 
     const result = await notificationService.getNotifications({ userId })
@@ -22,7 +22,7 @@ const getNotificationById = asyncHandler(async (req: Request, res: Response) => 
     const userId = req.user?.userId as string | undefined
 
     if (!userId) {
-        throw new AppError('unauthorized', 400)
+        throw new AppError('unauthorized', 401)
     }
 
     const parsedParams = NotificationParamsSchema.parse(req.params)
@@ -47,7 +47,7 @@ const markAsRead = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.userId as string | undefined
 
     if (!userId) {
-        throw new AppError('unauthorized', 400)
+        throw new AppError('unauthorized', 401)
     }
 
     const parsedParams = NotificationParamsSchema.parse(req.params)
@@ -61,7 +61,7 @@ const deleteNotification = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.userId as string | undefined
 
     if (!userId) {
-        throw new AppError('unauthorized', 400)
+        throw new AppError('unauthorized', 401)
     }
 
     const parsedParams = NotificationParamsSchema.parse(req.params)

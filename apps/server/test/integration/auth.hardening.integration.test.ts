@@ -2,8 +2,8 @@ import { prisma } from '@december/database'
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
 import request from 'supertest'
 
-import app from '../src/app'
-import { hashRefreshToken } from '../src/modules/auth/auth.utils'
+import app from '../../src/app'
+import { hashRefreshToken } from '../../src/modules/auth/auth.utils'
 
 describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
     let testUserId: string
@@ -54,7 +54,7 @@ describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
 
     it('POST /api/v1/auth/verify - verifies user with OTP and generates session with SHA-256 token hash', async () => {
         const bcrypt = await import('bcrypt')
-        const { env } = await import('../src/env')
+        const { env } = await import('../../src/env')
         const otpHash = await bcrypt.hash('123456', env.BCRYPT_SALT_ROUNDS)
 
         await prisma.user.update({
@@ -210,7 +210,7 @@ describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
             },
         })
 
-        const { authService } = await import('../src/modules/auth/auth.service')
+        const { authService } = await import('../../src/modules/auth/auth.service')
         await authService.purgeExpiredAndRevokedSessions()
 
         const checkExpired = await prisma.authSession.findUnique({

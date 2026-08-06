@@ -9,7 +9,9 @@
         "start": "bun src/server.ts",
         "build": "echo 'No build required for server'",
         "typecheck": "tsc --noEmit",
-        "test": "dotenv -e ../../.env.test -- bun test"
+        "test": "dotenv -e ../../.env.test -- bun test",
+        "test:unit": "dotenv -e ../../.env.test -- bun test test/unit",
+        "test:integration": "dotenv -e ../../.env.test -- bun test test/integration"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.5.8",

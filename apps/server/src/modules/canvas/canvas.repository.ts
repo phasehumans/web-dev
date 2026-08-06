@@ -1,10 +1,15 @@
 import { prisma } from '@december/database'
 
-async function findSessionAccess(data: { sessionId: string; userId: string }) {
-    const { sessionId, userId } = data
+import type { SessionAccessParam } from './canvas.types'
+
+const findSessionAccess = async (data: SessionAccessParam) => {
+    const { sessionId, projectId, userId } = data
+    if (!sessionId && !projectId) return null
+
     return prisma.session.findFirst({
         where: {
-            id: sessionId,
+            ...(sessionId ? { id: sessionId } : {}),
+            ...(projectId ? { projectId } : {}),
             OR: [{ userId }, { collaborators: { some: { userId } } }],
         },
         select: {

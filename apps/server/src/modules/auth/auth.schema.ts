@@ -39,11 +39,14 @@ export const forgotPasswordResetSchema = z.object({
         .max(20, 'new password must be at most 20 characters'),
 })
 
-export const googleAuthSchema = z.object({
-    code: z
-        .string({ message: 'authorization code is required' })
-        .min(1, 'authorization code is required'),
-})
+export const googleAuthSchema = z
+    .object({
+        code: z.string().min(1).optional(),
+        credential: z.string().min(1).optional(),
+    })
+    .refine((data) => data.code || data.credential, {
+        message: 'either code or credential must be provided',
+    })
 
 export const githubAuthSchema = z.object({
     code: z

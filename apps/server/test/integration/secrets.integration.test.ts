@@ -2,7 +2,7 @@ import { prisma } from '@december/database'
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
 import request from 'supertest'
 
-import app from '../src/app'
+import app from '../../src/app'
 
 describe('Secrets Module API Endpoints', () => {
     let testUserId: string
@@ -14,7 +14,7 @@ describe('Secrets Module API Endpoints', () => {
         testEmail = `secretstest-${Date.now()}@example.com`
 
         const bcrypt = await import('bcrypt')
-        const { env } = await import('../src/env')
+        const { env } = await import('../../src/env')
         const hashedPassword = await bcrypt.hash(testPassword, env.BCRYPT_SALT_ROUNDS)
 
         const user = await prisma.user.create({
@@ -28,7 +28,7 @@ describe('Secrets Module API Endpoints', () => {
         })
         testUserId = user.id
 
-        const { generateAccessToken } = await import('../src/modules/auth/auth.utils')
+        const { generateAccessToken } = await import('../../src/modules/auth/auth.utils')
         const session = await prisma.authSession.create({
             data: {
                 userId: testUserId,

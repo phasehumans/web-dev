@@ -5,6 +5,7 @@ import helmet from 'helmet'
 
 import { httpLogger } from './config/logger'
 import { env } from './env'
+import { parseAuthToken } from './middleware/auth.middleware'
 import { errorHandler } from './middleware/error.middleware'
 import { cliRateLimiter, globalRateLimiter, runtimeRateLimiter } from './middleware/rate-limiter'
 import authRouter from './modules/auth/auth.routes'
@@ -51,6 +52,9 @@ app.use(
         credentials: true,
     })
 )
+
+// Pre-parse token context for user-aware rate limiting and auth routing
+app.use(parseAuthToken)
 
 // Apply global baseline rate limiter to all API endpoints
 app.use('/api', globalRateLimiter)

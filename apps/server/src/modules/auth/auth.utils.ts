@@ -332,3 +332,17 @@ export const verifyRefreshToken = (token: string) => {
     const secret = env.REFRESH_TOKEN_SECRET
     return jwt.verify(token, secret) as TokenPayload
 }
+
+export const extractToken = (req: {
+    headers: Record<string, any>
+    cookies?: Record<string, any>
+}): string | undefined => {
+    const authHeader = req.headers.authorization
+    if (authHeader && typeof authHeader === 'string') {
+        const [scheme, extractedToken] = authHeader.split(' ')
+        if (scheme === 'Bearer' && extractedToken) {
+            return extractedToken
+        }
+    }
+    return req.cookies?.accessToken
+}

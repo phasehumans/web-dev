@@ -55,7 +55,7 @@ export function Header({
                     Use /handoff to continue this session in December (trydecember.com)
                 </Text>
                 {latestVersion && (
-                    <Text color="gray">Run /update to upgrade to {latestVersion}</Text>
+                    <Text color="gray">Run /update to install December CLI {latestVersion}</Text>
                 )}
             </Box>
         </Box>

@@ -119,6 +119,7 @@ const proxyChatCompletions = async (data: ProxyChatCompletions) => {
     const decoder = new TextDecoder()
     let usage: any = null
     const model = body.model
+    let lineBuffer = ''
 
     try {
         while (true) {
@@ -128,7 +129,10 @@ const proxyChatCompletions = async (data: ProxyChatCompletions) => {
             const chunk = decoder.decode(value, { stream: true })
             res.write(chunk)
 
-            const lines = chunk.split('\n')
+            lineBuffer += chunk
+            const lines = lineBuffer.split('\n')
+            lineBuffer = lines.pop() ?? ''
+
             for (const line of lines) {
                 if (line.startsWith('data: ') && line !== 'data: [DONE]') {
                     try {
@@ -136,14 +140,29 @@ const proxyChatCompletions = async (data: ProxyChatCompletions) => {
                         if (parsed.usage) {
                             usage = parsed.usage
                         }
-                    } catch (e) {
-                        // ignore parse errors for partial chunks
+                    } catch {
+                        // Intentionally swallowed: ignore non-JSON SSE chunk fragments
                     }
                 }
             }
         }
+
+        if (lineBuffer.startsWith('data: ') && lineBuffer !== 'data: [DONE]') {
+            try {
+                const parsed = JSON.parse(lineBuffer.substring(6))
+                if (parsed.usage) {
+                    usage = parsed.usage
+                }
+            } catch {
+                // Intentionally swallowed: ignore non-JSON SSE chunk fragments
+            }
+        }
+    } catch (streamErr) {
+        console.error('[Proxy Stream Error]:', streamErr)
     } finally {
-        res.end()
+        if (!res.writableEnded) {
+            res.end()
+        }
 
         if (usage) {
             usageService

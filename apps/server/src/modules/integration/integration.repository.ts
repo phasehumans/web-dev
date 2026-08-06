@@ -82,11 +82,11 @@ async function updateUserGithub(data: { id: string; username: string; accessToke
             githubUsername: username,
             githubToken: accessToken,
             githubConnected: true,
-            githubCardDone: true,
         },
         select: {
             id: true,
             githubConnected: true,
+            githubAppInstall: true,
             githubUsername: true,
         },
     })

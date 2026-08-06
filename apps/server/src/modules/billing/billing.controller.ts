@@ -5,7 +5,6 @@ import { sendSuccess } from '../../shared/response'
 import {
     creditsHistoryQuerySchema,
     redeemCodeSchema,
-    addCreditsSchema,
     createRazorpayOrderSchema,
     verifyRazorpayPaymentSchema,
 } from './billing.schema'
@@ -94,19 +93,8 @@ const redeemCode = asyncHandler(async (req: Request, res: Response) => {
 })
 
 const addCredits = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?.userId as string | undefined
-
-    if (!userId) {
-        throw new AppError('unauthorized', 401)
-    }
-
-    const parsedBody = addCreditsSchema.parse(req.body)
-
-    const result = await billingService.addCredits({
-        userId,
-        ...parsedBody,
-    })
-    return sendSuccess(res, 'credits added successfully', result)
+    // Manual credit additions without payment gateway verification are disabled in public APIs.
+    throw new AppError('Direct credit addition is disabled. Please use payment checkout.', 403)
 })
 
 export const billingController = {

@@ -16,7 +16,8 @@ type VerifyOtpInput = {
 }
 
 type GoogleInput = {
-    code: string
+    code?: string
+    credential?: string
 }
 
 type GithubInput = {

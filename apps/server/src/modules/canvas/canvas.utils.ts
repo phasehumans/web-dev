@@ -113,6 +113,7 @@ const persistImageAsset = async (data: PersistImageAsset) => {
                 content: temporaryAsset.body,
                 contentType: nextContentType,
             })
+            // Intentionally swallowed: cleanup of temporary asset is non-fatal
             await deleteObject(item.assetKey).catch(() => undefined)
 
             return {

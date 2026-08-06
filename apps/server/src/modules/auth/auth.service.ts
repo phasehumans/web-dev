@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt'
 import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 import { getUsername } from '../../shared/username'
-import { sendNotificationToUser } from '../notification/notification.service'
+import { notificationService } from '../notification/notification.service'
 
 import { sessionCache } from './auth.cache'
 import { authRepository } from './auth.repository'
@@ -158,7 +158,7 @@ const verifyOtp = async (data: VerifyOtp) => {
     })
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId: user.id,
             title: 'Welcome to December',
             message:
@@ -237,7 +237,8 @@ const login = async (data: Login) => {
 }
 
 const requestPasswordReset = async (data: RequestPasswordReset) => {
-    const user = await authRepository.findUserByEmail(data.email)
+    const { email } = data
+    const user = await authRepository.findUserByEmail(email)
 
     if (!user || user.deletedAt || user.isDeleted || !user.emailVerified) {
         return
@@ -315,7 +316,7 @@ const resetPassword = async (data: ResetPassword) => {
     const password = await bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS)
 
     await authRepository.resetPasswordAndRevokeSessions(user.id, password)
-    sessionCache.invalidateUser(user.id)
+    await sessionCache.invalidateUser(user.id)
 }
 
 const google = async (data: Google) => {
@@ -334,7 +335,7 @@ const google = async (data: Google) => {
         })
 
         try {
-            await sendNotificationToUser({
+            await notificationService.sendNotificationToUser({
                 userId: user.id,
                 title: 'Welcome to December',
                 message:
@@ -408,7 +409,7 @@ const github = async (data: Github) => {
         })
 
         try {
-            await sendNotificationToUser({
+            await notificationService.sendNotificationToUser({
                 userId: user.id,
                 title: 'Welcome to December',
                 message:
@@ -498,11 +499,13 @@ const refreshSession = async (data: RefreshSession) => {
 
     if (session.userId !== userId) {
         await authRepository.deleteSessionsBySessionId(session.id)
+        await sessionCache.invalidate(session.id)
         throw new AppError('invalid session', 401)
     }
 
     if (session.expiresAt.getTime() <= Date.now()) {
         await authRepository.deleteSessionsBySessionId(session.id)
+        await sessionCache.invalidate(session.id)
         throw new AppError('session expired', 401)
     }
 
@@ -516,6 +519,7 @@ const refreshSession = async (data: RefreshSession) => {
 
     if (!isCurrentToken && !isPreviousTokenWithinGrace) {
         await authRepository.deleteSessionsBySessionId(session.id)
+        await sessionCache.invalidate(session.id)
         throw new AppError('invalid refresh token', 401)
     }
 
@@ -523,11 +527,13 @@ const refreshSession = async (data: RefreshSession) => {
 
     if (!user) {
         await authRepository.deleteSessionsBySessionId(session.id)
+        await sessionCache.invalidate(session.id)
         throw new AppError('user not found', 401)
     }
 
     if (user.deletedAt || user.isDeleted) {
         await authRepository.deleteSessionsBySessionId(session.id)
+        await sessionCache.invalidate(session.id)
         throw new AppError('account no longer exists', 401)
     }
 
@@ -557,6 +563,8 @@ const refreshSession = async (data: RefreshSession) => {
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     })
 
+    await sessionCache.invalidate(session.id)
+
     return {
         accessToken,
         refreshToken: newRefreshToken,
@@ -573,14 +581,14 @@ const signout = async (data: Signout) => {
     }
 
     await authRepository.revokeSession(sessionId)
-    sessionCache.invalidate(sessionId)
+    await sessionCache.invalidate(sessionId)
 }
 
 const signoutAll = async (data: SignoutAll) => {
     const { userId } = data
 
     await authRepository.revokeAllSessions(userId)
-    sessionCache.invalidateUser(userId)
+    await sessionCache.invalidateUser(userId)
 }
 
 const deleteAccount = async (data: DeleteAccount) => {
@@ -597,7 +605,7 @@ const deleteAccount = async (data: DeleteAccount) => {
     }
 
     await authRepository.deleteAccount(userId)
-    sessionCache.invalidateUser(userId)
+    await sessionCache.invalidateUser(userId)
 }
 
 const getCliToken = async (data: GetCliToken) => {

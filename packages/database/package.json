@@ -7,7 +7,7 @@
     "private": true,
     "scripts": {
         "db:generate": "prisma generate",
-        "db:migrate": "prisma migrate dev",
+        "db:migrate": "bunx dotenv-cli -e ../../.env -- prisma migrate dev",
         "db:migrate:dev": "bunx dotenv-cli -e ../../.env -- prisma migrate dev",
         "db:migrate:test": "bunx --bun dotenv-cli -e ../../.env.test -- bunx --bun prisma migrate deploy",
         "db:studio": "prisma studio --browser none --port 5555",

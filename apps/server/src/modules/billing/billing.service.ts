@@ -2,7 +2,7 @@ import crypto from 'crypto'
 
 import { razorpay } from '../../config/razorpay'
 import { AppError } from '../../shared/appError'
-import { sendNotificationToUser } from '../notification/notification.service'
+import { notificationService } from '../notification/notification.service'
 
 import { billingRepository } from './billing.repository'
 import { getRazorpayKeyId, verifyRazorpayOrderPayment } from './billing.utils'
@@ -28,9 +28,18 @@ const getOverview = async (data: GetOverview) => {
     const periodEnd = new Date()
     const aggregate = await billingRepository.aggregateUsage(userId, periodStart, periodEnd)
     const usedInCents = aggregate._sum.costInCents ?? 0
+    const claims = ((user as any).redeemClaims || []).map((claim: any) => ({
+        id: claim.id,
+        createdAt: claim.redeemedAt,
+        amountInCents: claim.redeemCode.creditAmount,
+        code: (claim.redeemCode.metadata as any)?.code || 'GIFT',
+    }))
+
+    const giftedCredits = claims.reduce((sum: number, claim: any) => sum + claim.amountInCents, 0)
 
     return {
         creditBalance: user.creditBalance,
+        giftedCredits,
         createdAt: user.createdAt,
         usage: {
             inputTokens: aggregate._sum.inputTokens ?? 0,
@@ -38,12 +47,7 @@ const getOverview = async (data: GetOverview) => {
             totalTokens: aggregate._sum.totalTokens ?? 0,
             costInCents: usedInCents,
         },
-        claims: ((user as any).redeemClaims || []).map((claim: any) => ({
-            id: claim.id,
-            createdAt: claim.redeemedAt,
-            amountInCents: claim.redeemCode.creditAmount,
-            code: (claim.redeemCode.metadata as any)?.code || 'GIFT',
-        })),
+        claims,
         transactions: ((user as any).walletTransactions || []).map((tx: any) => ({
             id: tx.id,
             createdAt: tx.createdAt,
@@ -75,7 +79,7 @@ const createRazorpayOrder = async (data: CreateRazorpayOrder) => {
     await billingRepository.createWalletTransaction({
         userId,
         amountInCents, // we keep the usd cents for the user's wallet credit amount
-        currency: 'INR',
+        currency: 'USD',
         provider: 'RAZORPAY',
         providerOrderId: order.id,
     })
@@ -126,7 +130,7 @@ const verifyRazorpayPayment = async (data: VerifyRazorpayPayment) => {
     )
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Credits Added',
             message: `Successfully added $${(transaction.amountInCents / 100).toFixed(2)} to your wallet!`,
@@ -210,7 +214,7 @@ const redeemCode = async (data: RedeemCode) => {
     const result = await billingRepository.redeemCode({ userId, codeHash })
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Code Redeemed Successfully',
             message: `Successfully claimed $${(result.creditAmount / 100).toFixed(2)} in gifted credits!`,
@@ -235,7 +239,7 @@ const addCredits = async (data: AddCredits) => {
     const updatedUser = await billingRepository.addCredits(userId, amountInCents)
 
     try {
-        await sendNotificationToUser({
+        await notificationService.sendNotificationToUser({
             userId,
             title: 'Credits Added Successfully',
             message: `Successfully purchased $${(amountInCents / 100).toFixed(2)} in credits using ${paymentMethod.toUpperCase()}!`,

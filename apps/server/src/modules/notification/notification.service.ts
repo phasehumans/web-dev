@@ -81,12 +81,13 @@ const deleteNotification = async (data: DeleteNotification) => {
 }
 
 const sendNotificationToUser = async (data: SendNotificationToUser) => {
+    const { userId, title, message, type = 'INFO', link } = data
     return notificationRepository.createNotification({
-        userId: data.userId,
-        title: data.title,
-        message: data.message,
-        type: data.type || 'INFO',
-        link: data.link,
+        userId,
+        title,
+        message,
+        type,
+        link,
         select: notificationSelect,
     })
 }
@@ -104,5 +105,3 @@ export const notificationService = {
     sendNotificationToUser,
     deleteAllReadNotification,
 }
-
-export { sendNotificationToUser }

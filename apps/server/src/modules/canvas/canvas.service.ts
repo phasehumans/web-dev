@@ -4,42 +4,49 @@ import { putTextFile } from '../../shared/project-storage'
 import { canvasRepository } from './canvas.repository'
 import { persistCanvasDocument } from './canvas.utils'
 
-import type { SaveCanvas, CreateWebClips } from './canvas.types'
+import type { SaveCanvas, CreateWebClips, SessionAccessParam } from './canvas.types'
 
-const assertSessionAccess = async (sessionId: string, userId: string) => {
-    const access = await canvasRepository.findSessionAccess({ sessionId, userId })
+const assertSessionAccess = async (data: SessionAccessParam) => {
+    const { sessionId, projectId, userId } = data
+    const access = await canvasRepository.findSessionAccess({ sessionId, projectId, userId })
     if (!access) {
         throw new AppError('session not found or access denied', 403)
     }
+    return access
 }
 
 const createWebClips = async (data: CreateWebClips) => {
-    // clipper logic - no modifications needed besides mapping projectid/sessionid
+    const { url, userId, sessionId, projectId } = data
+    if (sessionId || projectId) {
+        await assertSessionAccess({ sessionId, projectId, userId })
+    }
+
     return {
-        sourceUrl: data.url,
+        sourceUrl: url,
         clips: [],
     }
 }
 
 const saveCanvas = async (data: SaveCanvas) => {
-    const { sessionId, userId, canvasState } = data
-    await assertSessionAccess(sessionId, userId)
+    const { sessionId, projectId, userId, canvasState } = data
+    const access = await assertSessionAccess({ sessionId, projectId, userId })
+    const targetSessionId = access.id
 
     const persistedCanvas = await persistCanvasDocument({
-        sessionId,
+        sessionId: targetSessionId,
         userId,
         canvasState,
     })
 
     // save canvas state directly to s3
     await putTextFile({
-        key: `sessions/${sessionId}/canvas.json`,
+        key: `sessions/${targetSessionId}/canvas.json`,
         content: JSON.stringify(persistedCanvas.canvasStateJson),
         contentType: 'application/json',
     })
 
     await putTextFile({
-        key: `sessions/${sessionId}/canvas-manifest.json`,
+        key: `sessions/${targetSessionId}/canvas-manifest.json`,
         content: JSON.stringify(persistedCanvas.canvasAssetManifestJson),
         contentType: 'application/json',
     })

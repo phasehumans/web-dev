@@ -1,13 +1,21 @@
 import type { CanvasDocument } from './canvas.schema'
 
+export type SessionAccessParam = {
+    sessionId?: string
+    projectId?: string
+    userId: string
+}
+
 export type CreateWebClips = {
     url: string
     userId: string
     sessionId?: string
+    projectId?: string
 }
 
 export type SaveCanvas = {
-    sessionId: string
+    sessionId?: string
+    projectId?: string
     userId: string
     canvasState: any
 }

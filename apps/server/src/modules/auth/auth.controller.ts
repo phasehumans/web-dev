@@ -84,30 +84,33 @@ const resetPassword = asyncHandler(async (req: Request, res: Response) => {
 
 const google = asyncHandler(async (req: Request, res: Response) => {
     const parseData = googleAuthSchema.parse(req.body)
-    const { code } = parseData
+    const { code, credential } = parseData
 
     if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
         throw new AppError('google auth is not configured on server', 500)
     }
 
-    let tokenResponse
-    try {
-        tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
-            code,
-            client_id: env.GOOGLE_CLIENT_ID,
-            client_secret: env.GOOGLE_CLIENT_SECRET,
-            redirect_uri: 'postmessage',
-            grant_type: 'authorization_code',
-        })
-    } catch (error: any) {
-        const errorMsg =
-            error?.response?.data?.error_description ||
-            error.message ||
-            'google authentication failed'
-        throw new AppError(errorMsg.toLowerCase(), 400)
-    }
+    let id_token: string | undefined = credential
 
-    const { id_token } = tokenResponse.data
+    if (!id_token && code) {
+        let tokenResponse
+        try {
+            tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+                code,
+                client_id: env.GOOGLE_CLIENT_ID,
+                client_secret: env.GOOGLE_CLIENT_SECRET,
+                redirect_uri: 'postmessage',
+                grant_type: 'authorization_code',
+            })
+            id_token = tokenResponse.data?.id_token
+        } catch (error: any) {
+            const errorMsg =
+                error?.response?.data?.error_description ||
+                error.message ||
+                'google authentication failed'
+            throw new AppError(errorMsg.toLowerCase(), 400)
+        }
+    }
 
     if (!id_token) throw new AppError('google id token not found', 400)
 
@@ -169,6 +172,11 @@ const github = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError(errorMsg.toLowerCase(), 400)
     }
 
+    if (tokenResponse.data?.error) {
+        const errorDesc = tokenResponse.data.error_description || tokenResponse.data.error
+        throw new AppError(`github oauth error: ${errorDesc}`, 400)
+    }
+
     const { access_token } = tokenResponse.data
 
     if (!access_token) throw new AppError('github access token not found', 400)
@@ -192,6 +200,10 @@ const github = asyncHandler(async (req: Request, res: Response) => {
             },
         })
     } catch (error: any) {
+        throw new AppError('failed to fetch github user emails', 400)
+    }
+
+    if (!Array.isArray(emailsResponse.data)) {
         throw new AppError('failed to fetch github user emails', 400)
     }
 

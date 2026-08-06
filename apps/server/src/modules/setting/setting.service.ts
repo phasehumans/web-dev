@@ -14,6 +14,7 @@ export const settingSelect = {
     emailVerified: true,
     googleId: true,
     githubConnected: true,
+    githubAppInstall: true,
     githubUsername: true,
     vercelConnected: true,
     vercelTeamId: true,

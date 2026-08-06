@@ -2,7 +2,7 @@ import { prisma } from '@december/database'
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
 import request from 'supertest'
 
-import app from '../src/app'
+import app from '../../src/app'
 
 describe('Setting Module Custom Rules Endpoints', () => {
     let testUserId: string
@@ -15,7 +15,7 @@ describe('Setting Module Custom Rules Endpoints', () => {
 
         // Create verified user
         const bcrypt = await import('bcrypt')
-        const { env } = await import('../src/env')
+        const { env } = await import('../../src/env')
         const hashedPassword = await bcrypt.hash(testPassword, env.BCRYPT_SALT_ROUNDS)
 
         const user = await prisma.user.create({
@@ -29,7 +29,7 @@ describe('Setting Module Custom Rules Endpoints', () => {
         })
         testUserId = user.id
 
-        const { generateAccessToken } = await import('../src/modules/auth/auth.utils')
+        const { generateAccessToken } = await import('../../src/modules/auth/auth.utils')
         const session = await prisma.authSession.create({
             data: {
                 userId: testUserId,
