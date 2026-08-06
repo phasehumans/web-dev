@@ -237,7 +237,8 @@ const login = async (data: Login) => {
 }
 
 const requestPasswordReset = async (data: RequestPasswordReset) => {
-    const user = await authRepository.findUserByEmail(data.email)
+    const { email } = data
+    const user = await authRepository.findUserByEmail(email)
 
     if (!user || user.deletedAt || user.isDeleted || !user.emailVerified) {
         return

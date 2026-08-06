@@ -76,3 +76,10 @@ export function createMockRequest(options: {
     }
     return mockReq as Request
 }
+
+/**
+ * Generate a random IP address string to prevent rate-limiter collisions in tests.
+ */
+export function getRandomIP(): string {
+    return `${Math.floor(Math.random() * 200 + 1)}.${Math.floor(Math.random() * 200 + 1)}.${Math.floor(Math.random() * 200 + 1)}.${Math.floor(Math.random() * 200 + 1)}`
+}

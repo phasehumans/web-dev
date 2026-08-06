@@ -15,10 +15,14 @@ export const GithubCallback = () => {
         const error = urlParams.get('error')
         const errorDescription = urlParams.get('error_description')
 
+        const isRealPopup = Boolean(
+            window.opener && window.opener !== window && !window.opener.closed
+        )
+
         if (error || errorDescription) {
             const message =
                 errorDescription || error || 'GitHub authorization was cancelled or failed.'
-            if (window.opener && !window.opener.closed) {
+            if (isRealPopup) {
                 try {
                     window.opener.postMessage(
                         { type: 'GITHUB_LOGIN_FAILED', error: message },
@@ -36,7 +40,7 @@ export const GithubCallback = () => {
 
         if (!code) {
             const message = 'No authorization code found in URL.'
-            if (window.opener && !window.opener.closed) {
+            if (isRealPopup) {
                 try {
                     window.opener.postMessage(
                         { type: 'GITHUB_LOGIN_FAILED', error: message },
@@ -53,7 +57,7 @@ export const GithubCallback = () => {
         }
 
         let openerHandled = false
-        if (window.opener && !window.opener.closed) {
+        if (isRealPopup) {
             try {
                 window.opener.postMessage(
                     { type: 'GITHUB_LOGIN_SUCCESS', code },
