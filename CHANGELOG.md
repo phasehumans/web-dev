@@ -1,4 +1,4 @@
-## [unreleased]
+## [0.3.2] - 2026-08-06
 
 ### Features
 
@@ -19,6 +19,10 @@
 
 - _(auth)_ Add unit and integration tests
 - _(cli)_ Add unit and integration test coverage for server CLI module
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.2
 
 ## [0.3.1] - 2026-08-04
 
