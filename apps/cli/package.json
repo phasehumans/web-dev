@@ -5,7 +5,7 @@
     "homepage": "https://trydecember.com",
     "repository": {
         "type": "git",
-        "url": "https://github.com/phasehumans/december.git",
+        "url": "git+https://github.com/phasehumans/december.git",
         "directory": "apps/cli"
     },
     "bugs": {
@@ -29,7 +29,7 @@
     },
     "main": "./dist/december.js",
     "bin": {
-        "december": "./dist/december.js"
+        "december": "dist/december.js"
     },
     "files": [
         "dist",
