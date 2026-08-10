@@ -1,3 +1,37 @@
+## [unreleased]
+
+### Features
+
+- _(tools)_ Add native C++ fuzzy Myers patch engine for edit_diff (#371)
+- _(evals)_ Add Python SWE-bench benchmark evaluation runner (#372)
+- _(tools)_ Add stateful Python REPL tool python_repl (#375)
+- _(evals)_ Add standard HumanEval, MBPP, and TerminalBench task suites and downloader script
+- _(evals)_ Replace sample benchmarks with official OpenAI HumanEval and Google MBPP datasets
+- _(evals)_ Add TerminalBench task dataset and individual benchmark runner commands
+- Pure TS fuzzy patch engine, stateful Python REPL, and official evals framework (#370) (#376)
+
+### Bug Fixes
+
+- Sidebar and cli installation
+
+### Refactor
+
+- _(tools)_ Use pure TypeScript fuzzy patch engine and remove C++ native build overhead (#371)
+
+### Documentation
+
+- _(evals)_ Add EVALS.md guide and standardize evaluation runner framework
+
+### Miscellaneous Tasks
+
+- Add comprehensive build, test, and database entries to .gitignore
+
+## [0.3.3] - 2026-08-07
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.3
+
 ## [0.3.2] - 2026-08-06
 
 ### Features
