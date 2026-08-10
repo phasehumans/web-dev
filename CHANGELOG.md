@@ -1,5 +1,12 @@
 ## [unreleased]
 
+### Bug Fixes
+
+- Npm prvenance issue
+- Npm link issue
+
+## [0.3.4] - 2026-08-10
+
 ### Features
 
 - _(tools)_ Add native C++ fuzzy Myers patch engine for edit_diff (#371)
@@ -25,6 +32,7 @@
 ### Miscellaneous Tasks
 
 - Add comprehensive build, test, and database entries to .gitignore
+- _(release)_ V0.3.4
 
 ## [0.3.3] - 2026-08-07
 
