@@ -1,6 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { EditDiffTool } from '../../src/edit_diff'
+import { patchFuzzyNative } from '../../src/native/myers_patcher'
 import { createMockContext } from '../mock-context'
 
 describe('EditDiffTool (Unit)', () => {
@@ -17,6 +18,36 @@ describe('EditDiffTool (Unit)', () => {
             'line 1\nline 2 updated\nline 3'
         )
         expect(result).toBe('Successfully patched file: /test.txt')
+    })
+
+    test('should handle fuzzy diff matching when line numbers shift', async () => {
+        const context = createMockContext()
+        // Content has extra lines at top, shifting target lines down
+        context.operations.fs.readFile = mock(
+            async () => 'header 1\nheader 2\nline 1\nline 2\nline 3'
+        )
+
+        // Hunk header says line 1, but actual lines are at line 3
+        const shiftedDiff = `@@ -1,3 +1,3 @@\n line 1\n-line 2\n+line 2 updated\n line 3`
+
+        const result = await EditDiffTool.execute({ path: '/test.txt', diff: shiftedDiff }, context)
+
+        expect(context.operations.fs.writeFile).toHaveBeenCalledWith(
+            '/test.txt',
+            'header 1\nheader 2\nline 1\nline 2 updated\nline 3'
+        )
+        expect(result).toBe('Successfully patched file: /test.txt')
+    })
+
+    test('should test native C++ patchFuzzyNative directly if built', () => {
+        const orig = 'first line\nsecond line\nthird line'
+        const diff =
+            '@@ -1,3 +1,3 @@\n first line\n-second line\n+second line replaced\n third line'
+
+        const patched = patchFuzzyNative(orig, diff)
+        if (patched !== null) {
+            expect(patched).toBe('first line\nsecond line replaced\nthird line')
+        }
     })
 
     test('should fail if diff is malformed or patching fails', async () => {

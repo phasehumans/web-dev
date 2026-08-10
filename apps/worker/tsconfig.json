@@ -2,6 +2,7 @@
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "verbatimModuleSyntax": false,
+        "types": ["bun"],
         "strict": false,
         "strictNullChecks": false,
         "noImplicitAny": false,

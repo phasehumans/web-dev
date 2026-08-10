@@ -2,6 +2,8 @@ import { Tool, ToolExecuteContext } from '@december/shared'
 import { Type, Static } from '@sinclair/typebox'
 import { applyPatch } from 'diff'
 
+import { patchFuzzyNative } from './native/myers_patcher'
+
 const diffSchema = Type.Object({
     path: Type.String(),
     diff: Type.String({ description: 'The unified diff patch string.' }),
@@ -24,8 +26,19 @@ export const EditDiffTool: Tool<EditDiffInput> = {
             }
 
             const normalizedContent = content.replace(/\r\n/g, '\n')
-            const updated = applyPatch(normalizedContent, formattedDiff)
-            if (updated === false) {
+
+            // Try native C++ Myers fuzzy patcher first
+            let updated: string | boolean | null = patchFuzzyNative(
+                normalizedContent,
+                formattedDiff
+            )
+
+            // Fall back to JS diff applyPatch if native patching is unavailable or fails
+            if (updated === null) {
+                updated = applyPatch(normalizedContent, formattedDiff)
+            }
+
+            if (updated === false || updated === null) {
                 return `Error: Failed to apply unified diff patch to '${path}'. Ensure context lines match the existing file exactly, or use edit_file instead.`
             }
 
