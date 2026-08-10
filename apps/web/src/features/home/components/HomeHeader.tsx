@@ -110,10 +110,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
             <div className="flex-initial flex items-center justify-center pointer-events-auto">
                 <div
                     onClick={() => {
-                        window.open(
-                            'https://www.npmjs.com/package/@trydecember/cli?activeTab=readme',
-                            '_blank'
-                        )
+                        window.open('https://www.npmjs.com/package/@trydecember/cli', '_blank')
                     }}
                     className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 py-1 text-[13px] text-[#E8E8E6] transition-all duration-200 cursor-pointer hover:bg-white/5 group whitespace-nowrap flex-shrink-0 opacity-[0.85] hover:opacity-100"
                 >

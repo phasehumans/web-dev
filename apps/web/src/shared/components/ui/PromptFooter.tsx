@@ -446,7 +446,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                         <img
                                             src={sidebarPng}
                                             alt="Context Canvas"
-                                            className="w-full h-full object-cover object-center scale-[1.35] absolute inset-0 opacity-80"
+                                            className="w-full h-full object-cover object-center absolute inset-0 opacity-80"
                                         />
                                     </div>
                                 </div>

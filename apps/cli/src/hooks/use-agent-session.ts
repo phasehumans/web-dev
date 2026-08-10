@@ -150,7 +150,7 @@ export function useAgentSession({
         setSettingsFollowUpMode,
     } = state
 
-    const [expandCommands, setExpandCommands] = useState(false)
+    const [expandCommands, setExpandCommands] = useState(true)
     const toggleExpandCommands = useCallback(() => {
         setExpandCommands((prev) => !prev)
     }, [])

@@ -35,14 +35,27 @@ type Props = {
     expandCommands?: boolean
 }
 
-function CollapsibleThought({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
-    const [expanded, setExpanded] = useState<boolean>(false)
+function CollapsibleThought({
+    content,
+    isStreaming,
+    forceExpanded,
+}: {
+    content: string
+    isStreaming?: boolean
+    forceExpanded?: boolean
+}) {
+    const [userExpanded, setUserExpanded] = useState<boolean | null>(null)
+    const expanded = userExpanded !== null ? userExpanded : (forceExpanded ?? true)
+
     const words = content.trim() ? content.trim().split(/\s+/).length : 0
     const tokenCount = Math.max(1, Math.round(words * 1.33))
 
     useInput((input, key) => {
         if ((key.ctrl && input.toLowerCase() === 'o') || input === '\x0f') {
-            setExpanded((prev) => !prev)
+            setUserExpanded((prev) => {
+                const current = prev !== null ? prev : (forceExpanded ?? true)
+                return !current
+            })
         }
     })
 
@@ -104,16 +117,19 @@ function CollapsibleCommandOutput({
     forceExpanded?: boolean
 }) {
     const { isFocused } = useFocus({ autoFocus: true })
-    const [userExpanded, setUserExpanded] = useState<boolean>(false)
+    const [userExpanded, setUserExpanded] = useState<boolean | null>(null)
 
-    const isExpanded = userExpanded || Boolean(forceExpanded)
+    const isExpanded = userExpanded !== null ? userExpanded : (forceExpanded ?? true)
 
     useInput((input, key) => {
         if (
             (key.ctrl && ((key as any).name === 'o' || input?.toLowerCase() === 'o')) ||
             input === '\x0f'
         ) {
-            setUserExpanded((prev) => !prev)
+            setUserExpanded((prev) => {
+                const current = prev !== null ? prev : (forceExpanded ?? true)
+                return !current
+            })
         }
     })
 
@@ -256,6 +272,7 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                                                 key={pidx}
                                                 content={thoughtContent}
                                                 isStreaming={isStreaming}
+                                                forceExpanded={expandCommands}
                                             />
                                         )
                                     }
@@ -293,6 +310,7 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                                 key={idx}
                                 content={block.content}
                                 isStreaming={isStreaming}
+                                forceExpanded={expandCommands}
                             />
                         )
                     }
