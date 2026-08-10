@@ -12,10 +12,10 @@ describe('BotMessage Component (Unit)', () => {
         expect(lastFrame()).toContain('Assistant response text')
     })
 
-    it('renders completed thought blocks auto-collapsed to Thoughts (tokens) summary', () => {
+    it('renders completed thought blocks expanded by default and collapses on Ctrl+O', async () => {
         const thoughtContent =
             'Line 1: Planning search\nLine 2: Locating files\nLine 3: Reading contents\nLine 4: Done'
-        const { lastFrame } = render(
+        const { lastFrame, stdin } = render(
             <BotMessage
                 blocks={[
                     { type: 'thinking', content: thoughtContent },
@@ -23,8 +23,18 @@ describe('BotMessage Component (Unit)', () => {
                 ]}
             />
         )
-        const frame = lastFrame() || ''
-        expect(frame).toContain('Thoughts (20 tokens)')
+        let frame = lastFrame() || ''
+        expect(frame).toContain('Thoughts')
+        expect(frame).toContain('20 tokens')
+        expect(frame).toContain('Line 1: Planning search')
+
+        // Send Ctrl+O keystroke (\x0f) to collapse
+        stdin.write('\x0f')
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        frame = lastFrame() || ''
+        expect(frame).toContain('Thoughts')
+        expect(frame).toContain('20 tokens')
         expect(frame).not.toContain('Line 1: Planning search')
     })
 
@@ -72,7 +82,7 @@ describe('BotMessage Component (Unit)', () => {
         expect(frame).not.toContain('HIGH DEMAND')
     })
 
-    it('renders git diff outputs collapsed by default and expands on Ctrl+O', async () => {
+    it('renders git diff outputs expanded by default and collapses on Ctrl+O', async () => {
         const diffOutput = '--- a/file.ts\n+++ b/file.ts\n@@ -1,2 +1,2 @@\n-old code\n+new code'
         const { lastFrame, stdin } = render(
             <BotMessage
@@ -89,15 +99,16 @@ describe('BotMessage Component (Unit)', () => {
             />
         )
         let frame = lastFrame() || ''
-        expect(frame).toContain('ctrl+o to expand')
+        expect(frame).toContain('ctrl+o to collapse')
+        expect(frame).toContain('-old code')
+        expect(frame).toContain('+new code')
 
-        // Send Ctrl+O keystroke (\x0f) to expand
+        // Send Ctrl+O keystroke (\x0f) to collapse
         stdin.write('\x0f')
         await new Promise((resolve) => setTimeout(resolve, 50))
 
         frame = lastFrame() || ''
-        expect(frame).toContain('ctrl+o to collapse')
-        expect(frame).toContain('-old code')
-        expect(frame).toContain('+new code')
+        expect(frame).toContain('ctrl+o to expand')
+        expect(frame).not.toContain('-old code')
     })
 })

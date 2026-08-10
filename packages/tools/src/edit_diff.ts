@@ -2,6 +2,8 @@ import { Tool, ToolExecuteContext } from '@december/shared'
 import { Type, Static } from '@sinclair/typebox'
 import { applyPatch } from 'diff'
 
+import { applyFuzzyPatchTS } from './fuzzy_patch'
+
 const diffSchema = Type.Object({
     path: Type.String(),
     diff: Type.String({ description: 'The unified diff patch string.' }),
@@ -24,8 +26,19 @@ export const EditDiffTool: Tool<EditDiffInput> = {
             }
 
             const normalizedContent = content.replace(/\r\n/g, '\n')
-            const updated = applyPatch(normalizedContent, formattedDiff)
-            if (updated === false) {
+
+            // Try pure TypeScript fuzzy patcher first
+            let updated: string | boolean | null = applyFuzzyPatchTS(
+                normalizedContent,
+                formattedDiff
+            )
+
+            // Fall back to npm diff applyPatch if fuzzy patch fails
+            if (updated === null) {
+                updated = applyPatch(normalizedContent, formattedDiff)
+            }
+
+            if (updated === false || updated === null) {
                 return `Error: Failed to apply unified diff patch to '${path}'. Ensure context lines match the existing file exactly, or use edit_file instead.`
             }
 

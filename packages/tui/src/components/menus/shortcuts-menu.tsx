@@ -15,7 +15,7 @@ export const SHORTCUTS = [
     { key: 'ctrl+c', desc: 'Exit / Graceful interrupt' },
     { key: 'ctrl+h', desc: 'Session history' },
     { key: 'ctrl+l', desc: 'Login / Account menu' },
-    { key: 'ctrl+o', desc: 'Toggle expand commands' },
+    { key: 'ctrl+o', desc: 'Toggle expand commands & thoughts' },
     { key: 'ctrl+t', desc: 'Tasks mode' },
     { key: 'alt+enter', desc: 'Insert newline' },
     { key: 'esc', desc: 'Cancel / Close menu' },

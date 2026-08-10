@@ -138,24 +138,21 @@ export const SidebarFooter: React.FC<
                         id="cli-popover-card"
                         className="absolute bottom-11 left-3 w-[300px] z-[100] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl shadow-lg shadow-black/40 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
                     >
-                        <div className="w-full h-[165px] bg-[#1E1E1E] relative overflow-hidden flex items-center justify-center p-1.5 pb-0 pointer-events-none">
-                            <div className="w-full h-full relative overflow-hidden rounded-xl border border-[#2A2928]">
+                        <div className="w-full h-[200px] bg-[#1E1E1E] relative overflow-hidden flex items-center justify-center p-1.5 pb-0">
+                            <a
+                                href="https://www.npmjs.com/package/@trydecember/cli"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full h-full relative overflow-hidden rounded-xl border border-[#2A2928] block cursor-pointer"
+                            >
                                 <img
                                     src={sidebarPng}
                                     alt="December CLI preview"
-                                    className="w-full h-full object-cover object-center scale-[1.35] absolute inset-0"
+                                    className="w-full h-full object-cover object-center absolute inset-0"
                                 />
-                            </div>
+                            </a>
                         </div>
-                        <div className="flex flex-col px-2 pt-2 pb-3 bg-[#1E1E1E] gap-2.5">
-                            <div className="flex flex-col px-1 w-full text-left overflow-hidden pointer-events-none">
-                                <span className="text-[13px] font-medium text-[#D6D5D4]">
-                                    December CLI
-                                </span>
-                                <span className="text-[11px] text-[#8F8E8D] mt-0.5 leading-tight truncate w-full">
-                                    Turn ideas into reality.
-                                </span>
-                            </div>
+                        <div className="flex flex-col px-2 pt-2 pb-2.5 bg-[#1E1E1E] gap-2.5">
                             <div className="flex items-center justify-between mx-1 px-3 py-1.5 bg-[#1E1E1E] border border-[#2A2928] rounded-xl group/cmd">
                                 <div className="flex items-center truncate mr-2">
                                     <span className="text-[#7B7A79] mr-2 text-[11px] font-mono select-none">
