@@ -1,5 +1,7 @@
 # Dependency directories
 **/node_modules/
+.venv/
+venv/
 
 # Lockfiles
 bun.lockb
@@ -17,6 +19,18 @@ pnpm-lock.yaml
 **/.tmp/
 **/.cache/
 **/.vite/
+*.tsbuildinfo
+
+# E2E & Test Reports
+playwright-report/
+test-results/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite-journal
+**/generated/prisma/
+packages/database/src/generated/
 
 # Environments & configs
 .env
@@ -29,10 +43,6 @@ pnpm-lock.yaml
 logs/
 *.log
 
-# Generated database directories
-**/generated/prisma/
-packages/database/src/generated/
-
 # Local infrastructure & runtimes
 docker-compose.override.yml
 infra/minio/data/
@@ -40,11 +50,12 @@ infra/postgres/data/
 
 # Tool generated files
 **/.december-imports/
-# Deployments
 /deployments/
 infra/nginx/deployments/*
 .turbo
 
-# OS files
+# IDE & OS files
+.idea/
+.vscode/
 Thumbs.db
 .DS_Store
