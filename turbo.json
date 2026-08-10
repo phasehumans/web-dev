@@ -24,14 +24,7 @@
         },
         "build": {
             "dependsOn": ["^build", "db:generate"],
-            "outputs": [
-                "dist/**",
-                "build/**",
-                "target/**",
-                "native/*.so",
-                "native/*.dylib",
-                "native/*.dll"
-            ]
+            "outputs": ["dist/**", "build/**", "target/**"]
         },
         "typecheck": {
             "dependsOn": ["db:generate"],

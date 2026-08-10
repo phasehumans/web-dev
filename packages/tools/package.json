@@ -4,8 +4,7 @@
     "main": "src/index.ts",
     "types": "src/index.ts",
     "scripts": {
-        "build": "bun run build:native || echo 'Native build skipped'",
-        "build:native": "make -C native",
+        "build": "echo 'No build required for tools'",
         "typecheck": "tsc --noEmit",
         "test": "bun test test/unit test/integration",
         "test:unit": "bun test test/unit",

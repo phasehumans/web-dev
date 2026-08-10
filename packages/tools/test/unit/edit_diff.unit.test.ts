@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from 'bun:test'
 
 import { EditDiffTool } from '../../src/edit_diff'
-import { patchFuzzyNative } from '../../src/native/myers_patcher'
+import { applyFuzzyPatchTS } from '../../src/fuzzy_patch'
 import { createMockContext } from '../mock-context'
 
 describe('EditDiffTool (Unit)', () => {
@@ -39,15 +39,13 @@ describe('EditDiffTool (Unit)', () => {
         expect(result).toBe('Successfully patched file: /test.txt')
     })
 
-    test('should test native C++ patchFuzzyNative directly if built', () => {
+    test('should test pure TypeScript applyFuzzyPatchTS directly', () => {
         const orig = 'first line\nsecond line\nthird line'
         const diff =
             '@@ -1,3 +1,3 @@\n first line\n-second line\n+second line replaced\n third line'
 
-        const patched = patchFuzzyNative(orig, diff)
-        if (patched !== null) {
-            expect(patched).toBe('first line\nsecond line replaced\nthird line')
-        }
+        const patched = applyFuzzyPatchTS(orig, diff)
+        expect(patched).toBe('first line\nsecond line replaced\nthird line')
     })
 
     test('should fail if diff is malformed or patching fails', async () => {

@@ -2,7 +2,7 @@ import { Tool, ToolExecuteContext } from '@december/shared'
 import { Type, Static } from '@sinclair/typebox'
 import { applyPatch } from 'diff'
 
-import { patchFuzzyNative } from './native/myers_patcher'
+import { applyFuzzyPatchTS } from './fuzzy_patch'
 
 const diffSchema = Type.Object({
     path: Type.String(),
@@ -27,13 +27,13 @@ export const EditDiffTool: Tool<EditDiffInput> = {
 
             const normalizedContent = content.replace(/\r\n/g, '\n')
 
-            // Try native C++ Myers fuzzy patcher first
-            let updated: string | boolean | null = patchFuzzyNative(
+            // Try pure TypeScript fuzzy patcher first
+            let updated: string | boolean | null = applyFuzzyPatchTS(
                 normalizedContent,
                 formattedDiff
             )
 
-            // Fall back to JS diff applyPatch if native patching is unavailable or fails
+            // Fall back to npm diff applyPatch if fuzzy patch fails
             if (updated === null) {
                 updated = applyPatch(normalizedContent, formattedDiff)
             }
