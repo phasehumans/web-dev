@@ -28,10 +28,22 @@ export interface EvalResult {
     error?: string
 }
 
+export interface EvalSummaryReport {
+    timestamp: string
+    totalTasks: number
+    passedTasks: number
+    failedTasks: number
+    errorTasks: number
+    timeoutTasks: number
+    passRate: number
+    meanDurationMs: number
+    results: EvalResult[]
+}
+
 export type ExecutionBackend = 'sandbox' | 'local'
 
 export interface RunnerOptions {
-    backend: ExecutionBackend
+    backend?: ExecutionBackend
     outputDir?: string
     maxParallel?: number
     env?: Record<string, string>

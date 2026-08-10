@@ -1,0 +1,18 @@
+[
+    {
+        "id": "humaneval_001",
+        "name": "HumanEval 001 - String Reversal",
+        "description": "Reverse a string in Python",
+        "prompt": "Write a python script that prints the reversal of hello world",
+        "validationScript": "python3 -c 'assert True'",
+        "timeoutMs": 30000
+    },
+    {
+        "id": "humaneval_002",
+        "name": "HumanEval 002 - Fibonacci Sequence",
+        "description": "Calculate 10th fibonacci number",
+        "prompt": "Write a python script that prints the 10th Fibonacci number",
+        "validationScript": "python3 -c 'assert 55 == 55'",
+        "timeoutMs": 30000
+    }
+]
