@@ -49,9 +49,12 @@ export function initSocket(httpServer: any) {
             const sessionId = channel.replace('session_events:', '')
             try {
                 const event = JSON.parse(message)
+                console.log(
+                    `[SERVER CORE -> CLIENT] 📡 Relaying event '${event.type || 'unknown'}' to room session:${sessionId}`
+                )
                 io.to(`session:${sessionId}`).emit('agent_event', event)
             } catch (err) {
-                console.error(`[Socket] Failed to parse Redis message on ${channel}`, err)
+                console.error(`[SERVER CORE] ❌ Failed to parse Redis message on ${channel}`, err)
             }
         } else if (pattern === 'session_terminal_data:*') {
             const sessionId = channel.replace('session_terminal_data:', '')
@@ -148,17 +151,20 @@ export function initSocket(httpServer: any) {
             async (data: { sessionId: string; prompt: string; projectId: string }) => {
                 try {
                     console.log(
-                        `[Core Socket] Received prompt for session ${data.sessionId} from user ${socket.data.userId || 'anonymous'}: "${data.prompt?.slice(0, 60)}..."`
+                        `[SERVER CORE] 🚀 Prompt received for session '${data.sessionId}' (user: ${socket.data.userId || 'anonymous'}): "${data.prompt?.slice(0, 80)}..."`
                     )
 
                     // fetch user secrets (phase 3.6 secrets management)
-                    const secrets: any[] = [] // secret model fallback
+                    const secrets: any[] = []
                     const decryptedSecrets = secrets.map((s: any) => ({
                         key: s.key,
                         value: s.value,
                     }))
 
                     // enqueue to worker
+                    console.log(
+                        `[SERVER CORE] 📥 Enqueuing job 'run_agent' to BullMQ queue 'agent_jobs'...`
+                    )
                     const agentJobsQueue = new Queue('agent_jobs', { connection: pubClient as any })
                     const job = await agentJobsQueue.add('run_agent', {
                         sessionId: data.sessionId,
@@ -169,10 +175,10 @@ export function initSocket(httpServer: any) {
                     })
 
                     console.log(
-                        `[Core Socket] Successfully enqueued job ${job.id} to BullMQ 'agent_jobs' for session ${data.sessionId}`
+                        `[SERVER CORE] ✅ Job #${job.id} enqueued successfully to Redis for session '${data.sessionId}'`
                     )
                 } catch (err: any) {
-                    console.error('[Core Socket] Failed to enqueue agent job:', err)
+                    console.error('[SERVER CORE] ❌ Failed to enqueue agent job:', err)
                     socket.emit('error', { message: 'Failed to start agent: ' + err.message })
                 }
             }

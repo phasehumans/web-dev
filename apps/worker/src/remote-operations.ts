@@ -11,6 +11,7 @@ export class RemotePlatformAdapter implements PlatformAdapter {
 
     bash = {
         exec: async (command: string, onData?: (chunk: string) => void) => {
+            console.log(`[AGENT REMOTE TOOL] 💻 VM '${this.vmId}' executing command: ${command}`)
             let output = ''
             const exitCode = await executeCommand(this.vmId, command, (chunk) => {
                 output += chunk
@@ -27,11 +28,15 @@ export class RemotePlatformAdapter implements PlatformAdapter {
 
     fs = {
         readFile: async (filepath: string) => {
+            console.log(`[AGENT REMOTE TOOL] 📖 VM '${this.vmId}' reading file: ${filepath}`)
             const { exitCode, output } = await this.bash.exec(`cat ${escapeShellArg(filepath)}`)
             if (exitCode !== 0) throw new Error(`Failed to read file ${filepath}: ${output}`)
             return output
         },
         writeFile: async (filepath: string, content: string) => {
+            console.log(
+                `[AGENT REMOTE TOOL] ✍️ VM '${this.vmId}' writing file: ${filepath} (${content.length} bytes)`
+            )
             const base64Content = Buffer.from(content).toString('base64')
             await this.bash.exec(`mkdir -p "$(dirname ${escapeShellArg(filepath)})"`)
             const { exitCode, output } = await this.bash.exec(

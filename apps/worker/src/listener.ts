@@ -34,22 +34,33 @@ export async function processGrpcStream(sessionId: string, stream: any) {
     let hasError = false
     try {
         for await (const event of stream) {
+            const parsedEvent = JSON.parse(event.data)
+            console.log(
+                `[WORKER LISTENER -> REDIS] 📡 Session '${sessionId}' -> Publishing event '${parsedEvent.type || 'unknown'}'`
+            )
+
             // publish to socket rooms
             await redisPub.publish(`session_events:${sessionId}`, event.data)
 
             // handle specific events like usage and credits
-            const parsedEvent = JSON.parse(event.data)
             if (parsedEvent.type === 'AgentUsage') {
                 await updateCredits(sessionId, parsedEvent)
             } else if (parsedEvent.type === 'AgentError') {
                 hasError = true
+                console.error(
+                    `[WORKER LISTENER] ❌ Session '${sessionId}' AgentError received:`,
+                    parsedEvent.error || parsedEvent.message
+                )
             }
         }
     } catch (e: any) {
         hasError = true
         // Stream ended or connection closed: log exception safely
-        console.error(`Stream ended for ${sessionId}: ${e?.message || e}`)
+        console.error(`[WORKER LISTENER] ❌ Stream ended for ${sessionId}: ${e?.message || e}`)
     } finally {
+        console.log(
+            `[WORKER LISTENER] 🏁 Stream finished for session '${sessionId}'. Setting Prisma session status -> ${hasError ? 'FAILED' : 'STOPPED'}`
+        )
         await prisma.session
             .update({
                 where: { id: sessionId },
@@ -75,6 +86,10 @@ async function updateCredits(sessionId: string, event: any) {
         const model = event.model || 'gemini-3.6-flash'
         const now = new Date()
 
+        console.log(
+            `[WORKER LISTENER] 💰 Recording UsageEvent for session '${sessionId}': promptTokens=${promptTokens}, completionTokens=${completionTokens}, totalTokens=${totalTokens}`
+        )
+
         await prisma.usageEvent.create({
             data: {
                 userId: session.userId,
@@ -90,7 +105,7 @@ async function updateCredits(sessionId: string, event: any) {
         })
     } catch (err) {
         console.error(
-            `[Worker Listener] Failed to record token usage for session ${sessionId}:`,
+            `[WORKER LISTENER] ❌ Failed to record token usage for session ${sessionId}:`,
             err
         )
     }

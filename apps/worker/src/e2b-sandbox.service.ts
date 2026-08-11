@@ -599,11 +599,30 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
 
     const streamGenerator = (async function* () {
         try {
+            console.log(
+                `[AGENT EXECUTION] 🤖 Agent loop started for session '${sessionId}'. Running AgentHarness loop...`
+            )
             for await (const event of runAgentLoop(agent, prompt)) {
+                if (event.type === 'AgentStatus') {
+                    console.log(`[AGENT STATUS] 📢 Session '${sessionId}': ${event.message}`)
+                } else if (event.type === 'StreamChunk') {
+                    if (event.content) {
+                        console.log(
+                            `[AGENT STREAM] 💬 Session '${sessionId}': "${event.content.slice(0, 60)}..."`
+                        )
+                    }
+                } else if (event.type === 'AgentEnd') {
+                    console.log(
+                        `[AGENT END] 🏁 Agent loop finished successfully for session '${sessionId}'`
+                    )
+                }
                 yield { data: JSON.stringify(event) }
             }
         } catch (err: any) {
-            console.error(`[E2BSandboxService] Error during agent loop for ${sessionId}:`, err)
+            console.error(
+                `[AGENT EXECUTION] ❌ Error during agent loop for session '${sessionId}':`,
+                err
+            )
             yield {
                 data: JSON.stringify({
                     type: 'AgentError',
