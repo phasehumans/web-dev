@@ -91,10 +91,10 @@ export const worker = new Worker(
 
         try {
             console.log(
-                `[WORKER ENGINE] 📥 Picked up job #${job.id} (type: ${effectiveTaskType}) for session '${sessionId}'`
+                `[WORKER ENGINE] Picked up job #${job.id} (type: ${effectiveTaskType}) for session '${sessionId}'`
             )
             console.log(
-                `[WORKER ENGINE] 🔄 Setting Prisma session '${sessionId}' status -> PROVISIONING`
+                `[WORKER ENGINE] Setting Prisma session '${sessionId}' status -> PROVISIONING`
             )
             await prisma.session.update({
                 where: { id: sessionId },
@@ -110,11 +110,11 @@ export const worker = new Worker(
 
             // Provision E2B microVM sandbox with 3x retry backoff and user LRU limit
             console.log(
-                `[WORKER ENGINE] ⚡ Provisioning E2B microVM container for session '${sessionId}' (userId: '${userId || 'anonymous'}')...`
+                `[WORKER ENGINE] Provisioning E2B microVM container for session '${sessionId}' (userId: '${userId || 'anonymous'}')...`
             )
             const provisionResult = await E2BSandboxService.provisionSandbox({ sessionId, userId })
             console.log(
-                `[WORKER ENGINE] ✅ E2B Sandbox container '${provisionResult.sandboxId}' is RUNNING (isMock: ${provisionResult.isMock}). Initializing agent session...`
+                `[WORKER ENGINE] E2B Sandbox container '${provisionResult.sandboxId}' is RUNNING (isMock: ${provisionResult.isMock}). Initializing agent session...`
             )
 
             const apiHostUrl = process.env.API_URL || 'http://localhost:4000/api/v1'
@@ -128,18 +128,18 @@ export const worker = new Worker(
             })
 
             console.log(
-                `[WORKER ENGINE] 🤖 Agent loop started for session '${sessionId}'. Spawning stream listener...`
+                `[WORKER ENGINE] Agent loop started for session '${sessionId}'. Spawning stream listener...`
             )
 
             // start listening in the background without blocking the worker pool
             processGrpcStream(sessionId, stream).catch((e: any) =>
-                console.error(`[WORKER ENGINE] ❌ Stream failed for session ${sessionId}`, e)
+                console.error(`[WORKER ENGINE] Stream failed for session ${sessionId}`, e)
             )
 
             return { status: 'RUNNING', sandboxId: provisionResult.sandboxId, token }
         } catch (e: any) {
             console.error(
-                `[WORKER ENGINE] ❌ Failed to process job #${job.id} for session ${sessionId}`,
+                `[WORKER ENGINE] Failed to process job #${job.id} for session ${sessionId}`,
                 e
             )
             await prisma.session
