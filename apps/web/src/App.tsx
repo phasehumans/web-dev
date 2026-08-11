@@ -28,8 +28,6 @@ const App: React.FC = () => {
         isAuthenticated,
         isHome,
         showSidebar,
-        selectedModel,
-        setSelectedModel,
         handleNewThread,
         handleHomeClick,
         handleNavigate,
@@ -101,8 +99,6 @@ const App: React.FC = () => {
                         onDownloadProject={handleDownloadProject}
                         onSignOut={handleSignOut}
                         onDocs={() => handleNavigate('docs')}
-                        selectedModel={selectedModel}
-                        setSelectedModel={setSelectedModel}
                         onOpenFile={handleOpenFile}
                         onResetImportState={resetImportState}
                     />

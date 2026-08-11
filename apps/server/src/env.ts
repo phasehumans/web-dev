@@ -62,6 +62,7 @@ const envSchema = z
 
         OPENROUTER_API_KEY: z.string().min(1).optional(),
         AUTO_MODEL: z.string().optional(),
+        DEFAULT_MODEL: z.string().optional(),
         BCRYPT_SALT_ROUNDS: z.coerce.number().default(10),
         SECRETS_ENC_KEY: z
             .string()

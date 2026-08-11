@@ -33,8 +33,6 @@ interface AppContentViewProps {
     onDownloadProject: () => void
     onSignOut: () => void
     onDocs?: () => void
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
     onOpenFile?: (path: string) => void
     onResetImportState?: () => void
 }
@@ -85,8 +83,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
     onDownloadProject,
     onSignOut,
     onDocs,
-    selectedModel,
-    setSelectedModel,
     onOpenFile,
     onResetImportState,
 }) => {
@@ -94,12 +90,7 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
         <AnimatePresence mode="wait" initial={false}>
             {view === 'sessions' && (
                 <AnimatedPage pageKey="sessions">
-                    <SessionList
-                        onNewProject={onNewProject}
-                        onOpenProject={onOpenProject}
-                        selectedModel={selectedModel}
-                        setSelectedModel={setSelectedModel}
-                    />
+                    <SessionList onNewProject={onNewProject} onOpenProject={onOpenProject} />
                 </AnimatedPage>
             )}
 

@@ -40,8 +40,6 @@ export const useAppController = () => {
         activeProjectName,
         canvasState,
         setCanvasState,
-        selectedModel,
-        setSelectedModel,
         projectVersions,
         activeProjectVersionId,
         isProjectOpening,
@@ -184,15 +182,6 @@ export const useAppController = () => {
         queryClient,
     ])
 
-    // sync selected model to localstorage
-    React.useEffect(() => {
-        if (selectedModel) {
-            localStorage.setItem('december_selected_model', selectedModel)
-        } else {
-            localStorage.removeItem('december_selected_model')
-        }
-    }, [selectedModel])
-
     // auto-save canvas state
     React.useEffect(() => {
         if (!isAuthenticated || !activeProjectId) return
@@ -311,8 +300,6 @@ export const useAppController = () => {
         activeProjectName,
         canvasState,
         setCanvasState,
-        selectedModel,
-        setSelectedModel,
         projectVersions,
         activeProjectVersionId,
         isProjectOpening,

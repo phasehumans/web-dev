@@ -37,8 +37,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         isGenerating,
         activeProjectName: projectName,
         activeProjectId: projectId,
-        canvasState,
-        setCanvasState: onCanvasStateChange,
         projectVersions: versions,
         activeProjectVersionId: activeVersionId,
         isProjectOpening: isVersionLoading,
@@ -46,8 +44,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         previewSessionError,
         importState,
         projectType = 'generated',
-        selectedModel,
-        setSelectedModel,
     } = useAppStore()
 
     const activeFilesToDisplay = React.useMemo(() => {
@@ -279,8 +275,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                     showStructureOnly={showStructureOnly}
                     projectName={projectName}
                     projectId={projectId}
-                    canvasState={canvasState}
-                    onCanvasStateChange={onCanvasStateChange}
                     versions={versions}
                     activeVersionId={activeVersionId}
                     isVersionLoading={isVersionLoading}
@@ -293,8 +287,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                             : previewSessionError
                     }
                     projectType={projectType}
-                    selectedModel={selectedModel}
-                    setSelectedModel={setSelectedModel}
                     onRefresh={handleRefreshPreview}
                 />
             </div>

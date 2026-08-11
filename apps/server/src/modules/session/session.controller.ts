@@ -219,7 +219,11 @@ export const proxyPreview = asyncHandler(async (req: Request, res: Response) => 
         return sendSuccess(res, 'web preview proxy target resolved', result)
     }
 
-    if (process.env.E2B_API_KEY && result.previewUrl.startsWith('http')) {
+    if (
+        process.env.E2B_API_KEY &&
+        result.previewUrl.startsWith('http') &&
+        process.env.ENV === 'PROD'
+    ) {
         return res.redirect(302, result.previewUrl)
     }
 

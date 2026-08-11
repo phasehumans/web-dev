@@ -58,12 +58,6 @@ export const WorkspaceHeaderViewTabs: React.FC<WorkspaceHeaderViewTabsProps> = (
                     onSelect={setActiveTab}
                 />
                 <ViewModeTab
-                    label="Canvas"
-                    tab="canvas"
-                    activeTab={activeTab}
-                    onSelect={setActiveTab}
-                />
-                <ViewModeTab
                     label="Code"
                     tab="code"
                     activeTab={activeTab}

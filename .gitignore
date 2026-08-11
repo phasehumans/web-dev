@@ -42,6 +42,7 @@ packages/database/src/generated/
 # Logs
 logs/
 *.log
+log.txt
 
 # Local infrastructure & runtimes
 docker-compose.override.yml

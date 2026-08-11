@@ -2,7 +2,7 @@ import type { BackendProjectVersionSummary } from '@/features/sessions/api/proje
 import type { RefObject } from 'react'
 
 export type PreviewDevice = 'desktop' | 'mobile' | 'tablet'
-export type PreviewTab = 'preview' | 'code' | 'canvas' | 'terminal'
+export type PreviewTab = 'preview' | 'code' | 'terminal'
 export type GeneratedFileStatus = 'queued' | 'building' | 'done' | 'error'
 export type OutputOperation = 'build' | 'edit' | 'fix'
 export type PreviewRuntimeLifecycleState =
@@ -96,8 +96,6 @@ export interface WorkspaceHeaderProps {
     isVersionLoading?: boolean
     onSelectVersion?: (versionId: string) => void
     onDownload?: () => void
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
     onRefresh?: () => void
 }
 

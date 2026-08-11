@@ -5,7 +5,6 @@ import { PreviewArea } from './PreviewArea'
 import { TerminalWorkspace } from './TerminalWorkspace'
 import { WorkspaceHeader } from './WorkspaceHeader'
 
-import type { CanvasDocument } from '@/features/canvas/types'
 import type {
     GeneratedProjectFile,
     PreviewDevice,
@@ -13,8 +12,6 @@ import type {
     PreviewTab,
 } from '@/features/preview/types'
 import type { BackendProjectVersionSummary } from '@/features/sessions/api/project'
-
-import Canvas from '@/features/canvas/components/Canvas'
 
 interface WorkspaceScreenMainContentProps {
     activeTab: PreviewTab
@@ -36,8 +33,6 @@ interface WorkspaceScreenMainContentProps {
     showStructureOnly: boolean
     projectName?: string | null
     projectId?: string | null
-    canvasState: CanvasDocument
-    onCanvasStateChange: (document: CanvasDocument) => void
     versions?: BackendProjectVersionSummary[]
     activeVersionId?: string | null
     isVersionLoading?: boolean
@@ -46,8 +41,6 @@ interface WorkspaceScreenMainContentProps {
     previewSession?: PreviewSessionStatus | null
     previewSessionError?: string | null
     projectType?: 'generated' | 'github' | 'zip'
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
     onRefresh?: () => void
 }
 
@@ -71,8 +64,6 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
     showStructureOnly,
     projectName,
     projectId,
-    canvasState,
-    onCanvasStateChange,
     versions,
     activeVersionId,
     isVersionLoading,
@@ -81,8 +72,6 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
     previewSession,
     previewSessionError,
     projectType,
-    selectedModel,
-    setSelectedModel,
     onRefresh,
 }) => {
     return (
@@ -103,8 +92,6 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
                 isVersionLoading={isVersionLoading}
                 onSelectVersion={onSelectVersion}
                 onDownload={onDownload}
-                selectedModel={selectedModel}
-                setSelectedModel={setSelectedModel}
                 onRefresh={onRefresh}
             />
 
@@ -133,18 +120,6 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
                     activeFilePath={activeGeneratedFilePath}
                     onHtmlChange={setPreviewHtml}
                 />
-            )}
-
-            {activeTab === 'canvas' && (
-                <div className="flex-1 min-h-0 flex items-center justify-center p-0.5 pb-2 bg-[#141414]">
-                    <div className="w-full h-full rounded-xl border border-[#262626] shadow-2xl overflow-hidden">
-                        <Canvas
-                            document={canvasState}
-                            onDocumentChange={onCanvasStateChange}
-                            projectId={projectId}
-                        />
-                    </div>
-                </div>
             )}
 
             {activeTab === 'terminal' && (
