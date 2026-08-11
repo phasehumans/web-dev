@@ -84,8 +84,10 @@ export class RemotePlatformAdapter implements PlatformAdapter {
     }
 
     ui = {
-        askQuestion: async (question: string) => {
-            return { answer: 'Non-interactive mode: auto-proceeding' }
+        askQuestion: async (
+            questions: Array<{ question: string; options: string[]; is_multi_select?: boolean }>
+        ) => {
+            return 'Non-interactive mode: auto-proceeding'
         },
         requestPermission: async () => {
             return { block: false }

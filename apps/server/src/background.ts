@@ -8,6 +8,9 @@ import { deletePrefix } from './shared/project-storage'
 const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
     maxRetriesPerRequest: null,
 })
+redisConnection.on('error', (err) => {
+    console.error('[Background Redis Error]', err?.message || err)
+})
 
 // setup minio_wipe worker
 const minioWipeWorker = new Worker(

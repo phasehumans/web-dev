@@ -9,7 +9,7 @@ import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/pre
 
 import { DocsView } from '@/features/docs/components/DocsView'
 import { HomeHero } from '@/features/home/components/HomeHero'
-import { OutputScreen } from '@/features/preview/components/OutputScreen'
+import { WorkspaceScreen } from '@/features/preview/components/WorkspaceScreen'
 import { ProfileSettings } from '@/features/profile/components/ProfileSettings'
 import { SessionList } from '@/features/sessions/components/SessionList'
 import { WikiView } from '@/features/wiki/components/WikiView'
@@ -146,7 +146,7 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
                     </AnimatedPage>
                 ) : (
                     <AnimatedPage pageKey="chat-output">
-                        <OutputScreen
+                        <WorkspaceScreen
                             onBack={onBackFromOutput}
                             onPromptSubmit={(prompt, options) =>
                                 onOutputPromptSubmit(prompt, options?.selectedElement)

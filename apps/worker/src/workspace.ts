@@ -59,12 +59,35 @@ export async function uploadWorkspaceToMinio(zipPath: string, objectKey: string)
 export async function archiveWorkspaceState(data: {
     sessionId: string
     workspaceDir: string
+    sandbox?: any
 }): Promise<string> {
-    const { sessionId, workspaceDir } = data
+    const { sessionId, workspaceDir, sandbox } = data
     const tempZipPath = `/tmp/workspace-${sessionId}-${Date.now()}.tar.gz`
     const objectKey = `sessions/${sessionId}/workspace.tar.gz`
 
     try {
+        if (sandbox && sandbox.commands && typeof sandbox.commands.run === 'function') {
+            await sandbox.commands
+                .run(
+                    'tar -czf /tmp/workspace.tar.gz --exclude="node_modules" --exclude=".next" --exclude="dist" --exclude=".git" -C /workspace .',
+                    { cwd: '/workspace' }
+                )
+                .catch(() => {
+                    // Intentionally swallowed: remote tar creation warning fallback
+                })
+
+            const catRes = await sandbox.commands
+                .run('cat /tmp/workspace.tar.gz | base64', { cwd: '/workspace' })
+                .catch(() => null)
+
+            if (catRes?.stdout) {
+                const buffer = Buffer.from(catRes.stdout.replace(/\s+/g, ''), 'base64')
+                fs.writeFileSync(tempZipPath, buffer)
+                await uploadWorkspaceToMinio(tempZipPath, objectKey)
+                return objectKey
+            }
+        }
+
         if (fs.existsSync(workspaceDir)) {
             await compressWorkspace(workspaceDir, tempZipPath)
             await uploadWorkspaceToMinio(tempZipPath, objectKey)
@@ -85,8 +108,9 @@ export async function restoreWorkspaceState(data: {
     sessionId: string
     workspaceDir: string
     objectKey?: string
+    sandbox?: any
 }): Promise<boolean> {
-    const { sessionId, workspaceDir, objectKey } = data
+    const { sessionId, workspaceDir, objectKey, sandbox } = data
     const key = objectKey || `sessions/${sessionId}/workspace.tar.gz`
 
     try {
@@ -100,6 +124,21 @@ export async function restoreWorkspaceState(data: {
         const tempZipPath = `/tmp/restore-${sessionId}-${Date.now()}.tar.gz`
         const buffer = await response.Body.transformToByteArray()
         fs.writeFileSync(tempZipPath, buffer)
+
+        if (sandbox && sandbox.commands && typeof sandbox.commands.run === 'function') {
+            const base64Str = Buffer.from(buffer).toString('base64')
+            await sandbox.commands
+                .run(
+                    `echo "${base64Str}" | base64 -d > /tmp/restore.tar.gz && mkdir -p /workspace && tar -xzf /tmp/restore.tar.gz -C /workspace && rm -f /tmp/restore.tar.gz`,
+                    { cwd: '/workspace' }
+                )
+                .catch((e: any) => {
+                    console.error(
+                        `[Workspace] Remote sandbox restoration warning for session ${sessionId}:`,
+                        e
+                    )
+                })
+        }
 
         if (!fs.existsSync(workspaceDir)) {
             fs.mkdirSync(workspaceDir, { recursive: true })

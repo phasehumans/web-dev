@@ -65,7 +65,7 @@ export interface GeneratedProjectFile {
     generator?: string
 }
 
-export interface OutputScreenProps {
+export interface WorkspaceScreenProps {
     onBack?: () => void
     onPromptSubmit: (
         prompt: string,
@@ -78,7 +78,9 @@ export interface OutputScreenProps {
     onOpenFile?: (path: string) => void
 }
 
-export interface OutputHeaderProps {
+export type OutputScreenProps = WorkspaceScreenProps
+
+export interface WorkspaceHeaderProps {
     activeTab: PreviewTab
     setActiveTab: (tab: PreviewTab) => void
     device: PreviewDevice
@@ -98,6 +100,8 @@ export interface OutputHeaderProps {
     setSelectedModel?: (val: string) => void
     onRefresh?: () => void
 }
+
+export type OutputHeaderProps = WorkspaceHeaderProps
 
 export interface PreviewAreaProps {
     html: string

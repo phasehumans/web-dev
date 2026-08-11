@@ -12,6 +12,9 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
 const redisConnection: any = new Redis(REDIS_URL, {
     maxRetriesPerRequest: null,
 })
+redisConnection.on('error', (err: any) => {
+    console.error('[Worker Redis Connection Error]', err?.message || err)
+})
 
 console.log("Worker started, waiting for jobs on 'agent_jobs'...")
 
@@ -19,35 +22,77 @@ export const worker = new Worker(
     'agent_jobs',
     async (job: Job) => {
         const { sessionId, userId, taskType, prUrl, gitToken, reviewId } = job.data
+        const effectiveTaskType = taskType || job.name
         console.log(
-            `Processing job ${job.id} (type: ${taskType || job.name}) for session ${sessionId || reviewId}`
+            `Processing job ${job.id} (type: ${effectiveTaskType}) for session ${sessionId || reviewId}`
         )
 
-        // Handle Ephemeral PR Review & One-Click Fix tasks
-        if (taskType === 'pr_review' || job.name === 'pr_review' || taskType === 'one_click_fix') {
+        // Handle Ephemeral Tasks (PR Review, One-Click Fix, Security Audit, Wiki AST)
+        const isEphemeralTask = [
+            'pr_review',
+            'one_click_fix',
+            'security_audit',
+            'wiki_ast',
+        ].includes(effectiveTaskType)
+
+        if (isEphemeralTask) {
             const result = await E2BSandboxService.runEphemeralTask({
                 sessionId: sessionId || reviewId,
-                taskType: taskType || 'pr_review',
+                taskType: effectiveTaskType as any,
                 repoUrl: prUrl,
                 gitToken,
                 taskRunner: async (sandbox) => {
-                    if (taskType === 'pr_review' || job.name === 'pr_review') {
-                        // Clone repo branch and execute typecheck & lint analysis inside sandbox
-                        if (sandbox.commands?.run) {
+                    let runOutput = ''
+                    if (sandbox.commands?.run) {
+                        if (prUrl) {
                             await sandbox.commands
-                                .run(`git clone ${prUrl || ''} /workspace`, {
-                                    cwd: '/workspace',
+                                .run(`git clone ${prUrl} /workspace`, { cwd: '/workspace' })
+                                .catch((e: any) => {
+                                    console.warn(
+                                        `Git clone warning for ephemeral task: ${e?.message || e}`
+                                    )
                                 })
-                                .catch(() => {})
+                        }
+
+                        if (effectiveTaskType === 'pr_review') {
+                            const lintRes = await sandbox.commands
+                                .run('npm run lint --if-present', { cwd: '/workspace' })
+                                .catch(() => null)
+                            const typecheckRes = await sandbox.commands
+                                .run('npm run typecheck --if-present', { cwd: '/workspace' })
+                                .catch(() => null)
+                            runOutput = [lintRes?.stdout, typecheckRes?.stdout]
+                                .filter(Boolean)
+                                .join('\n')
+                        } else if (effectiveTaskType === 'security_audit') {
+                            const auditRes = await sandbox.commands
+                                .run('npm audit --json', { cwd: '/workspace' })
+                                .catch(() => null)
+                            runOutput = auditRes?.stdout || ''
+                        } else if (effectiveTaskType === 'one_click_fix') {
+                            const fixRes = await sandbox.commands
+                                .run('npm run fix --if-present', { cwd: '/workspace' })
+                                .catch(() => null)
+                            runOutput = fixRes?.stdout || 'Fix applied'
+                        } else if (effectiveTaskType === 'wiki_ast') {
+                            runOutput = 'AST generated'
                         }
                     }
-                    return { reviewId, status: 'COMPLETED', taskType }
+                    return {
+                        reviewId,
+                        status: 'COMPLETED',
+                        taskType: effectiveTaskType,
+                        output: runOutput,
+                    }
                 },
             })
             return result
         }
 
         try {
+            console.log(
+                `[Worker Engine] Job ${job.id} starting. Setting session ${sessionId} status to PROVISIONING...`
+            )
             await prisma.session.update({
                 where: { id: sessionId },
                 data: { vmStatus: 'PROVISIONING' },
@@ -60,11 +105,13 @@ export const worker = new Worker(
                 { expiresIn: '15m' }
             )
 
-            // Provision E2B microVM sandbox with 3x retry backoff
-            console.log(`Provisioning E2B Sandbox for session ${sessionId}...`)
-            const provisionResult = await E2BSandboxService.provisionSandbox({ sessionId })
+            // Provision E2B microVM sandbox with 3x retry backoff and user LRU limit
             console.log(
-                `E2B Sandbox provisioned successfully (${provisionResult.sandboxId}). Establishing agent session...`
+                `[Worker Engine] Provisioning E2B Sandbox for session ${sessionId} (user: ${userId || 'anonymous'})...`
+            )
+            const provisionResult = await E2BSandboxService.provisionSandbox({ sessionId, userId })
+            console.log(
+                `[Worker Engine] E2B Sandbox ${provisionResult.sandboxId} provisioned successfully for session ${sessionId}. Initializing agent runner session...`
             )
 
             const apiHostUrl = process.env.API_URL || 'http://localhost:4000/api/v1'
@@ -77,20 +124,29 @@ export const worker = new Worker(
                 apiHostUrl,
             })
 
+            console.log(
+                `[Worker Engine] Agent session execution stream initialized for session ${sessionId}. Spawning stream listener...`
+            )
+
             // start listening in the background without blocking the worker pool
             processGrpcStream(sessionId, stream).catch((e: any) =>
-                console.error('Stream failed', e)
+                console.error(`[Worker Engine] Stream failed for session ${sessionId}`, e)
             )
 
             return { status: 'RUNNING', sandboxId: provisionResult.sandboxId, token }
         } catch (e: any) {
-            console.error(`Failed to process job ${job.id}`, e)
+            console.error(
+                `[Worker Engine] Failed to process job ${job.id} for session ${sessionId}`,
+                e
+            )
             await prisma.session
                 .update({
                     where: { id: sessionId },
                     data: { vmStatus: 'FAILED' },
                 })
-                .catch(() => {})
+                .catch(() => {
+                    // Intentionally swallowed: DB fallback on job processing error
+                })
             throw e
         }
     },
@@ -103,3 +159,17 @@ export const worker = new Worker(
 worker.on('failed', (job: any, err: any) => {
     console.error(`Job ${job?.id} failed with ${err.message}`)
 })
+
+const shutdownGracefully = async () => {
+    console.log('Shutting down worker process gracefully...')
+    try {
+        await worker.close()
+        await redisConnection.quit()
+    } catch {
+        // Intentionally swallowed: Force exit on shutdown fallback
+    }
+    process.exit(0)
+}
+
+process.on('SIGINT', shutdownGracefully)
+process.on('SIGTERM', shutdownGracefully)

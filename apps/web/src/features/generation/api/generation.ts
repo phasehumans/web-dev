@@ -237,7 +237,8 @@ const runOverSocket = async (
             })
 
             socket.on('agent_event', (event: any) => {
-                let parsedData = event.data
+                console.log(`[Web Socket] Received agent_event:`, event)
+                let parsedData = event.data !== undefined ? event.data : event
                 if (typeof parsedData === 'string') {
                     try {
                         parsedData = JSON.parse(parsedData)
@@ -246,19 +247,25 @@ const runOverSocket = async (
                     }
                 }
 
-                const streamEvent = { type: event.type, data: parsedData } as GenerationStreamEvent
+                const eventType = event.type || parsedData?.type || 'StreamChunk'
+                const streamEvent = { type: eventType, data: parsedData } as GenerationStreamEvent
                 onEvent(streamEvent)
 
-                if (event.type === 'result') {
+                if (eventType === 'result' || eventType === 'AgentEnd') {
                     resultData = parsedData
                     hasResolved = true
                     socket.disconnect()
                     resolve(resultData)
                 }
-                if (event.type === 'error') {
+                if (eventType === 'error' || eventType === 'AgentError') {
                     hasResolved = true
                     socket.disconnect()
-                    reject(new ApiError(parsedData.message || 'Error', 500))
+                    reject(
+                        new ApiError(
+                            parsedData?.error || parsedData?.message || 'Agent Execution Error',
+                            500
+                        )
+                    )
                 }
             })
 
