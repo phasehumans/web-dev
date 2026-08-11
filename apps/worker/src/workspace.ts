@@ -1,3 +1,4 @@
+import { execSync } from 'child_process'
 import fs from 'fs'
 
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
@@ -105,9 +106,17 @@ export async function restoreWorkspaceState(data: {
         }
 
         try {
-            fs.unlinkSync(tempZipPath)
-        } catch {
-            // Intentionally swallowed: temp cleanup fallback
+            execSync(`tar -xzf "${tempZipPath}" -C "${workspaceDir}"`)
+        } catch (e) {
+            console.error(`[Workspace] Failed to extract archive for session ${sessionId}:`, e)
+        } finally {
+            if (fs.existsSync(tempZipPath)) {
+                try {
+                    fs.unlinkSync(tempZipPath)
+                } catch {
+                    // Intentionally swallowed: temp cleanup fallback
+                }
+            }
         }
         return true
     } catch {
