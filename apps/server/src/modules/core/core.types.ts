@@ -4,7 +4,9 @@ export type { HandlePromptDto }
 
 export type ProcessPromptJob = {
     userId: string
-    data: HandlePromptDto
+    prompt: string
+    projectId?: string
+    sessionId?: string
 }
 
 export type PromptJobData = {
@@ -12,4 +14,9 @@ export type PromptJobData = {
     projectId?: string
     sessionId?: string
     userId: string
+}
+
+export type ProcessPromptJobResult = {
+    jobId: string
+    sessionId: string
 }

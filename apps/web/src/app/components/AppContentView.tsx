@@ -9,7 +9,7 @@ import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/pre
 
 import { DocsView } from '@/features/docs/components/DocsView'
 import { HomeHero } from '@/features/home/components/HomeHero'
-import { OutputScreen } from '@/features/preview/components/OutputScreen'
+import { WorkspaceScreen } from '@/features/preview/components/WorkspaceScreen'
 import { ProfileSettings } from '@/features/profile/components/ProfileSettings'
 import { SessionList } from '@/features/sessions/components/SessionList'
 import { WikiView } from '@/features/wiki/components/WikiView'
@@ -33,8 +33,6 @@ interface AppContentViewProps {
     onDownloadProject: () => void
     onSignOut: () => void
     onDocs?: () => void
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
     onOpenFile?: (path: string) => void
     onResetImportState?: () => void
 }
@@ -85,8 +83,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
     onDownloadProject,
     onSignOut,
     onDocs,
-    selectedModel,
-    setSelectedModel,
     onOpenFile,
     onResetImportState,
 }) => {
@@ -94,12 +90,7 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
         <AnimatePresence mode="wait" initial={false}>
             {view === 'sessions' && (
                 <AnimatedPage pageKey="sessions">
-                    <SessionList
-                        onNewProject={onNewProject}
-                        onOpenProject={onOpenProject}
-                        selectedModel={selectedModel}
-                        setSelectedModel={setSelectedModel}
-                    />
+                    <SessionList onNewProject={onNewProject} onOpenProject={onOpenProject} />
                 </AnimatedPage>
             )}
 
@@ -146,7 +137,7 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
                     </AnimatedPage>
                 ) : (
                     <AnimatedPage pageKey="chat-output">
-                        <OutputScreen
+                        <WorkspaceScreen
                             onBack={onBackFromOutput}
                             onPromptSubmit={(prompt, options) =>
                                 onOutputPromptSubmit(prompt, options?.selectedElement)

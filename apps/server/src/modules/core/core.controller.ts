@@ -14,9 +14,14 @@ const handlePrompt = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const data = HandlePromptSchema.parse(req.body)
-    await coreService.processPromptJob({ userId, data })
+    const result = await coreService.processPromptJob({
+        userId,
+        prompt: data.prompt,
+        projectId: data.projectId,
+        sessionId: data.sessionId,
+    })
 
-    return sendSuccess(res, 'job enqueued', null)
+    return sendSuccess(res, 'job enqueued', result)
 })
 
 export const coreController = {

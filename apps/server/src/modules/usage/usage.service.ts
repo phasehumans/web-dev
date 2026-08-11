@@ -40,7 +40,11 @@ const calculateGenerationCost = (data: CalculateGenerationCost): number => {
     let matchedRate = rates.find((r) => r.name.toLowerCase() === modelName.trim().toLowerCase())
 
     if (!matchedRate && modelName === 'auto') {
-        const resolvedAuto = (process.env.AUTO_MODEL || 'openai/gpt-oss-20b:free').trim()
+        const resolvedAuto = (
+            process.env.DEFAULT_MODEL ||
+            process.env.AUTO_MODEL ||
+            'openai/gpt-oss-20b:free'
+        ).trim()
         matchedRate = rates.find((r) => r.name.toLowerCase() === resolvedAuto.toLowerCase())
     }
 

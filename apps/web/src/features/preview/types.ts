@@ -2,7 +2,7 @@ import type { BackendProjectVersionSummary } from '@/features/sessions/api/proje
 import type { RefObject } from 'react'
 
 export type PreviewDevice = 'desktop' | 'mobile' | 'tablet'
-export type PreviewTab = 'preview' | 'code' | 'canvas' | 'terminal'
+export type PreviewTab = 'preview' | 'code' | 'terminal'
 export type GeneratedFileStatus = 'queued' | 'building' | 'done' | 'error'
 export type OutputOperation = 'build' | 'edit' | 'fix'
 export type PreviewRuntimeLifecycleState =
@@ -65,7 +65,7 @@ export interface GeneratedProjectFile {
     generator?: string
 }
 
-export interface OutputScreenProps {
+export interface WorkspaceScreenProps {
     onBack?: () => void
     onPromptSubmit: (
         prompt: string,
@@ -78,7 +78,9 @@ export interface OutputScreenProps {
     onOpenFile?: (path: string) => void
 }
 
-export interface OutputHeaderProps {
+export type OutputScreenProps = WorkspaceScreenProps
+
+export interface WorkspaceHeaderProps {
     activeTab: PreviewTab
     setActiveTab: (tab: PreviewTab) => void
     device: PreviewDevice
@@ -94,10 +96,10 @@ export interface OutputHeaderProps {
     isVersionLoading?: boolean
     onSelectVersion?: (versionId: string) => void
     onDownload?: () => void
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
     onRefresh?: () => void
 }
+
+export type OutputHeaderProps = WorkspaceHeaderProps
 
 export interface PreviewAreaProps {
     html: string

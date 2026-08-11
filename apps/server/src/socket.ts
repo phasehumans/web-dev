@@ -9,10 +9,20 @@ import { env } from './env'
 const pubClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
     maxRetriesPerRequest: null,
 })
-const subClient = pubClient.duplicate()
+pubClient.on('error', (err) => {
+    console.error('[Socket Redis PubClient Error]', err?.message || err)
+})
+
+const subClient = pubClient.duplicate({ enableReadyCheck: false })
+subClient.on('error', (err) => {
+    console.error('[Socket Redis SubClient Error]', err?.message || err)
+})
 
 // this one is specifically for subscribing to worker session events
-const redisSubClient = pubClient.duplicate()
+const redisSubClient = pubClient.duplicate({ enableReadyCheck: false })
+redisSubClient.on('error', (err) => {
+    console.error('[Socket Redis EventSubClient Error]', err?.message || err)
+})
 
 let io: Server
 
@@ -39,9 +49,12 @@ export function initSocket(httpServer: any) {
             const sessionId = channel.replace('session_events:', '')
             try {
                 const event = JSON.parse(message)
+                console.log(
+                    `[SERVER CORE -> CLIENT] Relaying event '${event.type || 'unknown'}' to room session:${sessionId}`
+                )
                 io.to(`session:${sessionId}`).emit('agent_event', event)
             } catch (err) {
-                console.error(`[Socket] Failed to parse Redis message on ${channel}`, err)
+                console.error(`[SERVER CORE] Failed to parse Redis message on ${channel}`, err)
             }
         } else if (pattern === 'session_terminal_data:*') {
             const sessionId = channel.replace('session_terminal_data:', '')
@@ -137,25 +150,35 @@ export function initSocket(httpServer: any) {
             'send_prompt',
             async (data: { sessionId: string; prompt: string; projectId: string }) => {
                 try {
+                    console.log(
+                        `[SERVER CORE] Prompt received for session '${data.sessionId}' (user: ${socket.data.userId || 'anonymous'}): "${data.prompt?.slice(0, 80)}..."`
+                    )
+
                     // fetch user secrets (phase 3.6 secrets management)
-                    // we'll mock decryption here since decryption logic belongs to secret service
-                    const secrets: any[] = [] // secret model doesn't exist yet, passing empty secrets
+                    const secrets: any[] = []
                     const decryptedSecrets = secrets.map((s: any) => ({
                         key: s.key,
-                        value: s.value, // assuming decrypted or decryption utility here
+                        value: s.value,
                     }))
 
                     // enqueue to worker
+                    console.log(
+                        `[SERVER CORE] Enqueuing job 'run_agent' to BullMQ queue 'agent_jobs'...`
+                    )
                     const agentJobsQueue = new Queue('agent_jobs', { connection: pubClient as any })
-                    await agentJobsQueue.add('run_agent', {
+                    const job = await agentJobsQueue.add('run_agent', {
                         sessionId: data.sessionId,
                         projectId: data.projectId,
                         userId: socket.data.userId,
                         prompt: data.prompt,
-                        secrets: decryptedSecrets, // injecting decrypted secrets into payload
+                        secrets: decryptedSecrets,
                     })
+
+                    console.log(
+                        `[SERVER CORE] Job #${job.id} enqueued successfully to Redis for session '${data.sessionId}'`
+                    )
                 } catch (err: any) {
-                    console.error('[Socket] Failed to enqueue agent job:', err)
+                    console.error('[SERVER CORE] Failed to enqueue agent job:', err)
                     socket.emit('error', { message: 'Failed to start agent: ' + err.message })
                 }
             }

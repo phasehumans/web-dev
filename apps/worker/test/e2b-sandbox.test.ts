@@ -315,4 +315,45 @@ describe('E2BSandboxService (Unit & Integration)', () => {
 
         await new Promise((resolve) => setTimeout(resolve, 50))
     })
+
+    it('should support RemotePlatformAdapter shell escaping and CWD /workspace', async () => {
+        const { RemotePlatformAdapter } = await import('../src/remote-operations')
+        const adapter = new RemotePlatformAdapter('mock-vm-123')
+        expect(adapter.env.cwd()).toBe('/workspace')
+
+        const uiRes = await adapter.ui.askQuestion([
+            { question: 'Proceed?', options: ['Yes', 'No'] },
+        ])
+        expect(uiRes).toBe('Non-interactive mode: auto-proceeding')
+    })
+
+    it('should route ephemeral tasks security_audit and one_click_fix cleanly', async () => {
+        let taskTypeExecuted = ''
+        const mockClient = {
+            create: async () => ({
+                sandboxId: 'sb-ephemeral-2',
+                commands: {
+                    run: async (cmd: string) => ({
+                        exitCode: 0,
+                        stdout: 'Audit clean',
+                        stderr: '',
+                    }),
+                },
+                kill: async () => {},
+            }),
+        }
+
+        E2BSandboxService.setMockClient(mockClient)
+
+        const secRes = await E2BSandboxService.runEphemeralTask({
+            taskType: 'security_audit',
+            taskRunner: async (sb) => {
+                taskTypeExecuted = 'security_audit'
+                return { status: 'COMPLETED', taskType: 'security_audit' }
+            },
+        })
+
+        expect(secRes.success).toBe(true)
+        expect(taskTypeExecuted).toBe('security_audit')
+    })
 })

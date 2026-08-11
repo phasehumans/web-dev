@@ -30,8 +30,6 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
     generatedFiles,
     projectType,
     onTriggerSimulation,
-    selectedModel,
-    setSelectedModel,
     isAuthenticated,
     onOpenAuth,
     onOpenFile,
@@ -163,8 +161,6 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
             selectedElement={selectedElement}
             onClearSelection={handleClearSelection}
             isApplyingEdit={isApplyingEdit}
-            selectedModel={selectedModel}
-            setSelectedModel={setSelectedModel}
             isAuthenticated={isAuthenticated}
             onOpenAuth={onOpenAuth}
         />

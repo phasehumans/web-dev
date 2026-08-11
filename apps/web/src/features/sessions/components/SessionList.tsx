@@ -17,8 +17,6 @@ export type TypeFilter = 'any' | 'WEB' | 'CLI' | 'SEARCH'
 export const SessionList: React.FC<{
     onNewProject: () => void
     onOpenProject: (projectId: string) => void
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
 }> = ({ onNewProject, onOpenProject }) => {
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')

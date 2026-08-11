@@ -211,6 +211,42 @@ const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionS
                     .set(sessionId, { sandboxId, lastActiveAt: Date.now() })
             }
 
+            // Restore workspace state from MinIO archive or clone GitHub repository
+            const restored = await restoreWorkspaceState({
+                sessionId,
+                workspaceDir: '/workspace',
+                sandbox,
+            }).catch(() => false)
+
+            if (!restored) {
+                try {
+                    const sessionRecord = await prisma.session
+                        .findUnique({
+                            where: { id: sessionId },
+                            select: { githubRepoUrl: true },
+                        })
+                        .catch(() => null)
+
+                    if (sessionRecord?.githubRepoUrl && sandbox?.commands?.run) {
+                        console.log(
+                            `[E2BSandboxService] Initializing sandbox workspace from GitHub repo: ${sessionRecord.githubRepoUrl}`
+                        )
+                        await sandbox.commands
+                            .run(`git clone ${sessionRecord.githubRepoUrl} /workspace`, {
+                                cwd: '/workspace',
+                            })
+                            .catch((e: any) => {
+                                console.warn(
+                                    `[E2BSandboxService] Git clone fallback warning for session ${sessionId}:`,
+                                    e
+                                )
+                            })
+                    }
+                } catch {
+                    // Intentionally swallowed: optional repo initialization fallback
+                }
+            }
+
             await prisma.session
                 .update({
                     where: { id: sessionId },
@@ -273,6 +309,7 @@ const pauseSandbox = async (data: PauseSandboxInput): Promise<boolean> => {
         await archiveWorkspaceState({
             sessionId,
             workspaceDir: `/workspace`,
+            sandbox,
         }).catch((err) => {
             console.error(
                 `[E2BSandboxService] Workspace archiving warning for session ${sessionId}:`,
@@ -314,16 +351,17 @@ const resumeSandbox = async (data: ResumeSandboxInput): Promise<ProvisionSandbox
     console.log(`[E2BSandboxService] Resuming sandbox for session ${sessionId}`)
 
     try {
-        await restoreWorkspaceState({
-            sessionId,
-            workspaceDir: `/workspace`,
-        }).catch(() => {})
-
         if (mockClientOverride && typeof mockClientOverride.resume === 'function') {
             const mockSandbox = await mockClientOverride.resume({ sessionId, snapshotId })
             const sId = mockSandbox.sandboxId || snapshotId || `mock-sandbox-${sessionId}`
             activeSandboxes.set(sessionId, mockSandbox)
             activeSandboxes.set(sId, mockSandbox)
+
+            await restoreWorkspaceState({
+                sessionId,
+                workspaceDir: `/workspace`,
+                sandbox: mockSandbox,
+            }).catch(() => {})
 
             await prisma.session
                 .update({
@@ -342,6 +380,12 @@ const resumeSandbox = async (data: ResumeSandboxInput): Promise<ProvisionSandbox
                     : await Sandbox.connect(snapshotId, { apiKey: process.env.E2B_API_KEY })
             activeSandboxes.set(sessionId, sandbox)
             activeSandboxes.set(sandbox.sandboxId, sandbox)
+
+            await restoreWorkspaceState({
+                sessionId,
+                workspaceDir: `/workspace`,
+                sandbox,
+            }).catch(() => {})
 
             await prisma.session
                 .update({
@@ -555,11 +599,30 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
 
     const streamGenerator = (async function* () {
         try {
+            console.log(
+                `[AGENT EXECUTION] Agent loop started for session '${sessionId}'. Running AgentHarness loop...`
+            )
             for await (const event of runAgentLoop(agent, prompt)) {
+                if (event.type === 'AgentStatus') {
+                    console.log(`[AGENT STATUS] Session '${sessionId}': ${event.message}`)
+                } else if (event.type === 'StreamChunk') {
+                    if (event.content) {
+                        console.log(
+                            `[AGENT STREAM] Session '${sessionId}': "${event.content.slice(0, 60)}..."`
+                        )
+                    }
+                } else if (event.type === 'AgentEnd') {
+                    console.log(
+                        `[AGENT END] Agent loop finished successfully for session '${sessionId}'`
+                    )
+                }
                 yield { data: JSON.stringify(event) }
             }
         } catch (err: any) {
-            console.error(`[E2BSandboxService] Error during agent loop for ${sessionId}:`, err)
+            console.error(
+                `[AGENT EXECUTION] Error during agent loop for session '${sessionId}':`,
+                err
+            )
             yield {
                 data: JSON.stringify({
                     type: 'AgentError',

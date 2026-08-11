@@ -24,52 +24,6 @@ interface PromptFooterProps {
     mode?: 'agent' | 'search'
 }
 
-const MODELS = [
-    { id: 'Auto', name: 'Auto', desc: 'Best model for your task', icon: null },
-    {
-        id: 'Claude Opus 4.1',
-        name: 'Claude Opus 4.1',
-        desc: "Anthropic's Most Capable Model",
-        icon: Icons.Claude,
-    },
-    {
-        id: 'Claude Sonnet 4',
-        name: 'Claude Sonnet 4',
-        desc: "Anthropic's Latest Model",
-        icon: Icons.Claude,
-    },
-    {
-        id: 'GPT-5.5',
-        name: 'GPT-5.5',
-        desc: "OpenAI's Latest flagship",
-        icon: Icons.OpenAI,
-    },
-    {
-        id: 'GPT-5.5 Mini',
-        name: 'GPT-5.5 Mini',
-        desc: "OpenAI's Fast and smart model",
-        icon: Icons.OpenAI,
-    },
-    {
-        id: 'Gemini 2.5 Pro',
-        name: 'Gemini 2.5 Pro',
-        desc: "Google's Advanced intelligence",
-        icon: Icons.Gemini,
-    },
-    {
-        id: 'Gemini 2.5 Flash',
-        name: 'Gemini 2.5 Flash',
-        desc: "Google's High-speed processing",
-        icon: Icons.Gemini,
-    },
-    {
-        id: 'DeepSeek V3',
-        name: 'DeepSeek V3',
-        desc: 'Powerful Open Source',
-        icon: Icons.Deepseek,
-    },
-]
-
 export const PromptFooter: React.FC<PromptFooterProps> = ({
     onUpload,
     onSubmit,
@@ -83,14 +37,9 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
     mode = 'agent',
 }) => {
     const navigate = useNavigate()
-    const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false)
     const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false)
     const [plusMenuPosition, setPlusMenuPosition] = useState<'top' | 'bottom'>('bottom')
     const [selectedPlusIndex, setSelectedPlusIndex] = useState(0)
-    const [modelSelectorPosition, setModelSelectorPosition] = useState<'top' | 'bottom'>('bottom')
-    const [selectedModelIndex, setSelectedModelIndex] = useState(0)
-    const [selectedModel, setSelectedModel] = useState('Auto')
-    const selectorRef = useRef<HTMLDivElement>(null)
     const plusRef = useRef<HTMLDivElement>(null)
 
     const [showCanvasCard, setShowCanvasCard] = useState(false)
@@ -199,51 +148,8 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         return () => document.removeEventListener('keydown', handleKeyDown, true)
     }, [isPlusMenuOpen, selectedPlusIndex, onUpload, onOptionSelect, mode])
 
-    const isPro = true
-
-    useEffect(() => {
-        if (!isModelSelectorOpen) return
-
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowDown') {
-                e.preventDefault()
-                e.stopPropagation()
-                setSelectedModelIndex((prev) => (prev + 1) % MODELS.length)
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault()
-                e.stopPropagation()
-                setSelectedModelIndex((prev) => (prev - 1 + MODELS.length) % MODELS.length)
-            } else if (e.key === 'Enter') {
-                e.preventDefault()
-                e.stopPropagation()
-                const model = MODELS[selectedModelIndex]
-                if (model) {
-                    if (model.id !== 'Auto' && !isPro) {
-                        if (!isAuthenticated) {
-                            onOpenAuth?.()
-                            setIsModelSelectorOpen(false)
-                            return
-                        }
-                        navigate('/profile/billing')
-                        setIsModelSelectorOpen(false)
-                        return
-                    }
-                    setSelectedModel(model.id)
-                    setIsModelSelectorOpen(false)
-                }
-            } else if (e.key === 'Escape') {
-                setIsModelSelectorOpen(false)
-            }
-        }
-        document.addEventListener('keydown', handleKeyDown, true)
-        return () => document.removeEventListener('keydown', handleKeyDown, true)
-    }, [isModelSelectorOpen, selectedModelIndex, isAuthenticated, isPro, navigate, onOpenAuth])
-
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
-            if (selectorRef.current && !selectorRef.current.contains(e.target as Node)) {
-                setIsModelSelectorOpen(false)
-            }
             if (plusRef.current && !plusRef.current.contains(e.target as Node)) {
                 setIsPlusMenuOpen(false)
             }
@@ -258,8 +164,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         staleTime: 10 * 1000,
         enabled: isAuthenticated,
     })
-
-    const selectedModelData = MODELS.find((m) => m.id === selectedModel) ?? MODELS[0]!
 
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -489,87 +393,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
             </div>
 
             <div className="flex items-center gap-1.5">
-                <div className="relative group/btn" ref={selectorRef}>
-                    <button
-                        onClick={(e) => {
-                            if (!isModelSelectorOpen) {
-                                const rect = e.currentTarget.getBoundingClientRect()
-                                const spaceBelow = window.innerHeight - rect.bottom
-                                if (spaceBelow < 300 && rect.top > spaceBelow) {
-                                    setModelSelectorPosition('top')
-                                } else {
-                                    setModelSelectorPosition('bottom')
-                                }
-                                const currIdx = MODELS.findIndex((m) => m.id === selectedModel)
-                                setSelectedModelIndex(currIdx !== -1 ? currIdx : 0)
-                            }
-                            setIsModelSelectorOpen(!isModelSelectorOpen)
-                        }}
-                        className={cn(
-                            'flex items-center gap-1.5 transition-all duration-200 outline-none cursor-pointer px-2.5 py-1 rounded-full',
-                            isModelSelectorOpen
-                                ? 'text-[#E8E8E8] bg-[#2C2C2E]'
-                                : 'text-[#D6D5D4] bg-[#252525] hover:bg-[#2C2C2E] hover:text-[#E8E8E8]'
-                        )}
-                    >
-                        <span className="text-[12px] font-medium">{selectedModelData.name}</span>
-                        <Icons.ChevronDown
-                            className={cn(
-                                'w-[11px] h-[11px] transition-transform',
-                                isModelSelectorOpen ? 'rotate-180' : 'rotate-0'
-                            )}
-                        />
-                    </button>
-                    {!isModelSelectorOpen && (
-                        <div className="absolute bottom-[calc(100%+6px)] right-0 z-50 hidden group-hover/btn:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
-                            <span className="text-[12px] font-medium text-[#EDEDEF]">
-                                Select model
-                            </span>
-                        </div>
-                    )}
-
-                    {isModelSelectorOpen && (
-                        <div
-                            className={`absolute ${modelSelectorPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} right-0 w-[200px] bg-[#1F1F1F] border border-white/[0.08] rounded-xl p-1 shadow-lg shadow-black/40 z-50 flex flex-col gap-0.5`}
-                        >
-                            {MODELS.map((model, idx) => {
-                                const isSelected = selectedModel === model.id
-                                return (
-                                    <button
-                                        key={model.id}
-                                        onMouseEnter={() => setSelectedModelIndex(idx)}
-                                        onClick={() => {
-                                            if (model.id !== 'Auto' && !isPro) {
-                                                if (!isAuthenticated) {
-                                                    onOpenAuth?.()
-                                                    setIsModelSelectorOpen(false)
-                                                    return
-                                                }
-                                                navigate('/profile/billing')
-                                                setIsModelSelectorOpen(false)
-                                                return
-                                            }
-                                            setSelectedModel(model.id)
-                                            setIsModelSelectorOpen(false)
-                                        }}
-                                        className={cn(
-                                            'flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-[13px] font-medium transition-colors outline-none cursor-pointer',
-                                            selectedModelIndex === idx
-                                                ? 'bg-[#252525] text-[#D6D5D4]'
-                                                : 'text-[#8F8E8D] hover:bg-[#252525] hover:text-[#D6D5D4]'
-                                        )}
-                                    >
-                                        <span className="truncate">{model.name}</span>
-                                        {isSelected && (
-                                            <Icons.Check className="w-4 h-4 text-[#D6D5D4] shrink-0" />
-                                        )}
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    )}
-                </div>
-
                 {isSupported && (
                     <div className="relative group/btn">
                         <button

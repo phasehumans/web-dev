@@ -53,7 +53,6 @@ export const useChatController = (
         replaceGeneratedOutput,
         resetGeneratedOutput,
         canvasState,
-        selectedModel,
         isAuthenticated,
         setShowAuthModal,
     } = useAppStore()
@@ -152,7 +151,6 @@ export const useChatController = (
                         prompt,
                         projectId,
                         canvasState: nextCanvasState,
-                        model: selectedModel || undefined,
                         signal: abortController.signal,
                         onEvent: (event) => {
                             const activeMessageId = activeAssistantMessageIdRef.current
@@ -282,7 +280,6 @@ export const useChatController = (
             replaceGeneratedOutput,
             resetGeneratedOutput,
             resetGenerationRefs,
-            selectedModel,
             setActiveOperation,
             setActiveProjectId,
             setActiveProjectName,
@@ -495,7 +492,6 @@ export const useChatController = (
                                   prompt: prompt ?? '',
                                   ...(selectedElement ? { selectedElement } : {}),
                                   ...(canvasState ? { canvasState } : {}),
-                                  model: selectedModel || undefined,
                                   signal: abortController.signal,
                                   onEvent: handleStreamEvent,
                               })
@@ -504,7 +500,6 @@ export const useChatController = (
                                   versionId: activeProjectVersionId,
                                   errorMessage: errorMessage ?? '',
                                   ...(stack ? { stack } : {}),
-                                  model: selectedModel || undefined,
                                   signal: abortController.signal,
                                   onEvent: handleStreamEvent,
                               })
@@ -564,7 +559,6 @@ export const useChatController = (
             setIsGenerating,
             setProjectType,
             generationAbortControllerRef,
-            selectedModel,
         ]
     )
 

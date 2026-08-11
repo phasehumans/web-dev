@@ -48,8 +48,6 @@ export interface ChatPromptInputProps {
     selectedElement: SelectedElement | null
     onClearSelection: () => void
     isApplyingEdit: boolean
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
     isAuthenticated?: boolean
     onOpenAuth?: () => void
 }
@@ -79,8 +77,6 @@ export interface ChatSidebarProps {
     projectType?: 'generated' | 'github' | 'zip'
     onTriggerSimulation?: (type: 'generated' | 'github' | 'zip') => void
     onOpenFile?: (path: string) => void
-    selectedModel?: string
-    setSelectedModel?: (val: string) => void
     isAuthenticated?: boolean
     onOpenAuth?: () => void
     projectId?: string | null

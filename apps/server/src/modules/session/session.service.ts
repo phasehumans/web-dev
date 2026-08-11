@@ -187,8 +187,10 @@ const getSession = async (data: GetSession) => {
         if (canvasContent) {
             canvasState = JSON.parse(canvasContent)
         }
-    } catch (err) {
-        console.error('Failed to load canvas state:', err)
+    } catch (err: any) {
+        if (err?.Code !== 'NoSuchKey' && err?.$metadata?.httpStatusCode !== 404) {
+            console.error('Failed to load canvas state:', err?.message || err)
+        }
     }
 
     const hydratedCanvas = await hydrateCanvasDocument(canvasState)
