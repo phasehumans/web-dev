@@ -63,8 +63,8 @@ export const CodeWorkspaceEditorHeader: React.FC<CodeWorkspaceEditorHeaderProps>
                                 className={cn(
                                     'h-7 min-w-0 max-w-[220px] flex items-center rounded-lg border px-2 gap-1.5 shrink-0',
                                     isActive
-                                        ? 'bg-[#393F51] border-[#4a5166] text-[#d4d4d4]'
-                                        : 'bg-[#1f1f1f] border-[#2d2d2d] text-[#a3a3a3] hover:bg-[#252526]'
+                                        ? 'bg-[#1E1E20] border-[#363539] text-[#EDEDED] shadow-sm font-medium'
+                                        : 'bg-[#161618] border-[#262629] text-[#8F8E8D] hover:bg-[#1A1A1D] hover:text-[#D4D4D8]'
                                 )}
                             >
                                 <button

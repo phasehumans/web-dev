@@ -21,7 +21,7 @@ interface PromptFooterProps {
     isAuthenticated?: boolean
     onOpenAuth?: () => void
     onOptionSelect?: (trigger: string) => void
-    mode?: 'agent' | 'search'
+    mode?: 'agent' | 'search' | 'chat'
 }
 
 export const PromptFooter: React.FC<PromptFooterProps> = ({
@@ -224,7 +224,11 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
             ? allPlusMenuItems.filter((item) =>
                   ['Upload attachment', 'Repositories', 'Codebase files'].includes(item.label)
               )
-            : allPlusMenuItems
+            : mode === 'chat'
+              ? allPlusMenuItems.filter(
+                    (item) => !['Repositories', 'Codebase files', 'Sessions'].includes(item.label)
+                )
+              : allPlusMenuItems
 
     return (
         <div className="flex items-center justify-between px-3 pb-3 mt-0 pl-3 relative">
@@ -299,25 +303,27 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                         )}
                     </div>
 
-                    <div className="relative group/btn -ml-0.5">
-                        <button
-                            onClick={() => {
-                                if (!isAuthenticated && onOpenAuth) {
-                                    onOpenAuth()
-                                    return
-                                }
-                                onOptionSelect?.('repos:')
-                            }}
-                            className="flex items-center justify-center w-8 h-8 rounded-full text-[#8E8E8E] transition-all hover:bg-white/5 hover:text-white outline-none"
-                        >
-                            <Icons.Github className="w-[16px] h-[16px]" />
-                        </button>
-                        <div className="absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 z-50 hidden group-hover/btn:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
-                            <span className="text-[12px] font-medium text-[#EDEDEF]">
-                                Attach repo
-                            </span>
+                    {mode !== 'chat' && (
+                        <div className="relative group/btn -ml-0.5">
+                            <button
+                                onClick={() => {
+                                    if (!isAuthenticated && onOpenAuth) {
+                                        onOpenAuth()
+                                        return
+                                    }
+                                    onOptionSelect?.('repos:')
+                                }}
+                                className="flex items-center justify-center w-8 h-8 rounded-full text-[#8E8E8E] transition-all hover:bg-white/5 hover:text-white outline-none"
+                            >
+                                <Icons.Github className="w-[16px] h-[16px]" />
+                            </button>
+                            <div className="absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 z-50 hidden group-hover/btn:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
+                                <span className="text-[12px] font-medium text-[#EDEDEF]">
+                                    Attach repo
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {mode !== 'search' && (

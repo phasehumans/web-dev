@@ -247,9 +247,13 @@ export const useSettingsModalController = (
 
     const handleClose = () => {
         if (hasSavedChanges) {
-            if (window.location.pathname.startsWith('/project/')) {
+            if (
+                window.location.pathname.startsWith('/sessions/') ||
+                window.location.pathname.startsWith('/session/') ||
+                window.location.pathname.startsWith('/project/')
+            ) {
                 const slug = toProjectSlug(projName)
-                window.location.href = `/project/${slug}`
+                window.location.href = `/sessions/${slug}`
             } else {
                 window.location.reload()
             }
@@ -264,7 +268,7 @@ export const useSettingsModalController = (
         try {
             const res = await projectAPI.duplicateProject(projectId, newName.trim() || undefined)
             if (res?.id) {
-                window.location.href = `/project/${res.id}`
+                window.location.href = `/sessions/${res.id}`
             }
         } catch (err) {
             console.error('Failed to duplicate project:', err)

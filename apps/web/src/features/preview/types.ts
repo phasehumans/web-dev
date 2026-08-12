@@ -87,6 +87,8 @@ export interface WorkspaceHeaderProps {
     setDevice: (device: PreviewDevice) => void
     isSidebarCollapsed: boolean
     onToggleSidebar: () => void
+    isPreviewCollapsed?: boolean
+    onTogglePreview?: () => void
     onOpenNewTab: () => void
     onBack?: () => void
     projectName?: string | null

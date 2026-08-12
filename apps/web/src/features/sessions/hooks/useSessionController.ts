@@ -7,7 +7,7 @@ import { toProjectSlug, type ViewState } from '@/app/types'
 import { createEmptyCanvasDocument } from '@/features/canvas/types'
 import { mapBackendMessageToUIMessage } from '@/features/chat/utils'
 import { importsAPI, type ProjectImportStatus } from '@/features/home/api'
-import { projectAPI, type BackendProjectDetail } from '@/features/sessions/api/project'
+import { projectAPI } from '@/features/sessions/api/project'
 
 const getImportStatusMessage = (status: ProjectImportStatus) => {
     if (status.errorMessage) return status.errorMessage
@@ -98,14 +98,26 @@ export const useSessionController = (
     )
 
     const hydrateProjectDetail = React.useCallback(
-        (detail: BackendProjectDetail) => {
-            setActiveProjectId(detail.project.id)
-            setActiveProjectName(detail.project.name)
-            setProjectVersions(detail.versions)
-            setActiveProjectVersionId(detail.selectedVersionId)
+        (detail: any) => {
+            const projectOrSession = detail.project || detail.session
+            const projectId = projectOrSession?.id
+            const projectName = projectOrSession?.name || projectOrSession?.title || 'Session'
+            const versions = detail.versions || []
+            const selectedVersionId = detail.selectedVersionId || null
+
+            if (!projectId) {
+                console.error('[Session] Invalid session or project detail structure:', detail)
+                return
+            }
+
+            setActiveProjectId(projectId)
+            setActiveProjectName(projectName)
+            setProjectVersions(versions)
+            setActiveProjectVersionId(selectedVersionId)
             setProjectLoadError(null)
 
-            const uiMessages = detail.chatMessages.map(mapBackendMessageToUIMessage)
+            const rawMessages = detail.chatMessages || []
+            const uiMessages = rawMessages.map(mapBackendMessageToUIMessage)
             const activeVersionSummary = detail.activeVersion?.summary
             if (activeVersionSummary) {
                 const lastAssistantIdx = [...uiMessages]
@@ -135,7 +147,11 @@ export const useSessionController = (
             }
 
             if (resolvedType === 'generated') {
-                const projectPrompt = detail.project.prompt?.toLowerCase() || ''
+                const projectPrompt = (
+                    detail.project?.prompt ||
+                    detail.session?.description ||
+                    ''
+                ).toLowerCase()
                 if (
                     projectPrompt.includes('imported from') ||
                     projectPrompt.startsWith('importing github repository')
@@ -155,11 +171,11 @@ export const useSessionController = (
             lastSavedCanvasRef.current = JSON.stringify(
                 detail.canvasState ?? createEmptyCanvasDocument()
             )
-            replaceGeneratedOutput(detail.generatedFiles)
+            replaceGeneratedOutput(detail.generatedFiles || {})
             setGenerationPhase(null)
             setActiveOperation(null)
             lastAutoFixSignatureRef.current = null
-            navigate(`/project/${toProjectSlug(detail.project.name)}`, { replace: true })
+            navigate(`/sessions/${toProjectSlug(projectName)}`, { replace: true })
         },
         [
             navigate,

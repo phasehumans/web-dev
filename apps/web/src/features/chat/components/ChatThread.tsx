@@ -1,4 +1,3 @@
-import { ChevronLeft } from 'lucide-react'
 import React from 'react'
 
 import { ChatMessage } from './ChatMessage'
@@ -6,7 +5,6 @@ import { ChatPromptInput } from './ChatPromptInput'
 
 import type { ChatSidebarProps } from '@/features/chat/types'
 
-import { Icons } from '@/shared/components/ui/Icons'
 import { cn } from '@/shared/lib/utils'
 
 export const ChatThread: React.FC<ChatSidebarProps> = ({
@@ -34,12 +32,20 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
     onOpenAuth,
     onOpenFile,
     projectId,
+    customWidth,
+    isDragging,
+    isPreviewCollapsed,
+    onTogglePreview,
+    activeVersionId,
+    sessionTag,
 }) => {
     const scrollContainerRef = React.useRef<HTMLDivElement | null>(null)
     const contentRef = React.useRef<HTMLDivElement | null>(null)
     const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true)
     const prevMessagesLengthRef = React.useRef(messages.length)
     const [isMounted, setIsMounted] = React.useState(false)
+
+    const versionTag = sessionTag || (activeVersionId ? `#${activeVersionId.slice(0, 4)}` : null)
 
     React.useEffect(() => {
         const timer = setTimeout(() => {
@@ -185,45 +191,23 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
     return (
         <aside
             className={cn(
-                'h-full bg-[#141414] flex flex-col overflow-hidden shrink-0 z-20 font-sans',
-                isMounted && 'transition-all duration-300 ease-in-out',
+                'h-full bg-[#141414] flex flex-col overflow-hidden shrink-0 z-20 font-sans border-r-0',
+                isMounted && !isDragging && 'transition-[width] duration-200 ease-out',
                 isCollapsed
                     ? 'w-0 border-r-0'
-                    : 'w-full md:w-[340px] absolute md:relative inset-0 md:inset-auto'
+                    : isPreviewCollapsed
+                      ? 'flex-1 w-full border-r-0'
+                      : 'w-full absolute md:relative inset-0 md:inset-auto'
             )}
+            style={
+                !isCollapsed && !isPreviewCollapsed && customWidth
+                    ? { width: `${customWidth}px` }
+                    : !isCollapsed && !isPreviewCollapsed
+                      ? { width: '40%' }
+                      : undefined
+            }
         >
-            <div className="h-14 flex items-center justify-between shrink-0 px-4 min-w-[340px] w-full">
-                <div className="flex items-center gap-1.5 min-w-0">
-                    <Icons.DecemberLogo className="w-[18px] h-[18px] shrink-0" />
-                    <button
-                        type="button"
-                        onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            if (onBack) onBack()
-                        }}
-                        className="text-sm font-medium tracking-wide text-[#FFFFFF] select-none cursor-pointer outline-none shrink-0"
-                        title="Back to Home"
-                    >
-                        december
-                    </button>
-                    <span className="text-sm opacity-40 text-[#91908F] select-none">/</span>
-                    <span
-                        className="text-sm font-medium text-[#FFFFFF] truncate max-w-[150px]"
-                        title={projectName ? projectName.toLowerCase() : 'projectname'}
-                    >
-                        {projectName ? projectName.toLowerCase() : 'projectname'}
-                    </span>
-                </div>
-                <button
-                    onClick={onClose}
-                    className="md:hidden p-2 text-[#91908F] hover:text-white shrink-0"
-                >
-                    <ChevronLeft className="rotate-180" size={20} />
-                </button>
-            </div>
-
-            <div className="flex-1 flex flex-col overflow-hidden min-w-[340px]">
+            <div className="flex-1 flex flex-col overflow-hidden w-full">
                 <div
                     ref={scrollContainerRef}
                     onScroll={handleScroll}

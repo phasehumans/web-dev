@@ -69,6 +69,7 @@ const App: React.FC = () => {
                     isAuthenticated={isAuthenticated}
                     onOpenAuth={() => setShowAuthModal(true)}
                     onSignOut={handleSignOut}
+                    isWorkspaceScreen={!isHome && (view === 'chat' || view === 'project')}
                 />
 
                 <AuthModal

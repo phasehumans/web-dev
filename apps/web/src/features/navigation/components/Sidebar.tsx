@@ -199,13 +199,13 @@ const Sidebar: React.FC<
     return (
         <div
             className={cn(
-                'hidden md:flex flex-col h-screen bg-sidebar border-r border-white/5 pt-2 pb-0 z-[60] font-sans transition-all duration-300',
+                'hidden md:flex flex-col h-screen bg-sidebar border-r border-white/5 pt-0 pb-0 z-[60] font-sans transition-all duration-300',
                 isCollapsed ? 'w-[56px] items-center' : 'w-[200px]'
             )}
         >
             {isCollapsed ? (
                 <div className="px-2 mb-2 mt-0 z-30 relative">
-                    <div className="flex items-center justify-center w-full mb-6 mt-4">
+                    <div className="flex items-center justify-center w-full h-11 mb-2 mt-0">
                         <div
                             className="flex items-center justify-center w-[32px] h-[32px] relative group cursor-pointer rounded-[10px] hover:bg-[#252525] transition-colors"
                             onClick={(e) => {
@@ -261,7 +261,7 @@ const Sidebar: React.FC<
                 </div>
             ) : (
                 <div className="px-3 mb-2 mt-0 z-30 relative">
-                    <div className="flex items-center justify-between px-2 mb-6 mt-4">
+                    <div className="flex items-center justify-between px-2 h-11 mb-2 mt-0">
                         <Icons.DecemberLogo className="w-6 h-6 text-[#D6D5D4]" />
                         {onCollapse && (
                             <div

@@ -88,7 +88,7 @@ export const getPathForView = (
     context?: { projectSlug?: string; profileTab?: string }
 ): string => {
     if (view === 'project' && context?.projectSlug) {
-        return `/session/${context.projectSlug}`
+        return `/sessions/${context.projectSlug}`
     }
     if (view === 'profile') {
         const tabSlug = context?.profileTab ? getSlugForProfileTab(context.profileTab) : 'account'
@@ -115,8 +115,8 @@ export const getViewForPath = (pathname: string): ViewState => {
     )
         return 'profile'
 
-    // /session/* → session (output screen)
-    if (pathname.startsWith('/session/')) return 'project'
+    // /session/* or /project/* → project (workspace screen)
+    if (pathname.startsWith('/session/') || pathname.startsWith('/project/')) return 'project'
 
     return 'chat'
 }

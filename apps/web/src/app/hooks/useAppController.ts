@@ -3,8 +3,9 @@ import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useAppStore } from '@/app/store'
-import { getViewForPath, type ViewState } from '@/app/types'
+import { getViewForPath, toProjectSlug, type ViewState } from '@/app/types'
 import { canvasAPI } from '@/features/canvas/api'
+import { createEmptyCanvasDocument } from '@/features/canvas/types'
 import { useChatController } from '@/features/chat/hooks/useChatController'
 import { useNavigationController } from '@/features/navigation/hooks/useNavigationController'
 import { previewAPI } from '@/features/preview/api'
@@ -81,11 +82,7 @@ export const useAppController = () => {
     })
 
     const isHome = view === 'chat' && !activeProjectId && messages.length === 0
-    const showSidebar =
-        !(!isHome && (view === 'chat' || view === 'project')) &&
-        view !== 'profile' &&
-        view !== 'docs' &&
-        view !== 'canvas'
+    const showSidebar = view !== 'profile' && view !== 'docs' && view !== 'canvas'
     const { handleNewThread, handleHomeClick, handleNavigate, handleSignOut } =
         useNavigationController()
 
@@ -130,6 +127,27 @@ export const useAppController = () => {
         useAppStore.getState().setImportState({ status: 'idle', message: null })
     }, [])
 
+    const handleBackFromOutput = React.useCallback(() => {
+        resetGenerationRefs()
+        if (activeProjectId) {
+            void previewAPI.stopPreview(activeProjectId).catch((err) => {
+                console.error('Failed to stop preview on exit:', err)
+            })
+        }
+        useAppStore.getState().setActiveProjectId(null)
+        useAppStore.getState().setActiveProjectName(null)
+        useAppStore.getState().setActiveProjectVersionId(null)
+        useAppStore.getState().setProjectVersions([])
+        useAppStore.getState().setMessages([])
+        useAppStore.getState().setCanvasState(createEmptyCanvasDocument())
+        useAppStore.getState().setGeneratedFiles({})
+        useAppStore.getState().setImportState({ status: 'idle', message: null })
+        useAppStore.getState().setPreviewSession(null)
+        useAppStore.getState().setProjectLoadError(null)
+
+        navigate('/sessions')
+    }, [activeProjectId, navigate, resetGenerationRefs])
+
     const handleDownloadProject = React.useCallback(async () => {
         if (!activeProjectId) return
 
@@ -159,15 +177,41 @@ export const useAppController = () => {
     React.useEffect(() => {
         if (!isAuthenticated || activeProjectId || isProjectOpening) return
 
-        if (location.pathname.startsWith('/project/')) {
+        if (
+            location.pathname.startsWith('/sessions/') ||
+            location.pathname.startsWith('/session/') ||
+            location.pathname.startsWith('/project/')
+        ) {
             const parts = location.pathname.split('/')
             const slug = parts[parts.length - 1]
             if (slug && slug !== 'untitled') {
-                const projects = queryClient.getQueryData<any[]>(['projects']) || []
-                const matchingProject = projects.find((p) => p.id === slug || p.id === slug)
-                if (matchingProject) {
+                const projectsData = queryClient.getQueryData<any>(['projects'])
+                const projects = Array.isArray(projectsData)
+                    ? projectsData
+                    : Array.isArray(projectsData?.projects)
+                      ? projectsData.projects
+                      : Array.isArray(projectsData?.data)
+                        ? projectsData.data
+                        : []
+                const sessionsData = queryClient.getQueryData<any>(['sessions'])
+                const sessions = Array.isArray(sessionsData)
+                    ? sessionsData
+                    : Array.isArray(sessionsData?.sessions)
+                      ? sessionsData.sessions
+                      : Array.isArray(sessionsData?.data)
+                        ? sessionsData.data
+                        : []
+
+                const matchingItem =
+                    projects.find(
+                        (p: any) => p && (p.id === slug || toProjectSlug(p.name || '') === slug)
+                    ) ||
+                    sessions.find(
+                        (s: any) => s && (s.id === slug || toProjectSlug(s.title || '') === slug)
+                    )
+                if (matchingItem) {
                     void openProject({
-                        projectId: matchingProject.id,
+                        projectId: matchingItem.id,
                         originView: 'all-projects',
                     })
                 }
@@ -317,7 +361,7 @@ export const useAppController = () => {
         handlePreviewRuntimeError,
         handleImportGithub,
         handleImportZip,
-        handleBackFromOutput: resetGenerationRefs,
+        handleBackFromOutput,
         handleOpenProject,
         handleSelectVersion,
         handleDownloadProject,
