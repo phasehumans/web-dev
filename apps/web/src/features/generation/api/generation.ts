@@ -5,6 +5,7 @@ import type {
     BackendProjectVersionSummary,
 } from '@/features/sessions/api/project'
 
+import { useAppStore } from '@/app/store'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { ApiError, API_BASE_URL } from '@/shared/api/client'
 
@@ -243,13 +244,17 @@ const runOverSocket = async (
                     try {
                         parsedData = JSON.parse(parsedData)
                     } catch {
-                        // Keep as raw string if JSON parsing fails
+                        // Intentionally swallowed: Keep as raw string if JSON parsing fails
                     }
                 }
 
                 const eventType = event.type || parsedData?.type || 'StreamChunk'
                 const streamEvent = { type: eventType, data: parsedData } as GenerationStreamEvent
                 onEvent(streamEvent)
+
+                if (parsedData?.generatedFiles) {
+                    useAppStore.getState().replaceGeneratedOutput(parsedData.generatedFiles)
+                }
 
                 if (eventType === 'result' || eventType === 'AgentEnd') {
                     resultData = parsedData

@@ -462,7 +462,11 @@ const proxyPreview = async (data: import('./session.types').ProxyPreview) => {
         throw new AppError('Session not found', 404)
     }
 
-    const targetHost = `session-${sessionId}-${port}.preview.december.ai`
+    let targetHost = `session-${sessionId}-${port}.preview.december.ai`
+    if (session.vmId && !session.vmId.startsWith('mock-')) {
+        targetHost = `${port}-${session.vmId}.e2b.dev`
+    }
+
     const previewUrl = `https://${targetHost}${reqPath || '/'}`
 
     return {

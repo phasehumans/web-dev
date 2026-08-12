@@ -617,6 +617,19 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
                     )
                 }
                 yield { data: JSON.stringify(event) }
+
+                const modifiedFiles = adapter.getModifiedFiles()
+                if (
+                    Object.keys(modifiedFiles).length > 0 &&
+                    (event.type === 'ToolCallResult' || event.type === 'TurnEnd')
+                ) {
+                    yield {
+                        data: JSON.stringify({
+                            type: 'result',
+                            generatedFiles: modifiedFiles,
+                        }),
+                    }
+                }
             }
         } catch (err: any) {
             console.error(

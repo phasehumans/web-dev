@@ -220,9 +220,8 @@ export const proxyPreview = asyncHandler(async (req: Request, res: Response) => 
     }
 
     if (
-        process.env.E2B_API_KEY &&
         result.previewUrl.startsWith('http') &&
-        process.env.ENV === 'PROD'
+        (result.targetHost.endsWith('.e2b.dev') || process.env.ENV === 'PROD')
     ) {
         return res.redirect(302, result.previewUrl)
     }

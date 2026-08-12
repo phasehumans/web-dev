@@ -85,4 +85,31 @@ describe('Session E2B & Rehydration Service Suite', () => {
         )
         expect(result.headers['Access-Control-Allow-Origin']).toBe('*')
     })
+
+    it('proxyPreview - constructs live e2b.dev targetHost when session.vmId is present', async () => {
+        const testSessionId = 'sess-preview-2'
+        const testUserId = 'user-preview-2'
+
+        spyOn(sessionRepository, 'findSessionById').mockImplementation(
+            async (id: string) =>
+                ({
+                    id,
+                    userId: testUserId,
+                    vmId: 'i6gvzd2ae5gtyijtaky0d',
+                    vmStatus: 'RUNNING',
+                }) as any
+        )
+
+        const result = await sessionService.proxyPreview({
+            userId: testUserId,
+            sessionId: testSessionId,
+            port: 5173,
+            reqPath: '/',
+        })
+
+        expect(result.port).toBe(5173)
+        expect(result.targetHost).toBe('5173-i6gvzd2ae5gtyijtaky0d.e2b.dev')
+        expect(result.previewUrl).toBe('https://5173-i6gvzd2ae5gtyijtaky0d.e2b.dev/')
+        expect(result.headers['X-Forwarded-Host']).toBe('5173-i6gvzd2ae5gtyijtaky0d.e2b.dev')
+    })
 })
