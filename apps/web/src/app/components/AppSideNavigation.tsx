@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 import type { ViewState } from '@/app/types'
 
@@ -17,6 +17,7 @@ interface AppSideNavigationProps {
     onOpenAuth: () => void
     onSignOut?: () => void
     onHomeClick?: () => void
+    isWorkspaceScreen?: boolean
 }
 
 export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
@@ -30,8 +31,19 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
     onOpenAuth,
     onSignOut,
     onHomeClick,
+    isWorkspaceScreen = false,
 }) => {
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(isWorkspaceScreen)
+    const prevIsWorkspaceRef = useRef(isWorkspaceScreen)
+
+    useEffect(() => {
+        if (isWorkspaceScreen && !prevIsWorkspaceRef.current) {
+            setIsSidebarCollapsed(true)
+        } else if (!isWorkspaceScreen && prevIsWorkspaceRef.current) {
+            setIsSidebarCollapsed(false)
+        }
+        prevIsWorkspaceRef.current = isWorkspaceScreen
+    }, [isWorkspaceScreen])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {

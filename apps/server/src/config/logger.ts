@@ -29,6 +29,7 @@ export const createModuleLogger = (moduleName: string) => {
 
 export const httpLogger = pinoHttp({
     logger,
+    autoLogging: false,
     genReqId: (req, res) => {
         const existingId = req.headers['x-request-id']
         const reqId =

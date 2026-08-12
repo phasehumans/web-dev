@@ -80,4 +80,10 @@ export interface ChatSidebarProps {
     isAuthenticated?: boolean
     onOpenAuth?: () => void
     projectId?: string | null
+    customWidth?: number
+    isDragging?: boolean
+    isPreviewCollapsed?: boolean
+    onTogglePreview?: () => void
+    activeVersionId?: string | null
+    sessionTag?: string | null
 }

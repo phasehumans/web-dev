@@ -3,7 +3,7 @@ import React from 'react'
 import { CodeWorkspace } from './CodeWorkspace'
 import { PreviewArea } from './PreviewArea'
 import { TerminalWorkspace } from './TerminalWorkspace'
-import { WorkspaceHeader } from './WorkspaceHeader'
+import { WorkspaceHeaderViewTabs } from './WorkspaceHeaderViewTabs'
 
 import type {
     GeneratedProjectFile,
@@ -20,6 +20,8 @@ interface WorkspaceScreenMainContentProps {
     setDevice: (device: PreviewDevice) => void
     isChatSidebarCollapsed: boolean
     onToggleSidebar: () => void
+    isPreviewCollapsed?: boolean
+    onTogglePreview?: () => void
     onOpenInNewTab: () => void
     onBack?: () => void
     previewHtml: string
@@ -51,6 +53,8 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
     setDevice,
     isChatSidebarCollapsed,
     onToggleSidebar,
+    isPreviewCollapsed,
+    onTogglePreview,
     onOpenInNewTab,
     onBack,
     previewHtml,
@@ -76,24 +80,15 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
 }) => {
     return (
         <div className="flex-1 flex flex-col h-full bg-[#141414] relative overflow-hidden min-h-0">
-            <WorkspaceHeader
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                device={device}
-                setDevice={setDevice}
-                isSidebarCollapsed={isChatSidebarCollapsed}
-                onToggleSidebar={onToggleSidebar}
-                onOpenNewTab={onOpenInNewTab}
-                onBack={onBack}
-                projectName={projectName}
-                projectId={projectId}
-                versions={versions}
-                activeVersionId={activeVersionId}
-                isVersionLoading={isVersionLoading}
-                onSelectVersion={onSelectVersion}
-                onDownload={onDownload}
-                onRefresh={onRefresh}
-            />
+            <div className="h-10 flex items-center justify-between px-3 bg-[#141414] border-b border-[#222225] shrink-0 z-[40]">
+                <WorkspaceHeaderViewTabs
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    isSidebarCollapsed={isChatSidebarCollapsed}
+                    onToggleSidebar={onToggleSidebar}
+                    onBack={onBack}
+                />
+            </div>
 
             {activeTab === 'preview' && (
                 <PreviewArea

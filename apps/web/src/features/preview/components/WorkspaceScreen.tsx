@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { ExitConfirmModal } from './ExitConfirmModal'
 import { OutputScreenMainContent } from './OutputScreenMainContent'
 import { PreviewArea } from './PreviewArea'
+import { WorkspaceHeader } from './WorkspaceHeader'
 
 import type { WorkspaceScreenProps } from '@/features/preview/types'
 
@@ -106,6 +107,41 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
 
     const [mobileActiveTab, setMobileActiveTab] = React.useState<MobileOutputTab>('chat')
     const [showExitModal, setShowExitModal] = React.useState(false)
+    const [chatWidth, setChatWidth] = React.useState<number | undefined>(undefined)
+    const [isResizingChat, setIsResizingChat] = React.useState(false)
+    const [isPreviewPanelCollapsed, setIsPreviewPanelCollapsed] = React.useState(false)
+    const chatWidthRef = React.useRef(chatWidth)
+
+    React.useEffect(() => {
+        chatWidthRef.current = chatWidth
+    }, [chatWidth])
+
+    const handleResizeMouseDown = React.useCallback((e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsResizingChat(true)
+        const startX = e.clientX
+        const resizer = e.currentTarget as HTMLElement
+        const chatElement = resizer.previousElementSibling as HTMLElement
+        const measuredWidth = chatElement ? chatElement.getBoundingClientRect().width : 380
+        const startWidth = chatWidthRef.current ?? measuredWidth
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            moveEvent.preventDefault()
+            const deltaX = moveEvent.clientX - startX
+            const newWidth = Math.min(Math.max(startWidth + deltaX, 260), 850)
+            setChatWidth(newWidth)
+        }
+
+        const handleMouseUp = () => {
+            setIsResizingChat(false)
+            window.removeEventListener('mousemove', handleMouseMove)
+            window.removeEventListener('mouseup', handleMouseUp)
+        }
+
+        window.addEventListener('mousemove', handleMouseMove)
+        window.addEventListener('mouseup', handleMouseUp)
+    }, [])
 
     const handleTriggerExit = React.useCallback(() => {
         setShowExitModal(true)
@@ -223,56 +259,10 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                 </div>
             </div>
 
-            <div className="hidden md:flex w-full h-full overflow-hidden">
-                <ChatSidebar
-                    messages={messages}
-                    onPromptSubmit={(prompt) => {
-                        if (isOutOfCredits) return
-                        void onPromptSubmit(prompt)
-                    }}
+            <div className="hidden md:flex flex-col w-full h-full overflow-hidden relative bg-[#141414]">
+                {/* Main Top Header spanning 100% full width */}
+                <WorkspaceHeader
                     onBack={handleTriggerExit}
-                    isGenerating={isGenerating}
-                    steps={steps}
-                    executionTime={executionTime}
-                    isThoughtsOpen={isThoughtsOpen}
-                    setIsThoughtsOpen={setIsThoughtsOpen}
-                    editPrompt={editPrompt}
-                    setEditPrompt={setEditPrompt}
-                    handleApplyEdit={() => {
-                        void handleApplyEdit()
-                    }}
-                    isVisualMode={isVisualMode}
-                    setIsVisualMode={setIsVisualMode}
-                    selectedElement={selectedElement}
-                    handleClearSelection={handleClearSelection}
-                    isApplyingEdit={isApplyingEdit}
-                    isCollapsed={isChatSidebarCollapsed}
-                    onClose={() => setIsChatSidebarCollapsed(true)}
-                    projectName={projectName}
-                    generatedFiles={activeFilesToDisplay}
-                    projectType={projectType}
-                    onOpenFile={handleOpenFileWrapper}
-                    projectId={projectId}
-                />
-
-                <OutputScreenMainContent
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    device={device}
-                    setDevice={setDevice}
-                    isChatSidebarCollapsed={isChatSidebarCollapsed}
-                    onToggleSidebar={() => setIsChatSidebarCollapsed(!isChatSidebarCollapsed)}
-                    onOpenInNewTab={handleOpenInNewTab}
-                    onBack={handleTriggerExit}
-                    previewHtml={previewHtml}
-                    setPreviewHtml={setPreviewHtml}
-                    generatedFiles={activeFilesToDisplay}
-                    activeGeneratedFilePath={activeGeneratedFilePath}
-                    isGenerating={isGenerating}
-                    isVisualMode={isVisualMode}
-                    iframeRef={iframeRef}
-                    onIframeMessage={handleIframeMessage}
-                    showStructureOnly={showStructureOnly}
                     projectName={projectName}
                     projectId={projectId}
                     versions={versions}
@@ -280,15 +270,109 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                     isVersionLoading={isVersionLoading}
                     onSelectVersion={onSelectVersion}
                     onDownload={onDownload}
-                    previewSession={previewSession}
-                    previewSessionError={
-                        importState.status === 'failed'
-                            ? importState.message || 'Import failed'
-                            : previewSessionError
-                    }
-                    projectType={projectType}
-                    onRefresh={handleRefreshPreview}
+                    isSidebarCollapsed={isChatSidebarCollapsed}
+                    onToggleSidebar={() => setIsChatSidebarCollapsed(!isChatSidebarCollapsed)}
+                    isPreviewCollapsed={isPreviewPanelCollapsed}
+                    onTogglePreview={() => setIsPreviewPanelCollapsed(!isPreviewPanelCollapsed)}
                 />
+
+                {/* Content Split Area below Main Top Header */}
+                <div className="flex-1 flex w-full min-h-0 overflow-hidden relative">
+                    <ChatSidebar
+                        messages={messages}
+                        onPromptSubmit={(prompt) => {
+                            if (isOutOfCredits) return
+                            void onPromptSubmit(prompt)
+                        }}
+                        onBack={handleTriggerExit}
+                        isGenerating={isGenerating}
+                        steps={steps}
+                        executionTime={executionTime}
+                        isThoughtsOpen={isThoughtsOpen}
+                        setIsThoughtsOpen={setIsThoughtsOpen}
+                        editPrompt={editPrompt}
+                        setEditPrompt={setEditPrompt}
+                        handleApplyEdit={() => {
+                            void handleApplyEdit()
+                        }}
+                        isVisualMode={isVisualMode}
+                        setIsVisualMode={setIsVisualMode}
+                        selectedElement={selectedElement}
+                        handleClearSelection={handleClearSelection}
+                        isApplyingEdit={isApplyingEdit}
+                        isCollapsed={isChatSidebarCollapsed}
+                        onClose={() => setIsChatSidebarCollapsed(true)}
+                        projectName={projectName}
+                        generatedFiles={activeFilesToDisplay}
+                        projectType={projectType}
+                        onOpenFile={handleOpenFileWrapper}
+                        projectId={projectId}
+                        customWidth={chatWidth}
+                        isDragging={isResizingChat}
+                        isPreviewCollapsed={isPreviewPanelCollapsed}
+                        onTogglePreview={() => setIsPreviewPanelCollapsed(!isPreviewPanelCollapsed)}
+                        activeVersionId={activeVersionId}
+                    />
+
+                    {/* Resizer Handle */}
+                    {!isChatSidebarCollapsed && !isPreviewPanelCollapsed && (
+                        <div
+                            onMouseDown={handleResizeMouseDown}
+                            className="w-[1px] hover:w-1 bg-[#222225] hover:bg-[#3B82F6] active:bg-[#3B82F6] transition-all cursor-col-resize h-full flex items-center justify-center shrink-0 z-30 group select-none"
+                            title="Drag to resize chat panel"
+                        >
+                            <div className="w-[1.5px] h-8 rounded-full bg-[#363539] group-hover:bg-white group-active:bg-white transition-colors" />
+                        </div>
+                    )}
+
+                    {/* Fullscreen overlay to capture mouse movements smoothly during resizing */}
+                    {isResizingChat && (
+                        <div className="fixed inset-0 z-[9999] cursor-col-resize select-none bg-transparent" />
+                    )}
+
+                    {!isPreviewPanelCollapsed && (
+                        <OutputScreenMainContent
+                            activeTab={activeTab}
+                            setActiveTab={setActiveTab}
+                            device={device}
+                            setDevice={setDevice}
+                            isChatSidebarCollapsed={isChatSidebarCollapsed}
+                            onToggleSidebar={() =>
+                                setIsChatSidebarCollapsed(!isChatSidebarCollapsed)
+                            }
+                            isPreviewCollapsed={isPreviewPanelCollapsed}
+                            onTogglePreview={() =>
+                                setIsPreviewPanelCollapsed(!isPreviewPanelCollapsed)
+                            }
+                            onOpenInNewTab={handleOpenInNewTab}
+                            onBack={handleTriggerExit}
+                            previewHtml={previewHtml}
+                            setPreviewHtml={setPreviewHtml}
+                            generatedFiles={activeFilesToDisplay}
+                            activeGeneratedFilePath={activeGeneratedFilePath}
+                            isGenerating={isGenerating}
+                            isVisualMode={isVisualMode}
+                            iframeRef={iframeRef}
+                            onIframeMessage={handleIframeMessage}
+                            showStructureOnly={showStructureOnly}
+                            projectName={projectName}
+                            projectId={projectId}
+                            versions={versions}
+                            activeVersionId={activeVersionId}
+                            isVersionLoading={isVersionLoading}
+                            onSelectVersion={onSelectVersion}
+                            onDownload={onDownload}
+                            previewSession={previewSession}
+                            previewSessionError={
+                                importState.status === 'failed'
+                                    ? importState.message || 'Import failed'
+                                    : previewSessionError
+                            }
+                            projectType={projectType}
+                            onRefresh={handleRefreshPreview}
+                        />
+                    )}
+                </div>
             </div>
 
             {/* low credits warning toast */}

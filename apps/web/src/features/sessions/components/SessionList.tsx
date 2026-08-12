@@ -253,7 +253,7 @@ export const SessionList: React.FC<{
 
     const handleOpenConfirm = () => {
         if (openConfirmModal.project) {
-            onOpenProject(openConfirmModal.project.projectId || openConfirmModal.project.id)
+            onOpenProject(openConfirmModal.project.id)
             setOpenConfirmModal({ isOpen: false, project: null })
         }
     }

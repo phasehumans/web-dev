@@ -7,7 +7,17 @@ const escapeShellArg = (arg: string): string => {
 }
 
 export class RemotePlatformAdapter implements PlatformAdapter {
+    private modifiedFiles: Record<string, string> = {}
+
     constructor(private vmId: string) {}
+
+    getModifiedFiles(): Record<string, string> {
+        return { ...this.modifiedFiles }
+    }
+
+    clearModifiedFiles(): void {
+        this.modifiedFiles = {}
+    }
 
     bash = {
         exec: async (command: string, onData?: (chunk: string) => void) => {
@@ -43,6 +53,11 @@ export class RemotePlatformAdapter implements PlatformAdapter {
                 `echo ${escapeShellArg(base64Content)} | base64 -d > ${escapeShellArg(filepath)}`
             )
             if (exitCode !== 0) throw new Error(`Failed to write file ${filepath}: ${output}`)
+
+            const relPath = filepath.startsWith('/workspace/')
+                ? filepath.replace('/workspace/', '')
+                : filepath.replace(/^\//, '')
+            this.modifiedFiles[relPath] = content
         },
         readdir: async (dirPath: string) => {
             const { exitCode, output } = await this.bash.exec(`ls -1p ${escapeShellArg(dirPath)}`)

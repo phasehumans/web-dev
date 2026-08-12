@@ -1,25 +1,21 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, X, Plus } from 'lucide-react'
+import { X } from 'lucide-react'
 import React, { useRef, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
 
 import type { ChatPromptInputProps } from '@/features/chat/types'
 
-import { Icons } from '@/shared/components/ui/Icons'
-import { useVoiceToText } from '@/shared/lib/useVoiceToText'
-import { cn } from '@/shared/lib/utils'
+import { PromptFooter } from '@/shared/components/ui/PromptFooter'
 
 export const ChatPromptInput: React.FC<ChatPromptInputProps> = ({
     value,
     onChange,
     onSubmit,
-    isVisualMode,
-    onToggleVisualMode,
     selectedElement,
     onClearSelection,
     isApplyingEdit,
+    isAuthenticated,
+    onOpenAuth,
 }) => {
-    const navigate = useNavigate()
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const voiceBaseRef = useRef('')
     const isVoiceActiveRef = useRef(false)
@@ -36,17 +32,6 @@ export const ChatPromptInput: React.FC<ChatPromptInputProps> = ({
         },
         [value, onChange]
     )
-
-    const { isListening, isSupported, volume, toggleListening } = useVoiceToText({
-        onTranscript: handleVoiceTranscript,
-    })
-
-    // reset voice base when listening stops
-    useEffect(() => {
-        if (!isListening) {
-            isVoiceActiveRef.current = false
-        }
-    }, [isListening])
 
     // auto-resize textarea
     useEffect(() => {
@@ -66,12 +51,8 @@ export const ChatPromptInput: React.FC<ChatPromptInputProps> = ({
     }
 
     return (
-        <div className="w-full bg-[#141414] shrink-0 z-30 flex justify-end">
-            <div
-                className={cn(
-                    'w-full bg-[#1F1F1F] rounded-[17px] border border-[#363534] transition-all relative group flex flex-col'
-                )}
-            >
+        <div className="w-full bg-[#141414] shrink-0 z-30">
+            <div className="relative group rounded-[17px] bg-[#1F1F1F] border border-[#313131] focus-within:border-white/10 transition-all duration-300 ease-out flex flex-col">
                 {/* integrated selected element display */}
                 <AnimatePresence>
                     {selectedElement && (
@@ -99,68 +80,35 @@ export const ChatPromptInput: React.FC<ChatPromptInputProps> = ({
                     )}
                 </AnimatePresence>
 
-                <textarea
-                    ref={textareaRef}
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={selectedElement ? 'Describe changes...' : 'Ask December...'}
-                    className="w-full bg-transparent text-[14.5px] text-neutral-200 text-left pl-5 pr-5 py-4 min-h-[78px] max-h-[200px] resize-none outline-none placeholder-neutral-500 font-medium leading-relaxed [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20 caret-white"
-                    rows={1}
-                />
-
-                <div className="flex items-center justify-between px-2 pb-2">
-                    <div className="flex items-center gap-2">
-                        <button
-                            className="p-1 rounded-full text-[#727272] hover:text-white hover:bg-white/5 transition-all"
-                            title="Add attachment"
-                        >
-                            <Plus size={18} strokeWidth={2.5} />
-                        </button>
-                        <button
-                            onClick={onToggleVisualMode}
-                            className={cn(
-                                'flex items-center px-3 py-1 rounded-full text-[12.5px] font-medium transition-all select-none border border-dashed hidden md:flex',
-                                isVisualMode
-                                    ? 'bg-white/10 text-white border-neutral-500'
-                                    : 'text-[#727272] border-[#363534] hover:text-white hover:border-neutral-500'
-                            )}
-                        >
-                            <span>Visual Edits</span>
-                        </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        {isSupported && (
-                            <button
-                                type="button"
-                                onClick={toggleListening}
-                                className={cn(
-                                    'flex items-center justify-center w-8 h-8 rounded-full transition-all',
-                                    isListening
-                                        ? 'bg-white/10 text-white'
-                                        : 'text-[#727272] hover:bg-white/5 hover:text-white'
-                                )}
-                                title={isListening ? 'Stop listening' : 'Voice input'}
-                            >
-                                <Icons.Microphone className="w-[15px] h-[15px] stroke-[2.5px] relative z-10" />
-                            </button>
-                        )}
-                        <button
-                            onClick={onSubmit}
-                            className={`
-                                flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-200
-                                ${
-                                    value.trim() && !isApplyingEdit
-                                        ? 'bg-[#D6D5D4] text-black'
-                                        : 'bg-[#2C2C2E] text-[#4A4A4A] cursor-not-allowed'
-                                }
-                            `}
-                        >
-                            <ArrowRight size={18} strokeWidth={1.8} />
-                        </button>
-                    </div>
+                <div className="pt-[12px] pl-5 pr-5 pb-1 min-h-[64px]">
+                    <textarea
+                        ref={textareaRef}
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={selectedElement ? 'Describe changes...' : 'Ask December...'}
+                        className="w-full bg-transparent text-[#D6D5D4] placeholder-[#949494] caret-white resize-none focus:outline-none z-10 font-sans font-medium leading-relaxed p-0 m-0 border-none text-[14.5px] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20"
+                        rows={1}
+                    />
                 </div>
+
+                <PromptFooter
+                    onUpload={() => {}}
+                    onSubmit={() => {
+                        if (value.trim()) onSubmit()
+                    }}
+                    hasInput={!!value.trim()}
+                    isLoading={!!isApplyingEdit}
+                    onVoiceTranscript={handleVoiceTranscript}
+                    isAuthenticated={isAuthenticated}
+                    onOpenAuth={onOpenAuth}
+                    mode="chat"
+                    onOptionSelect={(trigger) => {
+                        const separator = value && !value.endsWith(' ') ? ' ' : ''
+                        onChange((value || '') + separator + '@' + trigger)
+                        textareaRef.current?.focus()
+                    }}
+                />
             </div>
         </div>
     )
