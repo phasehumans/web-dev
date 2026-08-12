@@ -1,9 +1,40 @@
 ## [unreleased]
 
+### Features
+
+- _(core)_ Refine prompt task dispatch flow and remote worker operations
+- _(worker,web)_ Audit worker and rename OutputScreen to WorkspaceScreen
+- _(worker,server)_ Add rich development debug logging across full execution lifecycle
+
+### Bug Fixes
+
+- _(preview)_ Resolve e2b workspace preview redirect and sync sandbox file updates
+- Preview screen and add subheader section
+- _(worker)_ Worker stream and workspace (#379)
+
+### Refactor
+
+- _(web)_ Remove canvas tab from workspace screen
+- _(web)_ Remove canvas tab from workspace screen (#378)
+
+### Styling
+
+- _(worker,server)_ Remove emojis from development log statements
+
+### Testing
+
+- _(worker)_ Add extensive unit and mock integration test suites
+
+## [0.3.5] - 2026-08-10
+
 ### Bug Fixes
 
 - Npm prvenance issue
 - Npm link issue
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.5
 
 ## [0.3.4] - 2026-08-10
 
