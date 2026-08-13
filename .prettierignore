@@ -1,22 +1,65 @@
-node_modules
-.turbo
-dist
-build
-coverage
-.env
-.env.*
+# Dependencies
+node_modules/
+**/node_modules/
+.venv/
+venv/
+
+# Lockfiles
+bun.lock
 bun.lockb
 package-lock.json
-*.log
-.logs
-.cache
-.vscode
-.idea
-.DS_Store
+yarn.lock
+pnpm-lock.yaml
 
-# Generated files
-**/generated/prisma/**
-**/.december-imports/**
-logs
-runtime
-infra
+# Build & compiled outputs
+**/dist/
+**/build/
+**/bin/
+**/out/
+**/.turbo/
+**/.cache/
+**/.tmp/
+**/.vite/
+**/.next/
+*.tsbuildinfo
+**/*.min.js
+**/*.min.css
+
+# Test, coverage & eval outputs
+**/coverage/
+**/playwright-report/
+**/test-results/
+**/eval_results/
+**/eval_results_test/
+
+# Generated code & databases
+**/generated/
+**/generated/prisma/
+packages/database/src/generated/
+**/.december-imports/
+*.sqlite
+*.sqlite-journal
+*.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+log.txt
+npm-debug.log*
+
+# Infrastructure & runtime data
+infra/
+runtime/
+deployments/
+docker-compose.override.yml
+
+# IDE & OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -16,18 +16,16 @@ Please describe the changes proposed in this pull request and the rationale behi
 ## Workspace / Modules Affected
 
 - [ ] `apps/cli`
-- [ ] `apps/web`
 - [ ] `apps/server`
+- [ ] `apps/web`
 - [ ] `apps/worker`
-- [ ] `apps/sidecar`
-- [ ] `apps/runtime`
 - [ ] `packages/agent`
-- [ ] `packages/tools`
-- [ ] `packages/providers`
 - [ ] `packages/database`
+- [ ] `packages/evals`
+- [ ] `packages/providers`
 - [ ] `packages/shared`
+- [ ] `packages/tools`
 - [ ] `packages/tui`
-- [ ] `packages/proto`
 
 ## Checklist
 

@@ -5,7 +5,6 @@
     "private": true,
     "scripts": {
         "dev": "bun run --watch src/index.tsx",
-        "build": "echo 'No build required for tui'",
         "typecheck": "tsc --noEmit",
         "test": "bun test test/unit test/integration",
         "test:unit": "bun test test/unit",
@@ -33,7 +32,7 @@
         "marked": "18.0.5",
         "react": "^19.2.4"
     },
-    "version": "0.3.6",
+    "version": "0.3.7",
     "author": "Chaitanya Sonawane",
     "license": "MIT"
 }

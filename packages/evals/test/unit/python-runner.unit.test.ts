@@ -1,12 +1,16 @@
 import * as fs from 'node:fs/promises'
 
-import { describe, expect, test } from 'bun:test'
+import { afterEach, describe, expect, test } from 'bun:test'
 
 import { runPythonEvalTask } from '../../src/python-runner'
 
 import type { EvalTask } from '../../src/types'
 
 describe('Python Evaluation Runner (Unit)', () => {
+    afterEach(async () => {
+        await fs.rm('./eval_results_test', { recursive: true, force: true }).catch(() => {})
+    })
+
     test('should execute python evaluation harness successfully for valid task', async () => {
         const task: EvalTask = {
             id: 'test_task_1',
@@ -26,8 +30,6 @@ describe('Python Evaluation Runner (Unit)', () => {
         expect(result.status).toBe('PASS')
         expect(result.exitCode).toBe(0)
         expect(result.durationMs).toBeGreaterThan(0)
-
-        await fs.rm('./eval_results_test', { recursive: true, force: true }).catch(() => {})
     })
 
     test('should report FAIL status when validation script exits with non-zero code', async () => {
@@ -47,7 +49,5 @@ describe('Python Evaluation Runner (Unit)', () => {
 
         expect(result.taskId).toBe('failing_task_1')
         expect(result.status).toBe('FAIL')
-
-        await fs.rm('./eval_results_test', { recursive: true, force: true }).catch(() => {})
     })
 })

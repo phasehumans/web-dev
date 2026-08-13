@@ -16,6 +16,7 @@ pnpm-lock.yaml
 **/out/
 **/coverage/
 **/eval_results/
+**/eval_results_test/
 **/.tmp/
 **/.cache/
 **/.vite/

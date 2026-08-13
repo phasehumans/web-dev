@@ -1,5 +1,13 @@
 ## [unreleased]
 
+### Bug Fixes
+
+- Update license MIT
+- _(workspace)_ Fix workspace ui and add searchspace
+- _(workspace)_ Fix workspace ui and add searchspace (#380)
+
+## [0.3.6] - 2026-08-12
+
 ### Features
 
 - _(core)_ Refine prompt task dispatch flow and remote worker operations
@@ -24,6 +32,10 @@
 ### Testing
 
 - _(worker)_ Add extensive unit and mock integration test suites
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.6
 
 ## [0.3.5] - 2026-08-10
 

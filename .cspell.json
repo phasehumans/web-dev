@@ -51,6 +51,7 @@
         "dnsmasq",
         "ebtables",
         "prisma",
-        "hono"
+        "hono",
+        "evals"
     ]
 }

@@ -1,6 +1,6 @@
 {
     "name": "@trydecember/cli",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "description": "AI coding agent that runs in your terminal and the cloud.",
     "homepage": "https://trydecember.com",
     "repository": {
@@ -39,7 +39,9 @@
     "scripts": {
         "build": "bun build ./src/index.ts --target=node --outfile=./dist/december.js",
         "prepublishOnly": "bun run build",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test": "bun test",
+        "test:unit": "bun test"
     },
     "devDependencies": {
         "@december/agent": "workspace:*",

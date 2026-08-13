@@ -1,11 +1,10 @@
 {
     "name": "@december/providers",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "type": "module",
     "main": "src/index.ts",
     "private": true,
     "scripts": {
-        "build": "echo 'No build required for providers'",
         "typecheck": "tsc --noEmit",
         "test": "bun test test/unit test/integration",
         "test:unit": "bun test test/unit",
