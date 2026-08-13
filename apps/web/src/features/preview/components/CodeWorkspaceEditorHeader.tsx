@@ -48,53 +48,53 @@ export const CodeWorkspaceEditorHeader: React.FC<CodeWorkspaceEditorHeaderProps>
 }) => {
     const tabs = React.useMemo(() => getTabs(activeFile, openFiles), [activeFile, openFiles])
 
+    if (tabs.length === 0) {
+        return null
+    }
+
     return (
         <div className="h-10 shrink-0 border-b border-[#2d2d2d] bg-[#141414] flex items-center justify-between px-3">
             <div className="flex-1 h-full flex items-center gap-1 overflow-x-auto no-scrollbar">
-                {tabs.length === 0 ? (
-                    <span className="text-[12px] text-[#7a7a7a] px-2">No files yet</span>
-                ) : (
-                    tabs.map((tab) => {
-                        const isActive = tab.file.path === activeFile?.path
+                {tabs.map((tab) => {
+                    const isActive = tab.file.path === activeFile?.path
 
-                        return (
-                            <div
-                                key={`${tab.file.path}-${tab.isPreview ? 'preview' : 'pinned'}`}
+                    return (
+                        <div
+                            key={`${tab.file.path}-${tab.isPreview ? 'preview' : 'pinned'}`}
+                            className={cn(
+                                'h-7 min-w-0 max-w-[220px] flex items-center rounded-lg border px-2 gap-1.5 shrink-0',
+                                isActive
+                                    ? 'bg-[#1E1E20] border-[#363539] text-[#EDEDED] shadow-sm font-medium'
+                                    : 'bg-[#161618] border-[#262629] text-[#8F8E8D] hover:bg-[#1A1A1D] hover:text-[#D4D4D8]'
+                            )}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => onSelectFile(tab.file.path)}
                                 className={cn(
-                                    'h-7 min-w-0 max-w-[220px] flex items-center rounded-lg border px-2 gap-1.5 shrink-0',
-                                    isActive
-                                        ? 'bg-[#1E1E20] border-[#363539] text-[#EDEDED] shadow-sm font-medium'
-                                        : 'bg-[#161618] border-[#262629] text-[#8F8E8D] hover:bg-[#1A1A1D] hover:text-[#D4D4D8]'
+                                    'min-w-0 truncate text-[12px] text-left outline-none',
+                                    tab.isPreview && 'italic'
                                 )}
                             >
+                                {tab.file.label}
+                            </button>
+
+                            {!tab.isPreview && (
                                 <button
                                     type="button"
-                                    onClick={() => onSelectFile(tab.file.path)}
-                                    className={cn(
-                                        'min-w-0 truncate text-[12px] text-left outline-none',
-                                        tab.isPreview && 'italic'
-                                    )}
+                                    onClick={(event) => {
+                                        event.stopPropagation()
+                                        onCloseFile(tab.file.path)
+                                    }}
+                                    className="shrink-0 text-[#8b8b8b] hover:text-[#d4d4d4] outline-none"
+                                    aria-label={`Close ${tab.file.label}`}
                                 >
-                                    {tab.file.label}
+                                    <X size={12} />
                                 </button>
-
-                                {!tab.isPreview && (
-                                    <button
-                                        type="button"
-                                        onClick={(event) => {
-                                            event.stopPropagation()
-                                            onCloseFile(tab.file.path)
-                                        }}
-                                        className="shrink-0 text-[#8b8b8b] hover:text-[#d4d4d4] outline-none"
-                                        aria-label={`Close ${tab.file.label}`}
-                                    >
-                                        <X size={12} />
-                                    </button>
-                                )}
-                            </div>
-                        )
-                    })
-                )}
+                            )}
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )

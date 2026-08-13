@@ -1,5 +1,6 @@
 export type ViewState =
     | 'chat'
+    | 'search'
     | 'all-projects'
     | 'sessions'
     | 'review'
@@ -69,6 +70,7 @@ export const toProjectSlug = (name: string): string =>
 
 const simpleViewToPath: Record<string, string> = {
     chat: '/',
+    search: '/search',
     'all-projects': '/projects',
     sessions: '/sessions',
     review: '/review',

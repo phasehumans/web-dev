@@ -93,11 +93,8 @@ export const TerminalWorkspace: React.FC<TerminalWorkspaceProps> = ({ previewSes
     }, [previewSessionId])
 
     return (
-        <div className="flex-1 min-h-0 flex bg-[#141414] p-2">
-            <div
-                className="flex-1 border border-white/10 rounded-xl overflow-hidden p-2"
-                ref={terminalRef}
-            />
+        <div className="flex-1 min-h-0 flex bg-[#141414] w-full h-full">
+            <div className="flex-1 border-0 rounded-none overflow-hidden" ref={terminalRef} />
         </div>
     )
 }

@@ -37,7 +37,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     const [activeImportForm, setActiveImportForm] = useState<'github' | null>(null)
     const [showUpgradeModal, setShowUpgradeModal] = useState(false)
     const [isUbuntuMenuOpen, setIsUbuntuMenuOpen] = useState(false)
-    const [chatMode, setChatMode] = useState<'agent' | 'plan'>('agent')
+    const [chatMode, setChatMode] = useState<'agent' | 'search'>('agent')
     const [isLogoAnimating, setIsLogoAnimating] = useState(false)
 
     const queryClient = useQueryClient()
@@ -203,7 +203,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                 Agent
                             </button>
                             <button
-                                onClick={() => setChatMode('search' as any)}
+                                onClick={() => setChatMode('search')}
                                 className={`relative z-10 flex-1 flex justify-center items-center py-[5px] rounded-full text-[11px] transition-colors duration-300 ${
                                     chatMode === 'search'
                                         ? 'text-[#111111] font-semibold'
@@ -217,7 +217,13 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                     <PromptInput
                         value={prompt}
                         onChange={setPrompt}
-                        onSubmit={onPromptSubmit}
+                        onSubmit={(submittedPrompt) => {
+                            if (chatMode === 'search') {
+                                navigate('/search')
+                            } else {
+                                onPromptSubmit(submittedPrompt)
+                            }
+                        }}
                         isLoading={isGenerating}
                         onUpload={() => canvasRef.current?.triggerImageUpload()}
                         isAuthenticated={isAuthenticated}
@@ -226,7 +232,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                             setIsLogoAnimating(true)
                             setTimeout(() => setIsLogoAnimating(false), 500)
                         }}
-                        mode={chatMode as any}
+                        mode={chatMode}
                     />
 
                     {/* Get Started Section */}

@@ -57,7 +57,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     if (role === 'user') {
         return (
             <div className="flex flex-col gap-1 items-end w-full font-sans">
-                <div className="bg-[#1B1B1B] px-4 py-2.5 rounded-xl text-sm leading-relaxed text-[#EDEDED] selection:bg-blue-500/20 shadow-sm max-w-[95%] break-words whitespace-pre-wrap border-none">
+                <div className="bg-[#1B1B1B] px-4.5 py-3 rounded-2xl text-sm leading-relaxed text-[#EDEDED] selection:bg-blue-500/20 shadow-sm w-full break-words whitespace-pre-wrap border-none">
                     {content}
                 </div>
             </div>

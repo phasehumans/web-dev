@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -56,6 +56,32 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         }
         return filtered
     }, [generatedFiles, currentGenerationFilePaths])
+
+    const queryClient = useQueryClient()
+    const sessionTag = React.useMemo(() => {
+        if (!projectId) return null
+        const projectsData = queryClient.getQueryData<any>(['projects'])
+        const projects = Array.isArray(projectsData)
+            ? projectsData
+            : Array.isArray(projectsData?.projects)
+              ? projectsData.projects
+              : []
+        const foundProject = projects.find((p: any) => p && p.id === projectId)
+        if (foundProject && Array.isArray(foundProject.tags) && foundProject.tags.length > 0) {
+            return foundProject.tags[0]
+        }
+        const sessionsData = queryClient.getQueryData<any>(['sessions'])
+        const sessions = Array.isArray(sessionsData)
+            ? sessionsData
+            : Array.isArray(sessionsData?.sessions)
+              ? sessionsData.sessions
+              : []
+        const foundSession = sessions.find((s: any) => s && s.id === projectId)
+        if (foundSession && Array.isArray(foundSession.tags) && foundSession.tags.length > 0) {
+            return foundSession.tags[0]
+        }
+        return null
+    }, [projectId, queryClient])
 
     const { data: overview } = useQuery({
         queryKey: ['billing-overview'],
@@ -274,6 +300,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                     onToggleSidebar={() => setIsChatSidebarCollapsed(!isChatSidebarCollapsed)}
                     isPreviewCollapsed={isPreviewPanelCollapsed}
                     onTogglePreview={() => setIsPreviewPanelCollapsed(!isPreviewPanelCollapsed)}
+                    sessionTag={sessionTag}
                 />
 
                 {/* Content Split Area below Main Top Header */}

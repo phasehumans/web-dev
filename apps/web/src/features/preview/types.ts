@@ -99,6 +99,7 @@ export interface WorkspaceHeaderProps {
     onSelectVersion?: (versionId: string) => void
     onDownload?: () => void
     onRefresh?: () => void
+    sessionTag?: string | null
 }
 
 export type OutputHeaderProps = WorkspaceHeaderProps
