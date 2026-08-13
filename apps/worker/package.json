@@ -31,5 +31,7 @@
         "@types/archiver": "8.0.0",
         "@types/bun": "latest",
         "@types/jsonwebtoken": "^9.0.9"
-    }
+    },
+    "author": "Chaitanya Sonawane",
+    "license": "MIT"
 }
