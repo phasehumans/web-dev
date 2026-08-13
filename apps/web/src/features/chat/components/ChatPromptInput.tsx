@@ -6,16 +6,14 @@ import type { ChatPromptInputProps } from '@/features/chat/types'
 
 import { PromptFooter } from '@/shared/components/ui/PromptFooter'
 
-export const ChatPromptInput: React.FC<ChatPromptInputProps> = ({
-    value,
-    onChange,
-    onSubmit,
-    selectedElement,
-    onClearSelection,
-    isApplyingEdit,
-    isAuthenticated,
-    onOpenAuth,
-}) => {
+export const ChatPromptInput: React.FC<Partial<ChatPromptInputProps> & Record<string, any>> = (
+    props
+) => {
+    const value = props.value ?? props.editPrompt ?? ''
+    const onChange = props.onChange ?? props.setEditPrompt ?? (() => {})
+    const onSubmit = props.onSubmit ?? props.handleApplyEdit ?? (() => {})
+    const { selectedElement, onClearSelection, isApplyingEdit, isAuthenticated, onOpenAuth } = props
+
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const voiceBaseRef = useRef('')
     const isVoiceActiveRef = useRef(false)
@@ -23,7 +21,7 @@ export const ChatPromptInput: React.FC<ChatPromptInputProps> = ({
     const handleVoiceTranscript = useCallback(
         (text: string) => {
             if (!isVoiceActiveRef.current) {
-                voiceBaseRef.current = value || ''
+                voiceBaseRef.current = value
                 isVoiceActiveRef.current = true
             }
             const base = voiceBaseRef.current

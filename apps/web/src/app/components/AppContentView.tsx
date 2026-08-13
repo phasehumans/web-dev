@@ -11,6 +11,7 @@ import { DocsView } from '@/features/docs/components/DocsView'
 import { HomeHero } from '@/features/home/components/HomeHero'
 import { WorkspaceScreen } from '@/features/preview/components/WorkspaceScreen'
 import { ProfileSettings } from '@/features/profile/components/ProfileSettings'
+import { SearchSpaceScreen } from '@/features/search/components/SearchSpaceScreen'
 import { SessionList } from '@/features/sessions/components/SessionList'
 import { WikiView } from '@/features/wiki/components/WikiView'
 
@@ -121,6 +122,12 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
             {view === 'canvas' && (
                 <AnimatedPage pageKey="canvas">
                     <CanvasPage onBack={onNewProject} onOpenAuth={onOpenAuth} />
+                </AnimatedPage>
+            )}
+
+            {view === 'search' && (
+                <AnimatedPage pageKey="search">
+                    <SearchSpaceScreen onBack={onNewProject} />
                 </AnimatedPage>
             )}
 

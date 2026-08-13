@@ -66,33 +66,21 @@ export const PreviewArea: React.FC<PreviewAreaProps> = ({
     return (
         <div
             className={cn(
-                'overflow-auto relative bg-[#141414] [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:bg-[#383736]/60 hover:[&::-webkit-scrollbar-thumb]:bg-[#4A4948]/80 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent',
-                fullscreen
-                    ? 'h-full w-full min-h-0'
-                    : 'flex-1 flex items-center justify-center p-0.5 pb-2'
+                'overflow-hidden relative bg-[#141414] flex-1 flex flex-col w-full h-full min-h-0',
+                '[&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:bg-[#383736]/60 hover:[&::-webkit-scrollbar-thumb]:bg-[#4A4948]/80 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent'
             )}
         >
-            {!fullscreen && (
-                <div
-                    className="absolute inset-0 z-0 opacity-20 pointer-events-none"
-                    style={{
-                        backgroundImage: 'radial-gradient(#333 1px, transparent 1px)',
-                        backgroundSize: '20px 20px',
-                    }}
-                />
-            )}
-
             <div
                 className={cn(
-                    'relative bg-[#141414] shadow-2xl overflow-hidden group w-full h-full',
+                    'relative bg-[#141414] overflow-hidden group w-full h-full flex-1',
                     isMounted && 'transition-all duration-500',
                     fullscreen
-                        ? 'rounded-2xl border border-white/10'
+                        ? 'rounded-none border-0'
                         : device === 'mobile'
-                          ? 'w-[375px] h-[812px] rounded-[3rem] border-[8px] border-[#1a1a1a]'
+                          ? 'w-[375px] h-[812px] rounded-[3rem] border-[8px] border-[#1a1a1a] mx-auto my-auto shadow-2xl'
                           : device === 'tablet'
-                            ? 'w-[768px] h-[1024px] rounded-[2rem] border-[8px] border-[#1a1a1a]'
-                            : 'rounded-xl border border-[#262626] shadow-2xl'
+                            ? 'w-[768px] h-[1024px] rounded-[2rem] border-[8px] border-[#1a1a1a] mx-auto my-auto shadow-2xl'
+                            : 'rounded-none border-0 shadow-none'
                 )}
             >
                 {/* 1. dynamic checklist logs loader screen */}

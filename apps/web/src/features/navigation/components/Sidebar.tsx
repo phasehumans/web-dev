@@ -1,4 +1,3 @@
-import { History } from 'lucide-react'
 import React from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -128,8 +127,8 @@ const Sidebar: React.FC<
             id: 'new',
             label: 'New',
             icon: (
-                <div className="w-[20px] h-[20px] rounded-full bg-[#333333] flex items-center justify-center shrink-0">
-                    <Icons.Plus className="w-3 h-3 text-[#E8E8E8]" strokeWidth={2.5} />
+                <div className="w-[19px] h-[19px] rounded-full bg-[#333333] flex items-center justify-center shrink-0">
+                    <Icons.Plus className="w-2.5 h-2.5 text-[#E8E8E8]" strokeWidth={2.5} />
                 </div>
             ),
             onClick: () => {
@@ -145,7 +144,7 @@ const Sidebar: React.FC<
         {
             id: 'search',
             label: 'Search',
-            icon: <Icons.Search className="w-[18px] h-[18px]" />,
+            icon: <Icons.Search className="w-[17px] h-[17px]" />,
             onClick: () => {
                 if (isAuthenticated) {
                     setIsSearchOpen(true)
@@ -157,25 +156,25 @@ const Sidebar: React.FC<
         {
             id: 'sessions',
             label: 'Sessions',
-            icon: <Icons.Folder className="w-[18px] h-[18px]" />,
+            icon: <Icons.Folder className="w-[17px] h-[17px]" />,
             onClick: onSessions,
         },
         {
             id: 'review',
             label: 'Review',
-            icon: <Icons.GitPullRequest className="w-[18px] h-[18px]" />,
+            icon: <Icons.GitPullRequest className="w-[17px] h-[17px]" />,
             onClick: onReview,
         },
         {
             id: 'templates',
             label: 'Wiki',
-            icon: <Icons.BookOpen className="w-[18px] h-[18px]" />,
+            icon: <Icons.BookOpen className="w-[17px] h-[17px]" />,
             onClick: onTemplates,
         },
         {
             id: 'settings',
             label: 'Settings',
-            icon: <Icons.Settings className="w-[18px] h-[18px]" />,
+            icon: <Icons.Settings className="w-[17px] h-[17px]" />,
             onClick: onProfile,
         },
     ]
@@ -289,7 +288,7 @@ const Sidebar: React.FC<
                                 key={item.id}
                                 onClick={item.onClick}
                                 className={cn(
-                                    'relative flex items-center justify-between w-full px-2.5 h-[32px] rounded-[10px] transition-all group outline-none',
+                                    'relative flex items-center justify-between w-full px-2.5 h-[30px] rounded-[9px] transition-all group outline-none',
                                     activeIndex === idx ? 'bg-[#1F1F1F]' : 'hover:bg-[#1C1C1C]'
                                 )}
                             >
@@ -306,7 +305,7 @@ const Sidebar: React.FC<
                                     </div>
                                     <span
                                         className={cn(
-                                            'font-medium text-[14px] tracking-wide transition-colors truncate',
+                                            'font-medium text-[13.5px] tracking-tight transition-colors truncate',
                                             activeIndex === idx
                                                 ? 'text-[#D6D5D4]'
                                                 : 'text-[#919191] group-hover:text-[#D6D5D4]'
@@ -330,14 +329,13 @@ const Sidebar: React.FC<
 
             <div
                 className={cn(
-                    'flex-1 flex flex-col mt-2 mb-2 font-sans min-h-0',
+                    'flex-1 flex flex-col mt-0.5 mb-2 font-sans min-h-0',
                     isCollapsed ? 'px-2 hidden' : 'pl-[10px] pr-3'
                 )}
             >
                 <div className="flex flex-col h-full">
                     <div className="flex items-center justify-between px-3 py-1.5 w-full text-left group shrink-0 z-10">
-                        <div className="flex items-center gap-1.5 text-[#919191]">
-                            <History className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        <div className="flex items-center text-[#919191]">
                             <span className="font-medium text-[12px] whitespace-nowrap transition-colors tracking-tight">
                                 Recent
                             </span>

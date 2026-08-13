@@ -112,12 +112,6 @@ export const CodeWorkspaceFileSidebar: React.FC<CodeWorkspaceFileSidebarProps> =
 
     return (
         <aside className="w-64 shrink-0 border-r border-[#2d2d2d] bg-[#141414] flex flex-col min-h-0">
-            <div className="h-10 px-3 flex items-center border-b border-[#2d2d2d]">
-                <span className="text-[11px] tracking-[0.08em] uppercase text-[#c5c5c5]">
-                    File Explorer
-                </span>
-            </div>
-
             <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-1.5 space-y-0.5 [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-thumb]:bg-[#383736]/60 hover:[&::-webkit-scrollbar-thumb]:bg-[#4A4948]/80 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                 {renderTree(tree, 0)}
             </div>

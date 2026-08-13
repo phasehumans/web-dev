@@ -18,9 +18,8 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
     isVersionLoading,
     onSelectVersion,
     onDownload,
+    sessionTag,
 }) => {
-    const versionDisplay = activeVersionId ? `#${activeVersionId.slice(0, 4)}` : '#1'
-
     return (
         <header className="h-11 flex items-center justify-between px-3.5 bg-[#141414] border-b border-[#222225] shrink-0 z-[45] gap-3 w-full">
             <div className="flex items-center gap-2 min-w-0">
@@ -39,14 +38,16 @@ export const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                     </button>
                 )}
                 <span
-                    className="text-[14px] font-semibold text-[#EDEDEF] truncate max-w-[280px] sm:max-w-[400px] tracking-tight"
+                    className="text-[13px] font-normal lowercase text-[#D6D5D4] hover:text-white hover:bg-[#222225] px-2 py-1 rounded-md transition-colors cursor-pointer truncate max-w-[280px] sm:max-w-[400px] tracking-tight select-none"
                     title={projectName ? projectName.toLowerCase() : 'new session'}
                 >
                     {projectName ? projectName.toLowerCase() : 'new session'}
                 </span>
-                <span className="px-1.5 py-0.5 rounded text-[11px] font-mono text-[#91908F] bg-[#1A1A1C] border border-[#2A2A2D] shrink-0">
-                    {versionDisplay}
-                </span>
+                {sessionTag && (
+                    <span className="px-1.5 py-0.5 rounded text-[11px] font-mono text-[#91908F] bg-[#1A1A1C] border border-[#2A2A2D] shrink-0">
+                        {sessionTag}
+                    </span>
+                )}
             </div>
 
             <WorkspaceHeaderActions
