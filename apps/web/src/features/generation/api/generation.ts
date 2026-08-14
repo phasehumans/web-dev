@@ -95,6 +95,16 @@ export type GenerationStreamEvent =
           }
       }
     | {
+          type: 'ContextCompacted'
+          data: {
+              summary: string
+          }
+      }
+    | {
+          type: 'AgentInterrupt'
+          data?: any
+      }
+    | {
           type: 'TurnEnd'
           data?: any
       }

@@ -5,6 +5,7 @@ import { ChatPromptInput } from './ChatPromptInput'
 
 import type { ChatSidebarProps } from '@/features/chat/types'
 
+import { useAppStore } from '@/app/store'
 import { cn } from '@/shared/lib/utils'
 
 export const ChatThread: React.FC<ChatSidebarProps> = ({
@@ -44,6 +45,20 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
     const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true)
     const prevMessagesLengthRef = React.useRef(messages.length)
     const [isMounted, setIsMounted] = React.useState(false)
+
+    const expandCommands = useAppStore((state) => state.expandCommands)
+    const toggleExpandCommands = useAppStore((state) => state.toggleExpandCommands)
+
+    React.useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+                e.preventDefault()
+                toggleExpandCommands()
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown)
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    }, [toggleExpandCommands])
 
     const versionTag = sessionTag || (activeVersionId ? `#${activeVersionId.slice(0, 4)}` : null)
 
@@ -150,6 +165,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                         tokensUsed={msg.tokensUsed}
                         creditsUsed={msg.creditsUsed}
                         modelName={msg.modelName}
+                        expandCommands={expandCommands}
                         onTriggerSimulation={onTriggerSimulation}
                         onOpenFile={onOpenFile}
                         projectId={projectId}

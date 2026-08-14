@@ -49,6 +49,8 @@ export const useChatController = (
         appendToolCallOutput,
         updateToolCallResult,
         addFileChangeBlock,
+        addCompactionBlock,
+        addInterruptBlock,
         setAssistantStatusMessage,
         setAssistantStatus,
         setAssistantError,
@@ -243,6 +245,15 @@ export const useChatController = (
                                             error: event.data.result.error,
                                         })
                                     }
+                                    return
+                                case 'ContextCompacted':
+                                    if (event.data?.summary) {
+                                        addCompactionBlock(activeMessageId, event.data.summary)
+                                    }
+                                    return
+                                case 'AgentInterrupt':
+                                    addInterruptBlock(activeMessageId)
+                                    setIsGenerating(false)
                                     return
                                 case 'TurnEnd':
                                 case 'AgentEnd':
@@ -563,6 +574,15 @@ export const useChatController = (
                                         error: event.data.result.error,
                                     })
                                 }
+                                return
+                            case 'ContextCompacted':
+                                if (event.data?.summary) {
+                                    addCompactionBlock(activeMessageId, event.data.summary)
+                                }
+                                return
+                            case 'AgentInterrupt':
+                                addInterruptBlock(activeMessageId)
+                                setIsGenerating(false)
                                 return
                             case 'TurnEnd':
                             case 'AgentEnd':

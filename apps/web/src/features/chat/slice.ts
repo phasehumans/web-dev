@@ -9,8 +9,11 @@ export interface ChatSlice {
     generationPhase: 'thinking' | 'building' | 'done' | null
     activeOperation: OutputOperation | null
     isGenerating: boolean
+    expandCommands: boolean
     currentGenerationFilePaths: string[]
     setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void
+    setExpandCommands: (expand: boolean) => void
+    toggleExpandCommands: () => void
     setGenerationPhase: (phase: ChatSlice['generationPhase']) => void
     setActiveOperation: (operation: ChatSlice['activeOperation']) => void
     setIsGenerating: (isGenerating: boolean) => void
@@ -53,6 +56,8 @@ export interface ChatSlice {
             diff?: string
         }
     ) => void
+    addCompactionBlock: (messageId: string, summary: string) => void
+    addInterruptBlock: (messageId: string) => void
     appendAssistantChunk: (messageId: string, chunk: string, streamMessageId?: string) => void
     setAssistantError: (messageId: string, errorMessage: string) => void
     setAssistantAppliedFiles: (messageId: string, appliedFiles: string[]) => void
@@ -63,11 +68,14 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
     generationPhase: null,
     activeOperation: null,
     isGenerating: false,
+    expandCommands: true,
     currentGenerationFilePaths: [],
     setMessages: (updater) =>
         set((state) => ({
             messages: typeof updater === 'function' ? updater(state.messages) : updater,
         })),
+    setExpandCommands: (expandCommands) => set({ expandCommands }),
+    toggleExpandCommands: () => set((state) => ({ expandCommands: !state.expandCommands })),
     setGenerationPhase: (generationPhase) => set({ generationPhase }),
     setActiveOperation: (activeOperation) => set({ activeOperation }),
     setIsGenerating: (isGenerating) => set({ isGenerating }),
@@ -230,6 +238,31 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
                 filePath: fileChange.filePath,
                 action: fileChange.action,
                 diff: fileChange.diff,
+            })
+            return {
+                ...message,
+                blocks,
+            }
+        })
+    },
+    addCompactionBlock: (messageId, summary) => {
+        get().updateAssistantMessage(messageId, (message) => {
+            const blocks = message.blocks ? [...message.blocks] : []
+            blocks.push({
+                type: 'compaction',
+                summary,
+            })
+            return {
+                ...message,
+                blocks,
+            }
+        })
+    },
+    addInterruptBlock: (messageId) => {
+        get().updateAssistantMessage(messageId, (message) => {
+            const blocks = message.blocks ? [...message.blocks] : []
+            blocks.push({
+                type: 'interrupt',
             })
             return {
                 ...message,

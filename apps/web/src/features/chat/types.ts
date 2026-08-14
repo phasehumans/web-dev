@@ -1,5 +1,7 @@
 export type MessageBlock =
     | { type: 'thinking'; content: string; isStreaming?: boolean }
+    | { type: 'compaction'; summary: string }
+    | { type: 'interrupt' }
     | {
           type: 'command'
           toolCallId: string
@@ -14,7 +16,7 @@ export type MessageBlock =
           action: 'created' | 'modified' | 'deleted'
           diff?: string
       }
-    | { type: 'text'; content: string }
+    | { type: 'text'; content: string; color?: string }
     | { type: 'status'; label: string; success: boolean }
     | { type: 'error'; error: string }
 
@@ -58,6 +60,7 @@ export interface ChatMessageProps {
     projectType?: 'generated' | 'github' | 'zip'
     tokensUsed?: number
     creditsUsed?: number
+    expandCommands?: boolean
     onTriggerSimulation?: (type: 'generated' | 'github' | 'zip') => void
     onOpenFile?: (path: string) => void
     projectId?: string | null
