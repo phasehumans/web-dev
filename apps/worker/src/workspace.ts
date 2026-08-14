@@ -163,3 +163,75 @@ export async function restoreWorkspaceState(data: {
         return false
     }
 }
+
+export async function syncWorkspaceFilesToS3(data: {
+    sessionId: string
+    modifiedFiles?: string[]
+    workspaceDir?: string
+    sandbox?: any
+}): Promise<string[]> {
+    const { sessionId, modifiedFiles, workspaceDir = '/workspace', sandbox } = data
+    const uploadedPaths: string[] = []
+    const bucket = process.env.S3_BUCKET || 'december-storage'
+
+    if (modifiedFiles && modifiedFiles.length > 0) {
+        for (const rawPath of modifiedFiles) {
+            const cleanPath = rawPath.replace(/^\/+/, '').replace(/^workspace\//, '')
+            try {
+                let content: Buffer | string | null = null
+
+                if (sandbox && sandbox.commands && typeof sandbox.commands.run === 'function') {
+                    const catRes = await sandbox.commands
+                        .run(`cat "/workspace/${cleanPath}" | base64`, { cwd: '/workspace' })
+                        .catch(() => null)
+                    if (catRes?.stdout) {
+                        content = Buffer.from(catRes.stdout.replace(/\s+/g, ''), 'base64')
+                    }
+                }
+
+                if (!content && fs.existsSync(`${workspaceDir}/${cleanPath}`)) {
+                    content = fs.readFileSync(`${workspaceDir}/${cleanPath}`)
+                }
+
+                if (content !== null) {
+                    const objectKey = `sessions/${sessionId}/workspace/${cleanPath}`
+                    const isJson = cleanPath.endsWith('.json')
+                    const isHtml = cleanPath.endsWith('.html')
+                    const isCss = cleanPath.endsWith('.css')
+                    const isJs =
+                        cleanPath.endsWith('.js') ||
+                        cleanPath.endsWith('.ts') ||
+                        cleanPath.endsWith('.tsx') ||
+                        cleanPath.endsWith('.jsx')
+
+                    const contentType = isJson
+                        ? 'application/json'
+                        : isHtml
+                          ? 'text/html; charset=utf-8'
+                          : isCss
+                            ? 'text/css; charset=utf-8'
+                            : isJs
+                              ? 'application/javascript; charset=utf-8'
+                              : 'text/plain; charset=utf-8'
+
+                    await s3.send(
+                        new PutObjectCommand({
+                            Bucket: bucket,
+                            Key: objectKey,
+                            Body: typeof content === 'string' ? Buffer.from(content) : content,
+                            ContentType: contentType,
+                        })
+                    )
+                    uploadedPaths.push(cleanPath)
+                }
+            } catch (err) {
+                console.error(
+                    `[Workspace Sync] Failed to sync ${cleanPath} to S3 for session ${sessionId}:`,
+                    err
+                )
+            }
+        }
+    }
+
+    return uploadedPaths
+}

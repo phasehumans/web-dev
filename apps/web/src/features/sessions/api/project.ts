@@ -45,6 +45,7 @@ export type BackendMessage = {
     id: string
     role: 'USER' | 'ASSISTANT' | 'SYSTEM'
     content: string
+    blocks?: import('@/features/chat/types').MessageBlock[] | null
     status?: 'thinking' | 'building' | 'done' | 'error' | null
     sequence: number
     createdAt: string

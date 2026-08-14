@@ -2,17 +2,18 @@ import { prisma } from '@december/database'
 import Redis from 'ioredis'
 
 import { E2BSandboxService } from './e2b-sandbox.service'
+import { syncWorkspaceFilesToS3 } from './workspace'
 
 const redisPub = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
     lazyConnect: true,
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false,
 })
-redisPub.on('error', (err) => {
+redisPub.on('error', () => {
     // Intentionally swallowed: Suppress offline Redis error noise in test environment
 })
 const redisSub = redisPub.duplicate({ enableReadyCheck: false })
-redisSub.on('error', (err) => {
+redisSub.on('error', () => {
     // Intentionally swallowed: Suppress offline Redis sub error noise in test environment
 })
 
@@ -36,8 +37,98 @@ redisSub.on('pmessage', (pattern, channel, message) => {
     }
 })
 
-export async function processGrpcStream(sessionId: string, stream: any) {
+interface AccumulatedTurn {
+    thoughts: string
+    content: string
+    blocks: any[]
+    modifiedFiles: Set<string>
+    hasError: boolean
+    errorMessage?: string
+}
+
+export async function processGrpcStream(sessionId: string, stream: any, sandbox?: any) {
     let hasError = false
+    let currentTurn: AccumulatedTurn = {
+        thoughts: '',
+        content: '',
+        blocks: [],
+        modifiedFiles: new Set(),
+        hasError: false,
+    }
+
+    const persistTurnMessage = async () => {
+        try {
+            if (
+                !currentTurn.content &&
+                !currentTurn.thoughts &&
+                currentTurn.blocks.length === 0 &&
+                !currentTurn.hasError
+            ) {
+                return
+            }
+
+            console.log(
+                `[WORKER LISTENER] Persisting turn message for session '${sessionId}' with ${currentTurn.blocks.length} blocks...`
+            )
+
+            const lastMessage = await prisma.message.findFirst({
+                where: { sessionId },
+                orderBy: { sequence: 'desc' },
+                select: { sequence: true },
+            })
+            const nextSequence = (lastMessage?.sequence ?? 0) + 1
+
+            const finalContent =
+                currentTurn.content ||
+                (currentTurn.hasError
+                    ? currentTurn.errorMessage || 'Agent Execution Error'
+                    : currentTurn.blocks.length > 0
+                      ? ''
+                      : 'Completed')
+
+            await prisma.message.create({
+                data: {
+                    sessionId,
+                    role: 'ASSISTANT',
+                    content: finalContent,
+                    status: currentTurn.hasError ? 'error' : 'done',
+                    sequence: nextSequence,
+                    blocks: currentTurn.blocks.length > 0 ? (currentTurn.blocks as any) : undefined,
+                },
+            })
+
+            console.log(
+                `[WORKER LISTENER] Successfully persisted assistant message (sequence: ${nextSequence}) for session '${sessionId}'`
+            )
+
+            // S3 Workspace Sync on Turn Completion
+            if (currentTurn.modifiedFiles.size > 0) {
+                console.log(
+                    `[WORKER LISTENER] Syncing ${currentTurn.modifiedFiles.size} modified files to S3 workspace for session '${sessionId}'...`
+                )
+                const sandbox = E2BSandboxService.getActiveSandbox(sessionId)
+                await syncWorkspaceFilesToS3({
+                    sessionId,
+                    modifiedFiles: Array.from(currentTurn.modifiedFiles),
+                    sandbox,
+                })
+            }
+        } catch (err) {
+            console.error(
+                `[WORKER LISTENER] Failed to persist message for session ${sessionId}:`,
+                err
+            )
+        } finally {
+            currentTurn = {
+                thoughts: '',
+                content: '',
+                blocks: [],
+                modifiedFiles: new Set(),
+                hasError: false,
+            }
+        }
+    }
+
     try {
         for await (const event of stream) {
             const parsedEvent = JSON.parse(event.data)
@@ -50,22 +141,97 @@ export async function processGrpcStream(sessionId: string, stream: any) {
                 await redisPub.publish(`session_events:${sessionId}`, event.data).catch(() => {})
             }
 
-            // handle specific events like usage and credits
-            if (parsedEvent.type === 'AgentUsage') {
+            const eventType = parsedEvent.type
+
+            if (eventType === 'ThinkingChunk') {
+                const chunk = parsedEvent.content || parsedEvent.data?.content || ''
+                if (chunk) {
+                    currentTurn.thoughts += chunk
+                    const lastBlock = currentTurn.blocks[currentTurn.blocks.length - 1]
+                    if (lastBlock && lastBlock.type === 'thinking') {
+                        lastBlock.content += chunk
+                    } else {
+                        currentTurn.blocks.push({ type: 'thinking', content: chunk })
+                    }
+                }
+            } else if (eventType === 'StreamChunk') {
+                const chunk = parsedEvent.content || parsedEvent.data?.content || ''
+                if (chunk) {
+                    currentTurn.content += chunk
+                    const lastBlock = currentTurn.blocks[currentTurn.blocks.length - 1]
+                    if (lastBlock && lastBlock.type === 'text') {
+                        lastBlock.content += chunk
+                    } else {
+                        currentTurn.blocks.push({ type: 'text', content: chunk })
+                    }
+                }
+            } else if (eventType === 'ToolCallStart') {
+                const tc = parsedEvent.toolCall || parsedEvent.data?.toolCall || {}
+                const toolName = tc.name || 'tool'
+                const toolInput = tc.input || tc.args || {}
+                const toolCallId = tc.id || `tool-${Date.now()}`
+
+                currentTurn.blocks.push({
+                    type: 'command',
+                    toolCallId,
+                    toolName,
+                    toolInput,
+                    status: 'running',
+                    output: '',
+                })
+
+                const filePath = toolInput.filePath || toolInput.path || toolInput.file
+                if (filePath && typeof filePath === 'string') {
+                    currentTurn.modifiedFiles.add(filePath)
+                }
+            } else if (eventType === 'ToolExecutionUpdate') {
+                const toolCallId = parsedEvent.toolCallId || parsedEvent.data?.toolCallId
+                const chunk = parsedEvent.chunk || parsedEvent.data?.chunk || ''
+                if (toolCallId && chunk) {
+                    const block = currentTurn.blocks.find(
+                        (b) => b.type === 'command' && b.toolCallId === toolCallId
+                    )
+                    if (block) {
+                        block.output = `${block.output || ''}${chunk}`
+                    }
+                }
+            } else if (eventType === 'ToolCallResult') {
+                const result = parsedEvent.result || parsedEvent.data?.result || {}
+                const toolCallId =
+                    parsedEvent.toolCallId || parsedEvent.data?.toolCallId || result.toolCallId
+                const block = currentTurn.blocks.find(
+                    (b) => b.type === 'command' && (!toolCallId || b.toolCallId === toolCallId)
+                )
+                if (block) {
+                    block.status = result.error ? 'error' : 'success'
+                    block.output = result.output || result.content || result.error || block.output
+                }
+            } else if (eventType === 'TurnEnd') {
+                await persistTurnMessage()
+            } else if (eventType === 'AgentEnd') {
+                await persistTurnMessage()
+            } else if (eventType === 'AgentUsage') {
                 await updateCredits(sessionId, parsedEvent)
-            } else if (parsedEvent.type === 'AgentError') {
+            } else if (eventType === 'AgentError') {
                 hasError = true
+                currentTurn.hasError = true
+                currentTurn.errorMessage = parsedEvent.error || parsedEvent.message
+                currentTurn.blocks.push({
+                    type: 'error',
+                    error: currentTurn.errorMessage || 'Agent Execution Error',
+                })
+                await persistTurnMessage()
                 console.error(
                     `[WORKER LISTENER] Session '${sessionId}' AgentError received:`,
-                    parsedEvent.error || parsedEvent.message
+                    currentTurn.errorMessage
                 )
             }
         }
     } catch (e: any) {
         hasError = true
-        // Stream ended or connection closed: log exception safely
         console.error(`[WORKER LISTENER] Stream ended for ${sessionId}: ${e?.message || e}`)
     } finally {
+        await persistTurnMessage()
         console.log(
             `[WORKER LISTENER] Stream finished for session '${sessionId}'. Setting Prisma session status -> ${hasError ? 'FAILED' : 'STOPPED'}`
         )

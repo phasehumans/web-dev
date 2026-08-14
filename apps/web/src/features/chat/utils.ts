@@ -49,6 +49,22 @@ export const mapBackendMessageToUIMessage = (message: BackendMessage): Message =
     let plan: string | undefined = undefined
     let summary: string | undefined = undefined
 
+    if (message.blocks && Array.isArray(message.blocks) && message.blocks.length > 0) {
+        return {
+            id: message.id,
+            role:
+                message.role === 'USER'
+                    ? 'user'
+                    : message.role === 'SYSTEM'
+                      ? 'system'
+                      : 'assistant',
+            content: message.content,
+            blocks: message.blocks,
+            type: 'text',
+            status: message.status ?? 'done',
+        }
+    }
+
     if (isAssistant && message.content) {
         if (message.content.includes('### Project Metadata')) {
             const index = message.content.indexOf('### Project Metadata')

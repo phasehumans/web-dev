@@ -722,6 +722,10 @@ const getPreviewUrl = async (data: {
     return `https://${targetHost}`
 }
 
+const getActiveSandbox = (sessionId: string) => {
+    return activeSandboxes.get(sessionId) || activeSandboxes.get(sessionId.replace(/^session-/, ''))
+}
+
 export const E2BSandboxService = {
     setMockClient,
     resetMockClient,
@@ -733,6 +737,7 @@ export const E2BSandboxService = {
     destroySandbox,
     executeCommand,
     getPreviewUrl,
+    getActiveSandbox,
     runAgentSession,
     runEphemeralTask,
 }
