@@ -8,6 +8,7 @@ export interface Message {
     type?: 'text' | 'code_preview'
     code?: string
     status?: 'thinking' | 'building' | 'done' | 'error'
+    statusMessage?: string
     tokensUsed?: number
     creditsUsed?: number
     modelName?: string
@@ -29,6 +30,7 @@ export interface ChatMessageProps {
     executionTime: number
     index: number
     status?: 'thinking' | 'building' | 'done' | 'error'
+    statusMessage?: string
     generatedFiles?: Record<string, any>
     appliedFiles?: string[]
     projectType?: 'generated' | 'github' | 'zip'

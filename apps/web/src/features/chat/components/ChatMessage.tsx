@@ -19,6 +19,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     executionTime,
     index,
     status = 'done',
+    statusMessage,
     generatedFiles,
     projectType = 'generated',
     appliedFiles,
@@ -37,6 +38,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         displayedPlan,
         displayedThoughts,
         displayedSummary,
+        displayedContent,
+        thoughtTokenCount,
         isStreamFinished,
         isThinkingPhase,
         thinkingText,
@@ -100,22 +103,24 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 transition={{ duration: 0.3, delay: 0.06 }}
                 className="pl-1 flex flex-col gap-2.5"
             >
-                {/* assistant meta */}
+                {/* assistant meta header */}
                 <div className="flex items-center gap-2 text-[11px] font-medium tracking-wide">
                     <span className="text-[#8E8D8C]">December</span>
-                    {(isThinkingPhase || isBuildingPhase || status === 'error') && (
+                    {(isThinkingPhase ||
+                        isBuildingPhase ||
+                        status === 'error' ||
+                        statusMessage) && (
                         <span
                             className={
-                                isThinkingPhase || isBuildingPhase
-                                    ? 'text-[#A1A09F] animate-pulse'
-                                    : 'text-red-400'
+                                status === 'error' ? 'text-red-400' : 'text-[#A1A09F] animate-pulse'
                             }
                         >
-                            {isThinkingPhase
-                                ? 'Thinking...'
-                                : isBuildingPhase
-                                  ? 'Building...'
-                                  : 'Error'}
+                            {statusMessage ||
+                                (isThinkingPhase
+                                    ? 'Thinking...'
+                                    : isBuildingPhase
+                                      ? 'Building...'
+                                      : 'Error')}
                         </span>
                     )}
                 </div>
@@ -138,6 +143,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             <span className="font-medium">
                                 {isThinkingPhase && !plan ? 'Thinking' : 'Thoughts'}
                             </span>
+                            {thoughtTokenCount > 0 && (
+                                <span className="text-[10px] text-[#636261] font-mono">
+                                    ({thoughtTokenCount} tokens)
+                                </span>
+                            )}
                         </button>
 
                         <AnimatePresence initial={false}>
@@ -213,10 +223,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </div>
                 )}
 
-                {/* 4. final summary (normal text, streamed) */}
-                {showSummary && displayedSummary.trim().length > 0 && (
-                    <div className="space-y-3 pt-1 animate-in fade-in duration-300 w-full">
-                        {renderRichContent(displayedSummary)}
+                {/* 4. main text / summary content (streamed response) */}
+                {displayedContent.trim().length > 0 && (
+                    <div className="space-y-3 pt-1 animate-in fade-in duration-300 w-full select-text">
+                        {renderRichContent(displayedContent)}
                     </div>
                 )}
 

@@ -20,6 +20,9 @@ export interface ChatSlice {
         messageId: string,
         status: 'thinking' | 'building' | 'done' | 'error'
     ) => void
+    setAssistantStatusMessage: (messageId: string, statusMessage?: string) => void
+    appendThinkingChunk: (messageId: string, chunk: string) => void
+    appendStreamChunk: (messageId: string, chunk: string) => void
     appendAssistantChunk: (messageId: string, chunk: string, streamMessageId?: string) => void
     setAssistantError: (messageId: string, errorMessage: string) => void
     setAssistantAppliedFiles: (messageId: string, appliedFiles: string[]) => void
@@ -46,6 +49,21 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
         })),
     setAssistantStatus: (messageId, status) => {
         get().updateAssistantMessage(messageId, (message) => ({ ...message, status }))
+    },
+    setAssistantStatusMessage: (messageId, statusMessage) => {
+        get().updateAssistantMessage(messageId, (message) => ({ ...message, statusMessage }))
+    },
+    appendThinkingChunk: (messageId, chunk) => {
+        get().updateAssistantMessage(messageId, (message) => ({
+            ...message,
+            thoughts: `${message.thoughts ?? ''}${chunk}`,
+        }))
+    },
+    appendStreamChunk: (messageId, chunk) => {
+        get().updateAssistantMessage(messageId, (message) => ({
+            ...message,
+            content: `${message.content ?? ''}${chunk}`,
+        }))
     },
     appendAssistantChunk: (messageId, chunk, streamMessageId) => {
         get().updateAssistantMessage(messageId, (message) => {

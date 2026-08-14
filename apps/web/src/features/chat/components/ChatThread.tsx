@@ -142,6 +142,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                         executionTime={executionTime}
                         index={index}
                         status={msg.status}
+                        statusMessage={msg.statusMessage}
                         generatedFiles={isLast ? generatedFiles : undefined}
                         appliedFiles={msg.appliedFiles}
                         projectType={projectType}

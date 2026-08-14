@@ -47,3 +47,7 @@ Reference gold standard modules: `auth`, `notification`, `session`.
 - **No `require()` Imports**: Never use CommonJS `require()`. Always use top-level ES module `import` statements (`import ... from '...'`).
 - **Scoped Switch Cases**: Always enclose `case` blocks in curly braces `{ ... }` when declaring `const` or `let` variables inside a `switch` statement.
 - **Complete React Hook Dependencies**: Ensure all `useEffect`, `useCallback`, and `useMemo` hooks have complete dependency arrays or explicitly documented refs.
+
+## Git & Pull Request Guidelines
+
+- **Lowercase Only for Git & PRs**: Always write commit messages, PR reviews/review comments, and PR titles/descriptions/messages strictly in lowercase only.

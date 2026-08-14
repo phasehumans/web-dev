@@ -43,6 +43,9 @@ export const useChatController = (
         setProjectType,
         setCurrentGenerationFilePaths,
         appendAssistantChunk,
+        appendThinkingChunk,
+        appendStreamChunk,
+        setAssistantStatusMessage,
         setAssistantStatus,
         setAssistantError,
         setAssistantAppliedFiles,
@@ -168,6 +171,48 @@ export const useChatController = (
                                     setActiveProjectVersionId(event.data.version.id)
                                     void queryClient.invalidateQueries({ queryKey: ['projects'] })
                                     return
+                                case 'AgentStart':
+                                case 'TurnStart':
+                                    setGenerationPhase('thinking')
+                                    setAssistantStatus(activeMessageId, 'thinking')
+                                    return
+                                case 'AgentStatus':
+                                    if (event.data?.message) {
+                                        setAssistantStatusMessage(
+                                            activeMessageId,
+                                            event.data.message
+                                        )
+                                    }
+                                    return
+                                case 'ThinkingChunk':
+                                    if (event.data?.content) {
+                                        setGenerationPhase('thinking')
+                                        appendThinkingChunk(activeMessageId, event.data.content)
+                                    }
+                                    return
+                                case 'StreamChunk':
+                                    if (event.data?.content) {
+                                        setGenerationPhase('building')
+                                        setAssistantStatus(activeMessageId, 'building')
+                                        appendStreamChunk(activeMessageId, event.data.content)
+                                    }
+                                    return
+                                case 'TurnEnd':
+                                case 'AgentEnd':
+                                    setGenerationPhase('done')
+                                    setAssistantStatus(activeMessageId, 'done')
+                                    setIsGenerating(false)
+                                    return
+                                case 'AgentError':
+                                    setGenerationPhase(null)
+                                    setAssistantError(
+                                        activeMessageId,
+                                        event.data?.error ||
+                                            event.data?.message ||
+                                            'Agent Execution Error'
+                                    )
+                                    setIsGenerating(false)
+                                    return
                                 case 'phase':
                                     if (event.data.phase === 'building') {
                                         setGenerationPhase('building')
@@ -270,6 +315,9 @@ export const useChatController = (
             abortGenerationRequest,
             activeAssistantMessageIdRef,
             appendAssistantChunk,
+            appendThinkingChunk,
+            appendStreamChunk,
+            setAssistantStatusMessage,
             appendGeneratedFileChunk,
             completeGeneratedFile,
             generationAbortControllerRef,
@@ -400,6 +448,45 @@ export const useChatController = (
 
                         switch (event.type) {
                             case 'connected':
+                                return
+                            case 'AgentStart':
+                            case 'TurnStart':
+                                setGenerationPhase('thinking')
+                                setAssistantStatus(activeMessageId, 'thinking')
+                                return
+                            case 'AgentStatus':
+                                if (event.data?.message) {
+                                    setAssistantStatusMessage(activeMessageId, event.data.message)
+                                }
+                                return
+                            case 'ThinkingChunk':
+                                if (event.data?.content) {
+                                    setGenerationPhase('thinking')
+                                    appendThinkingChunk(activeMessageId, event.data.content)
+                                }
+                                return
+                            case 'StreamChunk':
+                                if (event.data?.content) {
+                                    setGenerationPhase('building')
+                                    setAssistantStatus(activeMessageId, 'building')
+                                    appendStreamChunk(activeMessageId, event.data.content)
+                                }
+                                return
+                            case 'TurnEnd':
+                            case 'AgentEnd':
+                                setGenerationPhase('done')
+                                setAssistantStatus(activeMessageId, 'done')
+                                setIsGenerating(false)
+                                return
+                            case 'AgentError':
+                                setGenerationPhase(null)
+                                setAssistantError(
+                                    activeMessageId,
+                                    event.data?.error ||
+                                        event.data?.message ||
+                                        'Agent Execution Error'
+                                )
+                                setIsGenerating(false)
                                 return
                             case 'phase':
                                 if (event.data.phase === 'thinking') {
@@ -540,6 +627,9 @@ export const useChatController = (
             activeProjectVersionId,
             abortGenerationRequest,
             appendAssistantChunk,
+            appendThinkingChunk,
+            appendStreamChunk,
+            setAssistantStatusMessage,
             appendGeneratedFileChunk,
             completeGeneratedFile,
             hydrateAppliedProjectChange,
