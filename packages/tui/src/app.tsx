@@ -53,6 +53,7 @@ export function ChatApp({
         setStaticKey,
         setActiveMessages,
         setAuthMode,
+        handleSubmit,
     } = session
     const authUI =
         authMode !== 'none' ? (
@@ -78,9 +79,9 @@ export function ChatApp({
 
     const handleFormSubmit = useCallback(
         (text: string) => {
-            session.handleSubmit(text)
+            handleSubmit(text)
         },
-        [session.handleSubmit]
+        [handleSubmit]
     )
 
     const totalTokens = [...staticMessages, ...activeMessages].reduce((acc, msg) => {

@@ -211,7 +211,7 @@ export function useAgentSession({
                 return { block: false }
             }
         }
-    }, [agent])
+    }, [agent, setAuthMode, setPendingQuestions])
 
     // hooks state
 
@@ -287,7 +287,19 @@ export function useAgentSession({
                 setIsStreaming(false)
             }
         },
-        [agent]
+        [
+            agent,
+            addToast,
+            setActiveMessages,
+            setAuthMode,
+            setCurrentGrillIndex,
+            setCustomInputMode,
+            setGrillAnswers,
+            setGrillPrompt,
+            setGrillQuestions,
+            setIsStreaming,
+            setStaticMessages,
+        ]
     )
 
     const generatePlanFromGrill = useCallback(
@@ -331,7 +343,19 @@ export function useAgentSession({
                 setAuthMode('plan_approve')
             }
         },
-        [agent, grillPrompt, grillQuestions, activeMessages]
+        [
+            agent,
+            grillPrompt,
+            grillQuestions,
+            setActiveMessages,
+            setAuthMode,
+            setCurrentPlannedPrompt,
+            setGrillAnswers,
+            setGrillPrompt,
+            setGrillQuestions,
+            setIsStreaming,
+            setStaticMessages,
+        ]
     )
 
     const handleGrillSelect = useCallback(
@@ -350,7 +374,15 @@ export function useAgentSession({
                 await generatePlanFromGrill(nextAnswers)
             }
         },
-        [grillAnswers, currentGrillIndex, grillQuestions, generatePlanFromGrill]
+        [
+            grillAnswers,
+            currentGrillIndex,
+            grillQuestions,
+            generatePlanFromGrill,
+            setCurrentGrillIndex,
+            setCustomInputMode,
+            setGrillAnswers,
+        ]
     )
 
     const handleSubmit = useCallback(
@@ -623,19 +655,31 @@ export function useAgentSession({
         },
         [
             agent,
-            activeMessages,
             isAuthenticated,
             isStreaming,
-            grillQuestions,
-            grillAnswers,
-            customInputMode,
-            generatePlanFromGrill,
             generateGrillQuestions,
             sessionRepository,
-            authMode,
-            currentGrillIndex,
             grillMode,
             setQueuedPrompts,
+            addToast,
+            setActiveMessages,
+            setAuthMode,
+            setGrillMode,
+            setIsStreaming,
+            setLogoutItems,
+            setSelectedProvider,
+            setSessionPage,
+            setSessionRenameMode,
+            setSessionSelectedIndex,
+            setSessionsData,
+            setSettingsFollowUpMode,
+            setSettingsNonWorkspace,
+            setSettingsShowTasks,
+            setSettingsSteeringMode,
+            setSettingsThinkingLevel,
+            setSettingsToolPermission,
+            setShouldExit,
+            setStaticMessages,
         ]
     )
 
@@ -676,7 +720,7 @@ export function useAgentSession({
                 addToast('Plan rejected.', 'error')
             }
         },
-        [currentPlannedPrompt, handleSubmit, addToast, setAuthMode]
+        [currentPlannedPrompt, handleSubmit, addToast, setAuthMode, setCurrentPlannedPrompt]
     )
 
     const handleContextSelect = () => {}

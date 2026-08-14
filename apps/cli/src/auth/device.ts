@@ -6,41 +6,39 @@ export async function loginViaDeviceCode(
         'https://api.trydecember.com',
     onCodeGenerated: (userCode: string, verificationUri: string) => void
 ): Promise<{ token: string; email: string | null }> {
-    return new Promise(async (resolve, reject) => {
+    try {
+        const genRes = await fetch(`${baseUrl}/api/v1/auth/device/code`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        })
+
+        let genData: any = {}
         try {
-            const genRes = await fetch(`${baseUrl}/api/v1/auth/device/code`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            genData = await genRes.json()
+        } catch {
+            // Intentionally swallowed: fallback handled if server returns non-JSON
+        }
+
+        if (!genRes.ok || !genData.success) {
+            throw new Error(genData.message || `Failed to generate device code (${genRes.status})`)
+        }
+
+        const { deviceCode, userCode, verificationUri, expiresIn, interval } = genData.data
+
+        onCodeGenerated(userCode, verificationUri)
+
+        // Auto-open browser after 5 seconds
+        setTimeout(() => {
+            openUrl(verificationUri).catch(() => {
+                // Intentionally swallowed: fallback handled if browser cannot be opened in headless/SSH environment
             })
+        }, 5000)
 
-            let genData: any = {}
-            try {
-                genData = await genRes.json()
-            } catch {
-                // Intentionally swallowed: fallback handled if server returns non-JSON
-            }
+        // 2. poll for token
+        const startTime = Date.now()
+        const pollInterval = interval * 1000 || 5000
 
-            if (!genRes.ok || !genData.success) {
-                throw new Error(
-                    genData.message || `Failed to generate device code (${genRes.status})`
-                )
-            }
-
-            const { deviceCode, userCode, verificationUri, expiresIn, interval } = genData.data
-
-            onCodeGenerated(userCode, verificationUri)
-
-            // Auto-open browser after 5 seconds
-            setTimeout(() => {
-                openUrl(verificationUri).catch(() => {
-                    // Intentionally swallowed: fallback handled if browser cannot be opened in headless/SSH environment
-                })
-            }, 5000)
-
-            // 2. poll for token
-            const startTime = Date.now()
-            const pollInterval = interval * 1000 || 5000
-
+        return await new Promise((resolve, reject) => {
             const poll = async () => {
                 if (Date.now() - startTime > expiresIn * 1000) {
                     reject(new Error('Device code expired'))
@@ -77,19 +75,21 @@ export async function loginViaDeviceCode(
             }
 
             setTimeout(poll, pollInterval)
-        } catch (err: any) {
-            const msg = err?.message || String(err)
-            if (
-                msg.includes('fetch failed') ||
-                msg.includes('ECONNREFUSED') ||
-                msg.includes('ENOTFOUND') ||
-                msg.includes('Failed to fetch') ||
-                msg.includes('connect')
-            ) {
-                reject(new Error('Unable to connect. Is the computer able to access the url?'))
-            } else {
-                reject(err)
-            }
+        })
+    } catch (err: any) {
+        const msg = err?.message || String(err)
+        if (
+            msg.includes('fetch failed') ||
+            msg.includes('ECONNREFUSED') ||
+            msg.includes('ENOTFOUND') ||
+            msg.includes('Failed to fetch') ||
+            msg.includes('connect')
+        ) {
+            throw new Error('Unable to connect. Is the computer able to access the url?', {
+                cause: err,
+            })
+        } else {
+            throw err
         }
-    })
+    }
 }

@@ -2,6 +2,25 @@ import { useState, useEffect } from 'react'
 
 import type { AuthMode } from '@december/tui'
 
+const FALLBACK_OPENROUTER_MODELS = [
+    {
+        label: '(free) meta-llama/llama-3-8b-instruct:free',
+        value: 'meta-llama/llama-3-8b-instruct:free',
+    },
+    {
+        label: '(free) mistralai/mistral-7b-instruct:free',
+        value: 'mistralai/mistral-7b-instruct:free',
+    },
+    { label: 'google/gemini-3.6-flash', value: 'google/gemini-3.6-flash' },
+    { label: 'anthropic/claude-3.7-sonnet', value: 'anthropic/claude-3.7-sonnet' },
+    { label: 'anthropic/claude-3.5-sonnet', value: 'anthropic/claude-3.5-sonnet' },
+    { label: 'openai/o3-mini', value: 'openai/o3-mini' },
+    { label: 'openai/gpt-4o', value: 'openai/gpt-4o' },
+    { label: 'deepseek/deepseek-r1', value: 'deepseek/deepseek-r1' },
+    { label: 'deepseek/deepseek-chat', value: 'deepseek/deepseek-chat' },
+    { label: 'meta-llama/llama-3.3-70b-instruct', value: 'meta-llama/llama-3.3-70b-instruct' },
+]
+
 export function useAuth({ initialAuth, userEmail, authMode: initialAuthMode }: any) {
     const [isAuthenticated, setIsAuthenticated] = useState(initialAuth)
     const [currentEmail, setCurrentEmail] = useState<string | undefined>(userEmail)
@@ -11,24 +30,6 @@ export function useAuth({ initialAuth, userEmail, authMode: initialAuthMode }: a
     const [selectedProvider, setSelectedProvider] = useState<string>('')
     const [apiKey, setApiKey] = useState('')
 
-    const FALLBACK_OPENROUTER_MODELS = [
-        {
-            label: '(free) meta-llama/llama-3-8b-instruct:free',
-            value: 'meta-llama/llama-3-8b-instruct:free',
-        },
-        {
-            label: '(free) mistralai/mistral-7b-instruct:free',
-            value: 'mistralai/mistral-7b-instruct:free',
-        },
-        { label: 'google/gemini-3.6-flash', value: 'google/gemini-3.6-flash' },
-        { label: 'anthropic/claude-3.7-sonnet', value: 'anthropic/claude-3.7-sonnet' },
-        { label: 'anthropic/claude-3.5-sonnet', value: 'anthropic/claude-3.5-sonnet' },
-        { label: 'openai/o3-mini', value: 'openai/o3-mini' },
-        { label: 'openai/gpt-4o', value: 'openai/gpt-4o' },
-        { label: 'deepseek/deepseek-r1', value: 'deepseek/deepseek-r1' },
-        { label: 'deepseek/deepseek-chat', value: 'deepseek/deepseek-chat' },
-        { label: 'meta-llama/llama-3.3-70b-instruct', value: 'meta-llama/llama-3.3-70b-instruct' },
-    ]
     const [openRouterModels, setOpenRouterModels] = useState<
         { label: string; value: string }[] | null
     >(null)

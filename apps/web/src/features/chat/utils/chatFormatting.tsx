@@ -102,7 +102,7 @@ export const renderRichContent = (text: string, isThoughts = false) => {
         } else {
             flushList(index)
             const processedLine = line.replace(
-                /^(\*\*Overview:\*\*|\*\*Overview\*\*|Overview:?)\s*[\-–—]?\s*/i,
+                /^(\*\*Overview:\*\*|\*\*Overview\*\*|Overview:?)\s*[-–—]?\s*/i,
                 ''
             )
             elements.push(

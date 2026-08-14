@@ -343,7 +343,7 @@ export const MobileSidebar: React.FC<
                                         >
                                             <div className="flex flex-col min-w-0 pr-2 overflow-hidden">
                                                 <span className="font-normal text-[12px] transition-colors tracking-tight text-[#E8E8E8] group-hover:text-[#E8E8E8] truncate">
-                                                    {/* @ts-expect-error */}
+                                                    {/* @ts-expect-error -- fallback for project name property */}
                                                     {project.name || project.title}
                                                 </span>
                                                 <span className="text-[11px] text-[#8F8E8D] tracking-tight truncate mt-[1px]">

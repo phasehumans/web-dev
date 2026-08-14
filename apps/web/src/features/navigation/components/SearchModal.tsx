@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Icons } from '@/shared/components/ui/Icons'
@@ -50,301 +50,348 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         }
     }, [isOpen])
 
-    const saveRecent = (id: string) => {
-        const newRecents = [id, ...recentIds.filter((rId) => rId !== id)].slice(0, 5)
-        setRecentIds(newRecents)
-        localStorage.setItem('december-search-recents', JSON.stringify(newRecents))
-    }
+    const saveRecent = useCallback((id: string) => {
+        setRecentIds((prev) => {
+            const newRecents = [id, ...prev.filter((rId) => rId !== id)].slice(0, 5)
+            localStorage.setItem('december-search-recents', JSON.stringify(newRecents))
+            return newRecents
+        })
+    }, [])
 
-    const allItems: SearchItem[] = [
-        // Main Navigation Pages
-        {
-            id: 'go-home',
-            label: 'Home / New Session',
-            subtitle: 'Start a new AI coding session',
-            category: 'Navigation',
-            icon: <Icons.Home className="w-4 h-4 text-neutral-400" />,
-            keywords: ['home', 'new', 'chat', 'session', 'prompt', 'create', 'start'],
-            action: () => {
-                onClose()
-                if (onNewThread) {
-                    onNewThread()
-                } else {
-                    navigate('/')
-                }
+    const allItems: SearchItem[] = useMemo(
+        () => [
+            // Main Navigation Pages
+            {
+                id: 'go-home',
+                label: 'Home / New Session',
+                subtitle: 'Start a new AI coding session',
+                category: 'Navigation',
+                icon: <Icons.Home className="w-4 h-4 text-neutral-400" />,
+                keywords: ['home', 'new', 'chat', 'session', 'prompt', 'create', 'start'],
+                action: () => {
+                    onClose()
+                    if (onNewThread) {
+                        onNewThread()
+                    } else {
+                        navigate('/')
+                    }
+                },
             },
-        },
-        {
-            id: 'go-projects',
-            label: 'Sessions',
-            subtitle: 'View all active sessions & history',
-            category: 'Navigation',
-            icon: <Icons.Folder className="w-4 h-4 text-neutral-400" />,
-            keywords: ['projects', 'history', 'threads', 'saved', 'chats', 'sessions'],
-            action: () => {
-                onClose()
-                navigate('/projects')
+            {
+                id: 'go-projects',
+                label: 'Sessions',
+                subtitle: 'View all active sessions & history',
+                category: 'Navigation',
+                icon: <Icons.Folder className="w-4 h-4 text-neutral-400" />,
+                keywords: ['projects', 'history', 'threads', 'saved', 'chats', 'sessions'],
+                action: () => {
+                    onClose()
+                    navigate('/projects')
+                },
             },
-        },
-        {
-            id: 'go-templates',
-            label: 'Wiki & Templates',
-            subtitle: 'Explore repository wikis & codebase docs',
-            category: 'Navigation',
-            icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
-            keywords: ['wiki', 'templates', 'codebase', 'repos', 'architecture', 'docs'],
-            action: () => {
-                onClose()
-                navigate('/templates')
+            {
+                id: 'go-templates',
+                label: 'Wiki & Templates',
+                subtitle: 'Explore repository wikis & codebase docs',
+                category: 'Navigation',
+                icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
+                keywords: ['wiki', 'templates', 'codebase', 'repos', 'architecture', 'docs'],
+                action: () => {
+                    onClose()
+                    navigate('/templates')
+                },
             },
-        },
-        {
-            id: 'go-docs',
-            label: 'Documentation',
-            subtitle: 'Guides, API documentation & tutorials',
-            category: 'Navigation',
-            icon: <Icons.DocsBook className="w-4 h-4 text-neutral-400" />,
-            keywords: ['docs', 'help', 'guide', 'manual', 'reference', 'tutorials'],
-            action: () => {
-                onClose()
-                navigate('/docs')
+            {
+                id: 'go-docs',
+                label: 'Documentation',
+                subtitle: 'Guides, API documentation & tutorials',
+                category: 'Navigation',
+                icon: <Icons.DocsBook className="w-4 h-4 text-neutral-400" />,
+                keywords: ['docs', 'help', 'guide', 'manual', 'reference', 'tutorials'],
+                action: () => {
+                    onClose()
+                    navigate('/docs')
+                },
             },
-        },
-        {
-            id: 'go-activate',
-            label: 'Device Activation',
-            subtitle: 'Link CLI or secondary device code',
-            category: 'Navigation',
-            icon: <Icons.Terminal className="w-4 h-4 text-neutral-400" />,
-            keywords: ['activate', 'cli', 'code', 'pair', 'terminal', 'device', 'link'],
-            action: () => {
-                onClose()
-                navigate('/activate')
+            {
+                id: 'go-activate',
+                label: 'Device Activation',
+                subtitle: 'Link CLI or secondary device code',
+                category: 'Navigation',
+                icon: <Icons.Terminal className="w-4 h-4 text-neutral-400" />,
+                keywords: ['activate', 'cli', 'code', 'pair', 'terminal', 'device', 'link'],
+                action: () => {
+                    onClose()
+                    navigate('/activate')
+                },
             },
-        },
 
-        // Settings Subpages
-        {
-            id: 'go-settings-account',
-            label: 'Account Details',
-            subtitle: 'Settings / Account',
-            category: 'Settings Subpages',
-            icon: <Icons.User className="w-4 h-4 text-neutral-400" />,
-            keywords: [
-                'profile',
-                'account',
-                'password',
-                'security',
-                'email',
-                'avatar',
-                'user',
-                'name',
-            ],
-            action: () => {
-                onClose()
-                navigate('/settings/account')
+            // Settings Subpages
+            {
+                id: 'go-settings-account',
+                label: 'Account Details',
+                subtitle: 'Settings / Account',
+                category: 'Settings Subpages',
+                icon: <Icons.User className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'profile',
+                    'account',
+                    'password',
+                    'security',
+                    'email',
+                    'avatar',
+                    'user',
+                    'name',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/account')
+                },
             },
-        },
-        {
-            id: 'go-settings-preferences',
-            label: 'Preferences & Appearance',
-            subtitle: 'Settings / Preferences',
-            category: 'Settings Subpages',
-            icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
-            keywords: [
-                'theme',
-                'dark mode',
-                'light mode',
-                'custom rules',
-                'shortcuts',
-                'appearance',
-                'display',
-                'preferences',
-            ],
-            action: () => {
-                onClose()
-                navigate('/settings/preferences')
+            {
+                id: 'go-settings-preferences',
+                label: 'Preferences & Appearance',
+                subtitle: 'Settings / Preferences',
+                category: 'Settings Subpages',
+                icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'theme',
+                    'dark mode',
+                    'light mode',
+                    'custom rules',
+                    'shortcuts',
+                    'appearance',
+                    'display',
+                    'preferences',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/preferences')
+                },
             },
-        },
-        {
-            id: 'go-settings-integrations',
-            label: 'Integrations & Connections',
-            subtitle: 'Settings / Integrations',
-            category: 'Settings Subpages',
-            icon: <Icons.Globe className="w-4 h-4 text-neutral-400" />,
-            keywords: ['integrations', 'connections', 'github', 'oauth', 'services', 'third party'],
-            action: () => {
-                onClose()
-                navigate('/settings/integrations')
+            {
+                id: 'go-settings-integrations',
+                label: 'Integrations & Connections',
+                subtitle: 'Settings / Integrations',
+                category: 'Settings Subpages',
+                icon: <Icons.Globe className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'integrations',
+                    'connections',
+                    'github',
+                    'oauth',
+                    'services',
+                    'third party',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/integrations')
+                },
             },
-        },
-        {
-            id: 'go-settings-repositories',
-            label: 'GitHub Repositories',
-            subtitle: 'Settings / Repositories',
-            category: 'Settings Subpages',
-            icon: <Icons.Github className="w-4 h-4 text-neutral-400" />,
-            keywords: ['repos', 'repositories', 'github', 'git', 'sync', 'branches', 'codebase'],
-            action: () => {
-                onClose()
-                navigate('/settings/repositories')
+            {
+                id: 'go-settings-repositories',
+                label: 'GitHub Repositories',
+                subtitle: 'Settings / Repositories',
+                category: 'Settings Subpages',
+                icon: <Icons.Github className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'repos',
+                    'repositories',
+                    'github',
+                    'git',
+                    'sync',
+                    'branches',
+                    'codebase',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/repositories')
+                },
             },
-        },
-        {
-            id: 'go-settings-skills',
-            label: 'Agent Skills',
-            subtitle: 'Settings / Skills',
-            category: 'Settings Subpages',
-            icon: <Icons.Skills className="w-4 h-4 text-neutral-400" />,
-            keywords: [
-                'skills',
-                'agent',
-                'bot',
-                'tools',
-                'capabilities',
-                'custom skills',
-                'prompts',
-            ],
-            action: () => {
-                onClose()
-                navigate('/settings/skills')
+            {
+                id: 'go-settings-skills',
+                label: 'Agent Skills',
+                subtitle: 'Settings / Skills',
+                category: 'Settings Subpages',
+                icon: <Icons.Skills className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'skills',
+                    'agent',
+                    'bot',
+                    'tools',
+                    'capabilities',
+                    'custom skills',
+                    'prompts',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/skills')
+                },
             },
-        },
-        {
-            id: 'go-settings-secrets',
-            label: 'API Keys & Secrets',
-            subtitle: 'Settings / Secrets',
-            category: 'Settings Subpages',
-            icon: <Icons.Lock className="w-4 h-4 text-neutral-400" />,
-            keywords: ['api key', 'secrets', 'tokens', 'credentials', 'env', 'variables', 'keys'],
-            action: () => {
-                onClose()
-                navigate('/settings/secrets')
+            {
+                id: 'go-settings-secrets',
+                label: 'API Keys & Secrets',
+                subtitle: 'Settings / Secrets',
+                category: 'Settings Subpages',
+                icon: <Icons.Lock className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'api key',
+                    'secrets',
+                    'tokens',
+                    'credentials',
+                    'env',
+                    'variables',
+                    'keys',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/secrets')
+                },
             },
-        },
-        {
-            id: 'go-settings-review',
-            label: 'Code Review Settings',
-            subtitle: 'Settings / Review',
-            category: 'Settings Subpages',
-            icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
-            keywords: [
-                'review',
-                'code review',
-                'linter',
-                'standards',
-                'pr',
-                'pull request',
-                'rules',
-            ],
-            action: () => {
-                onClose()
-                navigate('/settings/review')
+            {
+                id: 'go-settings-review',
+                label: 'Code Review Settings',
+                subtitle: 'Settings / Review',
+                category: 'Settings Subpages',
+                icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'review',
+                    'code review',
+                    'linter',
+                    'standards',
+                    'pr',
+                    'pull request',
+                    'rules',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/review')
+                },
             },
-        },
-        {
-            id: 'go-settings-wiki',
-            label: 'Repository Wiki Settings',
-            subtitle: 'Settings / Wiki',
-            category: 'Settings Subpages',
-            icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
-            keywords: ['wiki settings', 'docs generation', 'markdown', 'knowledge base'],
-            action: () => {
-                onClose()
-                navigate('/settings/wiki')
+            {
+                id: 'go-settings-wiki',
+                label: 'Repository Wiki Settings',
+                subtitle: 'Settings / Wiki',
+                category: 'Settings Subpages',
+                icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
+                keywords: ['wiki settings', 'docs generation', 'markdown', 'knowledge base'],
+                action: () => {
+                    onClose()
+                    navigate('/settings/wiki')
+                },
             },
-        },
-        {
-            id: 'go-settings-schedules',
-            label: 'Schedules & Timers',
-            subtitle: 'Settings / Schedules',
-            category: 'Settings Subpages',
-            icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
-            keywords: ['schedules', 'cron', 'timers', 'recurring', 'automation', 'tasks', 'jobs'],
-            action: () => {
-                onClose()
-                navigate('/settings/schedules')
+            {
+                id: 'go-settings-schedules',
+                label: 'Schedules & Timers',
+                subtitle: 'Settings / Schedules',
+                category: 'Settings Subpages',
+                icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'schedules',
+                    'cron',
+                    'timers',
+                    'recurring',
+                    'automation',
+                    'tasks',
+                    'jobs',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/schedules')
+                },
             },
-        },
-        {
-            id: 'go-settings-billing',
-            label: 'Billing & Credits',
-            subtitle: 'Settings / Billing',
-            category: 'Settings Subpages',
-            icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
-            keywords: [
-                'billing',
-                'credits',
-                'payment',
-                'invoices',
-                'receipts',
-                'subscription',
-                'plan',
-                'pricing',
-                'pro',
-            ],
-            action: () => {
-                onClose()
-                navigate('/settings/billing')
+            {
+                id: 'go-settings-billing',
+                label: 'Billing & Credits',
+                subtitle: 'Settings / Billing',
+                category: 'Settings Subpages',
+                icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'billing',
+                    'credits',
+                    'payment',
+                    'invoices',
+                    'receipts',
+                    'subscription',
+                    'plan',
+                    'pricing',
+                    'pro',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/billing')
+                },
             },
-        },
-        {
-            id: 'go-settings-usage',
-            label: 'Usage & Quotas',
-            subtitle: 'Settings / Usage',
-            category: 'Settings Subpages',
-            icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
-            keywords: [
-                'usage',
-                'quotas',
-                'token limit',
-                'ai calls',
-                'metrics',
-                'stats',
-                'analytics',
-            ],
-            action: () => {
-                onClose()
-                navigate('/settings/usage')
+            {
+                id: 'go-settings-usage',
+                label: 'Usage & Quotas',
+                subtitle: 'Settings / Usage',
+                category: 'Settings Subpages',
+                icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'usage',
+                    'quotas',
+                    'token limit',
+                    'ai calls',
+                    'metrics',
+                    'stats',
+                    'analytics',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/usage')
+                },
             },
-        },
-        {
-            id: 'go-settings-privacy',
-            label: 'Privacy & Security',
-            subtitle: 'Settings / Privacy',
-            category: 'Settings Subpages',
-            icon: <Icons.Lock className="w-4 h-4 text-neutral-400" />,
-            keywords: ['privacy', 'security', 'data', 'encryption', 'gdpr', 'compliance', 'terms'],
-            action: () => {
-                onClose()
-                navigate('/settings/privacy')
+            {
+                id: 'go-settings-privacy',
+                label: 'Privacy & Security',
+                subtitle: 'Settings / Privacy',
+                category: 'Settings Subpages',
+                icon: <Icons.Lock className="w-4 h-4 text-neutral-400" />,
+                keywords: [
+                    'privacy',
+                    'security',
+                    'data',
+                    'encryption',
+                    'gdpr',
+                    'compliance',
+                    'terms',
+                ],
+                action: () => {
+                    onClose()
+                    navigate('/settings/privacy')
+                },
             },
-        },
-    ]
+        ],
+        [onClose, onNewThread, navigate]
+    )
 
-    const defaultRecentIds = ['go-projects', 'go-settings-account']
+    const defaultRecentIds = useMemo(() => ['go-projects', 'go-settings-account'], [])
     const activeRecentIds = recentIds.length > 0 ? recentIds : defaultRecentIds
 
-    const recentItems = activeRecentIds
-        .map((id) => allItems.find((i) => i.id === id))
-        .filter((i): i is SearchItem => Boolean(i))
-        .map((i) => ({ ...i, category: 'Recent' as const }))
+    const recentItems = useMemo(
+        () =>
+            activeRecentIds
+                .map((id) => allItems.find((i) => i.id === id))
+                .filter((i): i is SearchItem => Boolean(i))
+                .map((i) => ({ ...i, category: 'Recent' as const })),
+        [activeRecentIds, allItems]
+    )
 
-    let displayedItems: SearchItem[] = []
-
-    if (searchQuery.trim() === '') {
-        // Show recent items first, then all remaining items
-        displayedItems = [...recentItems, ...allItems]
-    } else {
+    const displayedItems: SearchItem[] = useMemo(() => {
+        if (searchQuery.trim() === '') {
+            // Show recent items first, then all remaining items
+            return [...recentItems, ...allItems]
+        }
         const query = searchQuery.toLowerCase()
-        displayedItems = allItems.filter(
+        return allItems.filter(
             (item) =>
                 item.label.toLowerCase().includes(query) ||
                 item.subtitle?.toLowerCase().includes(query) ||
                 item.category.toLowerCase().includes(query) ||
                 item.keywords?.some((k) => k.toLowerCase().includes(query))
         )
-    }
+    }, [searchQuery, recentItems, allItems])
 
     const categories: SearchCategory[] = ['Recent', 'Navigation', 'Settings Subpages']
 
@@ -392,7 +439,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [isOpen, displayedItems, selectedIndex, onClose])
+    }, [isOpen, displayedItems, selectedIndex, onClose, saveRecent])
 
     if (!isOpen) return null
 

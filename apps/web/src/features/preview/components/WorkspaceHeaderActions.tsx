@@ -66,47 +66,53 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
         }
     }, [isMoreMenuOpen])
 
-    const openSettings = (tab: typeof settingsTab) => {
-        setSettingsTab(tab)
-        setActivePanel('settings')
-    }
+    const openSettings = React.useCallback(
+        (tab: typeof settingsTab) => {
+            setSettingsTab(tab)
+            setActivePanel('settings')
+        },
+        [setSettingsTab, setActivePanel]
+    )
 
     const versionDisplay = activeVersionId ? `#${activeVersionId.slice(0, 4)}` : '#1'
 
-    const menuItems = [
-        {
-            id: 'rename',
-            label: 'Rename',
-            icon: <Pencil className="w-3.5 h-3.5" />,
-            action: () => openSettings('general'),
-        },
-        {
-            id: 'folder',
-            label: 'Folder',
-            icon: <Folder className="w-3.5 h-3.5" />,
-            hasSubmenu: true,
-        },
-        {
-            id: 'edit_tags',
-            label: 'Edit tags',
-            icon: <Tag className="w-3.5 h-3.5" />,
-            action: () => openSettings('general'),
-        },
-        { id: 'archive', label: 'Archive', icon: <Archive className="w-3.5 h-3.5" /> },
-        {
-            id: 'more',
-            label: 'More',
-            icon: <MoreHorizontal className="w-3.5 h-3.5" />,
-            hasSubmenu: true,
-        },
-    ]
+    const menuItems = React.useMemo(
+        () => [
+            {
+                id: 'rename',
+                label: 'Rename',
+                icon: <Pencil className="w-3.5 h-3.5" />,
+                action: () => openSettings('general'),
+            },
+            {
+                id: 'folder',
+                label: 'Folder',
+                icon: <Folder className="w-3.5 h-3.5" />,
+                hasSubmenu: true,
+            },
+            {
+                id: 'edit_tags',
+                label: 'Edit tags',
+                icon: <Tag className="w-3.5 h-3.5" />,
+                action: () => openSettings('general'),
+            },
+            { id: 'archive', label: 'Archive', icon: <Archive className="w-3.5 h-3.5" /> },
+            {
+                id: 'more',
+                label: 'More',
+                icon: <MoreHorizontal className="w-3.5 h-3.5" />,
+                hasSubmenu: true,
+            },
+        ],
+        [openSettings]
+    )
 
     const filteredMenuItems = React.useMemo(() => {
         if (!menuSearchQuery.trim()) return menuItems
         return menuItems.filter((item) =>
             item.label.toLowerCase().includes(menuSearchQuery.toLowerCase())
         )
-    }, [menuSearchQuery])
+    }, [menuSearchQuery, menuItems])
 
     return (
         <div className="flex items-center gap-1 relative">

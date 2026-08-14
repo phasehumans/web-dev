@@ -41,7 +41,7 @@ export const SessionList: React.FC<{
     }, [searchQuery, typeFilter, sortOption, advancedFilters])
 
     const { data, isLoading, isFetching, error } = useSessions(queryFilters)
-    const sessions = data?.sessions || []
+    const sessions = useMemo(() => data?.sessions || [], [data?.sessions])
     const errorMessage = error instanceof Error ? error.message : null
     const [renameModal, setRenameModal] = useState<RenameModalState>({
         isOpen: false,

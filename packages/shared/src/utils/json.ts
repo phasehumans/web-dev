@@ -25,19 +25,21 @@ export function safeParseJson(text: string): any {
         if (cleanText.startsWith('{') && !cleanText.endsWith('}')) {
             try {
                 return JSON.parse(cleanText + '}')
-            } catch (e) {
-                // fall through
+            } catch {
+                // Intentionally swallowed: fallback handled
             }
         }
         // 2. extra trailing comma
         if (cleanText.endsWith(',}') || cleanText.endsWith(', }') || cleanText.match(/,\s*\}/)) {
             try {
                 return JSON.parse(cleanText.replace(/,\s*\}/g, '}'))
-            } catch (e) {
-                // fall through
+            } catch {
+                // Intentionally swallowed: fallback handled
             }
         }
 
-        throw new Error(`Failed to parse JSON tool arguments: ${err.message}\nRaw text: ${text}`)
+        throw new Error(`Failed to parse JSON tool arguments: ${err.message}\nRaw text: ${text}`, {
+            cause: err,
+        })
     }
 }

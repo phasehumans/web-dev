@@ -53,7 +53,7 @@ function parseFlowchart(code: string) {
 
         // Match edges like A[Client] -->|HTTP| B[Server] or A --> B
         const edgeRegex =
-            /^([A-Za-z0-9_]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?\s*(\-\-\>|\-\-\-|\=\=\>|\-\.\-\>)(?:\|(.*?)\|)?\s*([A-Za-z0-9_]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?/
+            /^([A-Za-z0-9_]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?\s*(-->|---|==>|-\.->)(?:\|(.*?)\|)?\s*([A-Za-z0-9_]+)(?:\[(.*?)\]|\((.*?)\)|\{(.*?)\})?/
         const match = line.match(edgeRegex)
 
         if (match) {
@@ -130,7 +130,7 @@ function parseSequence(code: string) {
 
         // Match A->>B: Message or A-->>B: Message
         const msgMatch = line.match(
-            /^([A-Za-z0-9_]+)\s*(\-\>\>|\-\-\>\>|\-\>)\s*([A-Za-z0-9_]+)\s*:\s*(.*)$/
+            /^([A-Za-z0-9_]+)\s*(->>|-->>|->)\s*([A-Za-z0-9_]+)\s*:\s*(.*)$/
         )
         if (msgMatch) {
             const from = msgMatch[1]

@@ -165,7 +165,7 @@ export function InputBar({
                 })
             }
         },
-        [toast, dialog, agent, resetChat, onUpdateSuccess, handleContentChange, onSubmit]
+        [toast, dialog, agent, resetChat, onUpdateSuccess, handleContentChange, onSubmit, value]
     )
 
     const handleSubmit = useCallback(
@@ -190,6 +190,7 @@ export function InputBar({
         [
             disabled,
             showCommandMenu,
+            showShortcutsMenu,
             resolveCommand,
             selectedIndex,
             handleCommand,

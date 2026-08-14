@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 
 import { WikiChat } from './WikiChat'
 
@@ -71,7 +71,7 @@ export const WikiReader: React.FC<WikiReaderProps> = ({
     })
 
     const wiki = wikiData?.wiki
-    const pages = wiki?.pages || []
+    const pages = useMemo(() => wiki?.pages || [], [wiki?.pages])
 
     // Default to first page if activePageId is not set or invalid
     useEffect(() => {

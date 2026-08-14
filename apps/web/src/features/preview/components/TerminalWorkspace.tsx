@@ -1,7 +1,7 @@
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 import React, { useEffect, useRef } from 'react'
-// @ts-ignore
+// @ts-expect-error -- CSS file import lacks TypeScript declarations
 import '@xterm/xterm/css/xterm.css'
 
 interface TerminalWorkspaceProps {
