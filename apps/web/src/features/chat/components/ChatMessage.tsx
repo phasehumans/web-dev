@@ -4,6 +4,8 @@ import React from 'react'
 
 import type { ChatMessageProps } from '@/features/chat/types'
 
+import { FileChangeBadge } from '@/features/chat/components/FileChangeBadge'
+import { ToolCallCard } from '@/features/chat/components/ToolCallCard'
 import { useChatMessageController } from '@/features/chat/hooks/useChatMessageController'
 import { renderRichContent } from '@/features/chat/utils/chatFormatting'
 import { cn } from '@/shared/lib/utils'
@@ -12,6 +14,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     id,
     role,
     content,
+    blocks,
     thoughts,
     plan,
     summary,
@@ -77,11 +80,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const isCompletedPhase = status === 'done'
     const showActions = !isGenerating && isCompletedPhase && isStreamFinished
 
-    // segment calculation
+    // segment calculation for fallback
     const showThinking = isThinkingPhase || Boolean(thoughts)
-
     const showPlan = Boolean(plan)
-
     const isPlanFinished = !planText || displayedPlan.length >= planText.length
     const showFiles =
         projectType === 'generated' &&
@@ -89,11 +90,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         totalFiles > 0 &&
         isPlanFinished
 
-    const showSummary = projectType === 'generated' && Boolean(summary)
-
-    // for normal messages, we don't animate thoughts because sse handles it.
-    // but for forcestream messages, we simulate the thoughts streaming too.
     const activeThoughtsText = shouldForceStream ? displayedThoughts : thinkingText
+    const hasBlocks = blocks && blocks.length > 0
 
     return (
         <div className="flex flex-col gap-2 animate-in fade-in duration-500 font-sans w-full">
@@ -125,109 +123,219 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     )}
                 </div>
 
-                {/* 1. thinking phase collapsible block */}
-                {showThinking && activeThoughtsText.trim().length > 0 && (
-                    <div className="space-y-1.5">
-                        <button
-                            type="button"
-                            onClick={() => setIsThoughtsOpen(!isThoughtsOpen)}
-                            className="flex items-center gap-1.5 text-[11px] text-[#8E8D8C] hover:text-[#C4C3C2] transition-colors cursor-pointer select-none"
-                        >
-                            <ChevronDown
-                                size={12}
-                                className={cn(
-                                    'transition-transform duration-200',
-                                    isThoughtsOpen ? 'rotate-0' : '-rotate-90'
-                                )}
-                            />
-                            <span className="font-medium">
-                                {isThinkingPhase && !plan ? 'Thinking' : 'Thoughts'}
-                            </span>
-                            {thoughtTokenCount > 0 && (
-                                <span className="text-[10px] text-[#636261] font-mono">
-                                    ({thoughtTokenCount} tokens)
-                                </span>
-                            )}
-                        </button>
-
-                        <AnimatePresence initial={false}>
-                            {isThoughtsOpen && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="flex gap-3 pl-0.5">
-                                        <div className="w-[1.5px] bg-[#2E2D2C] rounded shrink-0 self-stretch" />
-                                        <div className="text-[12.5px] leading-relaxed text-[#8E8D8C] font-sans select-text py-0.5 space-y-2">
-                                            {renderRichContent(activeThoughtsText, true)}
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                )}
-
-                {/* 2. plan of action (normal text, streamed) */}
-                {showPlan && displayedPlan.trim().length > 0 && (
-                    <div className="space-y-2.5 animate-in fade-in duration-300 w-full">
-                        {renderRichContent(displayedPlan)}
-                    </div>
-                )}
-
-                {/* 3. edited files container */}
-                {showFiles && (
-                    <div className="mt-2 pl-0.5 animate-in fade-in duration-300">
-                        <div className="flex items-center gap-2 text-[#91908F] mb-1.5">
-                            <span className="text-[11px] font-medium">
-                                {isBuildingPhase
-                                    ? `Editing ${totalFiles} files`
-                                    : `Edited ${totalFiles} files`}
-                            </span>
-                        </div>
-                        <div className="bg-[#1C1C1C] border border-white/5 rounded-lg overflow-hidden w-full max-w-md divide-y divide-white/5">
-                            {filesArray.map((file) => {
-                                const isFileBuilding = file.status === 'building'
-
+                {/* Structured Multi-Block Execution View */}
+                {hasBlocks ? (
+                    <div className="flex flex-col gap-2 w-full">
+                        {blocks.map((block, bIdx) => {
+                            if (block.type === 'thinking') {
+                                const blockWords = block.content.trim()
+                                    ? block.content.trim().split(/\s+/).length
+                                    : 0
+                                const blockTokens = Math.max(0, Math.round(blockWords * 1.33))
                                 return (
-                                    <div
-                                        key={file.path}
-                                        onClick={() => onOpenFile?.(file.path)}
-                                        className={cn(
-                                            'flex items-center justify-between px-3 py-1.5 hover:bg-white/5 transition-colors cursor-pointer'
-                                        )}
-                                    >
-                                        <span className="text-[11px] text-[#D4D4D8] font-mono opacity-80 truncate">
-                                            {file.path}
-                                        </span>
-                                        <div className="shrink-0 ml-2">
-                                            {isFileBuilding ? (
-                                                <Loader2
-                                                    size={12}
-                                                    className="text-[#91908F] animate-spin"
-                                                />
-                                            ) : (
-                                                <CheckCircle2
-                                                    size={12}
-                                                    className="text-emerald-500"
-                                                />
+                                    <div key={bIdx} className="space-y-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsThoughtsOpen(!isThoughtsOpen)}
+                                            className="flex items-center gap-1.5 text-[11px] text-[#8E8D8C] hover:text-[#C4C3C2] transition-colors cursor-pointer select-none"
+                                        >
+                                            <ChevronDown
+                                                size={12}
+                                                className={cn(
+                                                    'transition-transform duration-200',
+                                                    isThoughtsOpen ? 'rotate-0' : '-rotate-90'
+                                                )}
+                                            />
+                                            <span className="font-medium">
+                                                {isThinkingPhase ? 'Thinking' : 'Thoughts'}
+                                            </span>
+                                            {blockTokens > 0 && (
+                                                <span className="text-[10px] text-[#636261] font-mono">
+                                                    ({blockTokens} tokens)
+                                                </span>
                                             )}
-                                        </div>
+                                        </button>
+
+                                        <AnimatePresence initial={false}>
+                                            {isThoughtsOpen && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.2 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className="flex gap-3 pl-0.5">
+                                                        <div className="w-[1.5px] bg-[#2E2D2C] rounded shrink-0 self-stretch" />
+                                                        <div className="text-[12.5px] leading-relaxed text-[#8E8D8C] font-sans select-text py-0.5 space-y-2">
+                                                            {renderRichContent(block.content, true)}
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 )
-                            })}
-                        </div>
-                    </div>
-                )}
+                            }
 
-                {/* 4. main text / summary content (streamed response) */}
-                {displayedContent.trim().length > 0 && (
-                    <div className="space-y-3 pt-1 animate-in fade-in duration-300 w-full select-text">
-                        {renderRichContent(displayedContent)}
+                            if (block.type === 'command') {
+                                return (
+                                    <ToolCallCard
+                                        key={block.toolCallId || bIdx}
+                                        toolCallId={block.toolCallId}
+                                        toolName={block.toolName}
+                                        toolInput={block.toolInput}
+                                        status={block.status}
+                                        output={block.output}
+                                    />
+                                )
+                            }
+
+                            if (block.type === 'file_change') {
+                                return (
+                                    <FileChangeBadge
+                                        key={`${block.filePath}-${bIdx}`}
+                                        filePath={block.filePath}
+                                        action={block.action}
+                                        diff={block.diff}
+                                        onOpenFile={onOpenFile}
+                                    />
+                                )
+                            }
+
+                            if (block.type === 'text') {
+                                return (
+                                    <div
+                                        key={bIdx}
+                                        className="space-y-3 pt-1 animate-in fade-in duration-300 w-full select-text"
+                                    >
+                                        {renderRichContent(block.content)}
+                                    </div>
+                                )
+                            }
+
+                            if (block.type === 'error') {
+                                return (
+                                    <div
+                                        key={bIdx}
+                                        className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-sans select-text"
+                                    >
+                                        {block.error}
+                                    </div>
+                                )
+                            }
+
+                            return null
+                        })}
                     </div>
+                ) : (
+                    <>
+                        {/* Fallback Unstructured Block View */}
+                        {/* 1. thinking phase collapsible block */}
+                        {showThinking && activeThoughtsText.trim().length > 0 && (
+                            <div className="space-y-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsThoughtsOpen(!isThoughtsOpen)}
+                                    className="flex items-center gap-1.5 text-[11px] text-[#8E8D8C] hover:text-[#C4C3C2] transition-colors cursor-pointer select-none"
+                                >
+                                    <ChevronDown
+                                        size={12}
+                                        className={cn(
+                                            'transition-transform duration-200',
+                                            isThoughtsOpen ? 'rotate-0' : '-rotate-90'
+                                        )}
+                                    />
+                                    <span className="font-medium">
+                                        {isThinkingPhase && !plan ? 'Thinking' : 'Thoughts'}
+                                    </span>
+                                    {thoughtTokenCount > 0 && (
+                                        <span className="text-[10px] text-[#636261] font-mono">
+                                            ({thoughtTokenCount} tokens)
+                                        </span>
+                                    )}
+                                </button>
+
+                                <AnimatePresence initial={false}>
+                                    {isThoughtsOpen && (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="flex gap-3 pl-0.5">
+                                                <div className="w-[1.5px] bg-[#2E2D2C] rounded shrink-0 self-stretch" />
+                                                <div className="text-[12.5px] leading-relaxed text-[#8E8D8C] font-sans select-text py-0.5 space-y-2">
+                                                    {renderRichContent(activeThoughtsText, true)}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
+
+                        {/* 2. plan of action (normal text, streamed) */}
+                        {showPlan && displayedPlan.trim().length > 0 && (
+                            <div className="space-y-2.5 animate-in fade-in duration-300 w-full">
+                                {renderRichContent(displayedPlan)}
+                            </div>
+                        )}
+
+                        {/* 3. edited files container */}
+                        {showFiles && (
+                            <div className="mt-2 pl-0.5 animate-in fade-in duration-300">
+                                <div className="flex items-center gap-2 text-[#91908F] mb-1.5">
+                                    <span className="text-[11px] font-medium">
+                                        {isBuildingPhase
+                                            ? `Editing ${totalFiles} files`
+                                            : `Edited ${totalFiles} files`}
+                                    </span>
+                                </div>
+                                <div className="bg-[#1C1C1C] border border-white/5 rounded-lg overflow-hidden w-full max-w-md divide-y divide-white/5">
+                                    {filesArray.map((file) => {
+                                        const isFileBuilding = file.status === 'building'
+
+                                        return (
+                                            <div
+                                                key={file.path}
+                                                onClick={() => onOpenFile?.(file.path)}
+                                                className={cn(
+                                                    'flex items-center justify-between px-3 py-1.5 hover:bg-white/5 transition-colors cursor-pointer'
+                                                )}
+                                            >
+                                                <span className="text-[11px] text-[#D4D4D8] font-mono opacity-80 truncate">
+                                                    {file.path}
+                                                </span>
+                                                <div className="shrink-0 ml-2">
+                                                    {isFileBuilding ? (
+                                                        <Loader2
+                                                            size={12}
+                                                            className="text-[#91908F] animate-spin"
+                                                        />
+                                                    ) : (
+                                                        <CheckCircle2
+                                                            size={12}
+                                                            className="text-emerald-500"
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* 4. main text / summary content (streamed response) */}
+                        {displayedContent.trim().length > 0 && (
+                            <div className="space-y-3 pt-1 animate-in fade-in duration-300 w-full select-text">
+                                {renderRichContent(displayedContent)}
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* 5. sleek white actions footer + restore button */}

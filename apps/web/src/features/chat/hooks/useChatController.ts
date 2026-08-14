@@ -45,6 +45,10 @@ export const useChatController = (
         appendAssistantChunk,
         appendThinkingChunk,
         appendStreamChunk,
+        addToolCallBlock,
+        appendToolCallOutput,
+        updateToolCallResult,
+        addFileChangeBlock,
         setAssistantStatusMessage,
         setAssistantStatus,
         setAssistantError,
@@ -197,6 +201,49 @@ export const useChatController = (
                                         appendStreamChunk(activeMessageId, event.data.content)
                                     }
                                     return
+                                case 'ToolCallStart':
+                                    setGenerationPhase('building')
+                                    setAssistantStatus(activeMessageId, 'building')
+                                    if (event.data?.toolCall) {
+                                        addToolCallBlock(activeMessageId, {
+                                            toolCallId:
+                                                event.data.toolCall.id || `tool-${Date.now()}`,
+                                            toolName: event.data.toolCall.name || 'tool',
+                                            toolInput:
+                                                event.data.toolCall.input ||
+                                                event.data.toolCall.args ||
+                                                {},
+                                            status: 'running',
+                                            output: '',
+                                        })
+                                    }
+                                    return
+                                case 'ToolExecutionUpdate':
+                                    if (event.data?.toolCallId && event.data?.chunk) {
+                                        appendToolCallOutput(
+                                            activeMessageId,
+                                            event.data.toolCallId,
+                                            event.data.chunk
+                                        )
+                                    }
+                                    return
+                                case 'ToolCallResult':
+                                    if (event.data?.result) {
+                                        updateToolCallResult(activeMessageId, {
+                                            toolCallId:
+                                                event.data.result.toolCallId ||
+                                                event.data.toolCallId,
+                                            status: event.data.result.error ? 'error' : 'success',
+                                            output:
+                                                event.data.result.output ||
+                                                event.data.result.content ||
+                                                (typeof event.data.result === 'string'
+                                                    ? event.data.result
+                                                    : ''),
+                                            error: event.data.result.error,
+                                        })
+                                    }
+                                    return
                                 case 'TurnEnd':
                                 case 'AgentEnd':
                                     setGenerationPhase('done')
@@ -317,6 +364,10 @@ export const useChatController = (
             appendAssistantChunk,
             appendThinkingChunk,
             appendStreamChunk,
+            addToolCallBlock,
+            appendToolCallOutput,
+            updateToolCallResult,
+            addFileChangeBlock,
             setAssistantStatusMessage,
             appendGeneratedFileChunk,
             completeGeneratedFile,
@@ -470,6 +521,47 @@ export const useChatController = (
                                     setGenerationPhase('building')
                                     setAssistantStatus(activeMessageId, 'building')
                                     appendStreamChunk(activeMessageId, event.data.content)
+                                }
+                                return
+                            case 'ToolCallStart':
+                                setGenerationPhase('building')
+                                setAssistantStatus(activeMessageId, 'building')
+                                if (event.data?.toolCall) {
+                                    addToolCallBlock(activeMessageId, {
+                                        toolCallId: event.data.toolCall.id || `tool-${Date.now()}`,
+                                        toolName: event.data.toolCall.name || 'tool',
+                                        toolInput:
+                                            event.data.toolCall.input ||
+                                            event.data.toolCall.args ||
+                                            {},
+                                        status: 'running',
+                                        output: '',
+                                    })
+                                }
+                                return
+                            case 'ToolExecutionUpdate':
+                                if (event.data?.toolCallId && event.data?.chunk) {
+                                    appendToolCallOutput(
+                                        activeMessageId,
+                                        event.data.toolCallId,
+                                        event.data.chunk
+                                    )
+                                }
+                                return
+                            case 'ToolCallResult':
+                                if (event.data?.result) {
+                                    updateToolCallResult(activeMessageId, {
+                                        toolCallId:
+                                            event.data.result.toolCallId || event.data.toolCallId,
+                                        status: event.data.result.error ? 'error' : 'success',
+                                        output:
+                                            event.data.result.output ||
+                                            event.data.result.content ||
+                                            (typeof event.data.result === 'string'
+                                                ? event.data.result
+                                                : ''),
+                                        error: event.data.result.error,
+                                    })
                                 }
                                 return
                             case 'TurnEnd':
@@ -629,6 +721,10 @@ export const useChatController = (
             appendAssistantChunk,
             appendThinkingChunk,
             appendStreamChunk,
+            addToolCallBlock,
+            appendToolCallOutput,
+            updateToolCallResult,
+            addFileChangeBlock,
             setAssistantStatusMessage,
             appendGeneratedFileChunk,
             completeGeneratedFile,

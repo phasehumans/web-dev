@@ -1,7 +1,28 @@
+export type MessageBlock =
+    | { type: 'thinking'; content: string; isStreaming?: boolean }
+    | {
+          type: 'command'
+          toolCallId: string
+          toolName: string
+          toolInput?: any
+          status: 'running' | 'success' | 'error'
+          output?: string
+      }
+    | {
+          type: 'file_change'
+          filePath: string
+          action: 'created' | 'modified' | 'deleted'
+          diff?: string
+      }
+    | { type: 'text'; content: string }
+    | { type: 'status'; label: string; success: boolean }
+    | { type: 'error'; error: string }
+
 export interface Message {
     id: string
     role: 'user' | 'assistant' | 'system'
     content: string
+    blocks?: MessageBlock[]
     thoughts?: string
     plan?: string
     summary?: string
@@ -23,6 +44,7 @@ export interface SelectedElement {
 export interface ChatMessageProps {
     role: 'user' | 'assistant'
     content: string
+    blocks?: MessageBlock[]
     thoughts?: string
     plan?: string
     summary?: string

@@ -135,6 +135,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                         id={msg.id}
                         role={msg.role === 'system' ? 'assistant' : msg.role}
                         content={msg.content}
+                        blocks={msg.blocks}
                         thoughts={msg.thoughts}
                         plan={msg.plan}
                         summary={msg.summary}

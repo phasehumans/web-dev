@@ -91,6 +91,7 @@ export type GenerationStreamEvent =
           type: 'ToolCallResult'
           data: {
               result: any
+              toolCallId?: string
           }
       }
     | {
