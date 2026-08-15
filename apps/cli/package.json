@@ -1,6 +1,6 @@
 {
     "name": "@trydecember/cli",
-    "version": "0.3.7",
+    "version": "0.3.8",
     "description": "AI coding agent that runs in your terminal and the cloud.",
     "homepage": "https://trydecember.com",
     "repository": {

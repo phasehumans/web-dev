@@ -1,10 +1,29 @@
 ## [unreleased]
 
+### Features
+
+- _(web)_ Native agent stream & live thought reasoning display
+- _(web)_ Interactive tool call cards & execution diffs
+- _(worker)_ Automated multi-turn message persistence & s3 workspace sync
+- _(web)_ Align web chat with cli and changes workspace (#388, #389, #390, #391)
+
+### Bug Fixes
+
+- _(template)_ Fix line and mail templates
+- _(workspace)_ Fix workspace stream and ui
+- _(workspace)_ Fix workspace stream and ui (#392)
+
+## [0.3.7] - 2026-08-13
+
 ### Bug Fixes
 
 - Update license MIT
 - _(workspace)_ Fix workspace ui and add searchspace
 - _(workspace)_ Fix workspace ui and add searchspace (#380)
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.7
 
 ## [0.3.6] - 2026-08-12
 
