@@ -6,6 +6,15 @@ const escapeShellArg = (arg: string): string => {
     return `'${arg.replace(/'/g, "'\\''")}'`
 }
 
+const resolveWorkspacePath = (rawPath: string): string => {
+    const trimmed = rawPath.trim()
+    if (!trimmed || trimmed === '.' || trimmed === './') return '/workspace'
+    if (trimmed.startsWith('/workspace')) return trimmed
+    const stripped = trimmed.replace(/^\/+/, '')
+    if (stripped.startsWith('workspace/')) return `/${stripped}`
+    return `/workspace/${stripped}`
+}
+
 export class RemotePlatformAdapter implements PlatformAdapter {
     private modifiedFiles: Record<string, string> = {}
 
@@ -38,30 +47,35 @@ export class RemotePlatformAdapter implements PlatformAdapter {
 
     fs = {
         readFile: async (filepath: string) => {
-            console.log(`[AGENT REMOTE TOOL] VM '${this.vmId}' reading file: ${filepath}`)
-            const { exitCode, output } = await this.bash.exec(`cat ${escapeShellArg(filepath)}`)
-            if (exitCode !== 0) throw new Error(`Failed to read file ${filepath}: ${output}`)
+            const targetPath = resolveWorkspacePath(filepath)
+            console.log(`[AGENT REMOTE TOOL] VM '${this.vmId}' reading file: ${targetPath}`)
+            const { exitCode, output } = await this.bash.exec(`cat ${escapeShellArg(targetPath)}`)
+            if (exitCode !== 0) throw new Error(`Failed to read file ${targetPath}: ${output}`)
             return output
         },
         writeFile: async (filepath: string, content: string) => {
+            const targetPath = resolveWorkspacePath(filepath)
             console.log(
-                `[AGENT REMOTE TOOL] VM '${this.vmId}' writing file: ${filepath} (${content.length} bytes)`
+                `[AGENT REMOTE TOOL] VM '${this.vmId}' writing file: ${targetPath} (${content.length} bytes)`
             )
             const base64Content = Buffer.from(content).toString('base64')
-            await this.bash.exec(`mkdir -p "$(dirname ${escapeShellArg(filepath)})"`)
+            await this.bash.exec(`mkdir -p "$(dirname ${escapeShellArg(targetPath)})"`)
             const { exitCode, output } = await this.bash.exec(
-                `echo ${escapeShellArg(base64Content)} | base64 -d > ${escapeShellArg(filepath)}`
+                `echo ${escapeShellArg(base64Content)} | base64 -d > ${escapeShellArg(targetPath)}`
             )
-            if (exitCode !== 0) throw new Error(`Failed to write file ${filepath}: ${output}`)
+            if (exitCode !== 0) throw new Error(`Failed to write file ${targetPath}: ${output}`)
 
-            const relPath = filepath.startsWith('/workspace/')
-                ? filepath.replace('/workspace/', '')
-                : filepath.replace(/^\//, '')
+            const relPath = targetPath.startsWith('/workspace/')
+                ? targetPath.replace('/workspace/', '')
+                : targetPath.replace(/^\//, '')
             this.modifiedFiles[relPath] = content
         },
         readdir: async (dirPath: string) => {
-            const { exitCode, output } = await this.bash.exec(`ls -1p ${escapeShellArg(dirPath)}`)
-            if (exitCode !== 0) throw new Error(`Failed to read dir ${dirPath}: ${output}`)
+            const targetPath = resolveWorkspacePath(dirPath)
+            const { exitCode, output } = await this.bash.exec(
+                `ls -1p ${escapeShellArg(targetPath)}`
+            )
+            if (exitCode !== 0) throw new Error(`Failed to read dir ${targetPath}: ${output}`)
             return output
                 .split('\n')
                 .filter(Boolean)
@@ -71,14 +85,16 @@ export class RemotePlatformAdapter implements PlatformAdapter {
                 })
         },
         mkdir: async (dirPath: string, options?: { recursive?: boolean }) => {
+            const targetPath = resolveWorkspacePath(dirPath)
             const flag = options?.recursive ? '-p ' : ''
             const { exitCode, output } = await this.bash.exec(
-                `mkdir ${flag}${escapeShellArg(dirPath)}`
+                `mkdir ${flag}${escapeShellArg(targetPath)}`
             )
-            if (exitCode !== 0) throw new Error(`Failed to mkdir ${dirPath}: ${output}`)
+            if (exitCode !== 0) throw new Error(`Failed to mkdir ${targetPath}: ${output}`)
         },
         exists: async (filepath: string) => {
-            const { exitCode } = await this.bash.exec(`test -e ${escapeShellArg(filepath)}`)
+            const targetPath = resolveWorkspacePath(filepath)
+            const { exitCode } = await this.bash.exec(`test -e ${escapeShellArg(targetPath)}`)
             return exitCode === 0
         },
     }

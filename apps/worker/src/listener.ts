@@ -138,7 +138,9 @@ export async function processGrpcStream(sessionId: string, stream: any, sandbox?
 
             // publish to socket rooms if redis is connected
             if (redisPub.status === 'ready') {
-                await redisPub.publish(`session_events:${sessionId}`, event.data).catch(() => {})
+                await redisPub.publish(`session_events:${sessionId}`, event.data).catch(() => {
+                    // Intentionally swallowed: Suppress Redis publish failure during offline/test execution
+                })
             }
 
             const eventType = parsedEvent.type

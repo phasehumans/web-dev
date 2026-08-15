@@ -99,3 +99,8 @@ export type ProxyPreview = {
     port: number
     reqPath?: string
 }
+
+export type LoadSessionFiles = {
+    sessionId: string
+    userId?: string
+}

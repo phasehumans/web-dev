@@ -28,9 +28,14 @@ import type {
     GetCollaborators,
     AddCollaborator,
     RemoveCollaborator,
+    DisconnectSession,
+    RehydrateSession,
+    ProxyPreview,
+    LoadSessionFiles,
 } from './session.types'
 
-const loadSessionFiles = async (sessionId: string) => {
+const loadSessionFiles = async (data: LoadSessionFiles) => {
+    const { sessionId } = data
     const prefix = sessionWorkspacePrefix(sessionId)
     const objects = await listPrefix(prefix)
     const files: Record<string, string> = {}
@@ -179,7 +184,7 @@ const getSession = async (data: GetSession) => {
     const session = await sessionRepository.findSessionById(sessionId, userId)
     if (!session) throw new AppError('Session not found', 404)
 
-    const generatedFiles = await loadSessionFiles(sessionId)
+    const generatedFiles = await loadSessionFiles({ sessionId })
 
     let canvasState = null
     try {
@@ -250,7 +255,7 @@ const getSessionInsights = async (data: GetSessionInsights) => {
         throw new AppError('Session not found', 404)
     }
 
-    const files = await loadSessionFiles(sessionId)
+    const files = await loadSessionFiles({ sessionId })
     const fileCount = Object.keys(files).length
 
     const totalMessages = session.messages.length
@@ -395,7 +400,7 @@ const removeCollaborator = async (data: RemoveCollaborator) => {
     return { message: 'Collaborator removed successfully' }
 }
 
-const rehydrateSession = async (data: import('./session.types').RehydrateSession) => {
+const rehydrateSession = async (data: RehydrateSession) => {
     const { userId, sessionId } = data
     const session = await sessionRepository.findSessionById(sessionId, userId)
     if (!session) {
@@ -409,7 +414,7 @@ const rehydrateSession = async (data: import('./session.types').RehydrateSession
 
     let fileTree: Record<string, string> = {}
     try {
-        fileTree = await loadSessionFiles(sessionId)
+        fileTree = await loadSessionFiles({ sessionId })
     } catch {
         // Intentionally swallowed: storage fallback if workspace zip not yet uploaded
     }
@@ -422,7 +427,7 @@ const rehydrateSession = async (data: import('./session.types').RehydrateSession
     }
 }
 
-const disconnectSession = async (data: import('./session.types').DisconnectSession) => {
+const disconnectSession = async (data: DisconnectSession) => {
     const { userId, sessionId } = data
     const session = await sessionRepository.findSessionById(sessionId, userId)
     if (!session) {
@@ -435,7 +440,9 @@ const disconnectSession = async (data: import('./session.types').DisconnectSessi
             maxRetriesPerRequest: 1,
             enableOfflineQueue: false,
         })
-        redisPub.on('error', () => {})
+        redisPub.on('error', () => {
+            // Intentionally swallowed: Suppress Redis offline error noise during tests/fallback
+        })
         if (redisPub.status === 'ready') {
             await redisPub
                 .publish(
@@ -446,7 +453,9 @@ const disconnectSession = async (data: import('./session.types').DisconnectSessi
                         timestamp: Date.now(),
                     })
                 )
-                .catch(() => {})
+                .catch(() => {
+                    // Intentionally swallowed: Fallback during offline Redis test runs
+                })
         }
         redisPub.disconnect()
     } catch {
@@ -456,7 +465,7 @@ const disconnectSession = async (data: import('./session.types').DisconnectSessi
     return { message: 'Disconnect signal received and grace period started' }
 }
 
-const proxyPreview = async (data: import('./session.types').ProxyPreview) => {
+const proxyPreview = async (data: ProxyPreview) => {
     const { userId, sessionId, port, reqPath } = data
     const session = await sessionRepository.findSessionById(sessionId, userId)
     if (!session) {

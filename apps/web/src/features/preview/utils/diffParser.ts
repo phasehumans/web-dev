@@ -33,19 +33,23 @@ export interface TreeNode {
 }
 
 export function parseDiffChunks(targetContent?: string, replacementContent?: string): string {
-    const target = (targetContent || '')
-        .split(/\r?\n/)
-        .filter(Boolean)
-        .map((l) => (l.startsWith('-') ? l : `-${l}`))
-        .join('\n')
+    const target =
+        targetContent !== undefined && targetContent !== ''
+            ? targetContent
+                  .split(/\r?\n/)
+                  .map((l) => (l.startsWith('-') ? l : `-${l}`))
+                  .join('\n')
+            : ''
 
-    const replacement = (replacementContent || '')
-        .split(/\r?\n/)
-        .filter(Boolean)
-        .map((l) => (l.startsWith('+') ? l : `+${l}`))
-        .join('\n')
+    const replacement =
+        replacementContent !== undefined && replacementContent !== ''
+            ? replacementContent
+                  .split(/\r?\n/)
+                  .map((l) => (l.startsWith('+') ? l : `+${l}`))
+                  .join('\n')
+            : ''
 
-    return [target, replacement].filter(Boolean).join('\n')
+    return [target, replacement].filter((s) => s.length > 0).join('\n')
 }
 
 export function extractDiffStats(diffText: string): { additions: number; deletions: number } {
@@ -68,8 +72,8 @@ export function parseDiffLines(diffText: string): DiffLine[] {
     const rawLines = diffText.split(/\r?\n/)
     const result: DiffLine[] = []
 
-    let oldLineNum = 58
-    let newLineNum = 58
+    let oldLineNum = 1
+    let newLineNum = 1
 
     for (const line of rawLines) {
         if (line.startsWith('@@')) {
@@ -510,10 +514,6 @@ export function extractSessionFileDiffs(messages: Message[]): ParsedFileDiff[] {
                 }
             }
         }
-    }
-
-    if (diffMap.size === 0) {
-        return SAMPLE_FILE_DIFFS
     }
 
     return Array.from(diffMap.values())
