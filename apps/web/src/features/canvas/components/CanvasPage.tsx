@@ -1,13 +1,12 @@
 import React, { useRef } from 'react'
 
+import { useAppStore } from '@/app/store'
 import Canvas, { type CanvasRef } from '@/features/canvas/components/Canvas'
 
 interface CanvasPageProps {
     onBack?: () => void
     onOpenAuth?: () => void
 }
-
-import { useAppStore } from '@/app/store'
 
 export const CanvasPage: React.FC<CanvasPageProps> = ({ onBack, onOpenAuth }) => {
     const {

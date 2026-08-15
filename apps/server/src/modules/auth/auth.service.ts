@@ -61,7 +61,7 @@ const signup = async (data: Signup) => {
             otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
         })
 
-        await sendOTP(existingUser.email, otp)
+        await sendOTP(existingUser.email, otp, 'signup')
 
         return { message: 'otp sent successfully' }
     }
@@ -87,7 +87,7 @@ const signup = async (data: Signup) => {
         otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     })
 
-    await sendOTP(newUser.email, otp)
+    await sendOTP(newUser.email, otp, 'signup')
 
     return { message: 'otp sent successfully' }
 }
@@ -252,7 +252,7 @@ const requestPasswordReset = async (data: RequestPasswordReset) => {
         otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     })
 
-    await sendOTP(user.email, otp)
+    await sendOTP(user.email, otp, 'password_reset')
 }
 
 const verifyPasswordResetOtp = async (data: VerifyPasswordResetOtp) => {

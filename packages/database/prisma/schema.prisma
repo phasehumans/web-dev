@@ -269,6 +269,7 @@ model Message {
   content   String
   status    String?
   sequence  Int
+  blocks    Json?
   sessionId String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt

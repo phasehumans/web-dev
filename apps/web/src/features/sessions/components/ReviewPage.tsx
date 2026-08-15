@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 
 import { reviewAPI, type PullRequestReview } from '../../review/api/review'
-import { ReviewDetailView } from '../../review/components/ReviewDetailView'
 import { ReviewPreferencesDrawer } from '../../review/components/ReviewPreferencesDrawer'
 import { useSessions } from '../hooks/useSessions'
 
@@ -11,14 +10,17 @@ import { Icons } from '@/shared/components/ui/Icons'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { Tooltip } from '@/shared/components/ui/Tooltip'
 
-export const ReviewPage: React.FC = () => {
+interface ReviewPageProps {
+    onNewProject?: () => void
+}
+
+export const ReviewPage: React.FC<ReviewPageProps> = () => {
     const [prUrl, setPrUrl] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState<string | null>(null)
 
     const [reviews, setReviews] = useState<PullRequestReview[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const [selectedReview, setSelectedReview] = useState<PullRequestReview | null>(null)
     const [isPreferencesOpen, setIsPreferencesOpen] = useState(false)
 
     const [searchQuery, setSearchQuery] = useState('')
@@ -79,6 +81,17 @@ export const ReviewPage: React.FC = () => {
         return () => clearInterval(interval)
     }, [reviews, fetchReviews])
 
+    const handleOpenPrInGithub = (review: PullRequestReview) => {
+        const url =
+            review.prUrl ||
+            (review.repository && review.prNumber
+                ? `https://github.com/${review.repository}/pull/${review.prNumber}`
+                : undefined)
+        if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer')
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!prUrl.trim() || isSubmitting) return
@@ -87,13 +100,11 @@ export const ReviewPage: React.FC = () => {
         setSubmitError(null)
 
         try {
-            const newReview = await reviewAPI.submitReview(prUrl.trim())
+            await reviewAPI.submitReview(prUrl.trim())
+            const submittedUrl = prUrl.trim()
             setPrUrl('')
             fetchReviews()
-            if (newReview) {
-                const item = (newReview as any).data || newReview
-                setSelectedReview(item)
-            }
+            window.open(submittedUrl, '_blank', 'noopener,noreferrer')
         } catch (err: any) {
             setSubmitError(err.message || 'Failed to submit PR for review')
         } finally {
@@ -146,28 +157,6 @@ export const ReviewPage: React.FC = () => {
         return `${prefix} on ${weekday}, ${month} ${day}, ${year} at ${time}`
     }
 
-    // In-place Full Review Detail View
-    if (selectedReview) {
-        const rawSessionTitle =
-            selectedReview?.sessionId && Array.isArray(sessions)
-                ? sessions.find((s) => s && s.id === selectedReview.sessionId)?.title ||
-                  sessions.find((s) => s && s.id === selectedReview.sessionId)?.projectName
-                : undefined
-
-        return (
-            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16">
-                <div className="relative z-10 mx-auto max-w-6xl">
-                    <ReviewDetailView
-                        review={selectedReview}
-                        onBack={() => setSelectedReview(null)}
-                        sessionTitle={rawSessionTitle}
-                        onOpenPreferences={() => setIsPreferencesOpen(true)}
-                    />
-                </div>
-            </div>
-        )
-    }
-
     return (
         <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16">
             <div className="relative z-10 mx-auto max-w-6xl">
@@ -200,7 +189,7 @@ export const ReviewPage: React.FC = () => {
                         <button
                             type="submit"
                             disabled={!prUrl.trim() || isSubmitting}
-                            className="rounded-lg border border-[#383736] bg-[#242323] hover:bg-[#2C2B2B] hover:text-white text-[#D6D5C9] text-[13px] font-medium px-4 py-2 transition-colors disabled:opacity-40 disabled:pointer-events-none flex items-center shrink-0 justify-center min-w-[100px]"
+                            className="rounded-lg border border-[#383736] bg-[#242323] hover:bg-[#2C2B2B] hover:text-white text-[#D6D5C9] text-[13px] font-medium px-4 py-2 transition-colors disabled:opacity-40 disabled:pointer-events-none flex items-center shrink-0 justify-center min-w-[100px] cursor-pointer"
                         >
                             {isSubmitting ? (
                                 <div className="flex items-center gap-2">
@@ -341,7 +330,7 @@ export const ReviewPage: React.FC = () => {
                                 return (
                                     <div
                                         key={review.id}
-                                        onClick={() => setSelectedReview(review)}
+                                        onClick={() => handleOpenPrInGithub(review)}
                                         className="group relative grid cursor-pointer grid-cols-[minmax(0,1fr)_minmax(85px,auto)_minmax(100px,auto)_minmax(100px,auto)_minmax(100px,auto)] items-center gap-3 md:gap-5 rounded-lg border border-transparent px-3 py-2.5 transition-all duration-200 hover:bg-[#191919]"
                                     >
                                         {/* PR Title & Summary Description */}

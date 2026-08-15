@@ -1,6 +1,6 @@
 import util from 'util'
 export function parseErrorMessage(err: any): string {
-    let errMsg = ''
+    let errMsg: string
     try {
         errMsg = err?.message || String(err)
         if (typeof errMsg !== 'string') {

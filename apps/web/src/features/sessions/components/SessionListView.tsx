@@ -27,7 +27,6 @@ interface SessionListViewProps {
     onOpenRename: (project: any, event: React.MouseEvent) => void
     onOpenShare: (project: any, event: React.MouseEvent) => void
     onOpenDelete: (project: any, event: React.MouseEvent) => void
-    onOpenSettings: (project: any, event: React.MouseEvent) => void
     onOpenTags: (project: any, event: React.MouseEvent) => void
     onOpenInsights: (project: any, event: React.MouseEvent) => void
     searchQuery: string
@@ -105,7 +104,7 @@ const EmptySessionsState: React.FC = () => {
 
             <h2 className="text-[17px] font-medium text-[#D6D5C9]">No sessions</h2>
             <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#7B7A79]">
-                Sessions you create or launch will appear here.
+                Your recent sessions will appear here.
             </p>
         </div>
     )
@@ -168,7 +167,6 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
     onOpenDuplicate,
     onOpenShare,
     onOpenDelete,
-    onOpenSettings,
     onOpenTags,
     onOpenInsights,
     searchQuery,
@@ -322,7 +320,6 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
                                     onOpenRename={onOpenRename}
                                     onOpenShare={onOpenShare}
                                     onOpenDelete={onOpenDelete}
-                                    onOpenSettings={onOpenSettings}
                                     onOpenTags={onOpenTags}
                                     onOpenInsights={onOpenInsights}
                                 />

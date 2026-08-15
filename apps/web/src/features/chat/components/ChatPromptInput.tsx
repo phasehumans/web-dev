@@ -10,7 +10,10 @@ export const ChatPromptInput: React.FC<Partial<ChatPromptInputProps> & Record<st
     props
 ) => {
     const value = props.value ?? props.editPrompt ?? ''
-    const onChange = props.onChange ?? props.setEditPrompt ?? (() => {})
+    const onChange = React.useMemo(
+        () => props.onChange ?? props.setEditPrompt ?? (() => {}),
+        [props.onChange, props.setEditPrompt]
+    )
     const onSubmit = props.onSubmit ?? props.handleApplyEdit ?? (() => {})
     const { selectedElement, onClearSelection, isApplyingEdit, isAuthenticated, onOpenAuth } = props
 

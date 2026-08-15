@@ -41,6 +41,10 @@ export const useChatMessageController = ({
     const planText = plan || ''
     const summaryText = summary || ''
 
+    const thoughtWords = (thoughts || '').trim() ? (thoughts || '').trim().split(/\s+/).length : 0
+    const thoughtTokenCount = Math.max(0, Math.round(thoughtWords * 1.33))
+    const displayedContent = content || (summaryText ? displayedSummary : '')
+
     React.useEffect(() => {
         if (shouldForceStream) return
 
@@ -148,6 +152,8 @@ export const useChatMessageController = ({
         displayedPlan,
         displayedThoughts,
         displayedSummary,
+        displayedContent,
+        thoughtTokenCount,
         isStreamFinished,
         isThinkingPhase,
         thinkingText,

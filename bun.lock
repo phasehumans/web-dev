@@ -4,6 +4,11 @@
   "workspaces": {
     "": {
       "name": "december",
+      "dependencies": {
+        "crelt": "^1.0.7",
+        "style-mod": "^4.1.3",
+        "w3c-keyname": "^2.2.8",
+      },
       "devDependencies": {
         "@commitlint/cli": "^21.0.1",
         "@commitlint/config-conventional": "^21.0.1",
@@ -39,7 +44,7 @@
     },
     "apps/cli": {
       "name": "@trydecember/cli",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "bin": {
         "december": "./dist/december.js",
       },
@@ -64,7 +69,7 @@
     },
     "apps/server": {
       "name": "@december/server",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.1014.0",
         "@aws-sdk/s3-request-presigner": "3.1086.0",
@@ -126,13 +131,15 @@
     },
     "apps/web": {
       "name": "@december/web",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
+        "@codemirror/autocomplete": "^6.20.3",
         "@codemirror/commands": "^6.10.3",
         "@codemirror/lang-css": "^6.3.1",
         "@codemirror/lang-html": "^6.4.11",
         "@codemirror/lang-javascript": "^6.2.4",
         "@codemirror/language": "^6.11.3",
+        "@codemirror/search": "^6.7.1",
         "@codemirror/state": "^6.5.2",
         "@codemirror/view": "^6.38.6",
         "@google/genai": "^1.41.0",
@@ -146,14 +153,18 @@
         "bun-plugin-tailwind": "^0.1.2",
         "clsx": "2.1.0",
         "codemirror": "^6.0.2",
+        "crelt": "^1.0.7",
         "dotenv": "^17.3.1",
         "framer-motion": "11.0.8",
         "lucide-react": "0.344.0",
+        "prettier": "^3.9.6",
         "react": "18.2.0",
         "react-dom": "18.2.0",
         "react-router-dom": "^7.15.1",
         "socket.io-client": "4.8.3",
+        "style-mod": "^4.1.3",
         "tailwind-merge": "2.2.1",
+        "w3c-keyname": "^2.2.8",
         "zustand": "5.0.14",
       },
       "devDependencies": {
@@ -174,7 +185,7 @@
     },
     "apps/worker": {
       "name": "@december/worker",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@aws-sdk/client-s3": "3.1089.0",
         "@aws-sdk/s3-request-presigner": "3.1089.0",
@@ -199,7 +210,7 @@
     },
     "packages/agent": {
       "name": "@december/agent",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@anthropic-ai/sdk": "0.109.0",
         "@december/providers": "workspace:*",
@@ -218,7 +229,7 @@
     },
     "packages/database": {
       "name": "@december/database",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@prisma/adapter-pg": "7.8.0",
         "@prisma/client": "7.8.0",
@@ -237,7 +248,7 @@
     },
     "packages/evals": {
       "name": "@december/evals",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@december/shared": "workspace:*",
         "zod": "^3.24.2",
@@ -250,7 +261,7 @@
     },
     "packages/providers": {
       "name": "@december/providers",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.112.3",
         "@december/shared": "workspace:*",
@@ -266,7 +277,7 @@
     },
     "packages/shared": {
       "name": "@december/shared",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "bullmq": "5.80.2",
         "ioredis": "5.11.1",
@@ -278,7 +289,7 @@
     },
     "packages/tools": {
       "name": "@december/tools",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@december/shared": "workspace:*",
         "@modelcontextprotocol/sdk": "1.29.0",
@@ -293,7 +304,7 @@
     },
     "packages/tui": {
       "name": "@december/tui",
-      "version": "0.2.24",
+      "version": "0.3.7",
       "dependencies": {
         "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
@@ -1561,7 +1572,7 @@
 
     "crc32-stream": ["crc32-stream@7.0.1", "", { "dependencies": { "crc-32": "^1.2.0", "readable-stream": "^4.0.0" } }, "sha512-IBWsY8xznyQrcHn8h4bC8/4ErNke5elzgG8GcqF4RFPw6aHkWWRc7Tgw6upjaTX/CT/yQgqYENkxYsTYN+hW2g=="],
 
-    "crelt": ["crelt@1.0.6", "", {}, "sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g=="],
+    "crelt": ["crelt@1.0.7", "", {}, "sha512-aK6BbWfhf4U/wCcLHKPJl/xa6VkVstRaPywWtMKGwuOLc/wZTyQYuoxgvZnNsBvv7Kg3YTBQYYBCggcviQczuA=="],
 
     "cron-parser": ["cron-parser@4.9.0", "", { "dependencies": { "luxon": "^3.2.1" } }, "sha512-p0SaNjrHOnQeR8/VnfGbmg9te2kfyYSQ7Sc/j/6DtPL3JQvKxmjO9TSjNFpujqV3vEYYBvNNvXSxzyksBWAx1Q=="],
 
@@ -2957,6 +2968,12 @@
 
     "@boundaries/elements/is-core-module": ["is-core-module@2.16.1", "", { "dependencies": { "hasown": "^2.0.2" } }, "sha512-UfoeMA6fIJ8wTYFEUjelnaGI67v6+N7qXJEvQuIGa99l4xsCruSYOVSQ0uPANn4dAzm8lkYPaKLrrijLq7x23w=="],
 
+    "@codemirror/lint/crelt": ["crelt@1.0.6", "", {}, "sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g=="],
+
+    "@codemirror/search/crelt": ["crelt@1.0.6", "", {}, "sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g=="],
+
+    "@codemirror/view/crelt": ["crelt@1.0.6", "", {}, "sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g=="],
+
     "@commitlint/config-validator/ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
 
     "@commitlint/is-ignored/semver": ["semver@7.8.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA=="],
@@ -2990,6 +3007,8 @@
     "@december/web/@types/react-dom": ["@types/react-dom@18.3.7", "", { "peerDependencies": { "@types/react": "^18.0.0" } }, "sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ=="],
 
     "@december/web/knip": ["knip@6.23.0", "", { "dependencies": { "fdir": "^6.5.0", "formatly": "^0.3.0", "get-tsconfig": "4.14.0", "jiti": "^2.7.0", "oxc-parser": "^0.137.0", "oxc-resolver": "11.21.3", "picomatch": "^4.0.4", "smol-toml": "^1.6.1", "strip-json-comments": "5.0.3", "tinyglobby": "^0.2.17", "unbash": "^4.0.1", "yaml": "^2.9.0", "zod": "^4.1.11" }, "bin": { "knip": "bin/knip.js", "knip-bun": "bin/knip-bun.js" } }, "sha512-2DvAOX2pZWiG4SLvRRxOAU0aWGEn1ZoVblI541xIoXFdHqq2THMZXy66/qcY5WGuW3TXhb9T1x1zd/Hd1u+yqg=="],
+
+    "@december/web/prettier": ["prettier@3.9.6", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g=="],
 
     "@december/web/react": ["react@18.2.0", "", { "dependencies": { "loose-envify": "^1.1.0" } }, "sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ=="],
 

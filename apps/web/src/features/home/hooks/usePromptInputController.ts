@@ -87,12 +87,15 @@ export const usePromptInputController = ({
         action()
     }
 
-    const handleInputChange = (val: string) => {
-        if (!isControlled) {
-            setInternalInput(val)
-        }
-        onChange?.(val)
-    }
+    const handleInputChange = useCallback(
+        (val: string) => {
+            if (!isControlled) {
+                setInternalInput(val)
+            }
+            onChange?.(val)
+        },
+        [isControlled, onChange]
+    )
 
     const handleSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
         setCursorPosition((e.target as HTMLTextAreaElement).selectionStart)
@@ -287,7 +290,7 @@ export const usePromptInputController = ({
             const newValue = base + separator + text
             handleInputChange(newValue)
         },
-        [isControlled, value, internalInput]
+        [isControlled, value, internalInput, handleInputChange]
     )
 
     const handleVoiceStateChange = useCallback((isListening: boolean) => {

@@ -1,4 +1,3 @@
-import { EditorView } from '@codemirror/view'
 import React from 'react'
 
 import {
@@ -55,12 +54,6 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
     const [selectedFile, setSelectedFile] = React.useState<CodeFilePath | null>(null)
     const [openFilePaths, setOpenFilePaths] = React.useState<CodeFilePath[]>([])
     const [files, setFiles] = React.useState<Record<CodeFilePath, string>>({})
-    const [wordWrap, setWordWrap] = React.useState(true)
-    const [cursorPos, setCursorPos] = React.useState({ line: 1, col: 1 })
-
-    React.useEffect(() => {
-        setCursorPos({ line: 1, col: 1 })
-    }, [selectedFile])
 
     React.useEffect(() => {
         setFiles(generatedFileContents)
@@ -75,29 +68,26 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
         }
 
         const workspacePathSet = new Set(workspaceFiles.map((file) => file.path))
-
         setOpenFilePaths((previous) => previous.filter((path) => workspacePathSet.has(path)))
 
-        const hasSelectedFile = Boolean(selectedFile && workspacePathSet.has(selectedFile))
-
-        if (activeFilePath && workspacePathSet.has(activeFilePath)) {
-            if (!userSelectedFileRef.current || !hasSelectedFile) {
-                setSelectedFile(activeFilePath)
-                setOpenFilePaths((previous) =>
-                    previous.includes(activeFilePath) ? previous : [...previous, activeFilePath]
-                )
-            }
-
+        if (userSelectedFileRef.current) {
+            setSelectedFile((previous) =>
+                previous && !workspacePathSet.has(previous) ? null : previous
+            )
             return
         }
 
-        if (!hasSelectedFile && defaultFilePath) {
-            setSelectedFile(defaultFilePath)
-            setOpenFilePaths((previous) =>
-                previous.includes(defaultFilePath) ? previous : [...previous, defaultFilePath]
-            )
+        if (activeFilePath && workspacePathSet.has(activeFilePath)) {
+            setSelectedFile(activeFilePath)
+            setOpenFilePaths([activeFilePath])
+            return
         }
-    }, [activeFilePath, defaultFilePath, selectedFile, workspaceFiles])
+
+        if (defaultFilePath && workspacePathSet.has(defaultFilePath)) {
+            setSelectedFile(defaultFilePath)
+            setOpenFilePaths([defaultFilePath])
+        }
+    }, [activeFilePath, defaultFilePath, workspaceFiles])
 
     React.useEffect(() => {
         if (!htmlFilePath || !files[htmlFilePath]) {
@@ -109,8 +99,9 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
         }
     }, [files, html, htmlFilePath, onHtmlChange])
 
-    const activeFile: CodeFile | null =
-        workspaceFiles.find((file) => file.path === selectedFile) ?? workspaceFiles[0] ?? null
+    const activeFile: CodeFile | null = selectedFile
+        ? (workspaceFiles.find((file) => file.path === selectedFile) ?? null)
+        : null
 
     const openFiles = React.useMemo(
         () =>
@@ -125,12 +116,8 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
         if (!activeFile) {
             return sharedExtensions
         }
-        const extensions = [...sharedExtensions, getLanguageExtension(activeFile.language)]
-        if (wordWrap) {
-            extensions.push(EditorView.lineWrapping)
-        }
-        return extensions
-    }, [activeFile, sharedExtensions, wordWrap])
+        return [...sharedExtensions, getLanguageExtension(activeFile.language)]
+    }, [activeFile, sharedExtensions])
 
     const handleChange = (value: string) => {
         if (!activeFile) {
@@ -150,6 +137,7 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
     const handleSelectFile = (path: CodeFilePath) => {
         userSelectedFileRef.current = true
         setSelectedFile(path)
+        setOpenFilePaths((previous) => (previous.includes(path) ? previous : [...previous, path]))
     }
 
     const handlePinFile = (path: CodeFilePath) => {
@@ -159,22 +147,20 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
     }
 
     const handleCloseOpenFile = (path: CodeFilePath) => {
+        userSelectedFileRef.current = true
         setOpenFilePaths((previous) => {
-            const closingIndex = previous.indexOf(path)
-            if (closingIndex === -1) {
-                return previous
-            }
-
             const next = previous.filter((openPath) => openPath !== path)
-
-            if (selectedFile === path) {
-                const fallbackPath =
-                    next[closingIndex] ?? next[closingIndex - 1] ?? defaultFilePath ?? null
-                setSelectedFile(fallbackPath)
-            }
-
             return next
         })
+
+        if (selectedFile === path) {
+            setSelectedFile(() => {
+                const next = openFilePaths.filter((openPath) => openPath !== path)
+                const closingIndex = openFilePaths.indexOf(path)
+                const fallbackPath = next[closingIndex] ?? next[closingIndex - 1] ?? null
+                return fallbackPath
+            })
+        }
     }
 
     return (
@@ -195,17 +181,6 @@ export const CodeWorkspace: React.FC<CodeWorkspaceProps> = ({
                     value={activeFile ? (files[activeFile.path] ?? '') : ''}
                     extensions={editorExtensions}
                     onChange={handleChange}
-                    wordWrap={wordWrap}
-                    toggleWordWrap={() => setWordWrap(!wordWrap)}
-                    cursorPos={cursorPos}
-                    onCursorPosChange={React.useCallback((pos: { line: number; col: number }) => {
-                        setCursorPos((prev) => {
-                            if (prev.line === pos.line && prev.col === pos.col) {
-                                return prev
-                            }
-                            return pos
-                        })
-                    }, [])}
                 />
             </div>
         </div>

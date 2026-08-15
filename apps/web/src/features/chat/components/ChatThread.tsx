@@ -135,6 +135,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                         id={msg.id}
                         role={msg.role === 'system' ? 'assistant' : msg.role}
                         content={msg.content}
+                        blocks={msg.blocks}
                         thoughts={msg.thoughts}
                         plan={msg.plan}
                         summary={msg.summary}
@@ -142,6 +143,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                         executionTime={executionTime}
                         index={index}
                         status={msg.status}
+                        statusMessage={msg.statusMessage}
                         generatedFiles={isLast ? generatedFiles : undefined}
                         appliedFiles={msg.appliedFiles}
                         projectType={projectType}
@@ -178,7 +180,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                 <div
                     ref={scrollContainerRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20"
+                    className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 chat-scrollbar"
                 >
                     {messagesList}
                 </div>
@@ -201,9 +203,9 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
             )}
             style={
                 !isCollapsed && !isPreviewCollapsed && customWidth
-                    ? { width: `${customWidth}px` }
+                    ? { width: `${customWidth}px`, maxWidth: '45%' }
                     : !isCollapsed && !isPreviewCollapsed
-                      ? { width: '35%' }
+                      ? { width: '35%', maxWidth: '45%' }
                       : undefined
             }
         >
@@ -211,7 +213,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                 <div
                     ref={scrollContainerRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2C2C30] hover:[&::-webkit-scrollbar-thumb]:bg-[#45454C] [&::-webkit-scrollbar-thumb]:rounded-full"
+                    className="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-4 chat-scrollbar"
                 >
                     <div
                         className={cn(
@@ -222,25 +224,6 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
                         {messagesList}
                     </div>
                 </div>
-
-                {/* Scrollbar Minimap Ticks */}
-                {messages.length > 1 && (
-                    <div className="absolute right-[1px] top-6 bottom-20 w-1.5 pointer-events-none flex flex-col justify-end items-center gap-1.5 z-20 pb-4">
-                        {messages.slice(-8).map((msg, idx) => (
-                            <div
-                                key={msg.id || idx}
-                                className={cn(
-                                    'rounded-full transition-opacity',
-                                    msg.role === 'user'
-                                        ? 'w-2.5 h-[2px] bg-white opacity-90'
-                                        : msg.role === 'assistant'
-                                          ? 'w-2.5 h-[2px] bg-[#A855F7] opacity-90'
-                                          : 'w-2 h-[1px] bg-[#444448] opacity-60'
-                                )}
-                            />
-                        ))}
-                    </div>
-                )}
 
                 <div className="shrink-0 bg-[#141414] pt-3 pl-2.5 pr-2.5 pb-2.5">
                     <div className={cn('w-full', isPreviewCollapsed && 'max-w-xl mx-auto')}>

@@ -46,7 +46,7 @@ export function TaskHUD({ cwd, showTasks = true }: { cwd: string; showTasks?: bo
             paddingX={1}
             width={40}
         >
-            <Text color="#A78BFA" bold>
+            <Text color="#89B4F8" bold>
                 Active Plan (task.md)
             </Text>
             {taskLines.map((line, i) => {

@@ -1,22 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
-echo "Cleaning up temporary directories..."
+echo "Cleaning up temporary directories and volumes..."
 
-if [ -d "infra/minio/data/december-storage" ]; then
-    echo "Clearing infra/minio/data/december-storage/*"
-    rm -rf infra/minio/data/december-storage/*
-else
-    echo "Directory infra/minio/data/december-storage not found."
+# Clean legacy minio bind-mount directory if present on host
+if [ -d "infra/minio/data" ]; then
+    echo "Clearing legacy infra/minio/data..."
+    rm -rf infra/minio/data 2>/dev/null || docker run --rm -v "$(pwd)/infra/minio/data:/data" alpine sh -c "rm -rf /data/* /data/.* 2>/dev/null || true" 2>/dev/null || true
+    rm -rf infra/minio/data 2>/dev/null || true
 fi
 
+# Clean MinIO volume if docker is available
+if command -v docker >/dev/null 2>&1; then
+    if docker ps --format '{{.Names}}' | grep -q "^december-minio$"; then
+        echo "Clearing MinIO data inside running container..."
+        docker compose -f infra/minio/docker-compose.yml -p december-minio exec -T minio sh -c "rm -rf /data/* /data/.* 2>/dev/null || true" 2>/dev/null || true
+    elif docker volume inspect december-minio_minio_data >/dev/null 2>&1; then
+        echo "Removing MinIO docker volume (december-minio_minio_data)..."
+        docker volume rm december-minio_minio_data 2>/dev/null || true
+    fi
+fi
+
+# Clean temporary import directories
 if [ -d "apps/server/.december-imports" ]; then
     echo "Clearing apps/server/.december-imports/*"
     rm -rf apps/server/.december-imports/*
-elif [ -d ".december-imports" ]; then
+fi
+
+if [ -d ".december-imports" ]; then
     echo "Clearing .december-imports/*"
     rm -rf .december-imports/*
-else
-    echo "Directory apps/server/.december-imports not found."
 fi
 
 echo "Cleanup completed successfully!"

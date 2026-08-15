@@ -49,6 +49,77 @@ export type GenerationStreamEvent =
           }
       }
     | {
+          type: 'AgentStart'
+          data?: any
+      }
+    | {
+          type: 'TurnStart'
+          data?: any
+      }
+    | {
+          type: 'AgentStatus'
+          data: {
+              message: string
+          }
+      }
+    | {
+          type: 'ThinkingChunk'
+          data: {
+              content: string
+          }
+      }
+    | {
+          type: 'StreamChunk'
+          data: {
+              content: string
+          }
+      }
+    | {
+          type: 'ToolCallStart'
+          data: {
+              toolCall: any
+          }
+      }
+    | {
+          type: 'ToolExecutionUpdate'
+          data: {
+              toolCallId: string
+              chunk: string
+          }
+      }
+    | {
+          type: 'ToolCallResult'
+          data: {
+              result: any
+              toolCallId?: string
+          }
+      }
+    | {
+          type: 'ContextCompacted'
+          data: {
+              summary: string
+          }
+      }
+    | {
+          type: 'AgentInterrupt'
+          data?: any
+      }
+    | {
+          type: 'TurnEnd'
+          data?: any
+      }
+    | {
+          type: 'AgentEnd'
+          data?: any
+      }
+    | {
+          type: 'AgentError'
+          data: {
+              error?: string
+              message?: string
+          }
+      }
+    | {
           type: 'phase'
           data: {
               phase: 'thinking' | 'building'
@@ -219,7 +290,7 @@ const runOverSocket = async (
                 signal.addEventListener('abort', () => {
                     if (!hasResolved) {
                         hasResolved = true
-                        socket.disconnect()
+                        socket.emit('stop_session', { sessionId })
                         reject(new Error('Aborted'))
                     }
                 })
@@ -259,12 +330,10 @@ const runOverSocket = async (
                 if (eventType === 'result' || eventType === 'AgentEnd') {
                     resultData = parsedData
                     hasResolved = true
-                    socket.disconnect()
                     resolve(resultData)
                 }
                 if (eventType === 'error' || eventType === 'AgentError') {
                     hasResolved = true
-                    socket.disconnect()
                     reject(
                         new ApiError(
                             parsedData?.error || parsedData?.message || 'Agent Execution Error',
@@ -277,7 +346,6 @@ const runOverSocket = async (
             socket.on('error', (err: any) => {
                 if (!hasResolved) {
                     hasResolved = true
-                    socket.disconnect()
                     reject(new ApiError(err.message || 'Socket error', 500))
                 }
             })

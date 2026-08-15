@@ -28,7 +28,7 @@ const main = async () => {
     }
 
     console.log(`Loading evaluation tasks from: ${targetPath}`)
-    let tasks: EvalTask[] = []
+    let tasks: EvalTask[]
 
     if (fs.existsSync(targetPath) && fs.statSync(targetPath).isFile()) {
         tasks = await loadTasksFromFile(targetPath)

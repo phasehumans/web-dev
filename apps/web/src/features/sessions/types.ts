@@ -48,7 +48,6 @@ export interface ProjectListRowProps {
     onOpenRename: (project: Project, event: MouseEvent) => void
     onOpenShare: (project: Project, event: MouseEvent) => void
     onOpenDelete: (project: Project, event: MouseEvent) => void
-    onOpenSettings: (project: Project, event: MouseEvent) => void
 }
 
 export interface ProjectRenameModalProps {

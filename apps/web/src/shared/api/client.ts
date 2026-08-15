@@ -52,7 +52,7 @@ export class ApiError extends Error {
 }
 
 const toApiError = async (res: Response) => {
-    let payload: { message?: string; errors?: unknown } | null = null
+    let payload: { message?: string; errors?: unknown } | null
 
     try {
         payload = await res.json()

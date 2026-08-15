@@ -1,14 +1,13 @@
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
-
-if (!globalThis.document) {
-    GlobalRegistrator.register()
-}
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { expect, test, describe, mock } from 'bun:test'
 import React from 'react'
 
 import { WikiView } from '../src/features/wiki/components/WikiView'
+
+if (!globalThis.document) {
+    GlobalRegistrator.register()
+}
 
 const { render, screen, fireEvent } = await import('@testing-library/react')
 

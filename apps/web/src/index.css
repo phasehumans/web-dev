@@ -70,8 +70,13 @@
 
 /* Custom scrollbar for webkit */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
@@ -83,12 +88,48 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #4b4b4b;
 }
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
 .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+}
+
+/* Slick Ultra-Thin Chat Scrollbar (Custom WebKit Scrollbar without OS stepper triangles) */
+.chat-scrollbar::-webkit-scrollbar {
+    width: 2px !important;
+    height: 2px !important;
+}
+.chat-scrollbar::-webkit-scrollbar-button,
+.chat-scrollbar::-webkit-scrollbar-button:single-button,
+.chat-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+.chat-scrollbar::-webkit-scrollbar-button:vertical:increment,
+.chat-scrollbar::-webkit-scrollbar-button:horizontal:decrement,
+.chat-scrollbar::-webkit-scrollbar-button:horizontal:increment {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+}
+.chat-scrollbar::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+.chat-scrollbar::-webkit-scrollbar-track-piece {
+    background: transparent !important;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-radius: 9999px !important;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4) !important;
+}
+.chat-scrollbar::-webkit-scrollbar-corner {
+    background: transparent !important;
 }
 .dot-pattern {
     background-image: radial-gradient(#454545 1.5px, transparent 1.5px);

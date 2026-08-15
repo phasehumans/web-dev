@@ -18,7 +18,6 @@ export const ProjectGridCard: React.FC<ProjectListRowProps> = ({
     onOpenDuplicate,
     onOpenShare,
     onOpenDelete,
-    onOpenSettings,
 }) => {
     const [menuDirection, setMenuDirection] = useState<'down' | 'up'>('down')
 
@@ -62,7 +61,14 @@ export const ProjectGridCard: React.FC<ProjectListRowProps> = ({
             <div className="flex items-start justify-between w-full gap-4 px-1 mt-1">
                 {/* left info */}
                 <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <h3 className="text-[14px] font-medium text-[#D6D5C9] truncate leading-tight">
+                    <h3
+                        onDoubleClick={(e) => {
+                            e.stopPropagation()
+                            onOpenRename?.(project, e)
+                        }}
+                        className="text-[14px] font-medium text-[#D6D5C9] truncate leading-tight cursor-pointer hover:text-white"
+                        title="Double-click to rename"
+                    >
                         {project.title}
                     </h3>
                     <p className="text-[12px] text-[#7B7A79] line-clamp-1 leading-snug">
@@ -137,12 +143,6 @@ export const ProjectGridCard: React.FC<ProjectListRowProps> = ({
                                     {project.isSharedAsTemplate
                                         ? 'Unshare template'
                                         : 'Share as template'}
-                                </button>
-                                <button
-                                    onClick={(e) => onOpenSettings(project, e)}
-                                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-[14px] text-[#D6D5C9] transition-colors hover:bg-[#262626]"
-                                >
-                                    <Icons.Settings className="h-4 w-4 text-[#7B7A79]" /> Settings
                                 </button>
                                 <div className="mx-2 my-1.5 h-px bg-[#383736]" />
                                 <button

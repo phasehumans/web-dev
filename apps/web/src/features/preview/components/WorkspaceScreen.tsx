@@ -14,6 +14,7 @@ import { useAppStore } from '@/app/store'
 import { billingAPI } from '@/features/billing/api/billing'
 import { ChatThread as ChatSidebar } from '@/features/chat/components/ChatThread'
 import { useOutputScreenController } from '@/features/preview/hooks/useOutputScreenController'
+import { sessionAPI } from '@/features/sessions/api/session'
 import { Modal } from '@/shared/components/ui/Modal'
 
 type MobileOutputTab = 'chat' | 'preview'
@@ -58,30 +59,39 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
     }, [generatedFiles, currentGenerationFilePaths])
 
     const queryClient = useQueryClient()
+    const { data: currentSession } = useQuery({
+        queryKey: ['session', projectId],
+        queryFn: () => (projectId ? sessionAPI.getSession(projectId) : null),
+        enabled: Boolean(projectId),
+    })
+
+    const displayProjectName = currentSession?.title || projectName
+
     const sessionTag = React.useMemo(() => {
-        if (!projectId) return null
-        const projectsData = queryClient.getQueryData<any>(['projects'])
-        const projects = Array.isArray(projectsData)
-            ? projectsData
-            : Array.isArray(projectsData?.projects)
-              ? projectsData.projects
-              : []
-        const foundProject = projects.find((p: any) => p && p.id === projectId)
-        if (foundProject && Array.isArray(foundProject.tags) && foundProject.tags.length > 0) {
-            return foundProject.tags[0]
+        if (
+            currentSession &&
+            Array.isArray(currentSession.tags) &&
+            currentSession.tags.length > 0
+        ) {
+            return currentSession.tags[0]
         }
-        const sessionsData = queryClient.getQueryData<any>(['sessions'])
-        const sessions = Array.isArray(sessionsData)
-            ? sessionsData
-            : Array.isArray(sessionsData?.sessions)
-              ? sessionsData.sessions
-              : []
-        const foundSession = sessions.find((s: any) => s && s.id === projectId)
-        if (foundSession && Array.isArray(foundSession.tags) && foundSession.tags.length > 0) {
-            return foundSession.tags[0]
+        const matchingQueries = queryClient.getQueriesData<any>({ queryKey: ['sessions'] })
+        for (const [, qData] of matchingQueries) {
+            const list = Array.isArray(qData)
+                ? qData
+                : Array.isArray(qData?.sessions)
+                  ? qData.sessions
+                  : []
+            const found = list.find((s: any) => s && s.id === projectId)
+            if (found && Array.isArray(found.tags) && found.tags.length > 0) {
+                return found.tags[0]
+            }
         }
-        return null
-    }, [projectId, queryClient])
+        if (activeVersionId) {
+            return `#${activeVersionId.slice(0, 4)}`
+        }
+        return 'main'
+    }, [currentSession, projectId, queryClient, activeVersionId])
 
     const { data: overview } = useQuery({
         queryKey: ['billing-overview'],
@@ -155,7 +165,8 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         const handleMouseMove = (moveEvent: MouseEvent) => {
             moveEvent.preventDefault()
             const deltaX = moveEvent.clientX - startX
-            const newWidth = Math.min(Math.max(startWidth + deltaX, 260), 850)
+            const maxAllowedWidth = Math.floor(window.innerWidth * 0.45)
+            const newWidth = Math.min(Math.max(startWidth + deltaX, 260), maxAllowedWidth)
             setChatWidth(newWidth)
         }
 
@@ -289,7 +300,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                 {/* Main Top Header spanning 100% full width */}
                 <WorkspaceHeader
                     onBack={handleTriggerExit}
-                    projectName={projectName}
+                    projectName={displayProjectName}
                     projectId={projectId}
                     versions={versions}
                     activeVersionId={activeVersionId}
@@ -329,7 +340,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                         isApplyingEdit={isApplyingEdit}
                         isCollapsed={isChatSidebarCollapsed}
                         onClose={() => setIsChatSidebarCollapsed(true)}
-                        projectName={projectName}
+                        projectName={displayProjectName}
                         generatedFiles={activeFilesToDisplay}
                         projectType={projectType}
                         onOpenFile={handleOpenFileWrapper}

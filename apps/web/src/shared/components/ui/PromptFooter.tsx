@@ -146,7 +146,15 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         }
         document.addEventListener('keydown', handleKeyDown, true)
         return () => document.removeEventListener('keydown', handleKeyDown, true)
-    }, [isPlusMenuOpen, selectedPlusIndex, onUpload, onOptionSelect, mode])
+    }, [
+        isPlusMenuOpen,
+        selectedPlusIndex,
+        onUpload,
+        onOptionSelect,
+        mode,
+        isAuthenticated,
+        onOpenAuth,
+    ])
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {

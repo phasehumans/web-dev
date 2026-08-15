@@ -1,13 +1,37 @@
+export type MessageBlock =
+    | { type: 'thinking'; content: string; isStreaming?: boolean }
+    | { type: 'compaction'; summary: string }
+    | { type: 'interrupt' }
+    | {
+          type: 'command'
+          toolCallId: string
+          toolName: string
+          toolInput?: any
+          status: 'running' | 'success' | 'error'
+          output?: string
+      }
+    | {
+          type: 'file_change'
+          filePath: string
+          action: 'created' | 'modified' | 'deleted'
+          diff?: string
+      }
+    | { type: 'text'; content: string; color?: string }
+    | { type: 'status'; label: string; success: boolean }
+    | { type: 'error'; error: string }
+
 export interface Message {
     id: string
     role: 'user' | 'assistant' | 'system'
     content: string
+    blocks?: MessageBlock[]
     thoughts?: string
     plan?: string
     summary?: string
     type?: 'text' | 'code_preview'
     code?: string
     status?: 'thinking' | 'building' | 'done' | 'error'
+    statusMessage?: string
     tokensUsed?: number
     creditsUsed?: number
     modelName?: string
@@ -22,6 +46,7 @@ export interface SelectedElement {
 export interface ChatMessageProps {
     role: 'user' | 'assistant'
     content: string
+    blocks?: MessageBlock[]
     thoughts?: string
     plan?: string
     summary?: string
@@ -29,11 +54,13 @@ export interface ChatMessageProps {
     executionTime: number
     index: number
     status?: 'thinking' | 'building' | 'done' | 'error'
+    statusMessage?: string
     generatedFiles?: Record<string, any>
     appliedFiles?: string[]
     projectType?: 'generated' | 'github' | 'zip'
     tokensUsed?: number
     creditsUsed?: number
+    expandCommands?: boolean
     onTriggerSimulation?: (type: 'generated' | 'github' | 'zip') => void
     onOpenFile?: (path: string) => void
     projectId?: string | null

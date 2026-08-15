@@ -43,6 +43,15 @@ export const useChatController = (
         setProjectType,
         setCurrentGenerationFilePaths,
         appendAssistantChunk,
+        appendThinkingChunk,
+        appendStreamChunk,
+        addToolCallBlock,
+        appendToolCallOutput,
+        updateToolCallResult,
+        addFileChangeBlock,
+        addCompactionBlock,
+        addInterruptBlock,
+        setAssistantStatusMessage,
         setAssistantStatus,
         setAssistantError,
         setAssistantAppliedFiles,
@@ -168,6 +177,100 @@ export const useChatController = (
                                     setActiveProjectVersionId(event.data.version.id)
                                     void queryClient.invalidateQueries({ queryKey: ['projects'] })
                                     return
+                                case 'AgentStart':
+                                case 'TurnStart':
+                                    setGenerationPhase('thinking')
+                                    setAssistantStatus(activeMessageId, 'thinking')
+                                    return
+                                case 'AgentStatus':
+                                    if (event.data?.message) {
+                                        setAssistantStatusMessage(
+                                            activeMessageId,
+                                            event.data.message
+                                        )
+                                    }
+                                    return
+                                case 'ThinkingChunk':
+                                    if (event.data?.content) {
+                                        setGenerationPhase('thinking')
+                                        appendThinkingChunk(activeMessageId, event.data.content)
+                                    }
+                                    return
+                                case 'StreamChunk':
+                                    if (event.data?.content) {
+                                        setGenerationPhase('building')
+                                        setAssistantStatus(activeMessageId, 'building')
+                                        appendStreamChunk(activeMessageId, event.data.content)
+                                    }
+                                    return
+                                case 'ToolCallStart':
+                                    setGenerationPhase('building')
+                                    setAssistantStatus(activeMessageId, 'building')
+                                    if (event.data?.toolCall) {
+                                        addToolCallBlock(activeMessageId, {
+                                            toolCallId:
+                                                event.data.toolCall.id || `tool-${Date.now()}`,
+                                            toolName: event.data.toolCall.name || 'tool',
+                                            toolInput:
+                                                event.data.toolCall.input ||
+                                                event.data.toolCall.args ||
+                                                {},
+                                            status: 'running',
+                                            output: '',
+                                        })
+                                    }
+                                    return
+                                case 'ToolExecutionUpdate':
+                                    if (event.data?.toolCallId && event.data?.chunk) {
+                                        appendToolCallOutput(
+                                            activeMessageId,
+                                            event.data.toolCallId,
+                                            event.data.chunk
+                                        )
+                                    }
+                                    return
+                                case 'ToolCallResult':
+                                    if (event.data?.result) {
+                                        updateToolCallResult(activeMessageId, {
+                                            toolCallId:
+                                                event.data.result.toolCallId ||
+                                                event.data.toolCallId,
+                                            status: event.data.result.error ? 'error' : 'success',
+                                            output:
+                                                event.data.result.output ||
+                                                event.data.result.content ||
+                                                (typeof event.data.result === 'string'
+                                                    ? event.data.result
+                                                    : ''),
+                                            error: event.data.result.error,
+                                        })
+                                    }
+                                    return
+                                case 'ContextCompacted':
+                                    if (event.data?.summary) {
+                                        addCompactionBlock(activeMessageId, event.data.summary)
+                                    }
+                                    return
+                                case 'AgentInterrupt':
+                                    addInterruptBlock(activeMessageId)
+                                    setIsGenerating(false)
+                                    return
+                                case 'TurnEnd':
+                                case 'AgentEnd':
+                                    setGenerationPhase('done')
+                                    setAssistantStatus(activeMessageId, 'done')
+                                    setIsGenerating(false)
+                                    return
+                                case 'AgentError':
+                                    setGenerationPhase(null)
+                                    setAssistantError(
+                                        activeMessageId,
+                                        event.data?.error ||
+                                            event.data?.message ||
+                                            'Agent Execution Error'
+                                    )
+                                    setIsGenerating(false)
+                                    return
                                 case 'phase':
                                     if (event.data.phase === 'building') {
                                         setGenerationPhase('building')
@@ -270,6 +373,14 @@ export const useChatController = (
             abortGenerationRequest,
             activeAssistantMessageIdRef,
             appendAssistantChunk,
+            appendThinkingChunk,
+            appendStreamChunk,
+            addCompactionBlock,
+            addInterruptBlock,
+            addToolCallBlock,
+            appendToolCallOutput,
+            updateToolCallResult,
+            setAssistantStatusMessage,
             appendGeneratedFileChunk,
             completeGeneratedFile,
             generationAbortControllerRef,
@@ -400,6 +511,95 @@ export const useChatController = (
 
                         switch (event.type) {
                             case 'connected':
+                                return
+                            case 'AgentStart':
+                            case 'TurnStart':
+                                setGenerationPhase('thinking')
+                                setAssistantStatus(activeMessageId, 'thinking')
+                                return
+                            case 'AgentStatus':
+                                if (event.data?.message) {
+                                    setAssistantStatusMessage(activeMessageId, event.data.message)
+                                }
+                                return
+                            case 'ThinkingChunk':
+                                if (event.data?.content) {
+                                    setGenerationPhase('thinking')
+                                    appendThinkingChunk(activeMessageId, event.data.content)
+                                }
+                                return
+                            case 'StreamChunk':
+                                if (event.data?.content) {
+                                    setGenerationPhase('building')
+                                    setAssistantStatus(activeMessageId, 'building')
+                                    appendStreamChunk(activeMessageId, event.data.content)
+                                }
+                                return
+                            case 'ToolCallStart':
+                                setGenerationPhase('building')
+                                setAssistantStatus(activeMessageId, 'building')
+                                if (event.data?.toolCall) {
+                                    addToolCallBlock(activeMessageId, {
+                                        toolCallId: event.data.toolCall.id || `tool-${Date.now()}`,
+                                        toolName: event.data.toolCall.name || 'tool',
+                                        toolInput:
+                                            event.data.toolCall.input ||
+                                            event.data.toolCall.args ||
+                                            {},
+                                        status: 'running',
+                                        output: '',
+                                    })
+                                }
+                                return
+                            case 'ToolExecutionUpdate':
+                                if (event.data?.toolCallId && event.data?.chunk) {
+                                    appendToolCallOutput(
+                                        activeMessageId,
+                                        event.data.toolCallId,
+                                        event.data.chunk
+                                    )
+                                }
+                                return
+                            case 'ToolCallResult':
+                                if (event.data?.result) {
+                                    updateToolCallResult(activeMessageId, {
+                                        toolCallId:
+                                            event.data.result.toolCallId || event.data.toolCallId,
+                                        status: event.data.result.error ? 'error' : 'success',
+                                        output:
+                                            event.data.result.output ||
+                                            event.data.result.content ||
+                                            (typeof event.data.result === 'string'
+                                                ? event.data.result
+                                                : ''),
+                                        error: event.data.result.error,
+                                    })
+                                }
+                                return
+                            case 'ContextCompacted':
+                                if (event.data?.summary) {
+                                    addCompactionBlock(activeMessageId, event.data.summary)
+                                }
+                                return
+                            case 'AgentInterrupt':
+                                addInterruptBlock(activeMessageId)
+                                setIsGenerating(false)
+                                return
+                            case 'TurnEnd':
+                            case 'AgentEnd':
+                                setGenerationPhase('done')
+                                setAssistantStatus(activeMessageId, 'done')
+                                setIsGenerating(false)
+                                return
+                            case 'AgentError':
+                                setGenerationPhase(null)
+                                setAssistantError(
+                                    activeMessageId,
+                                    event.data?.error ||
+                                        event.data?.message ||
+                                        'Agent Execution Error'
+                                )
+                                setIsGenerating(false)
                                 return
                             case 'phase':
                                 if (event.data.phase === 'thinking') {
@@ -540,6 +740,14 @@ export const useChatController = (
             activeProjectVersionId,
             abortGenerationRequest,
             appendAssistantChunk,
+            appendThinkingChunk,
+            appendStreamChunk,
+            addCompactionBlock,
+            addInterruptBlock,
+            addToolCallBlock,
+            appendToolCallOutput,
+            updateToolCallResult,
+            setAssistantStatusMessage,
             appendGeneratedFileChunk,
             completeGeneratedFile,
             hydrateAppliedProjectChange,

@@ -129,6 +129,10 @@ describe('Auth Utils - Unit Tests', () => {
     describe('sendOTP & sendWelcomeEmail', () => {
         it('should execute sendOTP without throwing', async () => {
             await expect(sendOTP('test@example.com', '123456')).resolves.toBeUndefined()
+            await expect(sendOTP('test@example.com', '123456', 'signup')).resolves.toBeUndefined()
+            await expect(
+                sendOTP('test@example.com', '123456', 'password_reset')
+            ).resolves.toBeUndefined()
         })
 
         it('should execute sendWelcomeEmail without throwing', async () => {

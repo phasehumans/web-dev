@@ -203,6 +203,7 @@ const getSession = async (data: GetSession) => {
             content: message.content,
             status: message.status,
             sequence: message.sequence,
+            blocks: (message as any).blocks ?? undefined,
             createdAt: message.createdAt,
             updatedAt: message.updatedAt,
         })),

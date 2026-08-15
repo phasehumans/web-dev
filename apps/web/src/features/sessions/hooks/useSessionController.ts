@@ -222,6 +222,8 @@ export const useSessionController = (
             try {
                 const detail = await projectAPI.getProject(projectId, versionId)
                 hydrateProjectDetail(detail)
+                // Buffer (1000ms) to allow Workspace DOM, preview iframe, and terminal to fully warm up in background
+                await new Promise((resolve) => setTimeout(resolve, 1000))
             } catch (error) {
                 setProjectLoadError(
                     error instanceof Error ? error.message : 'Failed to open project'
