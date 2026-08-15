@@ -45,7 +45,7 @@ const DEFAULT_TASKS: TaskItem[] = [
 ]
 
 // Find and parse tasks from TASK.md or TASKS.md
-function parseTasksFromFile(content: string): TaskItem[] {
+export function parseTasksFromFile(content: string): TaskItem[] {
     const lines = content.split('\n')
     const parsed: TaskItem[] = []
     let idCounter = 1
@@ -91,7 +91,7 @@ function parseTasksFromFile(content: string): TaskItem[] {
     return parsed
 }
 
-function findTaskFileContent(
+export function findTaskFileContent(
     generatedFiles?: Record<string, GeneratedProjectFile>,
     messages?: any[]
 ): string | null {
@@ -113,6 +113,49 @@ function findTaskFileContent(
     if (messages && messages.length > 0) {
         for (let i = messages.length - 1; i >= 0; i--) {
             const msg = messages[i]
+
+            if (msg.blocks && Array.isArray(msg.blocks)) {
+                for (let j = msg.blocks.length - 1; j >= 0; j--) {
+                    const block = msg.blocks[j]
+                    if (block.type === 'command') {
+                        let parsedInput: any = {}
+                        if (typeof block.toolInput === 'string') {
+                            try {
+                                parsedInput = JSON.parse(block.toolInput)
+                            } catch {
+                                parsedInput = {}
+                            }
+                        } else if (block.toolInput && typeof block.toolInput === 'object') {
+                            parsedInput = block.toolInput
+                        }
+
+                        const path = (
+                            parsedInput.TargetFile ||
+                            parsedInput.targetFile ||
+                            parsedInput.target_file ||
+                            parsedInput.filePath ||
+                            parsedInput.filepath ||
+                            parsedInput.AbsolutePath ||
+                            parsedInput.path ||
+                            parsedInput.file ||
+                            ''
+                        ).toLowerCase()
+
+                        if (path.endsWith('task.md') || path.endsWith('tasks.md')) {
+                            const content =
+                                parsedInput.CodeContent ??
+                                parsedInput.codeContent ??
+                                parsedInput.content ??
+                                parsedInput.ReplacementContent ??
+                                parsedInput.replacementContent ??
+                                parsedInput.code ??
+                                ''
+                            if (content.trim()) return content
+                        }
+                    }
+                }
+            }
+
             if (msg.tool_calls) {
                 for (const tc of msg.tool_calls) {
                     const args = tc.function?.arguments || tc.arguments
@@ -121,15 +164,23 @@ function findTaskFileContent(
                             const parsed = typeof args === 'string' ? JSON.parse(args) : args
                             const path = (
                                 parsed.TargetFile ||
+                                parsed.targetFile ||
+                                parsed.target_file ||
+                                parsed.filePath ||
+                                parsed.filepath ||
+                                parsed.AbsolutePath ||
                                 parsed.path ||
                                 parsed.file ||
                                 ''
                             ).toLowerCase()
                             if (path.endsWith('task.md') || path.endsWith('tasks.md')) {
                                 const content =
-                                    parsed.CodeContent ||
-                                    parsed.content ||
-                                    parsed.ReplacementContent ||
+                                    parsed.CodeContent ??
+                                    parsed.codeContent ??
+                                    parsed.content ??
+                                    parsed.ReplacementContent ??
+                                    parsed.replacementContent ??
+                                    parsed.code ??
                                     ''
                                 if (content.trim()) return content
                             }
