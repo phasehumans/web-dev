@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from 'react'
 
 import type { PreviewDevice } from '@/features/preview/types'
 
+import { Tooltip } from '@/shared/components/ui/Tooltip'
+
 interface WorkspaceHeaderDevicePickerProps {
     device: PreviewDevice
     setDevice: (device: PreviewDevice) => void
@@ -89,20 +91,22 @@ export const WorkspaceHeaderDevicePicker: React.FC<WorkspaceHeaderDevicePickerPr
             <div className="flex-1 text-sm text-[#91908F] truncate font-mono opacity-60 text-center"></div>
 
             <div className="flex items-center gap-1 pl-2">
-                <button
-                    onClick={onRefresh}
-                    className="p-1.5 text-[#91908F] hover:text-white hover:bg-white/5 rounded transition-colors"
-                    title="Refresh preview"
-                >
-                    <RefreshCw size={12} />
-                </button>
-                <button
-                    onClick={onOpenNewTab}
-                    className="p-1.5 text-[#91908F] hover:text-white hover:bg-white/5 rounded transition-colors"
-                    title="Open in new tab"
-                >
-                    <ArrowUpRight size={12} />
-                </button>
+                <Tooltip content="Refresh preview" position="bottom">
+                    <button
+                        onClick={onRefresh}
+                        className="p-1.5 text-[#91908F] hover:text-white hover:bg-white/5 rounded transition-colors cursor-pointer outline-none"
+                    >
+                        <RefreshCw size={12} />
+                    </button>
+                </Tooltip>
+                <Tooltip content="Open in new tab" position="bottom" align="end">
+                    <button
+                        onClick={onOpenNewTab}
+                        className="p-1.5 text-[#91908F] hover:text-white hover:bg-white/5 rounded transition-colors cursor-pointer outline-none"
+                    >
+                        <ArrowUpRight size={12} />
+                    </button>
+                </Tooltip>
             </div>
         </div>
     )

@@ -5,6 +5,9 @@ import jwt, { type SignOptions } from 'jsonwebtoken'
 import resend from '../../config/email'
 import { env } from '../../env'
 
+import { renderOtpEmail, type OtpType } from './templates/otp.template'
+import { renderWelcomeEmail } from './templates/welcome.template'
+
 import type { TokenPayload } from './auth.types'
 
 export const hashRefreshToken = (token: string): string => {
@@ -27,9 +30,6 @@ export const generateUserCode = (): string => {
     }
     return `${result.substring(0, 4)}-${result.substring(4, 8)}`
 }
-
-import { renderOtpEmail, type OtpType } from './templates/otp.template'
-import { renderWelcomeEmail } from './templates/welcome.template'
 
 export const sendOTP = async (email: string, otp: string, type: OtpType = 'verification') => {
     const fromEmail = env.SENDER_EMAIL || 'onboarding@resend.dev'

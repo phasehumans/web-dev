@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { History } from 'lucide-react'
 import React from 'react'
 import { createPortal } from 'react-dom'
@@ -8,7 +9,11 @@ import { SidebarFooter } from './SidebarFooter'
 
 import type { MobileSidebarProps } from '@/features/navigation/types'
 
+import { projectAPI } from '@/features/sessions/api/project'
+import { sessionAPI } from '@/features/sessions/api/session'
+import { SessionRenameModal } from '@/features/sessions/components/SessionRenameModal'
 import { useProjects } from '@/features/sessions/hooks/useProjects'
+import { useSessions } from '@/features/sessions/hooks/useSessions'
 import { Icons } from '@/shared/components/ui/Icons'
 import { cn } from '@/shared/lib/utils'
 
@@ -31,7 +36,10 @@ export const MobileSidebar: React.FC<
     onHomeClick,
     user,
 }) => {
+    const queryClient = useQueryClient()
     const { data: projects = [], isLoading: isProjectsLoading } = useProjects()
+    const { data: sessionsData, isLoading: isSessionsLoading } = useSessions()
+    const sessions = React.useMemo(() => sessionsData?.sessions || [], [sessionsData?.sessions])
     const location = useLocation()
     const path = location.pathname
 
@@ -48,8 +56,33 @@ export const MobileSidebar: React.FC<
         null
     )
     const [sortBy, setSortBy] = React.useState<'created' | 'updated'>('updated')
+    const [filterSchedules, setFilterSchedules] = React.useState(true)
+    const [filterArchived, setFilterArchived] = React.useState(false)
+    const [sessionType, setSessionType] = React.useState<'all' | 'agent' | 'search'>('all')
     const recentMenuRef = React.useRef<HTMLDivElement | null>(null)
     const recentMenuTriggerRef = React.useRef<HTMLButtonElement | null>(null)
+
+    // Item menu state
+    const [itemMenuState, setItemMenuState] = React.useState<{
+        sessionId: string
+        sessionTitle: string
+        isArchived: boolean
+        top: number
+        left: number
+    } | null>(null)
+    const itemMenuRef = React.useRef<HTMLDivElement | null>(null)
+    const [copiedSessionId, setCopiedSessionId] = React.useState<string | null>(null)
+
+    // Rename modal state
+    const [renameModal, setRenameModal] = React.useState<{
+        isOpen: boolean
+        sessionId: string
+        value: string
+    }>({
+        isOpen: false,
+        sessionId: '',
+        value: '',
+    })
 
     let activeIndex = 0
     if (isSearchOpen) {
@@ -90,10 +123,10 @@ export const MobileSidebar: React.FC<
             onClick: () => {
                 if (isAuthenticated) {
                     setIsSearchOpen(true)
-                    onClose()
                 } else {
                     if (onOpenAuth) onOpenAuth()
                 }
+                onClose()
             },
         },
         {
@@ -110,7 +143,7 @@ export const MobileSidebar: React.FC<
             label: 'Review',
             icon: <Icons.GitPullRequest className="w-[18px] h-[18px]" />,
             onClick: () => {
-                if (onReview) onReview()
+                onReview()
                 onClose()
             },
         },
@@ -155,15 +188,222 @@ export const MobileSidebar: React.FC<
         }
     }, [isRecentMenuOpen])
 
-    const recentProjects = isAuthenticated
-        ? [...projects]
-              .sort((a, b) =>
-                  sortBy === 'created'
-                      ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                      : new Date(b.rawUpdatedAt).getTime() - new Date(a.rawUpdatedAt).getTime()
-              )
-              .slice(0, 10)
-        : []
+    React.useEffect(() => {
+        if (!itemMenuState) return
+        const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+            const target = e.target as Node | null
+            if (itemMenuRef.current && !itemMenuRef.current.contains(target)) {
+                setItemMenuState(null)
+            }
+        }
+        document.addEventListener('mousedown', handleOutsideClick)
+        document.addEventListener('touchstart', handleOutsideClick)
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick)
+            document.removeEventListener('touchstart', handleOutsideClick)
+        }
+    }, [itemMenuState])
+
+    const handleToggleArchive = async (sessionId: string, currentArchived: boolean) => {
+        const nextArchived = !currentArchived
+        // Instant optimistic cache update
+        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
+            if (!old) return old
+            if (Array.isArray(old)) {
+                return old.map((s) => (s.id === sessionId ? { ...s, isArchived: nextArchived } : s))
+            }
+            if (Array.isArray(old.sessions)) {
+                return {
+                    ...old,
+                    sessions: old.sessions.map((s: any) =>
+                        s.id === sessionId ? { ...s, isArchived: nextArchived } : s
+                    ),
+                }
+            }
+            return old
+        })
+        queryClient.setQueryData(['session', sessionId], (old: any) => {
+            if (!old) return old
+            return { ...old, isArchived: nextArchived }
+        })
+        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
+            if (!old || !Array.isArray(old)) return old
+            return old.map((p) => (p.id === sessionId ? { ...p, isArchived: nextArchived } : p))
+        })
+        setItemMenuState(null)
+
+        try {
+            if (currentArchived) {
+                await sessionAPI.unarchiveSession(sessionId)
+            } else {
+                await sessionAPI.archiveSession(sessionId)
+            }
+        } catch (err) {
+            console.error('Failed to toggle archive:', err)
+        } finally {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+        }
+    }
+
+    const handleDeleteSession = async (sessionId: string) => {
+        // Instant optimistic removal
+        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
+            if (!old) return old
+            if (Array.isArray(old)) {
+                return old.filter((s) => s.id !== sessionId)
+            }
+            if (Array.isArray(old.sessions)) {
+                return {
+                    ...old,
+                    sessions: old.sessions.filter((s: any) => s.id !== sessionId),
+                }
+            }
+            return old
+        })
+        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
+            if (!old || !Array.isArray(old)) return old
+            return old.filter((p) => p.id !== sessionId)
+        })
+        setItemMenuState(null)
+
+        try {
+            await sessionAPI
+                .deleteSession(sessionId)
+                .catch(() => projectAPI.deleteProject(sessionId))
+        } catch (err) {
+            console.error('Failed to delete session:', err)
+        } finally {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+        }
+    }
+
+    const handleRenameSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const newTitle = renameModal.value.trim()
+        const sessionId = renameModal.sessionId
+        if (!newTitle || !sessionId) return
+
+        // Instant optimistic rename
+        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
+            if (!old) return old
+            if (Array.isArray(old)) {
+                return old.map((s) => (s.id === sessionId ? { ...s, title: newTitle } : s))
+            }
+            if (Array.isArray(old.sessions)) {
+                return {
+                    ...old,
+                    sessions: old.sessions.map((s: any) =>
+                        s.id === sessionId ? { ...s, title: newTitle } : s
+                    ),
+                }
+            }
+            return old
+        })
+        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
+            if (!old || !Array.isArray(old)) return old
+            return old.map((p) =>
+                p.id === sessionId ? { ...p, title: newTitle, name: newTitle } : p
+            )
+        })
+        setRenameModal({ isOpen: false, sessionId: '', value: '' })
+
+        try {
+            await sessionAPI.renameSession(sessionId, newTitle).catch(() => {})
+        } catch (err) {
+            console.error('Failed to rename session:', err)
+        } finally {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+        }
+    }
+
+    const handleCopyLink = (sessionId: string) => {
+        const url = `${window.location.origin}/session/${sessionId}`
+        navigator.clipboard.writeText(url)
+        setCopiedSessionId(sessionId)
+        setTimeout(() => {
+            setCopiedSessionId(null)
+            setItemMenuState(null)
+        }, 1000)
+    }
+
+    const formatRelativeTime = (isoString?: string) => {
+        if (!isoString) return 'just now'
+        const date = new Date(isoString)
+        if (isNaN(date.getTime())) return 'just now'
+        const diff = Math.max(0, Date.now() - date.getTime())
+        const mins = Math.floor(diff / (1000 * 60))
+        if (mins < 1) return 'just now'
+        if (mins < 60) return `${mins}m ago`
+        const hours = Math.floor(mins / 60)
+        if (hours < 24) return `${hours}h ago`
+        const days = Math.floor(hours / 24)
+        if (days < 7) return `${days}d ago`
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    }
+
+    const recentProjects = React.useMemo(() => {
+        if (!isAuthenticated) return []
+
+        const sourceList =
+            sessions && sessions.length > 0
+                ? sessions.map((s) => ({
+                      id: s.id,
+                      title: s.title || s.projectName || 'Untitled Session',
+                      projectName: s.projectName,
+                      updatedAt: s.updatedAt,
+                      createdAt: s.createdAt,
+                      isArchived: Boolean(s.isArchived),
+                      type: s.type || 'WEB',
+                      isSchedule: Boolean(
+                          s.tags?.some((t) => t.toLowerCase().includes('schedule')) ||
+                          s.type === ('SCHEDULE' as any)
+                      ),
+                      prNumber: s.prNumber,
+                  }))
+                : projects.map((p) => ({
+                      id: p.id,
+                      title: p.title || 'Untitled Session',
+                      projectName: p.title,
+                      updatedAt: p.rawUpdatedAt || p.updatedAt,
+                      createdAt: p.createdAt,
+                      isArchived: false,
+                      type: 'WEB',
+                      isSchedule: false,
+                      prNumber: undefined as number | undefined,
+                  }))
+
+        return sourceList
+            .filter((item) => {
+                if (!filterSchedules && item.isSchedule) {
+                    return false
+                }
+                if (!filterArchived && item.isArchived) {
+                    return false
+                }
+                if (sessionType === 'agent' && item.type === 'SEARCH') {
+                    return false
+                }
+                if (sessionType === 'search' && item.type !== 'SEARCH') {
+                    return false
+                }
+                return true
+            })
+            .sort((a, b) => {
+                const timeA = new Date(a.createdAt).getTime() || 0
+                const timeB = new Date(b.createdAt).getTime() || 0
+                const updatedA = new Date(a.updatedAt).getTime() || 0
+                const updatedB = new Date(b.updatedAt).getTime() || 0
+
+                if (sortBy === 'created') {
+                    return timeB - timeA
+                }
+                return updatedB - updatedA
+            })
+            .slice(0, 10)
+    }, [isAuthenticated, sessions, projects, sortBy, filterSchedules, filterArchived, sessionType])
 
     return (
         <>
@@ -234,9 +474,9 @@ export const MobileSidebar: React.FC<
                     </div>
                 </div>
 
-                <div className="flex-1 flex flex-col mt-2 mb-2 font-sans pl-[10px] pr-3 min-h-0">
+                <div className="flex-1 flex flex-col mt-2 mb-2 font-sans px-3 min-h-0">
                     <div className="flex flex-col h-full">
-                        <div className="flex items-center justify-between px-3 py-1.5 w-full text-left group shrink-0 z-10">
+                        <div className="flex items-center justify-between px-2.5 py-1.5 w-full text-left group shrink-0 z-10">
                             <div className="flex items-center gap-1.5 text-[#919191]">
                                 <History className="w-3.5 h-3.5" strokeWidth={2.5} />
                                 <span className="font-medium text-[12px] whitespace-nowrap transition-colors tracking-tight">
@@ -274,53 +514,118 @@ export const MobileSidebar: React.FC<
                                         createPortal(
                                             <div
                                                 ref={recentMenuRef}
-                                                className="fixed z-[200] w-[160px] rounded-2xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-2xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100 font-sans text-left"
+                                                className="fixed z-[200] w-[180px] rounded-xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-2xl p-1 flex flex-col gap-0 animate-in fade-in zoom-in-95 duration-100 font-sans text-left"
                                                 style={{
                                                     top: recentMenuPos.top,
                                                     left: recentMenuPos.left,
                                                 }}
                                             >
-                                                <div className="px-3 py-1 text-[12px] font-medium text-[#8F8E8D]">
+                                                <div className="px-2.5 py-1 text-[11.5px] font-medium text-[#8F8E8D]">
                                                     Sort by
                                                 </div>
                                                 <button
                                                     onClick={() => {
                                                         setSortBy('created')
-                                                        setIsRecentMenuOpen(false)
                                                     }}
-                                                    className="flex items-center justify-between w-full px-3 py-1.5 rounded-xl hover:bg-[#252525] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
                                                 >
                                                     <span>Created time</span>
                                                     {sortBy === 'created' && (
-                                                        <span className="text-white text-[14px]">
-                                                            ✓
-                                                        </span>
+                                                        <Icons.Check className="w-3.5 h-3.5 text-white" />
                                                     )}
                                                 </button>
                                                 <button
                                                     onClick={() => {
                                                         setSortBy('updated')
-                                                        setIsRecentMenuOpen(false)
                                                     }}
-                                                    className="flex items-center justify-between w-full px-3 py-1.5 rounded-xl hover:bg-[#252525] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
                                                 >
                                                     <span>Last updated</span>
                                                     {sortBy === 'updated' && (
-                                                        <span className="text-white text-[14px]">
-                                                            ✓
-                                                        </span>
+                                                        <Icons.Check className="w-3.5 h-3.5 text-white" />
                                                     )}
                                                 </button>
+
                                                 <div className="h-[1px] bg-[#2B2A29] mx-1 my-1" />
+
+                                                <div className="px-2.5 py-1 text-[11.5px] font-medium text-[#8F8E8D]">
+                                                    Filter
+                                                </div>
+                                                <button
+                                                    onClick={() =>
+                                                        setFilterSchedules(!filterSchedules)
+                                                    }
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                >
+                                                    <span>Schedules</span>
+                                                    <div
+                                                        className={`w-7 h-[14px] rounded-full flex items-center px-[2px] transition-colors ${filterSchedules ? 'bg-[#87B2F4]' : 'bg-[#333333]'}`}
+                                                    >
+                                                        <div
+                                                            className={`w-[10px] h-[10px] rounded-full bg-white transition-transform ${filterSchedules ? 'translate-x-[14px]' : 'translate-x-0'}`}
+                                                        />
+                                                    </div>
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        setFilterArchived(!filterArchived)
+                                                    }
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                >
+                                                    <span>Archived</span>
+                                                    <div
+                                                        className={`w-7 h-[14px] rounded-full flex items-center px-[2px] transition-colors ${filterArchived ? 'bg-[#87B2F4]' : 'bg-[#333333]'}`}
+                                                    >
+                                                        <div
+                                                            className={`w-[10px] h-[10px] rounded-full bg-white transition-transform ${filterArchived ? 'translate-x-[14px]' : 'translate-x-0'}`}
+                                                        />
+                                                    </div>
+                                                </button>
+
+                                                <div className="h-[1px] bg-[#2B2A29] mx-1 my-1" />
+
+                                                <div className="px-2.5 py-1 text-[11.5px] font-medium text-[#8F8E8D]">
+                                                    Session type
+                                                </div>
+                                                <button
+                                                    onClick={() => setSessionType('all')}
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                >
+                                                    <span>All</span>
+                                                    {sessionType === 'all' && (
+                                                        <Icons.Check className="w-3.5 h-3.5 text-white" />
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => setSessionType('agent')}
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                >
+                                                    <span>Agent</span>
+                                                    {sessionType === 'agent' && (
+                                                        <Icons.Check className="w-3.5 h-3.5 text-white" />
+                                                    )}
+                                                </button>
+                                                <button
+                                                    onClick={() => setSessionType('search')}
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                >
+                                                    <span>Search</span>
+                                                    {sessionType === 'search' && (
+                                                        <Icons.Check className="w-3.5 h-3.5 text-white" />
+                                                    )}
+                                                </button>
+
+                                                <div className="h-[1px] bg-[#2B2A29] mx-1 my-1" />
+
                                                 <button
                                                     onClick={() => {
                                                         setIsRecentMenuOpen(false)
                                                         onSessions?.()
                                                         onClose()
                                                     }}
-                                                    className="flex items-center gap-3 w-full px-3 py-1.5 rounded-xl hover:bg-[#252525] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
                                                 >
-                                                    <span>View all projects</span>
+                                                    <span>View all sessions</span>
                                                 </button>
                                             </div>,
                                             document.body
@@ -329,26 +634,102 @@ export const MobileSidebar: React.FC<
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-[2px] mt-1 pr-1 overflow-y-auto no-scrollbar flex-1 min-h-0 pb-2">
+                        <div className="flex flex-col gap-[2px] mt-1 overflow-y-auto no-scrollbar flex-1 min-h-0 pb-2">
                             {isAuthenticated ? (
-                                isProjectsLoading ? null : recentProjects.length > 0 ? (
+                                isProjectsLoading &&
+                                isSessionsLoading ? null : recentProjects.length > 0 ? (
                                     recentProjects.map((project) => (
                                         <div
                                             key={project.id}
-                                            className="flex items-center justify-between px-3 py-1 w-full text-left rounded-lg hover:bg-[#252525] transition-colors group cursor-pointer"
+                                            className="group flex items-center justify-between px-2.5 py-1.5 w-full text-left rounded-xl hover:bg-[#202020] transition-colors cursor-pointer relative"
                                             onClick={() => {
                                                 onOpenProject(project.id)
                                                 onClose()
                                             }}
                                         >
-                                            <div className="flex flex-col min-w-0 pr-2 overflow-hidden">
-                                                <span className="font-normal text-[12px] transition-colors tracking-tight text-[#E8E8E8] group-hover:text-[#E8E8E8] truncate">
-                                                    {/* @ts-expect-error -- fallback for project name property */}
-                                                    {project.name || project.title}
+                                            <div className="flex flex-col min-w-0 pr-1.5 overflow-hidden flex-1">
+                                                <span className="font-normal text-[12.5px] transition-colors tracking-tight text-[#EDEDED] group-hover:text-white truncate leading-snug">
+                                                    {project.title}
                                                 </span>
-                                                <span className="text-[11px] text-[#8F8E8D] tracking-tight truncate mt-[1px]">
-                                                    {project.updatedAt || 'just now'}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 text-[11px] text-[#8F8E8D] tracking-tight truncate mt-[2px]">
+                                                    <span>
+                                                        {formatRelativeTime(project.updatedAt)}
+                                                    </span>
+                                                    {project.type === 'SEARCH' ? (
+                                                        <>
+                                                            <span className="text-[#555] select-none">
+                                                                •
+                                                            </span>
+                                                            <span className="text-[#8F8E8D] inline-flex items-center">
+                                                                <Icons.Search className="w-3 h-3 text-[#8F8E8D]" />
+                                                            </span>
+                                                        </>
+                                                    ) : project.prNumber ? (
+                                                        <>
+                                                            <span className="text-[#555] select-none">
+                                                                •
+                                                            </span>
+                                                            <span className="text-[#C084FC] inline-flex items-center gap-0.5 font-mono text-[10.5px]">
+                                                                <Icons.GitPullRequest className="w-3 h-3 text-[#C084FC]" />
+                                                                <span>{project.prNumber}</span>
+                                                            </span>
+                                                        </>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+
+                                            {/* Right side hover actions */}
+                                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                                {/* Archive Button with Tooltip */}
+                                                <div className="relative group/btn">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            handleToggleArchive(
+                                                                project.id,
+                                                                project.isArchived
+                                                            )
+                                                        }}
+                                                        className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"
+                                                        aria-label={
+                                                            project.isArchived
+                                                                ? 'Unarchive'
+                                                                : 'Archive'
+                                                        }
+                                                    >
+                                                        <Icons.Archive className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <div className="absolute bottom-[calc(100%+6px)] right-0 z-50 hidden group-hover/btn:flex items-center gap-1 bg-[#1F1F1F] border border-[#282828] px-2 py-0.5 rounded-md shadow-lg whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
+                                                        <span className="text-[11.5px] font-medium text-[#EDEDEF]">
+                                                            {project.isArchived
+                                                                ? 'Unarchive'
+                                                                : 'Archive'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* 3 Dots Menu Button */}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        const rect =
+                                                            e.currentTarget.getBoundingClientRect()
+                                                        setItemMenuState({
+                                                            sessionId: project.id,
+                                                            sessionTitle: project.title,
+                                                            isArchived: project.isArchived,
+                                                            top: rect.top,
+                                                            left: rect.right + 8,
+                                                        })
+                                                    }}
+                                                    className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"
+                                                    title="More options"
+                                                    aria-label="More options"
+                                                >
+                                                    <Icons.MoreHorizontal className="w-3.5 h-3.5" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))
@@ -369,23 +750,11 @@ export const MobileSidebar: React.FC<
                 <SidebarFooter
                     isAuthenticated={isAuthenticated}
                     isCollapsed={false}
-                    onProfile={() => {
-                        onProfile()
-                        onClose()
-                    }}
-                    onDocs={() => {
-                        onDocs()
-                        onClose()
-                    }}
-                    onOpenAuth={() => {
-                        onOpenAuth()
-                        onClose()
-                    }}
+                    onProfile={onProfile}
+                    onDocs={onDocs}
+                    onOpenAuth={onOpenAuth}
                     user={user}
-                    onSignOut={() => {
-                        onSignOut?.()
-                        onClose()
-                    }}
+                    onSignOut={onSignOut}
                 />
             </div>
 
@@ -394,6 +763,99 @@ export const MobileSidebar: React.FC<
                 onClose={() => setIsSearchOpen(false)}
                 onNewThread={isAuthenticated ? onNewThread : onOpenAuth}
                 isAuthenticated={isAuthenticated}
+            />
+
+            {/* Session Item 3-Dots Dropdown Menu Portal */}
+            {itemMenuState &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                    <div
+                        ref={itemMenuRef}
+                        className="fixed z-[250] w-[180px] rounded-xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-2xl p-1 flex flex-col gap-0 animate-in fade-in zoom-in-95 duration-100 font-sans text-left"
+                        style={{
+                            top: itemMenuState.top,
+                            left: itemMenuState.left,
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Folder */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setItemMenuState(null)
+                                onOpenProject?.(itemMenuState.sessionId)
+                                onClose()
+                            }}
+                            className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <Icons.Folder className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                                <span>Folder</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[#8F8E8D]">
+                                <span className="text-[11.5px] font-normal truncate max-w-[70px]">
+                                    {itemMenuState.sessionTitle || 'project1'}
+                                </span>
+                                <Icons.ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                            </div>
+                        </button>
+
+                        {/* Rename */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setRenameModal({
+                                    isOpen: true,
+                                    sessionId: itemMenuState.sessionId,
+                                    value: itemMenuState.sessionTitle,
+                                })
+                                setItemMenuState(null)
+                            }}
+                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <Icons.Edit className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                            <span>Rename</span>
+                        </button>
+
+                        {/* Copy session link */}
+                        <button
+                            type="button"
+                            onClick={() => handleCopyLink(itemMenuState.sessionId)}
+                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <Icons.Copy className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                            <span>
+                                {copiedSessionId === itemMenuState.sessionId
+                                    ? 'Copied!'
+                                    : 'Copy session link'}
+                            </span>
+                        </button>
+
+                        {/* Analyze session */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setItemMenuState(null)
+                                onOpenProject?.(itemMenuState.sessionId)
+                                onClose()
+                            }}
+                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <Icons.Search className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                            <span>Analyze session</span>
+                        </button>
+                    </div>,
+                    document.body
+                )}
+
+            {/* Session Rename Modal */}
+            <SessionRenameModal
+                isOpen={renameModal.isOpen}
+                value={renameModal.value}
+                isPending={false}
+                onClose={() => setRenameModal({ isOpen: false, sessionId: '', value: '' })}
+                onChange={(val) => setRenameModal((prev) => ({ ...prev, value: val }))}
+                onSubmit={handleRenameSubmit}
             />
         </>
     )

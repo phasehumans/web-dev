@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import React, { useState, useRef, useEffect } from 'react'
+import { Paperclip, KeyRound, Code2, Puzzle, Folder } from 'lucide-react'
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 
 import { apiFetch } from '@/shared/api/client'
 import { Icons } from '@/shared/components/ui/Icons'
@@ -25,8 +26,14 @@ export const WikiChat: React.FC<WikiChatProps> = ({
     const [messages, setMessages] = useState<ChatMessage[]>([])
     const [prompt, setPrompt] = useState('')
     const [isMinimized, setIsMinimized] = useState(false)
+    const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false)
+    const [plusMenuPosition, setPlusMenuPosition] = useState<'top' | 'bottom'>('top')
+    const [selectedPlusIndex, setSelectedPlusIndex] = useState(0)
+
     const textareaRef = useRef<HTMLTextAreaElement | null>(null)
     const messagesEndRef = useRef<HTMLDivElement | null>(null)
+    const plusRef = useRef<HTMLDivElement | null>(null)
+    const fileInputRef = useRef<HTMLInputElement | null>(null)
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -46,6 +53,109 @@ export const WikiChat: React.FC<WikiChatProps> = ({
             textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
         }
     }, [prompt])
+
+    // Close plus menu on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (plusRef.current && !plusRef.current.contains(e.target as Node)) {
+                setIsPlusMenuOpen(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    const handleOptionSelect = useCallback((trigger: string) => {
+        setIsPlusMenuOpen(false)
+        setPrompt((prev) => {
+            const separator = prev.length > 0 && !prev.endsWith(' ') ? ' ' : ''
+            return prev + separator + trigger
+        })
+        setTimeout(() => {
+            textareaRef.current?.focus()
+        }, 50)
+    }, [])
+
+    const handleUploadClick = useCallback(() => {
+        setIsPlusMenuOpen(false)
+        if (fileInputRef.current) {
+            fileInputRef.current.click()
+        }
+    }, [])
+
+    const plusMenuItems = useMemo(
+        () => [
+            {
+                label: 'Upload attachment',
+                icon: <Paperclip className="w-4 h-4 text-[#8F8E8D]" />,
+                action: handleUploadClick,
+            },
+            {
+                label: 'Repositories',
+                icon: <Icons.Github className="w-4 h-4 text-[#8F8E8D]" />,
+                action: () => handleOptionSelect('repos:'),
+            },
+            {
+                label: 'Codebase files',
+                icon: <Code2 className="w-4 h-4 text-[#8F8E8D]" />,
+                action: () => handleOptionSelect('files:'),
+            },
+            {
+                label: 'Sessions',
+                icon: <Folder className="w-4 h-4 text-[#8F8E8D]" />,
+                action: () => handleOptionSelect('sessions:'),
+            },
+            {
+                label: 'Skills',
+                icon: <Puzzle className="w-4 h-4 text-[#8F8E8D]" />,
+                action: () => handleOptionSelect('skills:'),
+            },
+            {
+                label: 'Secrets',
+                icon: <KeyRound className="w-4 h-4 text-[#8F8E8D]" />,
+                action: () => handleOptionSelect('secrets:'),
+            },
+            {
+                label: 'Send secrets',
+                icon: (
+                    <KeyRound
+                        className="w-4 h-4 text-[#8F8E8D]"
+                        style={{ transform: 'scaleY(-1) rotate(-135deg)' }}
+                    />
+                ),
+                action: () => handleOptionSelect('send-secrets:'),
+            },
+        ],
+        [handleOptionSelect, handleUploadClick]
+    )
+
+    // Keyboard navigation for plus menu
+    useEffect(() => {
+        if (!isPlusMenuOpen) {
+            setSelectedPlusIndex(0)
+            return
+        }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const menuCount = plusMenuItems.length
+            if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedPlusIndex((prev) => (prev + 1) % menuCount)
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedPlusIndex((prev) => (prev - 1 + menuCount) % menuCount)
+            } else if (e.key === 'Enter') {
+                e.preventDefault()
+                e.stopPropagation()
+                plusMenuItems[selectedPlusIndex]?.action()
+            } else if (e.key === 'Escape') {
+                setIsPlusMenuOpen(false)
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown, true)
+        return () => document.removeEventListener('keydown', handleKeyDown, true)
+    }, [isPlusMenuOpen, selectedPlusIndex, plusMenuItems])
 
     const chatMutation = useMutation({
         mutationFn: async (userPrompt: string) => {
@@ -111,7 +221,29 @@ export const WikiChat: React.FC<WikiChatProps> = ({
     const hasInput = prompt.trim().length > 0
 
     return (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-[92%] max-w-3xl z-40 transition-all duration-300 font-sans">
+        <div className="sticky bottom-5 z-40 w-[92%] max-w-[680px] mx-auto transition-all duration-300 font-sans pointer-events-auto mt-auto shrink-0 pb-1">
+            {/* Hidden file input for attachment upload */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                multiple
+                accept="image/*,.pdf,.doc,.docx,.txt"
+                onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        const fileNames = Array.from(e.target.files)
+                            .map((f) => f.name)
+                            .join(', ')
+                        setPrompt((prev) =>
+                            prev ? `${prev} [Attached: ${fileNames}]` : `[Attached: ${fileNames}]`
+                        )
+                    }
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = ''
+                    }
+                }}
+            />
+
             {/* Message History (above prompt, shown when messages exist) */}
             {!isMinimized && messages.length > 0 && (
                 <div
@@ -189,12 +321,67 @@ export const WikiChat: React.FC<WikiChatProps> = ({
                 {/* Footer bar — exact match of PromptFooter */}
                 {!isMinimized && (
                     <div className="flex items-center justify-between px-3 pb-3 mt-0 pl-3 relative">
-                        {/* Left controls */}
+                        {/* Left controls: Plus Menu with Dropdown/Dropup */}
                         <div className="flex items-center gap-1.5">
                             <div className="flex items-center">
-                                {/* Q&A mode label (like Canvas button in PromptFooter) */}
-                                <div className="flex items-center gap-1.5 text-[#8E8E8E] hover:text-white hover:bg-[#27272A] px-2 py-0.5 rounded-full transition-all duration-200 outline-none cursor-default bg-transparent border border-dashed border-white/20">
-                                    <span className="text-[12px] font-medium">Q&A</span>
+                                <div className="relative group/btn" ref={plusRef}>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            if (!isPlusMenuOpen) {
+                                                const rect = e.currentTarget.getBoundingClientRect()
+                                                const spaceBelow = window.innerHeight - rect.bottom
+                                                if (spaceBelow < 260 && rect.top > spaceBelow) {
+                                                    setPlusMenuPosition('top')
+                                                } else {
+                                                    setPlusMenuPosition('bottom')
+                                                }
+                                            }
+                                            setIsPlusMenuOpen(!isPlusMenuOpen)
+                                        }}
+                                        className="flex items-center justify-center w-8 h-8 rounded-full text-[#8E8E8E] transition-all hover:bg-white/5 hover:text-white outline-none cursor-pointer"
+                                        title="Attach or mention"
+                                        aria-label="Add"
+                                    >
+                                        <Icons.Plus className="w-[18px] h-[18px] stroke-[2.5px]" />
+                                    </button>
+
+                                    {/* Hover Tooltip when menu closed */}
+                                    {!isPlusMenuOpen && (
+                                        <div className="absolute bottom-[calc(100%+6px)] left-0 z-50 hidden group-hover/btn:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
+                                            <span className="text-[12px] font-medium text-[#EDEDEF]">
+                                                Attach or mention
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Plus Menu Dropdown / Dropup matching PromptFooter */}
+                                    {isPlusMenuOpen && (
+                                        <div
+                                            className={`absolute ${
+                                                plusMenuPosition === 'top'
+                                                    ? 'bottom-[calc(100%+8px)]'
+                                                    : 'top-[calc(100%+8px)]'
+                                            } left-0 w-[230px] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-150 font-sans`}
+                                        >
+                                            {plusMenuItems.map((item, idx) => (
+                                                <button
+                                                    key={item.label}
+                                                    type="button"
+                                                    onMouseEnter={() => setSelectedPlusIndex(idx)}
+                                                    onClick={item.action}
+                                                    className={`flex items-center gap-3 px-3 py-1.5 rounded-xl text-left text-[12.5px] font-medium text-[#EDEDEF] transition-colors outline-none w-full cursor-pointer ${
+                                                        selectedPlusIndex === idx
+                                                            ? 'bg-[#252525]'
+                                                            : 'hover:bg-[#252525]'
+                                                    }`}
+                                                >
+                                                    {item.icon}
+                                                    <span>{item.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

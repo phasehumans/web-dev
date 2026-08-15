@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import React from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -7,9 +8,11 @@ import { SidebarFooter } from './SidebarFooter'
 
 import type { SidebarProps } from '@/features/navigation/types'
 
-import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
-import { SettingsBigModal } from '@/features/preview/components/settings/SettingsBigModal'
+import { projectAPI } from '@/features/sessions/api/project'
+import { sessionAPI } from '@/features/sessions/api/session'
+import { SessionRenameModal } from '@/features/sessions/components/SessionRenameModal'
 import { useProjects } from '@/features/sessions/hooks/useProjects'
+import { useSessions } from '@/features/sessions/hooks/useSessions'
 import { Icons } from '@/shared/components/ui/Icons'
 import { cn } from '@/shared/lib/utils'
 
@@ -40,14 +43,16 @@ const Sidebar: React.FC<
     isCollapsed,
     onExpand,
 }) => {
+    const queryClient = useQueryClient()
     const { data: projects = [], isLoading: isProjectsLoading } = useProjects()
+    const { data: sessionsData, isLoading: isSessionsLoading } = useSessions()
+    const sessions = React.useMemo(() => sessionsData?.sessions || [], [sessionsData?.sessions])
     const navigate = useNavigate()
     const location = useLocation()
     const path = location.pathname
 
     const [isSearchOpen, setIsSearchOpen] = React.useState(false)
     const [isRecentMenuOpen, setIsRecentMenuOpen] = React.useState(false)
-    const [settingsProjectId, setSettingsProjectId] = React.useState<string | null>(null)
     const [recentMenuPos, setRecentMenuPos] = React.useState<{ top: number; left: number } | null>(
         null
     )
@@ -59,6 +64,28 @@ const Sidebar: React.FC<
     const recentMenuRef = React.useRef<HTMLDivElement | null>(null)
     const recentMenuTriggerRef = React.useRef<HTMLButtonElement | null>(null)
     const [isLogoAnimating, setIsLogoAnimating] = React.useState(false)
+
+    // Item-level hover options menu state
+    const [itemMenuState, setItemMenuState] = React.useState<{
+        sessionId: string
+        sessionTitle: string
+        isArchived: boolean
+        top: number
+        left: number
+    } | null>(null)
+    const itemMenuRef = React.useRef<HTMLDivElement | null>(null)
+    const [copiedSessionId, setCopiedSessionId] = React.useState<string | null>(null)
+
+    // Rename modal state
+    const [renameModal, setRenameModal] = React.useState<{
+        isOpen: boolean
+        sessionId: string
+        value: string
+    }>({
+        isOpen: false,
+        sessionId: '',
+        value: '',
+    })
 
     React.useEffect(() => {
         if (isCollapsed) {
@@ -90,6 +117,22 @@ const Sidebar: React.FC<
     }, [isRecentMenuOpen])
 
     React.useEffect(() => {
+        if (!itemMenuState) return
+        const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+            const target = e.target as Node | null
+            if (itemMenuRef.current && !itemMenuRef.current.contains(target)) {
+                setItemMenuState(null)
+            }
+        }
+        document.addEventListener('mousedown', handleOutsideClick)
+        document.addEventListener('touchstart', handleOutsideClick)
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick)
+            document.removeEventListener('touchstart', handleOutsideClick)
+        }
+    }, [itemMenuState])
+
+    React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault()
@@ -99,6 +142,131 @@ const Sidebar: React.FC<
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [])
+
+    const handleToggleArchive = async (sessionId: string, currentArchived: boolean) => {
+        const nextArchived = !currentArchived
+        // Instant optimistic cache update
+        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
+            if (!old) return old
+            if (Array.isArray(old)) {
+                return old.map((s) => (s.id === sessionId ? { ...s, isArchived: nextArchived } : s))
+            }
+            if (Array.isArray(old.sessions)) {
+                return {
+                    ...old,
+                    sessions: old.sessions.map((s: any) =>
+                        s.id === sessionId ? { ...s, isArchived: nextArchived } : s
+                    ),
+                }
+            }
+            return old
+        })
+        queryClient.setQueryData(['session', sessionId], (old: any) => {
+            if (!old) return old
+            return { ...old, isArchived: nextArchived }
+        })
+        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
+            if (!old || !Array.isArray(old)) return old
+            return old.map((p) => (p.id === sessionId ? { ...p, isArchived: nextArchived } : p))
+        })
+        setItemMenuState(null)
+
+        try {
+            if (currentArchived) {
+                await sessionAPI.unarchiveSession(sessionId)
+            } else {
+                await sessionAPI.archiveSession(sessionId)
+            }
+        } catch (err) {
+            console.error('Failed to toggle archive:', err)
+        } finally {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+        }
+    }
+
+    const handleDeleteSession = async (sessionId: string) => {
+        // Instant optimistic removal
+        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
+            if (!old) return old
+            if (Array.isArray(old)) {
+                return old.filter((s) => s.id !== sessionId)
+            }
+            if (Array.isArray(old.sessions)) {
+                return {
+                    ...old,
+                    sessions: old.sessions.filter((s: any) => s.id !== sessionId),
+                }
+            }
+            return old
+        })
+        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
+            if (!old || !Array.isArray(old)) return old
+            return old.filter((p) => p.id !== sessionId)
+        })
+        setItemMenuState(null)
+
+        try {
+            await sessionAPI
+                .deleteSession(sessionId)
+                .catch(() => projectAPI.deleteProject(sessionId))
+        } catch (err) {
+            console.error('Failed to delete session:', err)
+        } finally {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+        }
+    }
+
+    const handleRenameSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const newTitle = renameModal.value.trim()
+        const sessionId = renameModal.sessionId
+        if (!newTitle || !sessionId) return
+
+        // Instant optimistic rename
+        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
+            if (!old) return old
+            if (Array.isArray(old)) {
+                return old.map((s) => (s.id === sessionId ? { ...s, title: newTitle } : s))
+            }
+            if (Array.isArray(old.sessions)) {
+                return {
+                    ...old,
+                    sessions: old.sessions.map((s: any) =>
+                        s.id === sessionId ? { ...s, title: newTitle } : s
+                    ),
+                }
+            }
+            return old
+        })
+        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
+            if (!old || !Array.isArray(old)) return old
+            return old.map((p) =>
+                p.id === sessionId ? { ...p, title: newTitle, name: newTitle } : p
+            )
+        })
+        setRenameModal({ isOpen: false, sessionId: '', value: '' })
+
+        try {
+            await sessionAPI.renameSession(sessionId, newTitle).catch(() => {})
+        } catch (err) {
+            console.error('Failed to rename session:', err)
+        } finally {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            queryClient.invalidateQueries({ queryKey: ['projects'] })
+        }
+    }
+
+    const handleCopyLink = (sessionId: string) => {
+        const url = `${window.location.origin}/session/${sessionId}`
+        navigator.clipboard.writeText(url)
+        setCopiedSessionId(sessionId)
+        setTimeout(() => {
+            setCopiedSessionId(null)
+            setItemMenuState(null)
+        }, 1000)
+    }
 
     const isHomeActive = path === '/'
     const isProjectsActive =
@@ -179,21 +347,81 @@ const Sidebar: React.FC<
         },
     ]
 
-    // keep exact same size (was 200px when open)
-    // no collapse option
+    const formatRelativeTime = (isoString?: string) => {
+        if (!isoString) return 'just now'
+        const date = new Date(isoString)
+        if (isNaN(date.getTime())) return 'just now'
+        const diff = Math.max(0, Date.now() - date.getTime())
+        const mins = Math.floor(diff / (1000 * 60))
+        if (mins < 1) return 'just now'
+        if (mins < 60) return `${mins}m ago`
+        const hours = Math.floor(mins / 60)
+        if (hours < 24) return `${hours}h ago`
+        const days = Math.floor(hours / 24)
+        if (days < 7) return `${days}d ago`
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    }
 
-    const { data: overview } = useBillingOverview()
-    const isPro = (overview as any)?.plan === 'PRO'
+    const recentProjects = React.useMemo(() => {
+        if (!isAuthenticated) return []
 
-    const recentProjects = isAuthenticated
-        ? [...projects]
-              .sort((a, b) =>
-                  sortBy === 'created'
-                      ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                      : new Date(b.rawUpdatedAt).getTime() - new Date(a.rawUpdatedAt).getTime()
-              )
-              .slice(0, 10)
-        : []
+        const sourceList =
+            sessions && sessions.length > 0
+                ? sessions.map((s) => ({
+                      id: s.id,
+                      title: s.title || s.projectName || 'Untitled Session',
+                      projectName: s.projectName,
+                      updatedAt: s.updatedAt,
+                      createdAt: s.createdAt,
+                      isArchived: Boolean(s.isArchived),
+                      type: s.type || 'WEB',
+                      isSchedule: Boolean(
+                          s.tags?.some((t) => t.toLowerCase().includes('schedule')) ||
+                          s.type === ('SCHEDULE' as any)
+                      ),
+                      prNumber: s.prNumber,
+                  }))
+                : projects.map((p) => ({
+                      id: p.id,
+                      title: p.title || 'Untitled Session',
+                      projectName: p.title,
+                      updatedAt: p.rawUpdatedAt || p.updatedAt,
+                      createdAt: p.createdAt,
+                      isArchived: false,
+                      type: 'WEB',
+                      isSchedule: false,
+                      prNumber: undefined as number | undefined,
+                  }))
+
+        return sourceList
+            .filter((item) => {
+                if (!filterSchedules && item.isSchedule) {
+                    return false
+                }
+                if (!filterArchived && item.isArchived) {
+                    return false
+                }
+                if (sessionType === 'agent' && item.type === 'SEARCH') {
+                    return false
+                }
+                if (sessionType === 'search' && item.type !== 'SEARCH') {
+                    return false
+                }
+                return true
+            })
+            .sort((a, b) => {
+                const timeA = new Date(a.createdAt).getTime() || 0
+                const timeB = new Date(b.createdAt).getTime() || 0
+                const updatedA = new Date(a.updatedAt).getTime() || 0
+                const updatedB = new Date(b.updatedAt).getTime() || 0
+
+                if (sortBy === 'created') {
+                    return timeB - timeA
+                }
+                return updatedB - updatedA
+            })
+            .slice(0, 10)
+    }, [isAuthenticated, sessions, projects, sortBy, filterSchedules, filterArchived, sessionType])
 
     return (
         <div
@@ -220,34 +448,39 @@ const Sidebar: React.FC<
                                         : 'rotate-0'
                                 )}
                             />
-                            <Icons.SidebarToggle className="w-4 h-4 text-[#919191] group-hover:text-[#D4D4D8] hidden group-hover:block" />
-
-                            <div className="absolute top-1/2 left-[calc(100%+12px)] -translate-y-1/2 z-50 hidden group-hover:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
-                                <span className="text-[12px] font-medium text-[#EDEDEF]">
-                                    Open sidebar{' '}
-                                    <span className="text-[#919191] ml-1 text-[10px] border border-[#333] rounded px-1 py-0.5 bg-[#252525]">
-                                        Ctrl .
-                                    </span>
-                                </span>
+                            <div className="hidden group-hover:flex items-center justify-center text-[#919191] hover:text-[#D4D4D8]">
+                                <Icons.SidebarToggle className="w-4 h-4 rotate-180" />
                             </div>
                         </div>
                     </div>
-                    <div className="flex flex-col gap-[1px] relative items-center">
+                    <div className="flex flex-col gap-[2px] relative items-center">
                         {navItems.map((item, idx) => {
+                            const isNew = item.id === 'new'
                             return (
                                 <button
                                     key={item.id}
                                     onClick={item.onClick}
                                     className={cn(
-                                        'relative flex items-center justify-center w-[32px] h-[32px] rounded-[10px] transition-all group outline-none',
-                                        activeIndex === idx
-                                            ? 'bg-[#1F1F1F] text-[#D6D5D4]'
-                                            : item.id === 'new'
-                                              ? 'text-[#919191] hover:text-[#D6D5D4]'
-                                              : 'hover:bg-[#252525] text-[#919191] hover:text-[#D6D5D4]'
+                                        'relative flex items-center justify-center w-[32px] h-[32px] rounded-[9px] transition-all group outline-none',
+                                        isNew
+                                            ? ''
+                                            : activeIndex === idx
+                                              ? 'bg-[#1F1F1F]'
+                                              : 'hover:bg-[#1C1C1C]'
                                     )}
                                 >
-                                    {item.icon}
+                                    <div
+                                        className={cn(
+                                            'transition-colors flex items-center justify-center',
+                                            isNew
+                                                ? ''
+                                                : activeIndex === idx
+                                                  ? 'text-[#D6D5D4]'
+                                                  : 'text-[#919191] group-hover:text-[#D6D5D4]'
+                                        )}
+                                    >
+                                        {item.icon}
+                                    </div>
                                     <div className="absolute top-1/2 left-[calc(100%+12px)] -translate-y-1/2 z-50 hidden group-hover:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
                                         <span className="text-[12px] font-medium text-[#EDEDEF]">
                                             {item.id === 'new' ? 'Create new session' : item.label}
@@ -329,17 +562,15 @@ const Sidebar: React.FC<
 
             <div
                 className={cn(
-                    'flex-1 flex flex-col mt-0.5 mb-2 font-sans min-h-0',
-                    isCollapsed ? 'px-2 hidden' : 'pl-[10px] pr-3'
+                    'flex-1 flex flex-col mt-0 mb-2 font-sans px-3 min-h-0',
+                    isCollapsed ? 'hidden' : 'flex'
                 )}
             >
                 <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between px-3 py-1.5 w-full text-left group shrink-0 z-10">
-                        <div className="flex items-center text-[#919191]">
-                            <span className="font-medium text-[12px] whitespace-nowrap transition-colors tracking-tight">
-                                Recent
-                            </span>
-                        </div>
+                    <div className="flex items-center justify-between px-2.5 h-7 mb-0">
+                        <span className="font-semibold text-[11.5px] text-[#8F8E8D] tracking-tight">
+                            Recent
+                        </span>
                         <div className="flex items-center gap-0.5">
                             <div className="relative">
                                 <button
@@ -490,23 +721,95 @@ const Sidebar: React.FC<
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-[2px] mt-1 pr-1 overflow-y-auto no-scrollbar flex-1 min-h-0 pb-2">
+                    <div className="flex flex-col gap-[2px] mt-1 overflow-y-auto no-scrollbar flex-1 min-h-0 pb-2">
                         {isAuthenticated ? (
-                            isProjectsLoading ? null : recentProjects.length > 0 ? (
+                            isProjectsLoading && isSessionsLoading ? null : recentProjects.length >
+                              0 ? (
                                 recentProjects.map((project) => (
                                     <div
                                         key={project.id}
-                                        className="flex items-center justify-between px-3 py-1 w-full text-left rounded-lg hover:bg-[#252525] transition-colors group cursor-pointer"
+                                        className="group flex items-center justify-between px-2.5 py-1.5 w-full text-left rounded-xl hover:bg-[#202020] transition-colors cursor-pointer relative"
                                         onClick={() => onOpenProject?.(project.id)}
                                     >
-                                        <div className="flex flex-col min-w-0 pr-2 overflow-hidden">
-                                            <span className="font-normal text-[12px] transition-colors tracking-tight text-[#E8E8E8] group-hover:text-[#E8E8E8] truncate">
-                                                {/* @ts-expect-error -- fallback for project name property */}
-                                                {project.name || project.title}
+                                        <div className="flex flex-col min-w-0 pr-1.5 overflow-hidden flex-1">
+                                            <span className="font-normal text-[12.5px] transition-colors tracking-tight text-[#EDEDED] group-hover:text-white truncate leading-snug">
+                                                {project.title}
                                             </span>
-                                            <span className="text-[11px] text-[#8F8E8D] tracking-tight truncate mt-[1px]">
-                                                {project.updatedAt || 'just now'}
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-[11px] text-[#8F8E8D] tracking-tight truncate mt-[2px]">
+                                                <span>{formatRelativeTime(project.updatedAt)}</span>
+                                                {project.type === 'SEARCH' ? (
+                                                    <>
+                                                        <span className="text-[#555] select-none">
+                                                            •
+                                                        </span>
+                                                        <span className="text-[#8F8E8D] inline-flex items-center">
+                                                            <Icons.Search className="w-3 h-3 text-[#8F8E8D]" />
+                                                        </span>
+                                                    </>
+                                                ) : project.prNumber ? (
+                                                    <>
+                                                        <span className="text-[#555] select-none">
+                                                            •
+                                                        </span>
+                                                        <span className="text-[#C084FC] inline-flex items-center gap-0.5 font-mono text-[10.5px]">
+                                                            <Icons.GitPullRequest className="w-3 h-3 text-[#C084FC]" />
+                                                            <span>{project.prNumber}</span>
+                                                        </span>
+                                                    </>
+                                                ) : null}
+                                            </div>
+                                        </div>
+
+                                        {/* Right side hover actions */}
+                                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                                            {/* Archive Button with Tooltip */}
+                                            <div className="relative group/btn">
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleToggleArchive(
+                                                            project.id,
+                                                            project.isArchived
+                                                        )
+                                                    }}
+                                                    className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"
+                                                    aria-label={
+                                                        project.isArchived ? 'Unarchive' : 'Archive'
+                                                    }
+                                                >
+                                                    <Icons.Archive className="w-3.5 h-3.5" />
+                                                </button>
+                                                <div className="absolute bottom-[calc(100%+6px)] right-0 z-50 hidden group-hover/btn:flex items-center gap-1 bg-[#1F1F1F] border border-[#282828] px-2 py-0.5 rounded-md shadow-lg whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
+                                                    <span className="text-[11.5px] font-medium text-[#EDEDEF]">
+                                                        {project.isArchived
+                                                            ? 'Unarchive'
+                                                            : 'Archive'}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* 3 Dots Menu Button */}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    const rect =
+                                                        e.currentTarget.getBoundingClientRect()
+                                                    setItemMenuState({
+                                                        sessionId: project.id,
+                                                        sessionTitle: project.title,
+                                                        isArchived: project.isArchived,
+                                                        top: rect.top,
+                                                        left: rect.right + 8,
+                                                    })
+                                                }}
+                                                className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"
+                                                title="More options"
+                                                aria-label="More options"
+                                            >
+                                                <Icons.MoreHorizontal className="w-3.5 h-3.5" />
+                                            </button>
                                         </div>
                                     </div>
                                 ))
@@ -541,13 +844,96 @@ const Sidebar: React.FC<
                 isAuthenticated={isAuthenticated}
             />
 
-            {settingsProjectId && (
-                <SettingsBigModal
-                    isOpen={!!settingsProjectId}
-                    onClose={() => setSettingsProjectId(null)}
-                    projectId={settingsProjectId}
-                />
-            )}
+            {/* Session Item 3-Dots Dropdown Menu Portal */}
+            {itemMenuState &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                    <div
+                        ref={itemMenuRef}
+                        className="fixed z-[250] w-[180px] rounded-xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-2xl p-1 flex flex-col gap-0 animate-in fade-in zoom-in-95 duration-100 font-sans text-left"
+                        style={{
+                            top: itemMenuState.top,
+                            left: itemMenuState.left,
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Folder */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setItemMenuState(null)
+                                onOpenProject?.(itemMenuState.sessionId)
+                            }}
+                            className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <Icons.Folder className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                                <span>Folder</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-[#8F8E8D]">
+                                <span className="text-[11.5px] font-normal truncate max-w-[70px]">
+                                    {itemMenuState.sessionTitle || 'project1'}
+                                </span>
+                                <Icons.ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                            </div>
+                        </button>
+
+                        {/* Rename */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setRenameModal({
+                                    isOpen: true,
+                                    sessionId: itemMenuState.sessionId,
+                                    value: itemMenuState.sessionTitle,
+                                })
+                                setItemMenuState(null)
+                            }}
+                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <Icons.Edit className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                            <span>Rename</span>
+                        </button>
+
+                        {/* Copy session link */}
+                        <button
+                            type="button"
+                            onClick={() => handleCopyLink(itemMenuState.sessionId)}
+                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <Icons.Copy className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                            <span>
+                                {copiedSessionId === itemMenuState.sessionId
+                                    ? 'Copied!'
+                                    : 'Copy session link'}
+                            </span>
+                        </button>
+
+                        {/* Analyze session */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setItemMenuState(null)
+                                onOpenProject?.(itemMenuState.sessionId)
+                            }}
+                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
+                        >
+                            <Icons.Search className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
+                            <span>Analyze session</span>
+                        </button>
+                    </div>,
+                    document.body
+                )}
+
+            {/* Session Rename Modal */}
+            <SessionRenameModal
+                isOpen={renameModal.isOpen}
+                value={renameModal.value}
+                isPending={false}
+                onClose={() => setRenameModal({ isOpen: false, sessionId: '', value: '' })}
+                onChange={(val) => setRenameModal((prev) => ({ ...prev, value: val }))}
+                onSubmit={handleRenameSubmit}
+            />
         </div>
     )
 }

@@ -61,7 +61,7 @@ export const EmptySessionsState: React.FC<{ onNewProject: () => void }> = ({ onN
 
             <h2 className="text-[17px] font-medium text-[#D6D5C9]">No sessions</h2>
             <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#7B7A79]">
-                Sessions you create or start will appear here.
+                Your recent sessions will appear here.
             </p>
         </div>
     )

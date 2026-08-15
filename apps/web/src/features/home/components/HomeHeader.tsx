@@ -77,7 +77,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
     const remaining = overview?.creditBalance ?? 0
 
     return (
-        <div className="absolute top-4 left-0 w-full px-4 md:px-6 z-50 flex justify-between items-center pointer-events-none">
+        <div className="absolute top-0 left-0 w-full h-11 px-4 md:px-6 z-50 flex justify-between items-center pointer-events-none">
             <div className="flex-1 pointer-events-auto flex items-center justify-start pl-2 md:pl-0">
                 {isAuthenticated ? (
                     <button
@@ -112,7 +112,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
                     onClick={() => {
                         window.open('https://www.npmjs.com/package/@trydecember/cli', '_blank')
                     }}
-                    className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 py-1 text-[13px] text-[#E8E8E6] transition-all duration-200 cursor-pointer hover:bg-white/5 group whitespace-nowrap flex-shrink-0 opacity-[0.85] hover:opacity-100"
+                    className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 h-7 text-[13px] text-[#E8E8E6] transition-all duration-200 cursor-pointer hover:bg-white/5 group whitespace-nowrap flex-shrink-0 opacity-[0.85] hover:opacity-100"
                 >
                     <span className="bg-[#87B2F4]/15 text-[#87B2F4] rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none flex items-center justify-center flex-shrink-0">
                         New

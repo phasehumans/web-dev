@@ -16,6 +16,7 @@ import type {
 } from '@/features/preview/types'
 import type { BackendProjectVersionSummary } from '@/features/sessions/api/project'
 
+import { Tooltip } from '@/shared/components/ui/Tooltip'
 import { cn } from '@/shared/lib/utils'
 
 interface WorkspaceScreenMainContentProps {
@@ -73,7 +74,23 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
         'desktop',
         'shell',
     ])
-    const [activeTab, setActiveTab] = React.useState<WorkspaceTabId>('desktop')
+    const [activeTab, setActiveTab] = React.useState<WorkspaceTabId>('changes')
+    const initialMountRef = React.useRef(true)
+    const prevFilePathRef = React.useRef<string | null>(activeGeneratedFilePath || null)
+
+    React.useEffect(() => {
+        if (initialMountRef.current) {
+            initialMountRef.current = false
+            return
+        }
+        if (activeGeneratedFilePath && activeGeneratedFilePath !== prevFilePathRef.current) {
+            prevFilePathRef.current = activeGeneratedFilePath
+            if (!openTabs.includes('editor')) {
+                setOpenTabs((prev) => [...prev, 'editor'])
+            }
+            setActiveTab('editor')
+        }
+    }, [activeGeneratedFilePath, openTabs])
 
     const handleCloseTab = (tabId: WorkspaceTabId) => {
         if (openTabs.length <= 1) return
@@ -113,21 +130,28 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
                     onBack={onBack}
                 />
 
-                <button
-                    type="button"
-                    onClick={onToggleSidebar}
-                    title={
-                        isChatSidebarCollapsed
-                            ? 'Show Chat Section'
-                            : 'Expand Workspace (Hide Chat)'
-                    }
-                    className="p-1.5 text-[#91908F] hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer outline-none"
+                <Tooltip
+                    content={isChatSidebarCollapsed ? 'Show chat' : 'Expand workspace (hide chat)'}
+                    position="bottom"
+                    align="end"
                 >
-                    {isChatSidebarCollapsed ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-                </button>
+                    <button
+                        type="button"
+                        onClick={onToggleSidebar}
+                        className="p-1.5 text-[#91908F] hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer outline-none"
+                    >
+                        {isChatSidebarCollapsed ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+                    </button>
+                </Tooltip>
             </div>
 
-            {activeTab === 'desktop' && (
+            <div
+                className={
+                    activeTab === 'desktop'
+                        ? 'flex-1 min-h-0 flex flex-col w-full h-full'
+                        : 'hidden'
+                }
+            >
                 <PreviewArea
                     html={previewHtml}
                     isGenerating={isGenerating}
@@ -143,7 +167,7 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
                     projectType={projectType}
                     projectId={projectId}
                 />
-            )}
+            </div>
 
             {activeTab === 'editor' && (
                 <CodeWorkspace
@@ -156,11 +180,18 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
 
             {activeTab === 'changes' && <ChangesWorkspace />}
 
-            {activeTab === 'shell' && (
-                <TerminalWorkspace previewSessionId={previewSession?.previewId} />
-            )}
+            <div
+                className={
+                    activeTab === 'shell' ? 'flex-1 min-h-0 flex flex-col w-full h-full' : 'hidden'
+                }
+            >
+                <TerminalWorkspace
+                    previewSessionId={previewSession?.previewId}
+                    generatedFiles={generatedFiles}
+                />
+            </div>
 
-            {activeTab === 'tasks' && <TasksWorkspace />}
+            {activeTab === 'tasks' && <TasksWorkspace generatedFiles={generatedFiles} />}
 
             {activeTab !== 'desktop' &&
                 activeTab !== 'editor' &&

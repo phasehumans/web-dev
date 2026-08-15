@@ -13,13 +13,14 @@ const App: React.FC = () => {
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowLoader(false)
-        }, 800) // 0.8s loader
+        }, 1000) // 1.0s loader
         return () => clearTimeout(timer)
     }, [])
 
     const {
         queryClient,
         view,
+        isProjectOpening,
         setIsAuthenticated,
         showAuthModal,
         setShowAuthModal,
@@ -47,13 +48,15 @@ const App: React.FC = () => {
 
     return (
         <>
-            {showLoader && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#141414]">
-                    <div className="flex items-center justify-center animate-pulse">
-                        <Icons.DecemberLogo
-                            className="w-10 h-10 md:w-14 md:h-14 text-[#212121]"
-                            strokeWidth={1.2}
-                        />
+            {(showLoader || isProjectOpening) && (
+                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#141414] animate-in fade-in duration-150 select-none">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="flex items-center justify-center animate-pulse">
+                            <Icons.DecemberLogo
+                                className="w-10 h-10 md:w-12 md:h-12 text-[#3A3A3A]"
+                                strokeWidth={1.2}
+                            />
+                        </div>
                     </div>
                 </div>
             )}

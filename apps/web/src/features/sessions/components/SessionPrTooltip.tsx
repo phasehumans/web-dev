@@ -77,27 +77,34 @@ export const SessionPrTooltip: React.FC<SessionPrTooltipProps> = ({ session }) =
             onMouseLeave={handleMouseLeave}
             onClick={(e) => e.stopPropagation()}
         >
-            {/* PR Status Badge */}
-            <span className="flex items-center gap-1 rounded-md bg-[#202020] hover:bg-[#272727] transition-colors px-2 py-0.5 text-[11px] font-medium text-purple-400 cursor-pointer select-none">
+            {/* PR Status Badge - Clicking opens GitHub PR */}
+            <button
+                type="button"
+                onClick={handleOpenGithub}
+                className="flex items-center gap-1 rounded-md bg-[#202020] hover:bg-[#272727] active:scale-95 transition-all px-2 py-0.5 text-[11px] font-medium text-purple-400 cursor-pointer select-none border border-transparent hover:border-purple-500/20"
+                title="Open Pull Request in GitHub"
+            >
                 <Icons.GitPullRequest className="h-3 w-3" />#{session.prNumber}
-            </span>
+            </button>
 
-            {/* Compact Tooltip Card (#1E1E1E Background, Reduced Vertical Spacing) */}
+            {/* Compact Tooltip Card */}
             {isOpen && (
                 <div
-                    className="absolute left-0 top-full mt-1 z-50 flex w-[280px] flex-col rounded-xl border border-[#2F2F2F] bg-[#1E1E1E] px-2.5 py-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 top-full mt-1 z-50 flex w-[290px] flex-col rounded-xl border border-[#2F2F2F] bg-[#1E1E1E] px-2.5 py-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Top Row: PR Title + Action Icons (Copy & GitHub) */}
                     <div className="flex items-center justify-between gap-1.5">
-                        <span
-                            className="truncate text-[12.5px] font-medium text-[#E1E1E1] max-w-[185px] leading-snug"
-                            title={prTitle}
+                        <button
+                            type="button"
+                            onClick={handleOpenGithub}
+                            className="truncate text-left text-[12.5px] font-medium text-[#E1E1E1] hover:text-purple-300 transition-colors max-w-[190px] leading-snug cursor-pointer"
+                            title={`Open in GitHub: ${prTitle}`}
                         >
                             {prTitle}
-                        </span>
+                        </button>
 
                         {/* Action Icons Pill Capsule */}
                         <div className="flex items-center gap-0.5 shrink-0 relative bg-[#262626]/90 border border-[#333333] rounded-md p-0.5">
@@ -116,10 +123,11 @@ export const SessionPrTooltip: React.FC<SessionPrTooltipProps> = ({ session }) =
 
                             {/* Copy Branch Icon */}
                             <button
+                                type="button"
                                 onClick={handleCopyBranch}
                                 onMouseEnter={() => setHoveredIcon('copy')}
                                 onMouseLeave={() => setHoveredIcon(null)}
-                                className={`flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF] ${
+                                className={`flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF] cursor-pointer ${
                                     copied ? 'bg-[#333333] text-emerald-400' : ''
                                 }`}
                                 aria-label="Copy branch name"
@@ -133,10 +141,11 @@ export const SessionPrTooltip: React.FC<SessionPrTooltipProps> = ({ session }) =
 
                             {/* Open in GitHub Icon */}
                             <button
+                                type="button"
                                 onClick={handleOpenGithub}
                                 onMouseEnter={() => setHoveredIcon('github')}
                                 onMouseLeave={() => setHoveredIcon(null)}
-                                className="flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF]"
+                                className="flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF] cursor-pointer"
                                 aria-label="Open in GitHub"
                             >
                                 <Icons.Github className="h-3 w-3" />
@@ -144,11 +153,11 @@ export const SessionPrTooltip: React.FC<SessionPrTooltipProps> = ({ session }) =
                         </div>
                     </div>
 
-                    {/* Bottom Row: Git PR Icon + Repo/PR Ref + Additions/Deletions + Branch (Reduced Vertical Space) */}
+                    {/* Bottom Row: Git PR Icon + Repo/PR Ref + Additions/Deletions + Branch */}
                     <div className="mt-0.5 flex items-center gap-1 text-[11px] leading-tight pt-0.5">
-                        <Icons.GitPullRequest className="h-3 w-3 text-[#A855F7] shrink-0" />
+                        <Icons.GitPullRequest className="w-3 h-3 text-[#C084FC] shrink-0" />
                         <span className="truncate text-[#999999] font-normal">
-                            ...{shortRepo}#{session.prNumber}
+                            {shortRepo}#{session.prNumber}
                         </span>
                         <span className="text-[#555555] select-none">•</span>
                         <span className="font-mono font-medium text-[#10B981] text-[11px]">

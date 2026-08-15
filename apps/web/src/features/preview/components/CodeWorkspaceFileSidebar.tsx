@@ -4,6 +4,7 @@ import React from 'react'
 
 import type { CodeFilePath, CodeFileTreeNode } from '@/features/preview/types'
 
+import { Tooltip } from '@/shared/components/ui/Tooltip'
 import { cn } from '@/shared/lib/utils'
 
 interface CodeWorkspaceFileSidebarProps {
@@ -62,28 +63,33 @@ export const CodeWorkspaceFileSidebar: React.FC<CodeWorkspaceFileSidebarProps> =
                 const isActive = selectedFile === node.file.path
 
                 return (
-                    <button
+                    <Tooltip
                         key={node.file.path}
-                        onClick={() => onSelectFile(node.file.path)}
-                        onDoubleClick={() => onPinFile(node.file.path)}
-                        className={cn(
-                            'w-full flex items-center gap-2 py-1 rounded text-left text-[13px] transition-colors',
-                            isActive
-                                ? 'bg-[#2a2d2e] text-[#d4d4d4]'
-                                : 'text-[#c5c5c5] hover:bg-[#252526]'
-                        )}
-                        style={{ paddingLeft: `${8 + depth * 12}px`, paddingRight: '8px' }}
-                        title="Double-click to pin in tabs"
+                        content="Double-click to pin in tabs"
+                        position="right"
+                        className="w-full"
                     >
-                        <FileText
-                            size={14}
+                        <button
+                            onClick={() => onSelectFile(node.file.path)}
+                            onDoubleClick={() => onPinFile(node.file.path)}
                             className={cn(
-                                'shrink-0',
-                                isActive ? 'text-[#d4d4d4]' : 'text-[#858585]'
+                                'w-full flex items-center gap-2 py-1 rounded text-left text-[13px] transition-colors',
+                                isActive
+                                    ? 'bg-[#2a2d2e] text-[#d4d4d4]'
+                                    : 'text-[#c5c5c5] hover:bg-[#252526]'
                             )}
-                        />
-                        <span className="truncate">{node.file.label}</span>
-                    </button>
+                            style={{ paddingLeft: `${8 + depth * 12}px`, paddingRight: '8px' }}
+                        >
+                            <FileText
+                                size={14}
+                                className={cn(
+                                    'shrink-0',
+                                    isActive ? 'text-[#d4d4d4]' : 'text-[#858585]'
+                                )}
+                            />
+                            <span className="truncate">{node.file.label}</span>
+                        </button>
+                    </Tooltip>
                 )
             }
 

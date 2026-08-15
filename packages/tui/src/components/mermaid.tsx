@@ -209,10 +209,10 @@ export function Mermaid({ code }: Props) {
             paddingX={2}
             paddingY={1}
             borderStyle="round"
-            borderColor="#A78BFA"
+            borderColor="#555555"
         >
             <Box justifyContent="space-between" alignItems="center" marginBottom={1}>
-                <Text color="#A78BFA" bold>
+                <Text color="white">
                     ❖ Mermaid Diagram (
                     {isSequence
                         ? 'sequence'
@@ -258,19 +258,17 @@ function RenderFlowchart({ code }: { code: string }) {
                         const outgoingEdges = edges.filter((e) => e.from === node.id)
                         return (
                             <React.Fragment key={node.id}>
-                                <Box borderStyle="round" borderColor="#89B4F8" paddingX={1}>
-                                    <Text bold color="white">
-                                        {node.label}
-                                    </Text>
+                                <Box borderStyle="round" borderColor="gray" paddingX={1}>
+                                    <Text color="white">{node.label}</Text>
                                 </Box>
                                 {outgoingEdges.length > 0 && i < nodes.length - 1 && (
                                     <Box flexDirection="column" alignItems="center">
                                         {outgoingEdges[0].label && (
-                                            <Text color="#A78BFA" italic>
+                                            <Text color="gray" italic>
                                                 [{outgoingEdges[0].label}]
                                             </Text>
                                         )}
-                                        <Text color="#89B4F8">
+                                        <Text color="gray">
                                             {outgoingEdges[0].style === 'dashed'
                                                 ? ' ┈► '
                                                 : outgoingEdges[0].style === 'thick'
@@ -289,19 +287,17 @@ function RenderFlowchart({ code }: { code: string }) {
                         const outgoingEdges = edges.filter((e) => e.from === node.id)
                         return (
                             <Box key={node.id} flexDirection="column">
-                                <Box borderStyle="round" borderColor="#89B4F8" paddingX={1}>
-                                    <Text bold color="white">
-                                        {node.label}
-                                    </Text>
+                                <Box borderStyle="round" borderColor="gray" paddingX={1}>
+                                    <Text color="white">{node.label}</Text>
                                 </Box>
                                 {outgoingEdges.length > 0 && (
                                     <Box flexDirection="column" paddingLeft={3}>
                                         {outgoingEdges[0].label && (
-                                            <Text color="#A78BFA" italic>
+                                            <Text color="gray" italic>
                                                 [{outgoingEdges[0].label}]
                                             </Text>
                                         )}
-                                        <Text color="#89B4F8">
+                                        <Text color="gray">
                                             {outgoingEdges[0].style === 'dashed'
                                                 ? '  ┆  \n  ▼  '
                                                 : '  │  \n  ▼  '}
@@ -316,18 +312,14 @@ function RenderFlowchart({ code }: { code: string }) {
 
             {edges.length > 0 && (
                 <Box flexDirection="column" marginTop={1} paddingLeft={1}>
-                    <Text color="gray" bold>
-                        Connections:
-                    </Text>
+                    <Text color="gray">Connections:</Text>
                     {edges.map((edge, idx) => {
                         const fromNode = nodes.find((n) => n.id === edge.from)?.label || edge.from
                         const toNode = nodes.find((n) => n.id === edge.to)?.label || edge.to
                         return (
                             <Text key={idx} color="#CCCCCC">
                                 • {fromNode}{' '}
-                                <Text color="#89B4F8">
-                                    {edge.style === 'dashed' ? '┈►' : '──►'}
-                                </Text>{' '}
+                                <Text color="gray">{edge.style === 'dashed' ? '┈►' : '──►'}</Text>{' '}
                                 {toNode}
                                 {edge.label ? ` (${edge.label})` : ''}
                             </Text>
@@ -350,25 +342,17 @@ function RenderSequence({ code }: { code: string }) {
         <Box flexDirection="column" gap={1}>
             <Box flexDirection="row" gap={2}>
                 {participants.map((p) => (
-                    <Box key={p} borderStyle="single" borderColor="#89B4F8" paddingX={1}>
-                        <Text bold color="white">
-                            {p}
-                        </Text>
+                    <Box key={p} borderStyle="single" borderColor="gray" paddingX={1}>
+                        <Text color="white">{p}</Text>
                     </Box>
                 ))}
             </Box>
             <Box flexDirection="column" paddingLeft={1} marginTop={1}>
                 {messages.map((msg, idx) => (
                     <Text key={idx} color="#DDDDDD">
-                        <Text color="#89B4F8" bold>
-                            {msg.from}
-                        </Text>{' '}
-                        <Text color={msg.style === 'dashed' ? '#A78BFA' : '#89B4F8'}>
-                            {msg.style === 'dashed' ? '◄┄┄' : '──►'}
-                        </Text>{' '}
-                        <Text color="#89B4F8" bold>
-                            {msg.to}
-                        </Text>
+                        <Text color="white">{msg.from}</Text>{' '}
+                        <Text color="gray">{msg.style === 'dashed' ? '◄┄┄' : '──►'}</Text>{' '}
+                        <Text color="white">{msg.to}</Text>
                         {': '}
                         <Text color="white">{msg.text}</Text>
                     </Text>
@@ -388,15 +372,13 @@ function RenderPie({ code }: { code: string }) {
 
     return (
         <Box flexDirection="column" gap={1}>
-            <Text bold color="white">
-                {title}
-            </Text>
+            <Text color="white">{title}</Text>
             {slices.map((slice, idx) => {
                 const percentage = total > 0 ? Math.round((slice.value / total) * 100) : 0
                 const filledWidth = Math.round((percentage / 100) * 20)
                 const emptyWidth = 20 - filledWidth
                 const bar = '█'.repeat(filledWidth) + '░'.repeat(emptyWidth)
-                const color = idx % 2 === 0 ? '#89B4F8' : '#A78BFA'
+                const color = idx % 2 === 0 ? 'white' : 'gray'
 
                 return (
                     <Box key={idx} flexDirection="row" gap={2}>

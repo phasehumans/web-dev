@@ -18,7 +18,6 @@ interface SessionListRowProps {
     onOpenRename: (session: any, event: React.MouseEvent) => void
     onOpenShare: (session: any, event: React.MouseEvent) => void
     onOpenDelete: (session: any, event: React.MouseEvent) => void
-    onOpenSettings: (session: any, event: React.MouseEvent) => void
     onOpenTags: (session: any, event: React.MouseEvent) => void
     onOpenInsights: (session: any, event: React.MouseEvent) => void
 }
@@ -36,7 +35,6 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
     onOpenRename,
     onOpenShare,
     onOpenDelete,
-    onOpenSettings,
     onOpenTags,
     onOpenInsights,
 }) => {
@@ -94,7 +92,14 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
             <div className="flex flex-1 items-center gap-3 min-w-0">
                 <div className="flex flex-1 flex-col min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
-                        <span className="truncate text-[14px] font-medium text-[#D6D5C9] transition-colors">
+                        <span
+                            onDoubleClick={(e) => {
+                                e.stopPropagation()
+                                onOpenRename(session, e)
+                            }}
+                            className="truncate text-[14px] font-medium text-[#D6D5C9] transition-colors hover:text-white"
+                            title="Double-click to rename"
+                        >
                             {session.title || 'Untitled Session'}
                         </span>
                         {session.isArchived && (
@@ -133,7 +138,14 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                 {session.tags && session.tags.length > 0 && (
                     <div className="flex items-center gap-1.5 min-w-0">
                         <Tooltip position="top" content={`Tags: ${session.tags[0]}`}>
-                            <span className="truncate rounded-md bg-[#202020] hover:bg-[#272727] transition-colors px-2 py-0.5 text-[11px] font-medium text-[#A3A2A0]">
+                            <span
+                                onDoubleClick={(e) => {
+                                    e.stopPropagation()
+                                    onOpenTags(session, e)
+                                }}
+                                className="truncate rounded-md bg-[#202020] hover:bg-[#272727] transition-colors px-2 py-0.5 text-[11px] font-medium text-[#949494] cursor-pointer hover:text-white"
+                                title="Double-click to edit tag"
+                            >
                                 {session.tags[0]}
                             </span>
                         </Tooltip>
@@ -209,14 +221,6 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                             <Icons.Archive className="h-3.5 w-3.5 text-[#7B7A79]" />{' '}
                             {session.isArchived ? 'Unarchive' : 'Archive'}
                         </button>
-                        {session.projectId && (
-                            <button
-                                onClick={(e) => onOpenSettings(session, e)}
-                                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-[#D6D5C9] transition-colors hover:bg-[#262626]"
-                            >
-                                <Icons.Settings className="h-3.5 w-3.5 text-[#7B7A79]" /> Settings
-                            </button>
-                        )}
                         <div className="mx-1.5 my-1 h-[1px] bg-[#282828]" />
                         <button
                             onClick={(e) => onOpenDelete(session, e)}

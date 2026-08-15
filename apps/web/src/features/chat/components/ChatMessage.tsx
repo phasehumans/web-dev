@@ -1,14 +1,16 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ThumbsUp, ThumbsDown, ChevronDown, CheckCircle2, Loader2 } from 'lucide-react'
+import { ChevronDown, CheckCircle2, Loader2 } from 'lucide-react'
 import React from 'react'
+
+import { CliSpinner } from './CliSpinner'
+import { ToolCallCard } from './ToolCallCard'
 
 import type { ChatMessageProps } from '@/features/chat/types'
 
-import { FileChangeBadge } from '@/features/chat/components/FileChangeBadge'
-import { ToolCallCard } from '@/features/chat/components/ToolCallCard'
 import { useChatMessageController } from '@/features/chat/hooks/useChatMessageController'
 import { renderRichContent } from '@/features/chat/utils/chatFormatting'
 import { parseInlineThoughtBlocks } from '@/features/chat/utils/thoughtParser'
+import { getToolActionLabel } from '@/features/chat/utils/toolFormatter'
 import { cn } from '@/shared/lib/utils'
 
 const CollapsibleThoughtView: React.FC<{
@@ -16,12 +18,8 @@ const CollapsibleThoughtView: React.FC<{
     tokenCount?: number
     isStreaming?: boolean
     forceExpanded?: boolean
-}> = ({ content, tokenCount, isStreaming, forceExpanded }) => {
-    const [userExpanded, setUserExpanded] = React.useState<boolean | null>(null)
-    const expanded = userExpanded !== null ? userExpanded : (forceExpanded ?? true)
-
-    const words = content.trim() ? content.trim().split(/\s+/).length : 0
-    const calculatedTokens = tokenCount ?? Math.max(1, Math.round(words * 1.33))
+}> = ({ content, isStreaming }) => {
+    const [expanded, setExpanded] = React.useState(false)
 
     if (isStreaming) {
         return (
@@ -35,8 +33,8 @@ const CollapsibleThoughtView: React.FC<{
         <div className="space-y-1 my-1 font-sans">
             <button
                 type="button"
-                onClick={() => setUserExpanded(!expanded)}
-                className="flex items-center gap-1.5 text-[11px] text-[#8E8D8C] hover:text-[#C4C3C2] transition-colors cursor-pointer select-none italic"
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1.5 text-[11.5px] text-[#8E8D8C] hover:text-[#C4C3C2] transition-colors cursor-pointer select-none italic"
             >
                 <ChevronDown
                     size={12}
@@ -45,10 +43,7 @@ const CollapsibleThoughtView: React.FC<{
                         expanded ? 'rotate-0' : '-rotate-90'
                     )}
                 />
-                <span>
-                    Thoughts ({calculatedTokens} tokens ·{' '}
-                    {expanded ? 'ctrl+o to collapse' : 'ctrl+o to expand'})
-                </span>
+                <span>Thoughts</span>
             </button>
 
             <AnimatePresence initial={false}>
@@ -60,11 +55,8 @@ const CollapsibleThoughtView: React.FC<{
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className="flex gap-3 pl-1">
-                            <div className="w-[1.5px] bg-[#2E2D2C] rounded shrink-0 self-stretch" />
-                            <div className="text-[12px] leading-relaxed text-[#8E8D8C] font-sans select-text py-0.5 space-y-2">
-                                {renderRichContent(content, true)}
-                            </div>
+                        <div className="text-[12.5px] leading-relaxed text-[#8E8D8C] font-sans select-text py-0.5 space-y-2 pl-4">
+                            {renderRichContent(content, true)}
                         </div>
                     </motion.div>
                 )}
@@ -92,14 +84,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     tokensUsed,
     creditsUsed,
     modelName,
-    expandCommands,
     onTriggerSimulation,
     onOpenFile,
     projectId,
 }) => {
     const {
-        feedback,
-        setFeedback,
         isThoughtsOpen,
         setIsThoughtsOpen,
         displayedPlan,
@@ -124,13 +113,23 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         projectId,
     })
 
+    const isBuildingPhase = status === 'building'
+    const isCompletedPhase = status === 'done'
+    const runningBlock = blocks?.find((b) => b.type === 'command' && b.status === 'running')
+    const runningToolName = runningBlock?.type === 'command' ? runningBlock.toolName : undefined
+
+    const currentStatusLabel = React.useMemo(() => {
+        if (statusMessage) return statusMessage
+        if (runningToolName) return getToolActionLabel(runningToolName)
+        if (isThinkingPhase) return 'Thinking...'
+        if (isBuildingPhase) return 'Working...'
+        return null
+    }, [statusMessage, runningToolName, isThinkingPhase, isBuildingPhase])
+
     if (role === 'user') {
         return (
-            <div className="flex flex-row items-start gap-2.5 w-full font-sans pl-1 py-1">
-                <span className="text-[#89B4F8] font-bold select-none shrink-0 text-[15px] leading-snug">
-                    ❭
-                </span>
-                <div className="text-[14px] leading-relaxed text-[#EDEDED] font-normal selection:bg-blue-500/20 w-full break-words whitespace-pre-wrap">
+            <div className="flex flex-col gap-1 items-end w-full font-sans">
+                <div className="bg-[#1B1B1B] px-4 py-2.5 rounded-xl text-[13.5px] leading-relaxed text-[#EDEDED] selection:bg-blue-500/20 shadow-sm max-w-[95%] break-words whitespace-pre-wrap border-none">
                     {content}
                 </div>
             </div>
@@ -143,9 +142,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             ? allFilesArray.filter((f: any) => appliedFiles.includes(f.path))
             : allFilesArray
     const totalFiles = filesArray.length
-    const isBuildingPhase = status === 'building'
-    const isCompletedPhase = status === 'done'
-    const showActions = !isGenerating && isCompletedPhase && isStreamFinished
 
     // segment calculation for fallback
     const showThinking = isThinkingPhase || Boolean(thoughts)
@@ -168,31 +164,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 transition={{ duration: 0.3, delay: 0.06 }}
                 className="pl-1 flex flex-col gap-2"
             >
-                {/* assistant meta header */}
-                <div className="flex items-center gap-2 text-[11px] font-medium tracking-wide">
-                    <span className="text-[#8E8D8C]">December</span>
-                    {(isThinkingPhase ||
-                        isBuildingPhase ||
-                        status === 'error' ||
-                        statusMessage) && (
-                        <span
-                            className={
-                                status === 'error' ? 'text-red-400' : 'text-[#A1A09F] animate-pulse'
-                            }
-                        >
-                            {statusMessage ||
-                                (isThinkingPhase
-                                    ? 'Thinking...'
-                                    : isBuildingPhase
-                                      ? 'Building...'
-                                      : 'Error')}
-                        </span>
+                {/* Assistant status indicator */}
+                {(isThinkingPhase || isBuildingPhase) &&
+                    currentStatusLabel &&
+                    (!hasBlocks || !runningBlock) && (
+                        <div className="flex items-center gap-2 py-0.5 font-sans">
+                            <CliSpinner label={currentStatusLabel} />
+                        </div>
                     )}
-                </div>
 
                 {/* Structured Multi-Block Execution View */}
                 {hasBlocks ? (
-                    <div className="flex flex-col gap-1 w-full">
+                    <div className="flex flex-col gap-0.5 w-full">
                         {blocks.map((block, bIdx) => {
                             if (block.type === 'thinking') {
                                 return (
@@ -200,7 +183,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         key={bIdx}
                                         content={block.content}
                                         isStreaming={block.isStreaming}
-                                        forceExpanded={expandCommands}
                                     />
                                 )
                             }
@@ -211,7 +193,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         key={bIdx}
                                         className="my-1.5 py-1 text-xs text-[#fef08a] italic font-sans flex flex-col gap-0.5"
                                     >
-                                        <span className="font-semibold">Context Compacted</span>
+                                        <span className="font-normal">Context Compacted</span>
                                         {block.summary && (
                                             <span className="text-[#8E8D8C] not-italic">
                                                 {block.summary}
@@ -241,21 +223,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         toolInput={block.toolInput}
                                         status={block.status}
                                         output={block.output}
-                                        expandCommands={expandCommands}
                                     />
                                 )
                             }
 
                             if (block.type === 'file_change') {
-                                return (
-                                    <FileChangeBadge
-                                        key={`${block.filePath}-${bIdx}`}
-                                        filePath={block.filePath}
-                                        action={block.action}
-                                        diff={block.diff}
-                                        onOpenFile={onOpenFile}
-                                    />
-                                )
+                                return null
                             }
 
                             if (block.type === 'text') {
@@ -269,7 +242,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         key={bIdx}
                                         className={cn(
                                             'space-y-2 pt-0.5 animate-in fade-in duration-300 w-full select-text',
-                                            block.color && 'text-[#FCA5A5]'
+                                            block.color && 'text-[#F87171]'
                                         )}
                                     >
                                         {segments.map((seg, sIdx) => {
@@ -280,7 +253,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                                         content={seg.content}
                                                         tokenCount={seg.tokenCount}
                                                         isStreaming={seg.isStreaming}
-                                                        forceExpanded={expandCommands}
                                                     />
                                                 )
                                             }
@@ -298,7 +270,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 return (
                                     <div
                                         key={bIdx}
-                                        className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-sans select-text"
+                                        className="py-1 text-[13px] leading-relaxed text-[#F87171] font-sans select-text whitespace-pre-wrap"
                                     >
                                         {block.error}
                                     </div>
@@ -312,10 +284,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     <>
                         {/* Fallback Unstructured Block View */}
                         {showThinking && activeThoughtsText.trim().length > 0 && (
-                            <CollapsibleThoughtView
-                                content={activeThoughtsText}
-                                forceExpanded={expandCommands}
-                            />
+                            <CollapsibleThoughtView content={activeThoughtsText} />
                         )}
 
                         {/* 2. plan of action (normal text, streamed) */}
@@ -377,54 +346,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             </div>
                         )}
                     </>
-                )}
-
-                {/* Actions footer */}
-                {showActions && (
-                    <div className="flex items-center justify-between pt-1 mt-0.5">
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-0.5">
-                                <button
-                                    onClick={() => setFeedback(feedback === 'like' ? null : 'like')}
-                                    className={cn(
-                                        'p-1.5 rounded-md transition-colors cursor-pointer',
-                                        feedback === 'like'
-                                            ? 'text-white'
-                                            : 'text-[#91908F] hover:text-white'
-                                    )}
-                                    title="Helpful"
-                                >
-                                    <ThumbsUp
-                                        size={14}
-                                        className={cn(
-                                            'transition-colors',
-                                            feedback === 'like' && 'fill-white'
-                                        )}
-                                    />
-                                </button>
-                                <button
-                                    onClick={() =>
-                                        setFeedback(feedback === 'dislike' ? null : 'dislike')
-                                    }
-                                    className={cn(
-                                        'p-1.5 rounded-md transition-colors cursor-pointer',
-                                        feedback === 'dislike'
-                                            ? 'text-white'
-                                            : 'text-[#91908F] hover:text-white'
-                                    )}
-                                    title="Not Helpful"
-                                >
-                                    <ThumbsDown
-                                        size={14}
-                                        className={cn(
-                                            'transition-colors',
-                                            feedback === 'dislike' && 'fill-white'
-                                        )}
-                                    />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 )}
             </motion.div>
         </div>

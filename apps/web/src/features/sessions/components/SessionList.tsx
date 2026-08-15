@@ -9,8 +9,6 @@ import { SessionListView } from './SessionListView'
 
 import type { DeleteModalState, RenameModalState } from '@/features/sessions/types'
 
-import { SettingsBigModal } from '@/features/preview/components/settings/SettingsBigModal'
-
 export type SortOption = 'newest' | 'oldest'
 export type TypeFilter = 'any' | 'WEB' | 'CLI' | 'SEARCH'
 
@@ -67,13 +65,6 @@ export const SessionList: React.FC<{
         project: null,
     })
     const [insightsModal, setInsightsModal] = useState<{
-        isOpen: boolean
-        project: any | null
-    }>({
-        isOpen: false,
-        project: null,
-    })
-    const [settingsModal, setSettingsModal] = useState<{
         isOpen: boolean
         project: any | null
     }>({
@@ -204,9 +195,6 @@ export const SessionList: React.FC<{
     const openDeleteModal = (session: any, event: React.MouseEvent) =>
         openModal(event, () => setDeleteModal({ isOpen: true, project: session }))
 
-    const openSettingsModal = (session: any, event: React.MouseEvent) =>
-        openModal(event, () => setSettingsModal({ isOpen: true, project: session }))
-
     const openTagsModal = (session: any, event: React.MouseEvent) =>
         openModal(event, () => setTagsModal({ isOpen: true, project: session }))
 
@@ -282,7 +270,6 @@ export const SessionList: React.FC<{
                     onOpenRename={openRenameModal}
                     onOpenShare={() => {}}
                     onOpenDelete={openDeleteModal}
-                    onOpenSettings={openSettingsModal}
                     onOpenTags={openTagsModal}
                     onOpenInsights={openInsightsModal}
                     searchQuery={searchQuery}
@@ -324,15 +311,6 @@ export const SessionList: React.FC<{
                 onSaveTags={handleSaveTags}
                 onCloseInsights={() => setInsightsModal({ isOpen: false, project: null })}
             />
-
-            {settingsModal.isOpen && settingsModal.project && settingsModal.project.projectId && (
-                <SettingsBigModal
-                    onClose={() => setSettingsModal({ isOpen: false, project: null })}
-                    initialTab="general"
-                    projectName={settingsModal.project.projectName || 'Session'}
-                    projectId={settingsModal.project.projectId}
-                />
-            )}
         </div>
     )
 }

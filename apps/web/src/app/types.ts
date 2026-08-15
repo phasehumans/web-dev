@@ -117,6 +117,15 @@ export const getViewForPath = (pathname: string): ViewState => {
     )
         return 'profile'
 
+    // /review or /reviews or subpaths → review
+    if (
+        pathname === '/review' ||
+        pathname.startsWith('/review/') ||
+        pathname === '/reviews' ||
+        pathname.startsWith('/reviews/')
+    )
+        return 'review'
+
     // /session/* or /project/* → project (workspace screen)
     if (pathname.startsWith('/session/') || pathname.startsWith('/project/')) return 'project'
 

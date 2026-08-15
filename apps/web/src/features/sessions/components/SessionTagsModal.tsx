@@ -61,7 +61,7 @@ export const SessionTagsModal: React.FC<SessionTagsModalProps> = ({
                         autoFocus
                         value={tagInput}
                         onChange={(e) => setTagInput(e.target.value.slice(0, 30))}
-                        className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-lg pl-3.5 pr-9 py-2.5 text-white text-[13px] focus:outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948]"
+                        className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-lg pl-3.5 pr-9 py-2.5 text-white text-[13px] focus:outline-none focus:border-[#87B2F4] focus:ring-1 focus:ring-[#87B2F4]/30 selection:bg-[#87B2F4] selection:text-black transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948]"
                         placeholder="Enter tag name (e.g. React, CLI, AI)..."
                         disabled={isPending}
                     />
