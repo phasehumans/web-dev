@@ -120,4 +120,58 @@ describe('Gemini Provider Adapter (Unit)', () => {
             { type: 'usage', promptTokens: 50, completionTokens: 25 },
         ])
     })
+
+    it('maps thinkingLevel correctly to thinkingConfig with includeThoughts', async () => {
+        let capturedConfig: any = null
+
+        const mockClient: any = {
+            models: {
+                generateContentStream: async (config: any) => {
+                    capturedConfig = config
+                    return (async function* () {
+                        yield { candidates: [{ content: { parts: [{ text: 'done' }] } }] }
+                    })()
+                },
+            },
+        }
+
+        const provider = geminiProvider('test-key', mockClient)
+
+        // 1. Medium thinking level
+        const streamMedium = provider.stream([{ role: 'user', content: 'test' }], [], undefined, {
+            thinkingLevel: 'medium',
+        })
+        for await (const _ of streamMedium) {
+            // consume
+        }
+        expect(capturedConfig.config.thinkingConfig).toEqual({
+            thinkingBudget: 4096,
+            includeThoughts: true,
+        })
+
+        // 2. Off thinking level
+        const streamOff = provider.stream([{ role: 'user', content: 'test' }], [], undefined, {
+            thinkingLevel: 'off',
+        })
+        for await (const _ of streamOff) {
+            // consume
+        }
+        expect(capturedConfig.config.thinkingConfig).toEqual({
+            thinkingBudget: 0,
+        })
+
+        // 3. Default / undefined thinking level
+        const streamDefault = provider.stream(
+            [{ role: 'user', content: 'test' }],
+            [],
+            undefined,
+            {}
+        )
+        for await (const _ of streamDefault) {
+            // consume
+        }
+        expect(capturedConfig.config.thinkingConfig).toEqual({
+            includeThoughts: true,
+        })
+    })
 })

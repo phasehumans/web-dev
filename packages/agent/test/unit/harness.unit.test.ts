@@ -61,5 +61,8 @@ describe('AgentHarness (Unit)', () => {
         expect(systemPrompt).toContain('You are December, an autonomous, expert coding agent.')
         expect(systemPrompt).toContain('Inspect Logs & Stack Traces First')
         expect(systemPrompt).toContain('Root Cause Resolution')
+        expect(systemPrompt).toContain('No Raw Code In Chat')
+        expect(systemPrompt).toContain('Strict Workspace Boundary')
+        expect(systemPrompt).toContain('Task Tracking & Lifecycle')
     })
 })
