@@ -430,10 +430,14 @@ export function extractSessionFileDiffs(messages: Message[]): ParsedFileDiff[] {
 
                 const path =
                     parsedInput.TargetFile ||
+                    parsedInput.targetFile ||
+                    parsedInput.target_file ||
                     parsedInput.AbsolutePath ||
                     parsedInput.filePath ||
                     parsedInput.filepath ||
                     parsedInput.path ||
+                    parsedInput.file ||
+                    parsedInput.fileName ||
                     ''
 
                 if (!path) continue
@@ -441,7 +445,13 @@ export function extractSessionFileDiffs(messages: Message[]): ParsedFileDiff[] {
                 let diff = ''
                 let action: 'created' | 'modified' | 'deleted' = 'modified'
 
-                if (block.toolName === 'write_file' || block.toolName === 'write_to_file') {
+                const toolName = (block.toolName || '').toLowerCase()
+
+                if (
+                    toolName === 'write_file' ||
+                    toolName === 'write_to_file' ||
+                    toolName === 'create_file'
+                ) {
                     action = 'created'
                     const code =
                         parsedInput.codeContent ??
