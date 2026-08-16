@@ -8,6 +8,7 @@ import { taskManager } from '../task-manager'
 import { parseErrorMessage } from '../utils/error-parser'
 import { extractJsonArray } from '../utils/json-parser'
 import { getProviderModels } from '../utils/models'
+import { fetchOpenRouterModels } from '../utils/openrouter-models'
 
 import { getNextMsgId, processAgentStream } from './use-agent-runner'
 import { useAuthHandlers } from './use-auth-handlers'
@@ -225,6 +226,19 @@ export function useAgentSession({
             return () => clearInterval(interval)
         }
     }, [authMode, setTasksData])
+
+    useEffect(() => {
+        if (selectedProvider === 'openrouter' || authMode === 'model_select') {
+            loadConfig().then((config) => {
+                if (config.activeProvider === 'openrouter' || selectedProvider === 'openrouter') {
+                    const apiKey = config.providers?.openrouter || process.env.OPENROUTER_API_KEY
+                    fetchOpenRouterModels(apiKey).then((models) => {
+                        setOpenRouterModels(models)
+                    })
+                }
+            })
+        }
+    }, [authMode, selectedProvider, setOpenRouterModels])
 
     const handleKillTask = useCallback(
         (taskId: string) => {
@@ -529,7 +543,7 @@ export function useAgentSession({
                     setSettingsNonWorkspace(config.nonWorkspaceAccess ?? false)
                     setSettingsShowTasks(config.showActiveTasks ?? true)
                     setSettingsToolPermission(config.toolPermission ?? 'always-proceed')
-                    setSettingsThinkingLevel(config.thinkingLevel ?? 'medium')
+                    setSettingsThinkingLevel(config.thinkingLevel ?? 'auto')
                     setSettingsSteeringMode(config.steeringMode ?? 'all')
                     setSettingsFollowUpMode(config.followUpMode ?? 'all')
                     setAuthMode('settings_main')

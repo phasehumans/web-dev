@@ -1,3 +1,7 @@
+import { getModelContextWindow } from '@december/providers'
+
+import { FALLBACK_OPENROUTER_MODELS } from './openrouter-models'
+
 export const getProviderModels = (provider: string) => {
     switch (provider) {
         case 'anthropic':
@@ -15,6 +19,7 @@ export const getProviderModels = (provider: string) => {
         case 'google':
         case 'gemini':
             return [
+                { label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
                 { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
                 { label: 'Gemini 3.5 Flash Lite', value: 'gemini-3.5-flash-lite' },
@@ -41,16 +46,7 @@ export const getProviderModels = (provider: string) => {
                 { label: 'GPT-4 Turbo', value: 'gpt-4-turbo' },
             ]
         case 'openrouter':
-            return [
-                { label: 'Google: Gemini 3.6 Flash', value: 'google/gemini-3.6-flash' },
-                { label: 'Anthropic: Claude 3.7 Sonnet', value: 'anthropic/claude-3.7-sonnet' },
-                { label: 'Anthropic: Claude 3.5 Sonnet', value: 'anthropic/claude-3.5-sonnet' },
-                { label: 'OpenAI: o3-mini', value: 'openai/o3-mini' },
-                { label: 'OpenAI: GPT-4o', value: 'openai/gpt-4o' },
-                { label: 'DeepSeek: DeepSeek R1', value: 'deepseek/deepseek-r1' },
-                { label: 'DeepSeek: DeepSeek V3', value: 'deepseek/deepseek-chat' },
-                { label: 'Meta: Llama 3.3 70B', value: 'meta-llama/llama-3.3-70b-instruct' },
-            ]
+            return FALLBACK_OPENROUTER_MODELS
         case 'deepseek':
             return [
                 { label: 'DeepSeek V4 Pro', value: 'deepseek-v4-pro' },
@@ -104,6 +100,7 @@ export const getProviderModels = (provider: string) => {
         case 'december':
         case 'december_proxy':
             return [
+                { label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
                 { label: 'Claude 3.7 Sonnet', value: 'claude-3-7-sonnet-latest' },
                 { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet-latest' },
@@ -141,6 +138,7 @@ export const getModelLabel = (value: string) => {
 
 export const isValidModelForProvider = (provider: string, model?: string): boolean => {
     if (!model) return false
+    if (provider === 'openrouter' && (model.includes('/') || model.includes(':'))) return true
     const models = getProviderModels(provider)
     return models.some((m) => m.value === model)
 }
@@ -153,5 +151,4 @@ export const getDefaultModelForProvider = (provider: string): string => {
     return 'gemini-3.6-flash'
 }
 
-import { getModelContextWindow } from '@december/providers'
 export { getModelContextWindow }

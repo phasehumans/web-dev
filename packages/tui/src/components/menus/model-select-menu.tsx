@@ -3,19 +3,38 @@ import SelectInput from 'ink-select-input'
 
 import { CustomIndicator, CustomItem } from './menu-items'
 
-export function ModelSelectMenu(props: any) {
-    const { handleModelSelect, selectedProvider, openRouterModels, getProviderModels } = props
+export interface ModelSelectMenuProps {
+    handleModelSelect: (item: { label: string; value: string }) => void
+    selectedProvider: string
+    openRouterModels?: { label: string; value: string }[]
+    getProviderModels?: (provider: string) => { label: string; value: string }[]
+}
+
+export function ModelSelectMenu({
+    handleModelSelect,
+    selectedProvider,
+    openRouterModels,
+    getProviderModels,
+}: ModelSelectMenuProps) {
+    const items =
+        selectedProvider === 'openrouter'
+            ? openRouterModels && openRouterModels.length > 0
+                ? openRouterModels
+                : typeof getProviderModels === 'function'
+                  ? getProviderModels('openrouter')
+                  : [{ label: 'Loading models...', value: 'loading' }]
+            : typeof getProviderModels === 'function'
+              ? getProviderModels(selectedProvider)
+              : []
+
     return (
         <Box flexDirection="column" paddingX={1}>
             <Box marginBottom={1}>
                 <Text color="white">Select Model:</Text>
             </Box>
             <SelectInput
-                items={
-                    selectedProvider === 'openrouter'
-                        ? openRouterModels || [{ label: 'Loading models...', value: 'loading' }]
-                        : getProviderModels(selectedProvider)
-                }
+                items={items}
+                limit={10}
                 onSelect={handleModelSelect}
                 indicatorComponent={CustomIndicator}
                 itemComponent={CustomItem}

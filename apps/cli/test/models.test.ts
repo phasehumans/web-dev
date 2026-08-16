@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect } from 'bun:test'
 
 import {
     getProviderModels,
@@ -26,11 +26,12 @@ describe('models utils', () => {
             const models = getProviderModels('google')
             expect(models).toEqual(
                 expect.arrayContaining([
+                    expect.objectContaining({ value: 'gemini-3.7-flash' }),
                     expect.objectContaining({ value: 'gemini-3.6-flash' }),
                     expect.objectContaining({ value: 'gemini-3-pro-preview' }),
                 ])
             )
-            expect(models.length).toBe(10)
+            expect(models.length).toBe(11)
         })
 
         it('returns openai models when provider is openai', () => {
@@ -45,6 +46,23 @@ describe('models utils', () => {
             expect(models.length).toBe(11)
         })
 
+        it('returns openrouter models with free and paid models when provider is openrouter', () => {
+            const models = getProviderModels('openrouter')
+            expect(models).toEqual(
+                expect.arrayContaining([
+                    expect.objectContaining({
+                        label: '(free) Meta: Llama 3.3 70B Instruct',
+                        value: 'meta-llama/llama-3.3-70b-instruct:free',
+                    }),
+                    expect.objectContaining({
+                        label: 'Anthropic: Claude 3.7 Sonnet',
+                        value: 'anthropic/claude-3.7-sonnet',
+                    }),
+                ])
+            )
+            expect(models.length).toBe(14)
+        })
+
         it('returns default model when provider is unknown', () => {
             const models = getProviderModels('unknown-provider')
             expect(models).toEqual([{ label: 'Default', value: 'default' }])
@@ -57,6 +75,10 @@ describe('models utils', () => {
             expect(isValidModelForProvider('anthropic', 'gpt-4o')).toBe(false)
             expect(isValidModelForProvider('openai', 'gpt-4o')).toBe(true)
             expect(isValidModelForProvider('december_proxy', 'gemini-3.6-flash')).toBe(true)
+            expect(
+                isValidModelForProvider('openrouter', 'meta-llama/llama-3.3-70b-instruct:free')
+            ).toBe(true)
+            expect(isValidModelForProvider('openrouter', 'custom/dynamic-model')).toBe(true)
         })
     })
 
@@ -64,12 +86,13 @@ describe('models utils', () => {
         it('returns first available model for provider', () => {
             expect(getDefaultModelForProvider('anthropic')).toBe('claude-fable-5')
             expect(getDefaultModelForProvider('openai')).toBe('gpt-5.6-sol')
-            expect(getDefaultModelForProvider('december_proxy')).toBe('gemini-3.6-flash')
+            expect(getDefaultModelForProvider('december_proxy')).toBe('gemini-3.7-flash')
         })
     })
 
     describe('getModelLabel', () => {
         it('returns correct label for a known model value', () => {
+            expect(getModelLabel('gemini-3.7-flash')).toBe('Gemini 3.7 Flash')
             expect(getModelLabel('gemini-3.6-flash')).toBe('Gemini 3.6 Flash')
             expect(getModelLabel('claude-3-7-sonnet-latest')).toBe('Claude 3.7 Sonnet')
             expect(getModelLabel('o3-mini')).toBe('o3-mini')
@@ -83,6 +106,7 @@ describe('models utils', () => {
 
     describe('getModelContextWindow', () => {
         it('returns 1000000 for gemini models', () => {
+            expect(getModelContextWindow('gemini-3.7-flash')).toBe(1000000)
             expect(getModelContextWindow('gemini-3.6-flash')).toBe(1000000)
         })
 
