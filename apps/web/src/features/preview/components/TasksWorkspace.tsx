@@ -16,36 +16,39 @@ interface TaskItem {
     completed: boolean
 }
 
-const DEFAULT_TASKS: TaskItem[] = [
-    { id: '1', title: 'Read all current TUI source to scope the migration', completed: false },
-    { id: '2', title: 'Generate Devin dotted logo as braille art', completed: false },
-    {
-        id: '3',
-        title: 'Set up Ink: add deps, remove opentui, new entrypoint/renderer',
-        completed: false,
-    },
-    { id: '4', title: 'Greyscale-only theme (no accent colors)', completed: false },
-    {
-        id: '5',
-        title: 'Port providers (theme, dialog, keyboard-layer, toast) to Ink',
-        completed: false,
-    },
-    { id: '6', title: 'Port layouts (root-layout, themed-root)', completed: false },
-    {
-        id: '7',
-        title: 'Port components: logo, header, tips, input-bar, status-bar, spinner, border',
-        completed: false,
-    },
-    { id: '8', title: 'Port command-menu + dialogs + dialog-search-list', completed: false },
-    { id: '9', title: 'Port messages (bot/user/error) + session-shell', completed: false },
-    { id: '10', title: 'Port screens: home, new-session, session', completed: false },
-    { id: '11', title: 'Match Devin CLI layout exactly (no bg, rule, footer)', completed: false },
-    { id: '12', title: 'Run lint/typecheck/prettier + render locally to verify', completed: false },
-    { id: '13', title: 'Commit, push new branch, open PR', completed: false },
-]
+export function extractFileToolParams(input: any): { path: string; content: string } {
+    let parsed: any = {}
+    if (typeof input === 'string') {
+        try {
+            parsed = JSON.parse(input)
+        } catch {
+            // Intentionally swallowed: Fallback for non-JSON input
+            parsed = {}
+        }
+    } else if (input && typeof input === 'object') {
+        parsed = input
+    }
+
+    const path = (
+        parsed.TargetFile ||
+        parsed.targetFile ||
+        parsed.target_file ||
+        parsed.filePath ||
+        parsed.filepath ||
+        parsed.AbsolutePath ||
+        parsed.path ||
+        parsed.file ||
+        parsed.fileName ||
+        ''
+    ).toLowerCase()
+
+    const content = parsed.CodeContent ?? parsed.codeContent ?? parsed.content ?? parsed.code ?? ''
+
+    return { path, content }
+}
 
 // Find and parse tasks from TASK.md or TASKS.md
-function parseTasksFromFile(content: string): TaskItem[] {
+export function parseTasksFromFile(content: string): TaskItem[] {
     const lines = content.split('\n')
     const parsed: TaskItem[] = []
     let idCounter = 1
@@ -91,7 +94,7 @@ function parseTasksFromFile(content: string): TaskItem[] {
     return parsed
 }
 
-function findTaskFileContent(
+export function findTaskFileContent(
     generatedFiles?: Record<string, GeneratedProjectFile>,
     messages?: any[]
 ): string | null {
@@ -113,28 +116,26 @@ function findTaskFileContent(
     if (messages && messages.length > 0) {
         for (let i = messages.length - 1; i >= 0; i--) {
             const msg = messages[i]
+
+            if (msg.blocks && Array.isArray(msg.blocks)) {
+                for (let j = msg.blocks.length - 1; j >= 0; j--) {
+                    const block = msg.blocks[j]
+                    if (block.type === 'command') {
+                        const { path, content } = extractFileToolParams(block.toolInput)
+                        if (path.endsWith('task.md') || path.endsWith('tasks.md')) {
+                            if (content.trim()) return content
+                        }
+                    }
+                }
+            }
+
             if (msg.tool_calls) {
                 for (const tc of msg.tool_calls) {
                     const args = tc.function?.arguments || tc.arguments
                     if (args) {
-                        try {
-                            const parsed = typeof args === 'string' ? JSON.parse(args) : args
-                            const path = (
-                                parsed.TargetFile ||
-                                parsed.path ||
-                                parsed.file ||
-                                ''
-                            ).toLowerCase()
-                            if (path.endsWith('task.md') || path.endsWith('tasks.md')) {
-                                const content =
-                                    parsed.CodeContent ||
-                                    parsed.content ||
-                                    parsed.ReplacementContent ||
-                                    ''
-                                if (content.trim()) return content
-                            }
-                        } catch {
-                            // ignore
+                        const { path, content } = extractFileToolParams(args)
+                        if (path.endsWith('task.md') || path.endsWith('tasks.md')) {
+                            if (content.trim()) return content
                         }
                     }
                 }
@@ -158,7 +159,7 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({ generatedFiles }
             const parsed = parseTasksFromFile(rawFileContent)
             if (parsed.length > 0) return parsed
         }
-        return DEFAULT_TASKS
+        return []
     }, [rawFileContent])
 
     const [tasks, setTasks] = useState<TaskItem[]>(initialTasks)
@@ -172,6 +173,21 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({ generatedFiles }
 
     const toggleTask = (id: string) => {
         setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)))
+    }
+
+    if (tasks.length === 0) {
+        return (
+            <div className="flex-1 flex flex-col items-center justify-center h-full bg-[#141414] text-[#71717A] font-sans px-5 py-4 select-none">
+                <div className="flex flex-col items-center gap-2 max-w-sm text-center">
+                    <CheckCircle2 className="w-6 h-6 text-[#3F3F46]" />
+                    <p className="text-[13px] text-[#A1A1AA] font-medium">No tasks initialized</p>
+                    <p className="text-[12px] text-[#52525B]">
+                        The agent will create and maintain a structured TASK.md checklist as work
+                        progresses.
+                    </p>
+                </div>
+            </div>
+        )
     }
 
     return (

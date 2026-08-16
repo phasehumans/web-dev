@@ -75,4 +75,34 @@ describe('Ticket #391: Interactive Changes Workspace', () => {
         expect(diffs[0].diff).toContain('-const oldVal = 1')
         expect(diffs[0].diff).toContain('+const newVal = 2')
     })
+
+    it('extracts diffs from write_file with /workspace prefix and normalizes paths', () => {
+        const messages: Message[] = [
+            {
+                id: 'm3',
+                role: 'assistant',
+                content: 'Creating main entrypoint',
+                blocks: [
+                    {
+                        type: 'command',
+                        toolCallId: 't2',
+                        toolName: 'write_file',
+                        toolInput: {
+                            filePath: '/workspace/src/main.ts',
+                            content:
+                                'import { createApp } from "./app"\ncreateApp().mount("#root")',
+                        },
+                        status: 'success',
+                    },
+                ],
+            },
+        ]
+
+        const diffs = extractSessionFileDiffs(messages)
+        expect(diffs).toHaveLength(1)
+        expect(diffs[0].filePath).toBe('/workspace/src/main.ts')
+        expect(diffs[0].action).toBe('created')
+        expect(diffs[0].additions).toBe(2)
+        expect(diffs[0].deletions).toBe(0)
+    })
 })
