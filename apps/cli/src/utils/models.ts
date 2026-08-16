@@ -108,8 +108,104 @@ export const getProviderModels = (provider: string) => {
                 { label: 'GPT-4o', value: 'gpt-4o' },
                 { label: 'DeepSeek Reasoner (R1)', value: 'deepseek-reasoner' },
             ]
+        case 'ollama':
+            return [
+                { label: 'Qwen 2.5 Coder 7B (Recommended)', value: 'qwen2.5-coder:7b' },
+                { label: 'Qwen 2.5 Coder 14B', value: 'qwen2.5-coder:14b' },
+                { label: 'Qwen 2.5 Coder 32B', value: 'qwen2.5-coder:32b' },
+                { label: 'Llama 3.3 70B', value: 'llama3.3:70b' },
+                { label: 'Llama 3.1 8B', value: 'llama3.1:8b' },
+                { label: 'Mistral Nemo 12B', value: 'mistral-nemo:latest' },
+            ]
         default:
             return [{ label: 'Default', value: 'default' }]
+    }
+}
+
+export const isToolCompatibleOllamaModel = (modelName: string): boolean => {
+    if (!modelName) return false
+    const lower = modelName.toLowerCase()
+    const toolKeywords = [
+        'qwen2.5-coder',
+        'qwen2.5',
+        'llama-3.3',
+        'llama3.3',
+        'llama-3.1',
+        'llama3.1',
+        'mistral-nemo',
+        'codellama',
+        'command-r',
+        'hermes3',
+        'firefunction',
+    ]
+    return toolKeywords.some((kw) => lower.includes(kw))
+}
+
+function formatBytes(bytes: number): string {
+    if (!bytes || bytes <= 0) return '0 B'
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+    const i = Math.floor(Math.log(bytes) / Math.log(1024))
+    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
+}
+
+export async function fetchOllamaModels(
+    baseUrl: string = 'http://localhost:11434',
+    fetchFn: typeof fetch = fetch
+): Promise<{ label: string; value: string }[]> {
+    try {
+        const cleanBaseUrl = baseUrl.replace(/\/+$/, '').replace(/\/v1$/, '')
+        const res = await fetchFn(`${cleanBaseUrl}/api/tags`)
+        if (!res.ok) {
+            return getProviderModels('ollama')
+        }
+        const data = (await res.json()) as { models?: { name: string; size: number }[] }
+        if (!data.models || data.models.length === 0) {
+            return getProviderModels('ollama')
+        }
+        const filtered = data.models.filter((m) => isToolCompatibleOllamaModel(m.name))
+        if (filtered.length === 0) {
+            return getProviderModels('ollama')
+        }
+        return filtered.map((m) => ({
+            label: `${m.name} (${formatBytes(m.size)})`,
+            value: m.name,
+        }))
+    } catch {
+        // Fallback to curated tool-compatible models on network error
+        return getProviderModels('ollama')
+    }
+}
+
+export async function checkOllamaStatus(
+    baseUrl: string = 'http://localhost:11434',
+    fetchFn: typeof fetch = fetch
+): Promise<{ running: boolean; models: string[]; compatibleModels: string[]; error?: string }> {
+    try {
+        const cleanBaseUrl = baseUrl.replace(/\/+$/, '').replace(/\/v1$/, '')
+        const res = await fetchFn(`${cleanBaseUrl}/api/tags`)
+        if (!res.ok) {
+            return {
+                running: false,
+                models: [],
+                compatibleModels: [],
+                error: `HTTP error: ${res.status} ${res.statusText}`,
+            }
+        }
+        const data = (await res.json()) as { models?: { name: string; size: number }[] }
+        const allModels = (data.models || []).map((m) => m.name)
+        const compatible = allModels.filter((name) => isToolCompatibleOllamaModel(name))
+        return {
+            running: true,
+            models: allModels,
+            compatibleModels: compatible,
+        }
+    } catch (err: any) {
+        return {
+            running: false,
+            models: [],
+            compatibleModels: [],
+            error: err?.message || String(err),
+        }
     }
 }
 
@@ -126,6 +222,7 @@ export const getModelLabel = (value: string) => {
         'mistral',
         'xai',
         'zai',
+        'ollama',
         'december_proxy',
     ]
     for (const p of allProviders) {
@@ -139,11 +236,15 @@ export const getModelLabel = (value: string) => {
 export const isValidModelForProvider = (provider: string, model?: string): boolean => {
     if (!model) return false
     if (provider === 'openrouter' && (model.includes('/') || model.includes(':'))) return true
+    if (provider === 'ollama') return isToolCompatibleOllamaModel(model)
     const models = getProviderModels(provider)
     return models.some((m) => m.value === model)
 }
 
 export const getDefaultModelForProvider = (provider: string): string => {
+    if (provider === 'ollama') {
+        return 'qwen2.5-coder:7b'
+    }
     const models = getProviderModels(provider)
     if (models && models.length > 0 && models[0].value !== 'default') {
         return models[0].value

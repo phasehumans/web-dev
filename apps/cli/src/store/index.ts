@@ -35,6 +35,16 @@ export interface CliState {
     setAuthError: (err: string | null) => void
     openRouterModels: { label: string; value: string }[]
     setOpenRouterModels: (models: { label: string; value: string }[]) => void
+    ollamaStatus: {
+        running: boolean
+        models: string[]
+        compatibleModels: string[]
+        baseUrl?: string
+        error?: string
+    } | null
+    setOllamaStatus: (status: any) => void
+    ollamaModels: { label: string; value: string }[]
+    setOllamaModels: (models: { label: string; value: string }[]) => void
 
     // chat feature
     currentPlannedPrompt: string | null
@@ -99,8 +109,8 @@ export interface CliState {
     setSettingsDefaultModel: (val: string) => void
     settingsMaxTokens: string
     setSettingsMaxTokens: (val: string) => void
-    settingsThinkingLevel: 'off' | 'minimal' | 'low' | 'medium' | 'high'
-    setSettingsThinkingLevel: (val: 'off' | 'minimal' | 'low' | 'medium' | 'high') => void
+    settingsThinkingLevel: 'auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high'
+    setSettingsThinkingLevel: (val: 'auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high') => void
     settingsSteeringMode: 'all' | 'one-at-a-time'
     setSettingsSteeringMode: (val: 'all' | 'one-at-a-time') => void
     settingsFollowUpMode: 'all' | 'one-at-a-time'
@@ -165,6 +175,10 @@ export const useCliStore = create<CliState>((set) => ({
     setAuthError: (authError) => set({ authError }),
     openRouterModels: [],
     setOpenRouterModels: (openRouterModels) => set({ openRouterModels }),
+    ollamaStatus: null,
+    setOllamaStatus: (ollamaStatus) => set({ ollamaStatus }),
+    ollamaModels: [],
+    setOllamaModels: (ollamaModels) => set({ ollamaModels }),
 
     // chat
     currentPlannedPrompt: null,
@@ -241,7 +255,7 @@ export const useCliStore = create<CliState>((set) => ({
     setSettingsDefaultModel: (settingsDefaultModel) => set({ settingsDefaultModel }),
     settingsMaxTokens: '',
     setSettingsMaxTokens: (settingsMaxTokens) => set({ settingsMaxTokens }),
-    settingsThinkingLevel: 'medium',
+    settingsThinkingLevel: 'auto',
     setSettingsThinkingLevel: (settingsThinkingLevel) => set({ settingsThinkingLevel }),
     settingsSteeringMode: 'all',
     setSettingsSteeringMode: (settingsSteeringMode) => set({ settingsSteeringMode }),

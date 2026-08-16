@@ -102,6 +102,7 @@ describe('OpenAI Provider Adapter (Unit)', () => {
             { thinkingLevel: 'low', expected: 'low' },
             { thinkingLevel: 'medium', expected: 'medium' },
             { thinkingLevel: 'high', expected: 'high' },
+            { thinkingLevel: 'auto', expected: undefined },
             { thinkingLevel: 'off', expected: undefined },
         ]
 

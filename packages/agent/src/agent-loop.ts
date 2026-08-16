@@ -11,7 +11,7 @@ import type { AgentEvent, AgentMessage, ToolCall, ToolResult } from '@december/s
 export function getAdaptiveThinkingLevel(
     messages: AgentMessage[],
     configuredLevel?: string
-): 'off' | 'minimal' | 'low' | 'medium' | 'high' {
+): 'auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high' {
     const userMsgs = messages.filter((m) => m.role === 'user' && !m.isUI)
     if (userMsgs.length === 0) return 'off'
     const lastUserMsg = userMsgs[userMsgs.length - 1]
@@ -69,8 +69,8 @@ export function getAdaptiveThinkingLevel(
         return 'high'
     }
 
-    // Tier 3: Medium (or configured default) for standard code edits
-    return (configuredLevel as any) || 'medium'
+    // Tier 3: Auto (or configured default) for standard code edits
+    return (configuredLevel as any) || 'auto'
 }
 
 export function isSimpleConversationalTurn(messages: AgentMessage[]): boolean {

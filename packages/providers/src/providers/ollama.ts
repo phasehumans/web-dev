@@ -1,34 +1,33 @@
 import { OpenAI } from 'openai'
 
-import { createProvider } from '../models.ts'
+import { createProvider, getModelContextWindow } from '../models.ts'
 import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
-export function resolveOpenAIModel(model?: string): string {
-    let name = model || 'gpt-4o'
-    if (name.startsWith('openai/')) {
-        name = name.slice('openai/'.length)
+export function resolveOllamaModel(model?: string): string {
+    let name = model || 'qwen2.5-coder:7b'
+    if (name.startsWith('ollama/')) {
+        name = name.slice('ollama/'.length)
     }
     return name
 }
 
-export function openaiProvider(
-    baseURL?: string,
-    apiKey?: string,
-    defaultHeaders?: Record<string, string>,
+export function ollamaProvider(
+    baseURL: string = 'http://localhost:11434/v1',
+    apiKey: string = 'ollama',
+    defaultNumCtx?: number,
     customClient?: OpenAI
 ): LLMProvider {
     const client =
         customClient ||
         new OpenAI({
             baseURL,
-            apiKey: apiKey || process.env.OPENAI_API_KEY || 'dummy-key',
-            defaultHeaders,
+            apiKey: apiKey || 'ollama',
         })
 
     return createProvider(
         {
-            id: 'openai',
-            name: 'OpenAI',
+            id: 'ollama',
+            name: 'Ollama',
             models: [],
             api: client,
         },
@@ -85,29 +84,23 @@ export function openaiProvider(
                 },
             }))
 
-            const thinkingLevel = modelOptions?.thinkingLevel
-            let reasoningEffort: 'low' | 'medium' | 'high' | undefined
-            if (thinkingLevel && thinkingLevel !== 'off' && thinkingLevel !== 'auto') {
-                if (thinkingLevel === 'minimal' || thinkingLevel === 'low') {
-                    reasoningEffort = 'low'
-                } else if (thinkingLevel === 'medium') {
-                    reasoningEffort = 'medium'
-                } else if (thinkingLevel === 'high') {
-                    reasoningEffort = 'high'
-                }
-            }
+            const resolvedModel = resolveOllamaModel(modelOptions?.model)
+            const numCtx =
+                modelOptions?.numCtx ?? defaultNumCtx ?? getModelContextWindow(resolvedModel)
 
             const stream = await client.chat.completions.create(
                 {
-                    model: resolveOpenAIModel(modelOptions?.model),
+                    model: resolvedModel,
                     messages: oaiMessages,
-                    tools: oaiTools,
+                    tools: oaiTools && oaiTools.length > 0 ? oaiTools : undefined,
                     stream: true,
                     temperature: modelOptions?.temperature,
                     max_tokens: modelOptions?.max_tokens,
-                    reasoning_effort: reasoningEffort,
                     stream_options: { include_usage: true },
-                },
+                    options: {
+                        num_ctx: numCtx,
+                    },
+                } as unknown as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
                 { signal }
             )
 
@@ -168,12 +161,16 @@ export function openaiProvider(
     )
 }
 
-export class OpenAIProvider implements LLMProvider {
-    public id = 'openai'
+export class OllamaProvider implements LLMProvider {
+    public id = 'ollama'
     private provider: LLMProvider
 
-    constructor(baseURL?: string, apiKey?: string) {
-        this.provider = openaiProvider(baseURL, apiKey)
+    constructor(
+        baseURL: string = 'http://localhost:11434/v1',
+        apiKey: string = 'ollama',
+        numCtx?: number
+    ) {
+        this.provider = ollamaProvider(baseURL, apiKey, numCtx)
     }
 
     stream(

@@ -4,6 +4,7 @@ import { getModelContextWindow, createProvider, MODEL_CONTEXT_WINDOWS } from '..
 
 describe('Models Utility & Context Windows (Unit)', () => {
     it('returns exact context window size for known model names in lookup map', () => {
+        expect(getModelContextWindow('gemini-3.7-flash')).toBe(1000000)
         expect(getModelContextWindow('gemini-3.6-flash')).toBe(1000000)
         expect(getModelContextWindow('gemini-3.5-flash')).toBe(1000000)
         expect(getModelContextWindow('gemini-3-pro-preview')).toBe(1000000)
@@ -60,6 +61,7 @@ describe('Models Utility & Context Windows (Unit)', () => {
     })
 
     it('MODEL_CONTEXT_WINDOWS map contains expected defaults', () => {
+        expect(MODEL_CONTEXT_WINDOWS['gemini-3.7-flash']).toBe(1000000)
         expect(MODEL_CONTEXT_WINDOWS['gemini-3.6-flash']).toBe(1000000)
         expect(MODEL_CONTEXT_WINDOWS['claude-3-5-sonnet-latest']).toBe(200000)
         expect(MODEL_CONTEXT_WINDOWS['gpt-4o']).toBe(128000)

@@ -8,6 +8,7 @@ vi.mock('@december/providers', () => ({
     anthropicProvider: vi.fn(),
     geminiProvider: vi.fn(),
     openrouterProvider: vi.fn(),
+    ollamaProvider: vi.fn(),
 }))
 
 describe('instantiateProvider', () => {
@@ -20,6 +21,7 @@ describe('instantiateProvider', () => {
         ;(providers.anthropicProvider as any).mockReturnValue('mock-anthropic')
         ;(providers.geminiProvider as any).mockReturnValue('mock-gemini')
         ;(providers.openrouterProvider as any).mockReturnValue('mock-openrouter')
+        ;(providers.ollamaProvider as any).mockReturnValue('mock-ollama')
     })
 
     afterEach(() => {
@@ -62,6 +64,27 @@ describe('instantiateProvider', () => {
         expect(providers.openaiProvider).toHaveBeenCalledWith(
             'https://api.groq.com/openai/v1',
             'key-123'
+        )
+    })
+
+    it('instantiates ollama provider with default localhost endpoint', () => {
+        const p = instantiateProvider('ollama', '')
+        expect(p).toBe('mock-ollama')
+        expect(providers.ollamaProvider).toHaveBeenCalledWith('http://localhost:11434/v1', 'ollama')
+    })
+
+    it('instantiates ollama provider with custom endpoint when passed as apiKey or OLLAMA_HOST', () => {
+        instantiateProvider('ollama', 'http://192.168.1.50:11434')
+        expect(providers.ollamaProvider).toHaveBeenCalledWith(
+            'http://192.168.1.50:11434/v1',
+            'ollama'
+        )
+
+        process.env.OLLAMA_HOST = 'http://remote-ollama:11434/v1'
+        instantiateProvider('ollama', '')
+        expect(providers.ollamaProvider).toHaveBeenCalledWith(
+            'http://remote-ollama:11434/v1',
+            'ollama'
         )
     })
 

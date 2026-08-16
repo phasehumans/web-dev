@@ -48,7 +48,8 @@ export function useSettingsHandlers() {
                 updated = true
                 break
             case 'thinkingLevel': {
-                const thinkingLevels: ('off' | 'minimal' | 'low' | 'medium' | 'high')[] = [
+                const thinkingLevels: ('auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high')[] = [
+                    'auto',
                     'off',
                     'minimal',
                     'low',

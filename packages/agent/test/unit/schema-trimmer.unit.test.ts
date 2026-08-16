@@ -37,12 +37,12 @@ describe('Performance & Schema Trimming (Unit)', () => {
             getAdaptiveThinkingLevel([{ role: 'user', content: 'find function main in index.ts' }])
         ).toBe('minimal')
 
-        // Tier 3: Medium (default for code edits)
+        // Tier 3: Auto (default for code edits)
         expect(
             getAdaptiveThinkingLevel([
                 { role: 'user', content: 'Add a new utility function to file' },
             ])
-        ).toBe('medium')
+        ).toBe('auto')
 
         // Tier 4: High for refactoring/debugging/multi-file prompts
         expect(

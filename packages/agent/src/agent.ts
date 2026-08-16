@@ -15,7 +15,7 @@ export interface AgentConfig {
     sessionRepository?: SessionRepository
     hooks?: AgentHooks
     convertToLlm?: (messages: AgentMessage[]) => Message[]
-    thinkingLevel?: 'off' | 'minimal' | 'low' | 'medium' | 'high'
+    thinkingLevel?: 'auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high'
     steeringMode?: 'all' | 'one-at-a-time'
     followUpMode?: 'all' | 'one-at-a-time'
 }
@@ -60,7 +60,7 @@ export class Agent {
     public operations: PlatformAdapter
     public env: Map<string, string>
     public modelOptions?: Record<string, any>
-    public thinkingLevel?: 'off' | 'minimal' | 'low' | 'medium' | 'high'
+    public thinkingLevel?: 'auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high'
     public steeringQueue: PendingMessageQueue
     public followUpQueue: PendingMessageQueue
     public activeAbortController?: AbortController
@@ -75,7 +75,7 @@ export class Agent {
         this.operations = config.operations
         this.env = new Map<string, string>()
         this.modelOptions = config.modelOptions
-        this.thinkingLevel = config.thinkingLevel || 'medium'
+        this.thinkingLevel = config.thinkingLevel || 'auto'
         this.convertToLlm = config.convertToLlm || this.defaultConvertToLlm
         this.steeringQueue = new PendingMessageQueue(config.steeringMode || 'all')
         this.followUpQueue = new PendingMessageQueue(config.followUpMode || 'all')

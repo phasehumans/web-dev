@@ -1,6 +1,7 @@
 import type { LLMProvider, Message, ProviderTool, ProviderStreamChunk } from './types.ts'
 
 export const MODEL_CONTEXT_WINDOWS: Record<string, number> = {
+    'gemini-3.7-flash': 1000000,
     'gemini-3.6-flash': 1000000,
     'gemini-3.5-flash': 1000000,
     'gemini-3.5-flash-lite': 1000000,
@@ -37,7 +38,10 @@ export function getModelContextWindow(value: string): number {
     if (MODEL_CONTEXT_WINDOWS[value]) {
         return MODEL_CONTEXT_WINDOWS[value]
     }
-    const lower = value.toLowerCase()
+    let lower = value.toLowerCase()
+    if (lower.startsWith('ollama/')) {
+        lower = lower.slice('ollama/'.length)
+    }
     if (lower.includes('gemini')) return 1000000
     if (lower.includes('claude')) return 200000
     if (lower.includes('o3-mini') || lower.includes('o1')) return 200000
@@ -46,7 +50,19 @@ export function getModelContextWindow(value: string): number {
     if (lower.includes('gpt-4')) return 128000
     if (lower.includes('gpt-3.5')) return 16385
     if (lower.includes('deepseek')) return 128000
-    if (lower.includes('llama-3.3') || lower.includes('llama-3.1')) return 128000
+    if (
+        lower.includes('llama-3.3') ||
+        lower.includes('llama-3.1') ||
+        lower.includes('llama3.3') ||
+        lower.includes('llama3.1') ||
+        lower.includes('mistral-nemo')
+    ) {
+        return 128000
+    }
+    if (lower.includes('qwen2.5-coder') || lower.includes('qwen2.5') || lower.includes('qwen')) {
+        return 32768
+    }
+    if (lower.includes('codellama')) return 16384
     if (lower.includes('128k')) return 131072
     if (lower.includes('32k')) return 32768
     if (lower.includes('8192')) return 8192

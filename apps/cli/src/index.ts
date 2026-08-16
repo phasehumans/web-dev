@@ -129,7 +129,7 @@ async function main() {
                 providerConfig?.model ||
                 config.activeModel ||
                 'gemini-3.6-flash',
-            thinkingLevel: config.thinkingLevel || 'medium',
+            thinkingLevel: config.thinkingLevel || 'auto',
         },
         sessionRepository,
         sessionId: parsedArgs.sessionId || sessionId,
@@ -139,7 +139,7 @@ async function main() {
                 // Future integration: hook into the TUI to request user approval for destructive bash commands
             },
         },
-        thinkingLevel: config.thinkingLevel || 'medium',
+        thinkingLevel: config.thinkingLevel || 'auto',
         steeringMode: config.steeringMode || 'all',
         followUpMode: config.followUpMode || 'all',
     })

@@ -14,7 +14,6 @@ describe('Agent core functionality (Unit)', () => {
             llm: new MockLLM(),
             tools: [tool1, tool2],
             operations: mockOperations,
-            thinkingLevel: 'medium',
         })
 
         expect(agent.messages.length).toBe(1)
@@ -23,7 +22,7 @@ describe('Agent core functionality (Unit)', () => {
         expect(agent.tools.size).toBe(2)
         expect(agent.tools.get('tool_a')).toBe(tool1)
         expect(agent.tools.get('tool_b')).toBe(tool2)
-        expect(agent.thinkingLevel).toBe('medium')
+        expect(agent.thinkingLevel).toBe('auto')
     })
 
     test('initializes queues based on mode', () => {

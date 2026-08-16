@@ -102,6 +102,26 @@ describe('Anthropic Provider Adapter (Unit)', () => {
             })
             expect(capturedPayload.max_tokens).toBe(expectedMaxTokens)
         }
+
+        // Test 'auto' thinking level
+        let capturedPayload: any = null
+        const mockClient: any = {
+            messages: {
+                create: async (payload: any) => {
+                    capturedPayload = payload
+                    return (async function* () {})()
+                },
+            },
+        }
+
+        const provider = anthropicProvider(undefined, undefined, mockClient)
+        const stream = provider.stream([{ role: 'user', content: 'hello' }], undefined, undefined, {
+            thinkingLevel: 'auto',
+        })
+        for await (const _chunk of stream) {
+            // Intentionally empty: consuming stream generator to capture payload
+        }
+        expect(capturedPayload.thinking).toEqual({ type: 'adaptive' })
     })
 
     it('streams text deltas, thinking deltas, tool_use blocks, and usage metadata', async () => {

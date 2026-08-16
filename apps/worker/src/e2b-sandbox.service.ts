@@ -591,7 +591,7 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         sessionId,
         modelOptions: {
             model: process.env.DEFAULT_MODEL || 'gemini-3.6-flash',
-            thinkingLevel: 'medium',
+            thinkingLevel: 'auto',
         },
     })
 

@@ -37,6 +37,8 @@ export function useAuthHandlers(
         setStaticKey,
         setAuthError,
         addToast,
+        ollamaStatus,
+        setOllamaStatus,
     } = useCliStore()
 
     const handleAuthMenuSelect = async (item: any) => {
@@ -152,8 +154,56 @@ export function useAuthHandlers(
         addToast(`Model changed to ${item.value}`, 'success')
     }
 
+    const applyOllamaConfig = async (urlToUse: string, targetModel: string) => {
+        const config = await loadConfig()
+        config.providers = config.providers || {}
+        config.providers['ollama'] = urlToUse
+        config.activeProvider = 'ollama'
+        config.activeModel = targetModel
+        await saveConfig(config)
+
+        const llm = instantiateProvider('ollama', urlToUse)
+        if (agent) {
+            agent.setLLM(llm)
+            agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+        }
+
+        const { getAuthStatus, getProviderConfig } = await import('../config')
+        const authStatus = await getAuthStatus()
+        const newProviderConfig = await getProviderConfig()
+        if (newProviderConfig) {
+            setAuthMethod(newProviderConfig.authMethod)
+        }
+        setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+        setSettingsAuthPriority(authStatus.authPriority)
+        setIsAuthenticated(true)
+        setSelectedProvider('ollama')
+        setAuthMode('none')
+        addToast(`Connected to local Ollama (${targetModel})`, 'success')
+    }
+
     const handleProviderSelect = async (item: any) => {
         const config = await loadConfig()
+
+        if (item.value === 'ollama') {
+            const { checkOllamaStatus, getDefaultModelForProvider } =
+                await import('../utils/models')
+            const existingUrl =
+                config.providers?.['ollama'] || process.env.OLLAMA_HOST || 'http://localhost:11434'
+            const status = await checkOllamaStatus(existingUrl)
+            setOllamaStatus({ ...status, baseUrl: existingUrl })
+
+            if (status.running && status.compatibleModels.length > 0) {
+                const targetModel =
+                    status.compatibleModels[0] || getDefaultModelForProvider('ollama')
+                await applyOllamaConfig(existingUrl, targetModel)
+            } else {
+                setSelectedProvider('ollama')
+                setAuthMode('ollama_setup')
+            }
+            return
+        }
+
         if (config.providers && config.providers[item.value]) {
             const key = config.providers[item.value]
             config.activeProvider = item.value
@@ -479,6 +529,33 @@ export function useAuthHandlers(
         }
     }
 
+    const handleOllamaRetry = async (customUrl?: string) => {
+        const urlToUse = customUrl || 'http://localhost:11434'
+        const { checkOllamaStatus, getDefaultModelForProvider } = await import('../utils/models')
+        const status = await checkOllamaStatus(urlToUse)
+        setOllamaStatus({ ...status, baseUrl: urlToUse })
+
+        if (status.running && status.compatibleModels.length > 0) {
+            const targetModel = status.compatibleModels[0] || getDefaultModelForProvider('ollama')
+            await applyOllamaConfig(urlToUse, targetModel)
+        } else if (!status.running) {
+            addToast(`Ollama server not reachable at ${urlToUse}`, 'error')
+        } else {
+            addToast('Ollama is running, but no tool-compatible models were found.', 'warning')
+        }
+    }
+
+    const handleOllamaCancel = () => {
+        setAuthMode('byok_provider')
+    }
+
+    const handleOllamaProceed = async (modelName?: string) => {
+        const config = await loadConfig()
+        const urlToUse = config.providers?.['ollama'] || 'http://localhost:11434'
+        const targetModel = modelName || 'qwen2.5-coder:7b'
+        await applyOllamaConfig(urlToUse, targetModel)
+    }
+
     return {
         handleAuthMenuSelect,
         handleModelSelect,
@@ -486,5 +563,8 @@ export function useAuthHandlers(
         handleKeySubmit,
         handleLogoutSelect,
         handleSessionSelect,
+        handleOllamaRetry,
+        handleOllamaCancel,
+        handleOllamaProceed,
     }
 }

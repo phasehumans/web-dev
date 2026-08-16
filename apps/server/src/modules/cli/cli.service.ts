@@ -53,6 +53,7 @@ const generateHandoffUrl = async (data: GenerateHandoffUrl) => {
 }
 
 const OPENROUTER_MODEL_MAP: Record<string, string> = {
+    'gemini-3.7-flash': 'google/gemini-3.7-flash',
     'gemini-3.6-flash': 'google/gemini-3.6-flash',
     'gemini-3.5-flash': 'google/gemini-3.5-flash',
     'gemini-3.5-flash-lite': 'google/gemini-3.5-flash-lite',

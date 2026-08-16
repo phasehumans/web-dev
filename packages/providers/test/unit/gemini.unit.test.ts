@@ -4,6 +4,8 @@ import { geminiProvider, GeminiProvider, resolveGeminiModel } from '../../src/pr
 
 describe('Gemini Provider Adapter (Unit)', () => {
     it('resolves model aliases and strips google/ prefix correctly', () => {
+        expect(resolveGeminiModel('gemini-3.7-flash')).toBe('gemini-3.7-flash')
+        expect(resolveGeminiModel('google/gemini-3.7-flash')).toBe('gemini-3.7-flash')
         expect(resolveGeminiModel('gemini-3.6-flash')).toBe('gemini-3.6-flash')
         expect(resolveGeminiModel('google/gemini-3.6-flash')).toBe('gemini-3.6-flash')
         expect(resolveGeminiModel('google/gemini-2.5-flash')).toBe('gemini-2.5-flash')
@@ -160,7 +162,18 @@ describe('Gemini Provider Adapter (Unit)', () => {
             thinkingBudget: 0,
         })
 
-        // 3. Default / undefined thinking level
+        // 3. Auto thinking level
+        const streamAuto = provider.stream([{ role: 'user', content: 'test' }], [], undefined, {
+            thinkingLevel: 'auto',
+        })
+        for await (const _ of streamAuto) {
+            // consume
+        }
+        expect(capturedConfig.config.thinkingConfig).toEqual({
+            includeThoughts: true,
+        })
+
+        // 4. Default / undefined thinking level
         const streamDefault = provider.stream(
             [{ role: 'user', content: 'test' }],
             [],

@@ -3,6 +3,7 @@ import {
     anthropicProvider,
     geminiProvider,
     openrouterProvider,
+    ollamaProvider,
 } from '@december/providers'
 
 export function instantiateProvider(provider: string, apiKey: string): any {
@@ -30,6 +31,16 @@ export function instantiateProvider(provider: string, apiKey: string): any {
             return openaiProvider('https://api.x.ai/v1', apiKey)
         case 'zai':
             return openaiProvider('https://api.zai.ai/v1', apiKey)
+        case 'ollama': {
+            let endpoint = 'http://localhost:11434/v1'
+            if (apiKey && (apiKey.startsWith('http://') || apiKey.startsWith('https://'))) {
+                endpoint = apiKey.endsWith('/v1') ? apiKey : `${apiKey.replace(/\/+$/, '')}/v1`
+            } else if (process.env.OLLAMA_HOST) {
+                const host = process.env.OLLAMA_HOST
+                endpoint = host.endsWith('/v1') ? host : `${host.replace(/\/+$/, '')}/v1`
+            }
+            return ollamaProvider(endpoint, 'ollama')
+        }
         default: {
             if (process.env.SERVER_PORT) {
                 return openaiProvider(`http://localhost:${process.env.SERVER_PORT}/api/v1`, apiKey)

@@ -7,6 +7,7 @@ export interface ModelSelectMenuProps {
     handleModelSelect: (item: { label: string; value: string }) => void
     selectedProvider: string
     openRouterModels?: { label: string; value: string }[]
+    ollamaModels?: { label: string; value: string }[]
     getProviderModels?: (provider: string) => { label: string; value: string }[]
 }
 
@@ -14,6 +15,7 @@ export function ModelSelectMenu({
     handleModelSelect,
     selectedProvider,
     openRouterModels,
+    ollamaModels,
     getProviderModels,
 }: ModelSelectMenuProps) {
     const items =
@@ -23,9 +25,15 @@ export function ModelSelectMenu({
                 : typeof getProviderModels === 'function'
                   ? getProviderModels('openrouter')
                   : [{ label: 'Loading models...', value: 'loading' }]
-            : typeof getProviderModels === 'function'
-              ? getProviderModels(selectedProvider)
-              : []
+            : selectedProvider === 'ollama'
+              ? ollamaModels && ollamaModels.length > 0
+                  ? ollamaModels
+                  : typeof getProviderModels === 'function'
+                    ? getProviderModels('ollama')
+                    : [{ label: 'Loading models...', value: 'loading' }]
+              : typeof getProviderModels === 'function'
+                ? getProviderModels(selectedProvider)
+                : []
 
     return (
         <Box flexDirection="column" paddingX={1}>

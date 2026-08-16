@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink'
 import { useState } from 'react'
 
 const MODELS = [
+    { id: 'gemini-3.7-flash', label: 'gemini-3.7-flash' },
     { id: 'gemini-3.6-flash', label: 'gemini-3.6-flash' },
     { id: 'gemini-3-pro-preview', label: 'gemini-3-pro-preview' },
     { id: 'claude-3-7-sonnet-latest', label: 'claude-3-7-sonnet-latest' },

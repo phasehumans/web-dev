@@ -20,6 +20,7 @@ export function ByokProviderMenu(props: any) {
                     { label: 'Kimi', value: 'kimi' },
                     { label: 'Mistral', value: 'mistral' },
                     { label: 'Moonshoot AI', value: 'moonshoot' },
+                    { label: 'Ollama (Local Models)', value: 'ollama' },
                     { label: 'OpenAI', value: 'openai' },
                     { label: 'OpenRouter', value: 'openrouter' },
                     { label: 'xAI', value: 'xAI' },

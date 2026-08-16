@@ -69,6 +69,10 @@ export function useAgentSession({
         setAuthError,
         openRouterModels,
         setOpenRouterModels,
+        ollamaStatus,
+        setOllamaStatus,
+        ollamaModels,
+        setOllamaModels,
         currentPlannedPrompt,
         setCurrentPlannedPrompt,
         grillMode,
@@ -480,6 +484,13 @@ export function useAgentSession({
                     const providerConfig = await getProviderConfig()
                     const activeProvider = config.activeProvider || providerConfig?.provider || ''
                     setSelectedProvider(activeProvider)
+                    if (activeProvider === 'ollama') {
+                        const { fetchOllamaModels } = await import('../utils/models')
+                        const endpoint = config.providers?.['ollama'] || 'http://localhost:11434'
+                        fetchOllamaModels(endpoint).then((models) => {
+                            setOllamaModels(models)
+                        })
+                    }
                     setAuthMode('model_select')
                 })
                 return
@@ -694,6 +705,7 @@ export function useAgentSession({
             setSettingsToolPermission,
             setShouldExit,
             setStaticMessages,
+            setOllamaModels,
         ]
     )
 
@@ -718,6 +730,9 @@ export function useAgentSession({
         handleKeySubmit,
         handleLogoutSelect,
         handleSessionSelect,
+        handleOllamaRetry,
+        handleOllamaCancel,
+        handleOllamaProceed,
     } = useAuthHandlers(agent, onLogin, onLoginHeadless)
 
     const handlePlanApprovalSelect = useCallback(
@@ -840,5 +855,12 @@ export function useAgentSession({
         toggleExpandCommands,
         queuedPrompts,
         setQueuedPrompts,
+        ollamaStatus,
+        setOllamaStatus,
+        ollamaModels,
+        setOllamaModels,
+        handleOllamaRetry,
+        handleOllamaCancel,
+        handleOllamaProceed,
     }
 }
