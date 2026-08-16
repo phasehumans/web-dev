@@ -113,9 +113,12 @@ export async function processAgentStream({
                         case 'StreamChunk': {
                             const lastBlock = blocks[blocks.length - 1]
                             if (lastBlock && lastBlock.type === 'text') {
+                                const wasStatus = isStatusMessage(lastBlock.content)
                                 lastBlock.content =
-                                    (isStatusMessage(lastBlock.content) ? '' : lastBlock.content) +
-                                    event.content
+                                    (wasStatus ? '' : lastBlock.content) + event.content
+                                if (wasStatus) {
+                                    delete lastBlock.color
+                                }
                             } else {
                                 blocks.push({ type: 'text', content: event.content })
                             }

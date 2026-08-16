@@ -5,10 +5,6 @@ export interface OpenRouterModelItem {
 
 export const FALLBACK_OPENROUTER_MODELS: OpenRouterModelItem[] = [
     {
-        label: '(free) Meta: Llama 3.3 70B Instruct',
-        value: 'meta-llama/llama-3.3-70b-instruct:free',
-    },
-    {
         label: '(free) Meta: Llama 3 8B Instruct',
         value: 'meta-llama/llama-3-8b-instruct:free',
     },

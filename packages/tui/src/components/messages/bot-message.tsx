@@ -61,14 +61,14 @@ function CollapsibleThought({
 
     if (isStreaming) {
         return (
-            <Box flexDirection="column" marginY={0.5}>
+            <Box flexDirection="column" marginY={0}>
                 <Text color="gray">{content}</Text>
             </Box>
         )
     }
 
     return (
-        <Box flexDirection="column" marginY={0.5}>
+        <Box flexDirection="column" marginY={0}>
             <Text color="gray" italic>
                 Thoughts ({tokenCount} tokens{expanded ? ' · ctrl+o to collapse' : ''})
             </Text>

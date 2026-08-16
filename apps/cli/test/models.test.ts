@@ -51,8 +51,8 @@ describe('models utils', () => {
             expect(models).toEqual(
                 expect.arrayContaining([
                     expect.objectContaining({
-                        label: '(free) Meta: Llama 3.3 70B Instruct',
-                        value: 'meta-llama/llama-3.3-70b-instruct:free',
+                        label: '(free) Meta: Llama 3 8B Instruct',
+                        value: 'meta-llama/llama-3-8b-instruct:free',
                     }),
                     expect.objectContaining({
                         label: 'Anthropic: Claude 3.7 Sonnet',
@@ -60,7 +60,7 @@ describe('models utils', () => {
                     }),
                 ])
             )
-            expect(models.length).toBe(14)
+            expect(models.length).toBe(13)
         })
 
         it('returns default model when provider is unknown', () => {

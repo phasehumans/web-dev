@@ -73,4 +73,30 @@ describe('processAgentStream Frame-Budget Throttler', () => {
         const assistantMsg = activeMessages.find((m) => m.id === 'assistant-1')
         expect(assistantMsg.blocks.some((b: any) => b.type === 'error')).toBe(true)
     })
+
+    it('clears retry status color when transitioning to StreamChunk', async () => {
+        let activeMessages: any[] = [{ id: 'assistant-1', role: 'assistant', blocks: [] }]
+
+        const setActiveMessages = (updater: any) => {
+            activeMessages = typeof updater === 'function' ? updater(activeMessages) : updater
+        }
+
+        const events = [
+            { type: 'TurnStart' },
+            { type: 'AgentStatus', message: 'Rate limit reached, retrying in 2s...' },
+            { type: 'StreamChunk', content: 'Here is the response' },
+        ]
+
+        const stream = createAsyncStream(events, 0)
+        await processAgentStream({
+            stream,
+            setActiveMessages,
+            assistantMsgId: 'assistant-1',
+        })
+
+        const assistantMsg = activeMessages.find((m) => m.id === 'assistant-1')
+        expect(assistantMsg).toBeDefined()
+        expect(assistantMsg.blocks[0].content).toBe('Here is the response')
+        expect(assistantMsg.blocks[0].color).toBeUndefined()
+    })
 })
