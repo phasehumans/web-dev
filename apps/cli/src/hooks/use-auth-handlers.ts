@@ -212,10 +212,23 @@ export function useAuthHandlers(
                 testModel = 'gpt-4o'
             }
 
-            const stream = testProvider.stream([{ role: 'user', content: 'Hi' }], [], undefined, {
-                model: testModel,
-            })
-            await stream.next()
+            const probeAbortController = new AbortController()
+            const stream = testProvider.stream(
+                [{ role: 'user', content: 'Hi' }],
+                [],
+                undefined,
+                {
+                    model: testModel,
+                    max_tokens: 16,
+                },
+                probeAbortController.signal
+            )
+            try {
+                await stream.next()
+            } finally {
+                probeAbortController.abort()
+                await stream.return?.()
+            }
 
             const config = await loadConfig()
             config.providers[selectedProvider] = key
@@ -244,12 +257,19 @@ export function useAuthHandlers(
             addToast(MESSAGES.AUTH.API_KEY_SAVED(selectedProvider), 'success')
         } catch (err: any) {
             const errStr = (err?.message || JSON.stringify(err) || String(err)).toLowerCase()
+            const isLowCredit =
+                errStr.includes('402') ||
+                errStr.includes('credits') ||
+                errStr.includes('payment') ||
+                errStr.includes('afford')
+
             if (
                 errStr.includes('429') ||
                 errStr.includes('quota') ||
                 errStr.includes('rate limit') ||
                 errStr.includes('404') ||
-                errStr.includes('not found')
+                errStr.includes('not found') ||
+                isLowCredit
             ) {
                 const config = await loadConfig()
                 config.providers[selectedProvider] = key
@@ -275,7 +295,18 @@ export function useAuthHandlers(
 
                 setAuthMode('none')
                 setApiKey('')
-                addToast(`API Key saved for ${selectedProvider}`, 'success')
+                if (isLowCredit) {
+                    const topUpUrl =
+                        selectedProvider === 'openrouter'
+                            ? ' (top up at https://openrouter.ai/settings/credits)'
+                            : ''
+                    addToast(
+                        `API Key saved for ${selectedProvider}, but credit balance is low${topUpUrl}`,
+                        'warning'
+                    )
+                } else {
+                    addToast(`API Key saved for ${selectedProvider}`, 'success')
+                }
             } else {
                 let cleanMessage = err?.message || String(err)
                 if (
@@ -307,10 +338,19 @@ export function useAuthHandlers(
                     }
                 }
 
-                const errorText =
-                    cleanMessage === 'Unable to connect. Is the computer able to access the url?'
-                        ? `Login failed: ${cleanMessage}`
-                        : `Invalid API Key for ${selectedProvider}: ${cleanMessage}`
+                let errorText: string
+                if (cleanMessage === 'Unable to connect. Is the computer able to access the url?') {
+                    errorText = `Login failed: ${cleanMessage}`
+                } else if (
+                    cleanMessage.includes('401') ||
+                    cleanMessage.toLowerCase().includes('unauthorized') ||
+                    cleanMessage.toLowerCase().includes('invalid api key') ||
+                    cleanMessage.toLowerCase().includes('incorrect api key')
+                ) {
+                    errorText = `Invalid API Key for ${selectedProvider}: ${cleanMessage}`
+                } else {
+                    errorText = `Login failed for ${selectedProvider}: ${cleanMessage}`
+                }
 
                 setAuthError(errorText)
                 setAuthMode('none')

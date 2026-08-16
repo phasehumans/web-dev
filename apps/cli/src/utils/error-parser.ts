@@ -124,5 +124,22 @@ export function parseErrorMessage(err: any): string {
         return rateLimitNotice + finalResult
     }
 
+    const isOpenRouterCredits =
+        lowerStr.includes('openrouter') ||
+        lowerStr.includes('requires more credits') ||
+        lowerStr.includes('can only afford') ||
+        lowerStr.includes('402')
+
+    if (
+        isOpenRouterCredits &&
+        (lowerStr.includes('credits') || lowerStr.includes('afford') || lowerStr.includes('402')) &&
+        !finalResult.includes('OpenRouter credits exhausted or insufficient') &&
+        !finalResult.includes('https://openrouter.ai/settings/credits')
+    ) {
+        const openRouterCreditsNotice =
+            'OpenRouter credits exhausted or insufficient. Please add credits at https://openrouter.ai/settings/credits\n'
+        return openRouterCreditsNotice + finalResult
+    }
+
     return finalResult
 }

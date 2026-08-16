@@ -111,4 +111,13 @@ describe('error-parser', () => {
         )
         expect(parsed).toContain('generativelanguage.googleapis.com')
     })
+
+    test('attaches OpenRouter credit notice when 402 or credit limit is exhausted', () => {
+        const raw402Err =
+            '402 This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account'
+        const parsed = parseErrorMessage(raw402Err)
+        expect(parsed).toContain('https://openrouter.ai/settings/credits')
+        expect(parsed).toContain('can only afford 10666')
+        expect(parsed).not.toMatch(/[\u{1F300}-\u{1F9FF}]/u)
+    })
 })
