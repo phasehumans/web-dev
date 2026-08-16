@@ -57,40 +57,29 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
                 </Text>
             </Box>
 
-            {/* Server Status Indicator */}
-            <Box flexDirection="row" gap={1}>
-                <Text color={isRunning ? '#86EFAC' : '#FCA5A5'}>{isRunning ? '[✓]' : '[✗]'}</Text>
+            {/* Server Status */}
+            <Box flexDirection="column" marginBottom={1}>
                 <Text color="white">
                     Ollama Server:{' '}
-                    {isRunning ? `Running (${baseUrl})` : `Not detected at ${baseUrl}`}
-                </Text>
-            </Box>
-
-            {/* Model Status Indicator */}
-            {isRunning && (
-                <Box flexDirection="row" gap={1} marginTop={1}>
-                    <Text color={hasCompatibleModel ? '#86EFAC' : '#FDE047'}>
-                        {hasCompatibleModel ? '[✓]' : '[!]'}
+                    <Text color={isRunning ? '#86EFAC' : '#FCA5A5'}>
+                        {isRunning ? `Running (${baseUrl})` : `Not detected at ${baseUrl}`}
                     </Text>
+                </Text>
+                {isRunning && (
                     <Text color="white">
                         Tool-Compatible Models:{' '}
-                        {hasCompatibleModel
-                            ? compatibleModels.join(', ')
-                            : 'None found (Agent requires function calling)'}
+                        <Text color={hasCompatibleModel ? '#86EFAC' : '#FDE047'}>
+                            {hasCompatibleModel
+                                ? compatibleModels.join(', ')
+                                : 'None found (Agent requires function calling)'}
+                        </Text>
                     </Text>
-                </Box>
-            )}
+                )}
+            </Box>
 
             {/* Step-by-Step Guidance */}
             {(!isRunning || !hasCompatibleModel) && (
-                <Box
-                    flexDirection="column"
-                    borderStyle="round"
-                    borderColor="#4B5563"
-                    paddingX={1}
-                    marginTop={1}
-                    marginBottom={1}
-                >
+                <Box flexDirection="column" marginBottom={1}>
                     <Text color="#93C5FD" bold>
                         Setup Instructions:
                     </Text>
@@ -150,9 +139,9 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
                                   value: `model:${m}`,
                               }))
                             : []),
-                        { label: '↻ Retry Connection', value: 'retry' },
-                        { label: '⚙ Change Base URL', value: 'change_url' },
-                        { label: '← Back to Providers', value: 'cancel' },
+                        { label: 'Retry Connection', value: 'retry' },
+                        { label: 'Change Base URL', value: 'change_url' },
+                        { label: 'Back to Providers', value: 'cancel' },
                     ]}
                     onSelect={handleSelect}
                     indicatorComponent={CustomIndicator}
