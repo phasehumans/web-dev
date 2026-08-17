@@ -129,11 +129,22 @@ const findExternalUsageEvent = (externalRequestId: string) => {
 }
 
 const recordUsageEvent = async (data: RecordUsageEvent) => {
-    const user = await getUsageUser(data.userId)
-    await assertProjectOwnership(user.id, data.projectId)
+    const {
+        userId,
+        model,
+        inputTokens,
+        outputTokens,
+        totalTokens,
+        projectId,
+        chatId,
+        externalRequestId,
+        metadata,
+    } = data
+    const user = await getUsageUser(userId)
+    await assertProjectOwnership(user.id, projectId)
 
-    if (data.externalRequestId) {
-        const existingEvent = await findExternalUsageEvent(data.externalRequestId)
+    if (externalRequestId) {
+        const existingEvent = await findExternalUsageEvent(externalRequestId)
 
         if (existingEvent) {
             if (existingEvent.userId !== user.id) {
@@ -149,9 +160,9 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
 
     const { periodStart, periodEnd } = resolveCurrentPeriod(user)
     const calculatedCost = calculateGenerationCost({
-        modelName: data.model,
-        inputTokens: data.inputTokens,
-        outputTokens: data.outputTokens,
+        modelName: model,
+        inputTokens,
+        outputTokens,
     })
 
     try {
@@ -180,17 +191,17 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
             const event = await usageRepository.createUsageEvent(
                 {
                     userId: user.id,
-                    model: data.model,
-                    inputTokens: data.inputTokens,
-                    outputTokens: data.outputTokens,
-                    totalTokens: data.totalTokens,
+                    model,
+                    inputTokens,
+                    outputTokens,
+                    totalTokens,
                     costInCents: costLogged,
-                    projectId: data.projectId,
-                    chatId: data.chatId,
-                    externalRequestId: data.externalRequestId,
+                    projectId,
+                    chatId,
+                    externalRequestId,
                     periodStart,
                     periodEnd,
-                    metadata: data.metadata,
+                    metadata,
                 },
                 tx
             )
@@ -203,8 +214,8 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
             idempotent: false,
         }
     } catch (error: any) {
-        if (error?.code === 'P2002' && data.externalRequestId) {
-            const existingEvent = await findExternalUsageEvent(data.externalRequestId)
+        if (error?.code === 'P2002' && externalRequestId) {
+            const existingEvent = await findExternalUsageEvent(externalRequestId)
 
             if (existingEvent && existingEvent.userId === user.id) {
                 return {
@@ -219,14 +230,15 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
 }
 
 const canRunSelfCorrection = async (data: CanRunSelfCorrection): Promise<boolean> => {
+    const { userId } = data
     try {
-        const { userId } = data
         const user = await usageRepository.findUserCredits({ userId })
         if (!user) return false
 
         const threshold = parseInt(process.env.SELF_CORRECTION_CREDIT_THRESHOLD || '5', 10) // default 5 cents
         return user.creditBalance >= threshold
     } catch {
+        // Intentionally swallowed: fallback to false if user not found or error occurred
         return false
     }
 }

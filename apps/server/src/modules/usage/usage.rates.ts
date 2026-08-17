@@ -116,21 +116,7 @@ export function resolveModelRate(modelName: string): ModelRate {
     const normalized = modelName.trim().toLowerCase()
     const stripped = normalized.includes('/') ? normalized.split('/').pop()! : normalized
 
-    // 1. Check optional manual environment variable overrides (MODEL_1_NAME, etc.)
-    for (let i = 1; i <= 8; i++) {
-        const envName = process.env[`MODEL_${i}_NAME`]?.trim().toLowerCase()
-        if (envName && (envName === normalized || envName === stripped)) {
-            const inRate = parseFloat(process.env[`MODEL_${i}_INPUT_RATE`] ?? '0')
-            const outRate = parseFloat(process.env[`MODEL_${i}_OUTPUT_RATE`] ?? '0')
-            return {
-                name: modelName,
-                inputRate: inRate,
-                outputRate: outRate,
-            }
-        }
-    }
-
-    // 2. Check live cached rates
+    // 1. Check live cached rates
     if (ratesCache.has(normalized)) {
         return ratesCache.get(normalized)!
     }
@@ -138,7 +124,7 @@ export function resolveModelRate(modelName: string): ModelRate {
         return ratesCache.get(stripped)!
     }
 
-    // 3. Check official embedded catalog
+    // 2. Check official embedded catalog
     if (OFFICIAL_MODEL_RATES[normalized]) {
         return OFFICIAL_MODEL_RATES[normalized]
     }

@@ -31,3 +31,10 @@ export type CreateCliSession = {
     messages: any[]
     minioPrefix?: string
 }
+
+export type UpstreamDispatchConfig = {
+    url: string
+    headers: Record<string, string>
+    body: Record<string, unknown>
+    providerName: 'gemini' | 'openai' | 'deepseek' | 'openrouter'
+}

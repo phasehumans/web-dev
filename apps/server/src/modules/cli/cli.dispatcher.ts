@@ -1,12 +1,7 @@
 import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 
-export interface UpstreamDispatchConfig {
-    url: string
-    headers: Record<string, string>
-    body: any
-    providerName: 'gemini' | 'openai' | 'deepseek' | 'openrouter'
-}
+import type { UpstreamDispatchConfig } from './cli.types'
 
 export const OPENROUTER_MODEL_MAP: Record<string, string> = {
     'gemini-3.7-flash': 'google/gemini-3.7-flash',
@@ -20,7 +15,7 @@ export const OPENROUTER_MODEL_MAP: Record<string, string> = {
     'claude-3-7-sonnet-latest': 'anthropic/claude-3.7-sonnet',
     'claude-3-5-sonnet-latest': 'anthropic/claude-3.5-sonnet',
     'claude-3-5-haiku-latest': 'anthropic/claude-3.5-haiku',
-    'claude-3-opus-latest': 'anthropic/claude-3.5-sonnet',
+    'claude-3-opus-latest': 'anthropic/claude-3-opus',
     'o3-mini': 'openai/o3-mini',
     o1: 'openai/o1',
     'o1-mini': 'openai/o1-mini',

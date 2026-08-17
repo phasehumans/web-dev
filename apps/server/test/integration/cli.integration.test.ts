@@ -68,6 +68,26 @@ describe('CLI Handoff API Endpoints', () => {
         expect(res.body.success).toBe(false)
     })
 
+    it('POST /cli/chat/completions returns 402 when user has insufficient wallet credits', async () => {
+        // Ensure user has 0 credit balance
+        await prisma.user.update({
+            where: { id: testUserId },
+            data: { creditBalance: 0 },
+        })
+
+        const res = await request(app)
+            .post('/api/v1/cli/chat/completions')
+            .set('Authorization', `Bearer ${authToken}`)
+            .send({
+                model: 'gemini-3.6-flash',
+                messages: [{ role: 'user', content: 'hello' }],
+            })
+
+        expect(res.status).toBe(402)
+        expect(res.body.message).toContain('Insufficient credits in December Wallet')
+        expect(res.body.message).toContain('https://trydecember.com/settings/billing')
+    })
+
     it('POST /cli/handoff/complete stores objectKey as minioPrefix on session creation', async () => {
         const testObjectKey = `handoffs/${testUserId}/${Date.now()}-handoff.tar.gz`
         const res = await request(app)
