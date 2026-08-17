@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 import { loginViaDeviceCode } from '../src/auth/device'
+import * as openUtils from '../src/utils/open'
 
 describe('loginViaDeviceCode', () => {
     beforeEach(() => {
@@ -54,6 +55,7 @@ describe('loginViaDeviceCode', () => {
             }),
         })
 
+        const openSpy = vi.spyOn(openUtils, 'openUrl').mockResolvedValue(undefined)
         const onCodeGenerated = vi.fn()
 
         // We can't await this directly because of fake timers; it will block waiting for polls.
@@ -66,6 +68,7 @@ describe('loginViaDeviceCode', () => {
             if (onCodeGenerated.mock.calls.length > 0) break
         }
         expect(onCodeGenerated).toHaveBeenCalledWith('USER-123', 'https://mock.login/device')
+        expect(openSpy).toHaveBeenCalledWith('https://mock.login/device?code=USER-123')
 
         // Advance timer to trigger the first poll (1 second)
         vi.advanceTimersByTime(1000)

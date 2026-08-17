@@ -27,12 +27,14 @@ export async function loginViaDeviceCode(
 
         onCodeGenerated(userCode, verificationUri)
 
-        // Auto-open browser after 5 seconds
-        setTimeout(() => {
-            openUrl(verificationUri).catch(() => {
-                // Intentionally swallowed: fallback handled if browser cannot be opened in headless/SSH environment
-            })
-        }, 5000)
+        // Auto-open browser instantly
+        const fullUrl = verificationUri.includes('?')
+            ? `${verificationUri}&code=${encodeURIComponent(userCode)}`
+            : `${verificationUri}?code=${encodeURIComponent(userCode)}`
+
+        openUrl(fullUrl).catch(() => {
+            // Intentionally swallowed: fallback handled if browser cannot be opened in headless/SSH environment
+        })
 
         // 2. poll for token
         const startTime = Date.now()

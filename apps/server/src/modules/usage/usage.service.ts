@@ -1,5 +1,6 @@
 import { AppError } from '../../shared/appError'
 
+import { resolveModelRate } from './usage.rates'
 import { usageRepository } from './usage.repository'
 
 import type {
@@ -10,25 +11,7 @@ import type {
     CalculateGenerationCost,
     CanRunSelfCorrection,
     UsageUser,
-    ModelRate,
 } from './usage.types'
-
-const getModelRatesFromEnv = (): ModelRate[] => {
-    const rates: ModelRate[] = []
-    for (let i = 1; i <= 8; i++) {
-        const name = process.env[`MODEL_${i}_NAME`]
-        const inputRateStr = process.env[`MODEL_${i}_INPUT_RATE`]
-        const outputRateStr = process.env[`MODEL_${i}_OUTPUT_RATE`]
-        if (name) {
-            rates.push({
-                name: name.trim(),
-                inputRate: parseFloat(inputRateStr ?? '0'),
-                outputRate: parseFloat(outputRateStr ?? '0'),
-            })
-        }
-    }
-    return rates
-}
 
 const calculateGenerationCost = (data: CalculateGenerationCost): number => {
     const { modelName, inputTokens, outputTokens } = data
@@ -36,30 +19,21 @@ const calculateGenerationCost = (data: CalculateGenerationCost): number => {
         return 0
     }
 
-    const rates = getModelRatesFromEnv()
-    let matchedRate = rates.find((r) => r.name.toLowerCase() === modelName.trim().toLowerCase())
-
-    if (!matchedRate && modelName === 'auto') {
-        const resolvedAuto = (
+    let targetModel = modelName
+    if (targetModel === 'auto') {
+        targetModel = (
             process.env.DEFAULT_MODEL ||
             process.env.AUTO_MODEL ||
             'openai/gpt-oss-20b:free'
         ).trim()
-        matchedRate = rates.find((r) => r.name.toLowerCase() === resolvedAuto.toLowerCase())
     }
 
-    let inputRatePer1M = parseFloat(process.env.FALLBACK_MODEL_INPUT_RATE ?? '2.00')
-    let outputRatePer1M = parseFloat(process.env.FALLBACK_MODEL_OUTPUT_RATE ?? '8.00')
-
-    if (matchedRate) {
-        inputRatePer1M = matchedRate.inputRate
-        outputRatePer1M = matchedRate.outputRate
-    }
+    const rate = resolveModelRate(targetModel)
 
     // convert usd per 1m tokens to cents per token:
     // cents/token = (usd/1m * 100) / 1,000,000 = usd/1m / 10,000
-    const inputCentsPerToken = inputRatePer1M / 10000
-    const outputCentsPerToken = outputRatePer1M / 10000
+    const inputCentsPerToken = rate.inputRate / 10000
+    const outputCentsPerToken = rate.outputRate / 10000
 
     const rawCost = inputTokens * inputCentsPerToken + outputTokens * outputCentsPerToken
 

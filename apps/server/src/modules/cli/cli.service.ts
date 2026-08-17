@@ -7,6 +7,7 @@ import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 import { usageService } from '../usage/usage.service'
 
+import { resolveUpstreamDispatch } from './cli.dispatcher'
 import { cliRepository } from './cli.repository'
 
 import type {
@@ -52,60 +53,25 @@ const generateHandoffUrl = async (data: GenerateHandoffUrl) => {
     }
 }
 
-const OPENROUTER_MODEL_MAP: Record<string, string> = {
-    'gemini-3.7-flash': 'google/gemini-3.7-flash',
-    'gemini-3.6-flash': 'google/gemini-3.6-flash',
-    'gemini-3.5-flash': 'google/gemini-3.5-flash',
-    'gemini-3.5-flash-lite': 'google/gemini-3.5-flash-lite',
-    'gemini-3-pro-preview': 'google/gemini-3-pro-preview',
-    'gemini-3.1-pro': 'google/gemini-3-pro-preview',
-    'claude-3-7-sonnet-latest': 'anthropic/claude-3.7-sonnet',
-    'claude-3-5-sonnet-latest': 'anthropic/claude-3.5-sonnet',
-    'claude-3-5-haiku-latest': 'anthropic/claude-3.5-haiku',
-    'claude-3-opus-latest': 'anthropic/claude-3-opus',
-    'o3-mini': 'openai/o3-mini',
-    o1: 'openai/o1',
-    'o1-mini': 'openai/o1-mini',
-    'gpt-4o': 'openai/gpt-4o',
-    'gpt-4o-mini': 'openai/gpt-4o-mini',
-    'gpt-4.5-preview': 'openai/gpt-4.5-preview',
-    'deepseek-reasoner': 'deepseek/deepseek-r1',
-    'deepseek-chat': 'deepseek/deepseek-chat',
-}
-
 const proxyChatCompletions = async (data: ProxyChatCompletions) => {
     const { userId, body, res } = data
-    body.stream = true
-    if (!body.stream_options) {
-        body.stream_options = { include_usage: true }
-    } else {
-        body.stream_options.include_usage = true
-    }
+    const requestedModel = body.model || 'auto'
 
-    if (body.model && OPENROUTER_MODEL_MAP[body.model]) {
-        body.model = OPENROUTER_MODEL_MAP[body.model]
-    }
+    const dispatch = resolveUpstreamDispatch(body)
 
-    const openRouterKey = env.OPENROUTER_API_KEY
-    if (!openRouterKey) {
-        throw new AppError('OpenRouter API Key not configured', 500)
-    }
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch(dispatch.url, {
         method: 'POST',
-        headers: {
-            Authorization: `Bearer ${openRouterKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': env.WEB_URL,
-            'X-Title': 'December Proxy',
-        },
-        body: JSON.stringify(body),
+        headers: dispatch.headers,
+        body: JSON.stringify(dispatch.body),
     })
 
     if (!response.ok) {
         const errorText = await response.text()
-        console.error('[OpenRouter Error]:', errorText)
-        throw new AppError(`Upstream error: ${response.statusText}`, response.status)
+        console.error(`[${dispatch.providerName.toUpperCase()} Proxy Error]:`, errorText)
+        throw new AppError(
+            `Upstream error (${dispatch.providerName}): ${response.statusText || errorText}`,
+            response.status
+        )
     }
 
     res.setHeader('Content-Type', 'text/event-stream')
@@ -169,7 +135,7 @@ const proxyChatCompletions = async (data: ProxyChatCompletions) => {
             usageService
                 .recordUsageEvent({
                     userId,
-                    model,
+                    model: requestedModel,
                     inputTokens: usage.prompt_tokens || 0,
                     outputTokens: usage.completion_tokens || 0,
                     totalTokens: usage.total_tokens || 0,
