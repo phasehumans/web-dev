@@ -32,9 +32,8 @@ export type CreateCliSession = {
     minioPrefix?: string
 }
 
-export type UpstreamDispatchConfig = {
-    url: string
-    headers: Record<string, string>
-    body: Record<string, unknown>
-    providerName: 'gemini' | 'openai' | 'deepseek' | 'openrouter'
+export type ServerProviderResolution = {
+    provider: any
+    providerName: 'gemini' | 'anthropic' | 'openai' | 'deepseek' | 'openrouter'
+    model: string
 }

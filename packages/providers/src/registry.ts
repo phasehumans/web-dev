@@ -1,4 +1,4 @@
-import { LLMProvider } from './types.ts'
+import type { LLMProvider } from './types.ts'
 
 const providers = new Map<string, LLMProvider>()
 

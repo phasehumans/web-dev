@@ -36,6 +36,7 @@
         "@aws-sdk/client-s3": "^3.1014.0",
         "@aws-sdk/s3-request-presigner": "3.1086.0",
         "@december/database": "workspace:*",
+        "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
         "@notionhq/client": "^5.22.0",
         "@openai/agents": "^0.5.4",

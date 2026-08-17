@@ -1,7 +1,14 @@
+import {
+    geminiProvider,
+    anthropicProvider,
+    openaiProvider,
+    openrouterProvider,
+} from '@december/providers'
+
 import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 
-import type { UpstreamDispatchConfig } from './cli.types'
+import type { ServerProviderResolution } from './cli.types'
 
 export const OPENROUTER_MODEL_MAP: Record<string, string> = {
     'gemini-3.7-flash': 'google/gemini-3.7-flash',
@@ -26,86 +33,72 @@ export const OPENROUTER_MODEL_MAP: Record<string, string> = {
     'deepseek-chat': 'deepseek/deepseek-chat',
 }
 
-export function resolveUpstreamDispatch(incomingBody: any): UpstreamDispatchConfig {
-    const body = { ...incomingBody }
-    body.stream = true
-    if (!body.stream_options) {
-        body.stream_options = { include_usage: true }
-    } else {
-        body.stream_options.include_usage = true
-    }
-
-    const model = (body.model || '').trim()
+export function resolveServerProvider(modelInput?: string): ServerProviderResolution {
+    const model = (modelInput || '').trim()
     const lowerModel = model.toLowerCase()
     const strippedModel = lowerModel.includes('/') ? lowerModel.split('/').pop()! : lowerModel
 
-    // 1. Direct Google Gemini API (via Google's OpenAI-compatible endpoint)
+    // 1. Direct Google Gemini Native Provider (@google/genai)
     const isGeminiModel = lowerModel.startsWith('gemini') || lowerModel.startsWith('google/')
     if (isGeminiModel && env.GEMINI_API_KEY) {
-        body.model = strippedModel
         return {
-            url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-            headers: {
-                Authorization: `Bearer ${env.GEMINI_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body,
+            provider: geminiProvider(env.GEMINI_API_KEY),
             providerName: 'gemini',
+            model: strippedModel,
         }
     }
 
-    // 2. Direct OpenAI API
+    // 2. Direct Anthropic Provider (@anthropic-ai/sdk)
+    const isAnthropicModel = lowerModel.startsWith('claude') || lowerModel.startsWith('anthropic/')
+    if (isAnthropicModel && env.ANTHROPIC_API_KEY) {
+        return {
+            provider: anthropicProvider(undefined, env.ANTHROPIC_API_KEY),
+            providerName: 'anthropic',
+            model: strippedModel,
+        }
+    }
+
+    // 3. Direct OpenAI Provider
     const isOpenAiModel =
         lowerModel.startsWith('gpt') ||
         lowerModel.startsWith('o1') ||
         lowerModel.startsWith('o3') ||
         lowerModel.startsWith('openai/')
     if (isOpenAiModel && env.OPENAI_API_KEY) {
-        body.model = strippedModel
         return {
-            url: 'https://api.openai.com/v1/chat/completions',
-            headers: {
-                Authorization: `Bearer ${env.OPENAI_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body,
+            provider: openaiProvider(undefined, env.OPENAI_API_KEY),
             providerName: 'openai',
+            model: strippedModel,
         }
     }
 
-    // 3. Direct DeepSeek API
+    // 4. Direct DeepSeek Provider
     const isDeepSeekModel = lowerModel.startsWith('deepseek')
     if (isDeepSeekModel && env.DEEPSEEK_API_KEY) {
-        body.model = strippedModel
         return {
-            url: 'https://api.deepseek.com/chat/completions',
-            headers: {
-                Authorization: `Bearer ${env.DEEPSEEK_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body,
+            provider: openaiProvider('https://api.deepseek.com', env.DEEPSEEK_API_KEY),
             providerName: 'deepseek',
+            model: strippedModel,
         }
     }
 
-    // 4. OpenRouter Gateway Fallback
+    // 5. OpenRouter Gateway Fallback
     if (env.OPENROUTER_API_KEY) {
-        body.model = OPENROUTER_MODEL_MAP[model] || OPENROUTER_MODEL_MAP[strippedModel] || model
+        const mappedModel =
+            OPENROUTER_MODEL_MAP[model] || OPENROUTER_MODEL_MAP[strippedModel] || model
         return {
-            url: 'https://openrouter.ai/api/v1/chat/completions',
-            headers: {
-                Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': env.WEB_URL || 'https://trydecember.com',
-                'X-Title': 'December Proxy',
-            },
-            body,
+            provider: openrouterProvider(env.OPENROUTER_API_KEY),
             providerName: 'openrouter',
+            model: mappedModel,
         }
     }
 
     throw new AppError(
-        `No upstream provider API key configured for model "${model}". Please configure GEMINI_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, or OPENROUTER_API_KEY on the server.`,
+        `No upstream provider API key configured for model "${model}". Please configure GEMINI_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, or OPENROUTER_API_KEY on the server.`,
         500
     )
+}
+
+export const cliDispatcher = {
+    resolveServerProvider,
 }

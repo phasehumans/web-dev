@@ -1,10 +1,11 @@
 import { prisma } from '@december/database'
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
+import { describe, it, expect, beforeAll, afterAll, spyOn } from 'bun:test'
 import jwt from 'jsonwebtoken'
 import request from 'supertest'
 
 import app from '../../src/app'
 import { env } from '../../src/env'
+import { cliDispatcher } from '../../src/modules/cli/cli.dispatcher'
 
 describe('CLI Handoff API Endpoints', () => {
     let testUserId: string
@@ -86,6 +87,51 @@ describe('CLI Handoff API Endpoints', () => {
         expect(res.status).toBe(402)
         expect(res.body.message).toContain('Insufficient credits in December Wallet')
         expect(res.body.message).toContain('https://trydecember.com/settings/billing')
+    })
+
+    it('POST /cli/chat/completions streams SSE response when user has balance and valid payload', async () => {
+        // Give user credits
+        await prisma.user.update({
+            where: { id: testUserId },
+            data: { creditBalance: 100 },
+        })
+
+        const mockProvider = {
+            id: 'gemini',
+            name: 'Gemini',
+            stream: async function* () {
+                yield { type: 'thinking_delta', text: 'Thinking about tools...' }
+                yield {
+                    type: 'tool_call_delta',
+                    id: JSON.stringify({ id: 'call_1', thoughtSignature: 'sig_123' }),
+                    name: 'write_file',
+                    inputDelta: '{"path":"/workspace/TASK.md"}',
+                }
+                yield { type: 'usage', promptTokens: 15, completionTokens: 25 }
+            },
+        }
+
+        const resolveSpy = spyOn(cliDispatcher, 'resolveServerProvider').mockReturnValue({
+            provider: mockProvider as any,
+            providerName: 'gemini',
+            model: 'gemini-3.6-flash',
+        })
+
+        const res = await request(app)
+            .post('/api/v1/cli/chat/completions')
+            .set('Authorization', `Bearer ${authToken}`)
+            .send({
+                model: 'gemini-3.6-flash',
+                messages: [{ role: 'user', content: 'hi' }],
+            })
+
+        expect(res.status).toBe(200)
+        expect(res.headers['content-type']).toContain('text/event-stream')
+        expect(res.text).toContain('Thinking about tools...')
+        expect(res.text).toContain('write_file')
+        expect(res.text).toContain('data: [DONE]')
+
+        resolveSpy.mockRestore()
     })
 
     it('POST /cli/handoff/complete stores objectKey as minioPrefix on session creation', async () => {

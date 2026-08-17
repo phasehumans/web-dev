@@ -27,6 +27,16 @@ const createSession = async (data: CreateCliSession) => {
     })
 }
 
+const findActiveSessionByUser = async (userId: string) => {
+    return prisma.session.findFirst({
+        where: {
+            userId,
+            vmStatus: { in: ['RUNNING', 'PROVISIONING'] },
+        },
+    })
+}
+
 export const cliRepository = {
     createSession,
+    findActiveSessionByUser,
 }
