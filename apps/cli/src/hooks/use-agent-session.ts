@@ -726,43 +726,15 @@ export function useAgentSession({
             }
 
             if (text.trim() === '/usage') {
-                const allMsgs = [
-                    ...useCliStore.getState().staticMessages,
-                    ...useCliStore.getState().activeMessages,
-                ]
-                let promptTokens = 0
-                let completionTokens = 0
-                let cachedPromptTokens = 0
-
-                for (const m of allMsgs) {
-                    if (m.usage) {
-                        promptTokens += m.usage.promptTokens || 0
-                        completionTokens += m.usage.completionTokens || 0
-                        if ((m.usage as any).cachedPromptTokens) {
-                            cachedPromptTokens += (m.usage as any).cachedPromptTokens
-                        }
-                    }
-                }
-
                 const currentModel = agent.modelOptions?.model || 'gemini-3.6-flash'
-                const provider = currentModel.startsWith('claude')
-                    ? 'anthropic'
-                    : currentModel.startsWith('gpt') ||
-                        currentModel.startsWith('o1') ||
-                        currentModel.startsWith('o3')
-                      ? 'openai'
-                      : currentModel.startsWith('deepseek')
-                        ? 'deepseek'
-                        : currentModel.includes('ollama')
-                          ? 'ollama'
-                          : 'google'
+                const rawProvider = selectedProvider || (agent.llm as any)?.id || ''
+                const provider = rawProvider || (authMethod === 'december' ? 'december' : undefined)
 
                 const card = formatUsageCard({
                     model: currentModel,
-                    promptTokens,
-                    completionTokens,
-                    cachedPromptTokens,
+                    authMethod,
                     provider,
+                    isAuthenticated,
                 })
 
                 setActiveMessages((prev) => [

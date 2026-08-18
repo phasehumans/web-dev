@@ -52,12 +52,63 @@ export const OFFICIAL_MODEL_RATES: Record<string, ModelRate> = {
 }
 
 export const PROVIDER_BILLING_LINKS: Record<string, string> = {
+    december: 'https://trydecember.com/settings/usage',
+    google: 'https://aistudio.google.com/app/usage',
+    gemini: 'https://aistudio.google.com/app/usage',
     anthropic: 'https://console.anthropic.com/settings/billing',
     openai: 'https://platform.openai.com/usage',
-    google: 'https://aistudio.google.com/app/plan_information',
     openrouter: 'https://openrouter.ai/activity',
     deepseek: 'https://platform.deepseek.com/usage',
-    ollama: 'http://localhost:11434 (Local & Free)',
+    groq: 'https://console.groq.com/usage',
+    mistral: 'https://console.mistral.ai/billing/',
+    moonshot: 'https://platform.moonshot.cn/console/recharge',
+    kimi: 'https://platform.moonshot.cn/console/recharge',
+    xai: 'https://console.x.ai/',
+    zai: 'https://open.bigmodel.cn/usercenter/apikeys',
+    huggingface: 'https://huggingface.co/settings/billing',
+    ollama: 'http://localhost:11434',
+}
+
+export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+    december: 'December Cloud',
+    google: 'Google AI Studio',
+    gemini: 'Google AI Studio',
+    anthropic: 'Anthropic Console',
+    openai: 'OpenAI Platform',
+    openrouter: 'OpenRouter',
+    deepseek: 'DeepSeek Platform',
+    groq: 'Groq Cloud',
+    mistral: 'Mistral AI',
+    moonshot: 'Moonshot AI (Kimi)',
+    kimi: 'Moonshot AI (Kimi)',
+    xai: 'xAI Console',
+    zai: 'Zhipu AI (GLM)',
+    huggingface: 'Hugging Face',
+    ollama: 'Ollama (Local)',
+}
+
+export function inferProviderFromModel(modelName: string): string {
+    const lower = (modelName || '').toLowerCase()
+    if (lower.startsWith('claude') || lower.startsWith('anthropic/')) return 'anthropic'
+    if (
+        lower.startsWith('gpt') ||
+        lower.startsWith('o1') ||
+        lower.startsWith('o3') ||
+        lower.startsWith('openai/')
+    )
+        return 'openai'
+    if (lower.startsWith('gemini') || lower.startsWith('google/')) return 'google'
+    if (lower.startsWith('deepseek')) return 'deepseek'
+    if (lower.startsWith('groq') || lower.includes('llama-3.3-70b-versatile')) return 'groq'
+    if (lower.startsWith('mistral') || lower.startsWith('codestral') || lower.startsWith('pixtral'))
+        return 'mistral'
+    if (lower.startsWith('moonshot') || lower.startsWith('kimi')) return 'moonshot'
+    if (lower.startsWith('grok') || lower.startsWith('xai')) return 'xai'
+    if (lower.startsWith('zai') || lower.startsWith('glm')) return 'zai'
+    if (lower.includes('meta-llama') || lower.includes('qwen/')) return 'huggingface'
+    if (lower.includes('ollama') || lower.includes('llama') || lower.includes('qwen'))
+        return 'ollama'
+    return 'openrouter'
 }
 
 export function resolveModelRate(modelName: string): ModelRate {
@@ -115,38 +166,53 @@ export function calculateUsageCost({
     }
 }
 
-export function formatUsageCard(params: {
+export interface FormatUsageCardParams {
     model: string
-    promptTokens: number
-    completionTokens: number
-    cachedPromptTokens?: number
+    authMethod?: 'byok' | 'december' | 'env' | string
     provider?: string
-}): string {
-    const {
-        model,
-        promptTokens,
-        completionTokens,
-        cachedPromptTokens = 0,
-        provider = 'google',
-    } = params
-    const totalTokens = promptTokens + completionTokens
-    const cost = calculateUsageCost({ model, promptTokens, completionTokens, cachedPromptTokens })
-    const billingLink =
-        PROVIDER_BILLING_LINKS[provider.toLowerCase()] || `https://openrouter.ai/activity`
+    isAuthenticated?: boolean
+    promptTokens?: number
+    completionTokens?: number
+    cachedPromptTokens?: number
+}
 
-    const formatNum = (n: number) => n.toLocaleString('en-US')
-    const formatDollar = (n: number) =>
-        n === 0 ? '$0.00' : n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(2)}`
+export function formatUsageCard(params: FormatUsageCardParams): string {
+    const { model, authMethod = 'byok', isAuthenticated = true } = params
+    let providerKey = (params.provider || '').toLowerCase()
 
-    return `### Session Usage & Costs
-**Model**: \`${model}\` (${provider.toUpperCase()})
+    if (!isAuthenticated) {
+        return `You are not logged in and have no custom API keys (BYOK) configured.
 
-| Metric | Tokens | Estimated Cost |
-| :--- | :--- | :--- |
-| **Prompt (Input)** | ${formatNum(promptTokens)} | ${formatDollar(cost.promptCost)} |
-| **Completion (Output)** | ${formatNum(completionTokens)} | ${formatDollar(cost.completionCost)} |
-${cachedPromptTokens > 0 ? `| **Cache Savings** | ${formatNum(cachedPromptTokens)} | -${formatDollar(cost.cacheSavings)} |\n` : ''}| **Total Session** | **${formatNum(totalTokens)}** | **${formatDollar(cost.totalCost)}** |
+Please run \`/login\` to:
+- Sign in with your December account (Cloud Wallet), or
+- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.`
+    }
 
-> **Official Rates**: $${cost.rate.inputRate.toFixed(2)} / 1M in · $${cost.rate.outputRate.toFixed(2)} / 1M out
-> **Provider Billing & Quota**: [${billingLink}](${billingLink})`
+    if (authMethod === 'december') {
+        const billingLink = PROVIDER_BILLING_LINKS.december
+        return `Active Model: \`${model}\` (December Wallet)
+Provider: December Cloud
+
+*Usage is deducted directly from your December account credits. Request telemetry, token consumption, and monthly invoices are tracked at [${billingLink}](${billingLink})*`
+    }
+
+    if (!providerKey || providerKey === 'december_proxy') {
+        providerKey = inferProviderFromModel(model)
+    }
+
+    if (providerKey === 'ollama' || model.toLowerCase().includes('ollama')) {
+        const link = PROVIDER_BILLING_LINKS.ollama
+        return `Active Model: \`${model}\` (Local)
+Provider: Ollama (Local)
+
+*Running completely locally on your hardware with no API keys, no external network calls, and no usage fees. View status and local models at [${link}](${link})*`
+    }
+
+    const displayName = PROVIDER_DISPLAY_NAMES[providerKey] || providerKey.toUpperCase()
+    const billingLink = PROVIDER_BILLING_LINKS[providerKey] || `https://openrouter.ai/activity`
+
+    return `Active Model: \`${model}\` (BYOK)
+Provider: ${displayName}
+
+*Prompts go directly to the provider API; December servers do not track, log, or bill this usage. Token consumption, quotas, and billing are managed in your ${displayName} account at [${billingLink}](${billingLink})*`
 }
