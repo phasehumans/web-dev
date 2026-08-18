@@ -168,20 +168,16 @@ export function TextArea({
     }
 
     // 3. Direct shell command at start (e.g. !git status, !ping, or standalone !)
-    let shellCmdEnd = -1
-    if (value.startsWith('!')) {
-        const spaceIdx = value.indexOf(' ')
-        shellCmdEnd = spaceIdx === -1 ? value.length : spaceIdx
-    }
+    const isDirectShell = value.startsWith('!')
 
     const getCharColor = (index: number): string => {
+        if (isDirectShell) {
+            return THEME.colors.brand
+        }
         if (value.startsWith('?') && index === 0) {
             return THEME.colors.brand
         }
         if (cmdEnd > 0 && index < cmdEnd) {
-            return THEME.colors.brand
-        }
-        if (shellCmdEnd > 0 && index < shellCmdEnd) {
             return THEME.colors.brand
         }
         for (const [start, end] of mentionRanges) {

@@ -48,13 +48,12 @@ describe('TextArea Component (Unit)', () => {
         expect(frame).toContain('?')
     })
 
-    it('highlights direct shell command ! and arguments separately', () => {
+    it('highlights entire direct shell command and arguments in brand color for !', () => {
         const { lastFrame } = render(
-            <TextArea value="!git status" onChange={() => {}} onSubmit={() => {}} />
+            <TextArea value="!git status -s" onChange={() => {}} onSubmit={() => {}} />
         )
         const frame = lastFrame() || ''
-        expect(frame).toContain('!git')
-        expect(frame).toContain('status')
+        expect(frame).toContain('!git status -s')
     })
 
     it('positions cursor at the end when value is updated via autocomplete', () => {
