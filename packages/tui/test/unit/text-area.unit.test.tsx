@@ -33,6 +33,15 @@ describe('TextArea Component (Unit)', () => {
         expect(frame).toContain('gemini-3.6-flash')
     })
 
+    it('highlights standalone @ and @filename mentions', () => {
+        const { lastFrame } = render(
+            <TextArea value="check @src/app.tsx please" onChange={() => {}} onSubmit={() => {}} />
+        )
+        const frame = lastFrame() || ''
+        expect(frame).toContain('@src/app.tsx')
+        expect(frame).toContain('please')
+    })
+
     it('positions cursor at the end when value is updated via autocomplete', () => {
         const { lastFrame, rerender } = render(
             <TextArea value="/mod" onChange={() => {}} onSubmit={() => {}} />

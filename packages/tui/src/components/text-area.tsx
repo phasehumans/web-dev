@@ -157,12 +157,14 @@ export function TextArea({
         cmdEnd = spaceIdx === -1 ? value.length : spaceIdx
     }
 
-    // 2. @file mentions (e.g. @src/app.tsx)
+    // 2. @file mentions (e.g. @ or @src/app.tsx)
     const mentionRanges: [number, number][] = []
-    const mentionRegex = /@\S+/g
+    const mentionRegex = /@\S*/g
     let match: RegExpExecArray | null
     while ((match = mentionRegex.exec(value)) !== null) {
-        mentionRanges.push([match.index, match.index + match[0].length])
+        if (match[0].length > 0) {
+            mentionRanges.push([match.index, match.index + match[0].length])
+        }
     }
 
     const getCharColor = (index: number): string => {
