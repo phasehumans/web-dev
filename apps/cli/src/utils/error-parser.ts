@@ -124,11 +124,16 @@ export function parseErrorMessage(err: any): string {
         return rateLimitNotice + finalResult
     }
 
+    const isDecemberCredits =
+        lowerStr.includes('december wallet') ||
+        lowerStr.includes('trydecember.com') ||
+        lowerStr.includes('december cloud')
+
     const isOpenRouterCredits =
-        lowerStr.includes('openrouter') ||
-        lowerStr.includes('requires more credits') ||
-        lowerStr.includes('can only afford') ||
-        lowerStr.includes('402')
+        !isDecemberCredits &&
+        (lowerStr.includes('openrouter') ||
+            lowerStr.includes('requires more credits') ||
+            lowerStr.includes('can only afford'))
 
     if (
         isOpenRouterCredits &&

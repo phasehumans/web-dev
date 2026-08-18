@@ -1,14 +1,16 @@
 import { Agent, runAgentLoop } from '@december/agent'
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 
 import { loadConfig } from '../config'
 import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
 import { useCliStore } from '../store'
 import { taskManager } from '../task-manager'
+import { startDirectCommand } from '../utils/direct-shell'
 import { parseErrorMessage } from '../utils/error-parser'
 import { extractJsonArray } from '../utils/json-parser'
 import { getProviderModels } from '../utils/models'
 import { fetchOpenRouterModels } from '../utils/openrouter-models'
+import { formatUsageCard } from '../utils/usage-rates'
 
 import { getNextMsgId, processAgentStream } from './use-agent-runner'
 import { useAuthHandlers } from './use-auth-handlers'
@@ -129,8 +131,6 @@ export function useAgentSession({
 
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsShowTasks,
-        setSettingsShowTasks,
         settingsToolPermission,
         setSettingsToolPermission,
         settingsCompactMode,
@@ -217,6 +217,8 @@ export function useAgentSession({
             }
         }
     }, [agent, setAuthMode, setPendingQuestions])
+
+    const activeShellAbortRef = useRef<(() => void) | null>(null)
 
     // hooks state
 
@@ -411,6 +413,133 @@ export function useAgentSession({
                 return
             }
 
+            if (text.trim().startsWith('!')) {
+                const rawCmd = text.trim().slice(1).trim()
+                if (!rawCmd) {
+                    addToast('Usage: !<command> (e.g. !git status)', 'info')
+                    return
+                }
+
+                const userMsgId = getNextMsgId()
+                const assistantMsgId = getNextMsgId()
+
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                setActiveMessages([
+                    {
+                        id: userMsgId,
+                        role: 'user',
+                        text: `!${rawCmd}`,
+                    },
+                    {
+                        id: assistantMsgId,
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'command',
+                                toolName: 'bash',
+                                command: rawCmd,
+                                status: 'running',
+                                output: '',
+                            },
+                        ],
+                    },
+                ])
+
+                setIsStreaming(true)
+
+                const { promise, abort } = startDirectCommand(rawCmd, {
+                    timeoutMs: 60_000,
+                    onData: (chunk) => {
+                        setActiveMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id !== assistantMsgId) return msg
+                                const blocks = msg.blocks || []
+                                const newBlocks = blocks.map((b) => {
+                                    if (b.type === 'command' && b.command === rawCmd) {
+                                        return {
+                                            ...b,
+                                            output: (b.output || '') + chunk,
+                                        }
+                                    }
+                                    return b
+                                })
+                                return { ...msg, blocks: newBlocks }
+                            })
+                        )
+                    },
+                    onBackground: (taskId) => {
+                        addToast(
+                            `Command running > 60s moved to background (${taskId}). Use /tasks to view logs.`,
+                            'info'
+                        )
+                        setActiveMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id !== assistantMsgId) return msg
+                                const blocks = msg.blocks || []
+                                const newBlocks = blocks.map((b) => {
+                                    if (b.type === 'command' && b.command === rawCmd) {
+                                        return {
+                                            ...b,
+                                            status: 'success' as const,
+                                            output:
+                                                (b.output || '') +
+                                                `\n[Moved to background task: ${taskId}. Use /tasks to inspect.]`,
+                                        }
+                                    }
+                                    return b
+                                })
+                                return { ...msg, blocks: newBlocks }
+                            })
+                        )
+                    },
+                })
+
+                activeShellAbortRef.current = abort
+
+                try {
+                    const result = await promise
+                    if (!result.isBackground) {
+                        setActiveMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id !== assistantMsgId) return msg
+                                const blocks = msg.blocks || []
+                                const newBlocks = blocks.map((b) => {
+                                    if (b.type === 'command' && b.command === rawCmd) {
+                                        return {
+                                            ...b,
+                                            status: (result.exitCode === 0
+                                                ? 'success'
+                                                : 'error') as 'success' | 'error',
+                                            output: result.output,
+                                        }
+                                    }
+                                    return b
+                                })
+                                return { ...msg, blocks: newBlocks }
+                            })
+                        )
+
+                        // Append to agent.messages so LLM has context for subsequent user turns
+                        if (agent && agent.messages) {
+                            agent.messages.push({
+                                role: 'user',
+                                content: `!${rawCmd}`,
+                            })
+                            agent.messages.push({
+                                role: 'assistant',
+                                content: `[Direct Shell Output: ${rawCmd}]\n${result.output}`,
+                            })
+                        }
+                    }
+                } finally {
+                    activeShellAbortRef.current = null
+                    setIsStreaming(false)
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([])
+                }
+                return
+            }
+
             if (text.trim() === '/logout') {
                 const config = await loadConfig()
                 const items: { label: string; value: string }[] = []
@@ -444,8 +573,38 @@ export function useAgentSession({
                 return
             }
 
-            if (text.trim() === '/hooks') {
-                setAuthMode('hooks' as any)
+            if (text.trim() === '/plan' || text.trim().startsWith('/plan ')) {
+                const goal = text.trim().slice('/plan'.length).trim()
+                if (!goal) {
+                    addToast('Usage: /plan <goal description>', 'info')
+                    return
+                }
+                setCurrentPlannedPrompt(goal)
+                const planPrompt = `You are an autonomous software engineer.\nThe user wants to implement: "${goal}"\n\nPlease create a detailed, step-by-step implementation plan based on these requirements.\nDo NOT execute any tools. Only describe the plan.\nStart your response with '### Implementation Plan' and list the concrete steps.\nExplain which files need to be created, modified, or deleted, and what the changes will be.`
+
+                setIsStreaming(true)
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                const assistantMsgId = getNextMsgId()
+                setActiveMessages([
+                    {
+                        id: getNextMsgId(),
+                        role: 'user',
+                        text: `/plan ${goal}`,
+                    },
+                    { id: assistantMsgId, role: 'assistant', blocks: [] },
+                ])
+                try {
+                    const stream = runAgentLoop(agent, planPrompt)
+                    await processAgentStream({ stream, setActiveMessages, assistantMsgId })
+                } catch (err: any) {
+                    setActiveMessages((prev) => [
+                        ...prev,
+                        { id: getNextMsgId(), role: 'error', text: err.message },
+                    ])
+                } finally {
+                    setIsStreaming(false)
+                    setAuthMode('plan_approve')
+                }
                 return
             }
 
@@ -552,7 +711,6 @@ export function useAgentSession({
             if (text.trim() === '/settings') {
                 loadConfig().then((config) => {
                     setSettingsNonWorkspace(config.nonWorkspaceAccess ?? false)
-                    setSettingsShowTasks(config.showActiveTasks ?? true)
                     setSettingsToolPermission(config.toolPermission ?? 'always-proceed')
                     setSettingsThinkingLevel(config.thinkingLevel ?? 'auto')
                     setSettingsSteeringMode(config.steeringMode ?? 'all')
@@ -568,8 +726,17 @@ export function useAgentSession({
             }
 
             if (text.trim() === '/usage') {
-                const baseUrl = process.env.WEB_URL || 'https://trydecember.com'
-                const url = `${baseUrl}/settings/analytics`
+                const currentModel = agent.modelOptions?.model || 'gemini-3.6-flash'
+                const rawProvider = selectedProvider || (agent.llm as any)?.id || ''
+                const provider = rawProvider || (authMethod === 'december' ? 'december' : undefined)
+
+                const card = formatUsageCard({
+                    model: currentModel,
+                    authMethod,
+                    provider,
+                    isAuthenticated,
+                })
+
                 setActiveMessages((prev) => [
                     ...prev,
                     {
@@ -578,16 +745,11 @@ export function useAgentSession({
                         blocks: [
                             {
                                 type: 'text',
-                                content: `\nOpening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})`,
+                                content: `\n${card}\n`,
                             },
                         ],
                     },
                 ])
-                import('../utils/open')
-                    .then((openUtils) => {
-                        openUtils.openUrl(url)
-                    })
-                    .catch(console.error)
                 return
             }
 
@@ -699,17 +861,21 @@ export function useAgentSession({
             setSessionsData,
             setSettingsFollowUpMode,
             setSettingsNonWorkspace,
-            setSettingsShowTasks,
             setSettingsSteeringMode,
             setSettingsThinkingLevel,
             setSettingsToolPermission,
             setShouldExit,
             setStaticMessages,
             setOllamaModels,
+            setCurrentPlannedPrompt,
         ]
     )
 
     const handleAbort = useCallback(() => {
+        if (activeShellAbortRef.current) {
+            activeShellAbortRef.current()
+            activeShellAbortRef.current = null
+        }
         if (isStreaming && agent) {
             agent.abort()
             setQueuedPrompts([])
@@ -820,8 +986,6 @@ export function useAgentSession({
         setSessionNewName,
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsShowTasks,
-        setSettingsShowTasks,
         settingsToolPermission,
         setSettingsToolPermission,
         settingsThinkingLevel,
@@ -862,5 +1026,7 @@ export function useAgentSession({
         handleOllamaRetry,
         handleOllamaCancel,
         handleOllamaProceed,
+        pendingToolCall,
+        setPendingToolCall,
     }
 }

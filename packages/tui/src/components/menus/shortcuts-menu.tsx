@@ -1,11 +1,16 @@
 import { Box, Text, useInput } from 'ink'
 import React, { useState } from 'react'
 
+import { THEME } from '../../theme'
+
+import { MenuFooter } from './menu-footer'
+
 const CMD_COL_WIDTH = 34
 const WINDOW_SIZE = 15
 
 export const SHORTCUTS = [
     { key: '/', desc: 'Open slash commands' },
+    { key: '! <cmd>', desc: 'Execute shell command directly (e.g. !git status)' },
     { key: 'ctrl+a', desc: 'Go to start' },
     { key: 'ctrl+e', desc: 'Go to end' },
     { key: 'ctrl+k', desc: 'Delete to end' },
@@ -53,11 +58,11 @@ export function ShortcutsMenu({ onClose }: { onClose: () => void }) {
     const itemsBelow = SHORTCUTS.length - windowEnd
 
     return (
-        <Box flexDirection="column">
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             {/* ↑ n more */}
             {itemsAbove > 0 && (
-                <Box paddingLeft={2}>
-                    <Text color="#AAAAAA">↑ {itemsAbove} more</Text>
+                <Box paddingLeft={1}>
+                    <Text color={THEME.colors.muted}>↑ {itemsAbove} more</Text>
                 </Box>
             )}
 
@@ -66,46 +71,45 @@ export function ShortcutsMenu({ onClose }: { onClose: () => void }) {
                 const absIdx = windowStart + relIdx
                 const isSelected = absIdx === selectedIndex
                 return (
-                    <Box key={cmd.key} paddingLeft={2}>
-                        <Text color={isSelected ? '#89B4F8' : '#AAAAAA'}>
-                            {isSelected ? '> ' : '  '}
-                        </Text>
+                    <Box key={cmd.key} flexDirection="row">
+                        <Box width={2}>
+                            <Text color={isSelected ? THEME.colors.brand : THEME.colors.muted}>
+                                {isSelected ? `${THEME.glyphs.selector} ` : '  '}
+                            </Text>
+                        </Box>
                         <Box width={CMD_COL_WIDTH}>
-                            <Text color={isSelected ? '#89B4F8' : '#AAAAAA'} bold={false}>
+                            <Text
+                                color={isSelected ? THEME.colors.brand : THEME.colors.muted}
+                                bold={false}
+                            >
                                 {cmd.key}
                             </Text>
                         </Box>
-                        <Text color="#AAAAAA">{cmd.desc}</Text>
+                        <Text color={THEME.colors.muted}>{cmd.desc}</Text>
                     </Box>
                 )
             })}
 
             {/* ↓ n more */}
             {itemsBelow > 0 && (
-                <Box paddingLeft={2}>
-                    <Text color="#AAAAAA">↓ {itemsBelow} more</Text>
+                <Box paddingLeft={1}>
+                    <Text color={THEME.colors.muted}>↓ {itemsBelow} more</Text>
                 </Box>
             )}
 
-            <Box paddingLeft={2} paddingTop={1}>
-                <Text color="#AAAAAA">
+            <Box paddingLeft={1} paddingTop={1}>
+                <Text color={THEME.colors.muted}>
                     [{selectedIndex + 1}-{windowEnd} of {SHORTCUTS.length} items]
                 </Text>
             </Box>
 
             {/* footer */}
-            <Box flexDirection="column" paddingLeft={2} paddingTop={1} paddingBottom={1}>
-                <Box gap={2}>
-                    <Box gap={1}>
-                        <Text color="#89B4F8">↑/↓</Text>
-                        <Text color="#AAAAAA">Navigate</Text>
-                    </Box>
-                    <Box gap={1}>
-                        <Text color="#89B4F8">esc</Text>
-                        <Text color="#AAAAAA">Close</Text>
-                    </Box>
-                </Box>
-            </Box>
+            <MenuFooter
+                items={[
+                    { key: '↑/↓', label: 'Navigate' },
+                    { key: 'esc', label: 'Close' },
+                ]}
+            />
         </Box>
     )
 }

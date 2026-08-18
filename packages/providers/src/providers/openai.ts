@@ -1,7 +1,8 @@
 import { OpenAI } from 'openai'
 
 import { createProvider } from '../models.ts'
-import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
+
+import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
 export function resolveOpenAIModel(model?: string): string {
     let name = model || 'gpt-4o'

@@ -31,3 +31,9 @@ export type CreateCliSession = {
     messages: any[]
     minioPrefix?: string
 }
+
+export type ServerProviderResolution = {
+    provider: any
+    providerName: 'gemini' | 'anthropic' | 'openai' | 'deepseek' | 'openrouter'
+    model: string
+}

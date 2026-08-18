@@ -39,15 +39,17 @@ async function main() {
     if (parsedArgs.command === 'login') {
         const { loginViaDeviceCode } = await import('./auth')
         const { loadConfig, saveConfig } = await import('./config')
-        console.log('Generating device code for December login...')
+        console.log('\nGenerating device code for December login...')
         const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
-            console.log(`Please open ${uri} on any device and enter code: ${code}`)
+            console.log(
+                `\nPlease open ${uri} on any device and enter code: ${code}\nWaiting for authorization...`
+            )
         })
         const configToSave = await loadConfig()
         configToSave.decemberToken = token
         if (email) configToSave.email = email
         await saveConfig(configToSave)
-        console.log('Successfully logged in via device code!')
+        console.log('\x1b[32mSuccessfully logged in via device code!\x1b[0m\n')
         process.exit(0)
     }
 

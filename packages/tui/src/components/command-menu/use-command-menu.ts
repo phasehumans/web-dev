@@ -9,7 +9,11 @@ import type { Command } from './types'
 
 const WINDOW_SIZE = 5
 
-type UseCommandMenuReturn = {
+export type UseCommandMenuOptions = {
+    onAutocomplete?: (completedText: string) => void
+}
+
+export type UseCommandMenuReturn = {
     showCommandMenu: boolean
     commandQuery: string
     selectedIndex: number
@@ -20,12 +24,12 @@ type UseCommandMenuReturn = {
     moveSelection: (direction: 'up' | 'down') => void
 }
 
-export function useCommandMenu(): UseCommandMenuReturn {
+export function useCommandMenu(options?: UseCommandMenuOptions): UseCommandMenuReturn {
     const [textValue, setTextValue] = useState('')
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [windowStart, setWindowStart] = useState(0)
     const [showCommandMenu, setShowCommandMenu] = useState(false)
-    const { push, pop, isTopLayer } = useKeyboardLayer()
+    const { push, pop } = useKeyboardLayer()
 
     const commandQuery = showCommandMenu && textValue.startsWith('/') ? textValue.slice(1) : ''
     const filteredCommands = useMemo(() => getFilteredCommands(commandQuery), [commandQuery])
@@ -93,8 +97,8 @@ export function useCommandMenu(): UseCommandMenuReturn {
         [showCommandMenu, filteredCommands.length]
     )
 
-    useInput((_input, key) => {
-        if (!showCommandMenu || !isTopLayer('command')) return
+    useInput((input, key) => {
+        if (!showCommandMenu) return
 
         if (key.escape) {
             close()
@@ -102,6 +106,14 @@ export function useCommandMenu(): UseCommandMenuReturn {
             moveSelection('up')
         } else if (key.downArrow) {
             moveSelection('down')
+        } else if (key.tab || input === '\t') {
+            const command = filteredCommands[selectedIndex]
+            if (command) {
+                if (options?.onAutocomplete) {
+                    options.onAutocomplete(`/${command.name} `)
+                }
+                close()
+            }
         }
     })
 

@@ -102,6 +102,16 @@ describe('error-parser', () => {
         expect(parseErrorMessage(ctaErr)).toBe(ctaErr)
     })
 
+    test('does not attach OpenRouter notice to December Wallet 402 error', () => {
+        const decemberWallet402 =
+            '402 Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.\n402 status code (no body)'
+        const parsed = parseErrorMessage(decemberWallet402)
+        expect(parsed).not.toContain('OpenRouter credits exhausted or insufficient')
+        expect(parsed).not.toContain('https://openrouter.ai/settings/credits')
+        expect(parsed).toContain('Insufficient credits in December Wallet')
+        expect(parsed).toContain('https://trydecember.com/settings/billing')
+    })
+
     test('attaches custom December rate limit notice when rate limit/quota is exhausted', () => {
         const rawQuotaErr =
             'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. * Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash'

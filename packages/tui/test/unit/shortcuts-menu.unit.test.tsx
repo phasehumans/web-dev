@@ -10,8 +10,9 @@ describe('ShortcutsMenu Component (Unit)', () => {
         const { lastFrame } = renderWithProviders(<ShortcutsMenu onClose={handleClose} />)
         const frame = lastFrame()
 
-        expect(SHORTCUTS.length).toBe(14)
+        expect(SHORTCUTS.length).toBe(15)
         expect(frame).toContain('Open slash commands')
+        expect(frame).toContain('! <cmd>')
         expect(frame).toContain('ctrl+c')
         expect(frame).toContain('ctrl+h')
         expect(frame).toContain('ctrl+l')

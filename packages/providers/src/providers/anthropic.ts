@@ -2,7 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { safeParseJson } from '@december/shared'
 
 import { createProvider } from '../models.ts'
-import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
+
+import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
 export function resolveAnthropicModel(model?: string): string {
     let name = model || 'claude-3-5-sonnet-20241022'
@@ -90,8 +91,8 @@ export function anthropicProvider(
             }
 
             // Apply ephemeral prompt caching directive to the last message turn
-            if (antMessages.length > 0) {
-                const lastMsg = antMessages[antMessages.length - 1]
+            const lastMsg = antMessages[antMessages.length - 1]
+            if (lastMsg) {
                 if (typeof lastMsg.content === 'string') {
                     lastMsg.content = [
                         {

@@ -1,0 +1,62 @@
+import { describe, it, expect, mock } from 'bun:test'
+import { render } from 'ink-testing-library'
+import React from 'react'
+
+import { CommandMenu } from '../../src/components/command-menu'
+import { COMMANDS } from '../../src/components/command-menu/commands'
+import { useCommandMenu } from '../../src/components/command-menu/use-command-menu'
+import { KeyboardLayerProvider } from '../../src/providers/keyboard-layer'
+
+function CommandInputHarness({ onAutocomplete }: { onAutocomplete?: (text: string) => void }) {
+    const {
+        showCommandMenu,
+        commandQuery,
+        selectedIndex,
+        windowStart,
+        handleContentChange,
+        setSelectedIndex,
+    } = useCommandMenu({ onAutocomplete })
+
+    return (
+        <>
+            {showCommandMenu && (
+                <CommandMenu
+                    query={commandQuery}
+                    selectedIndex={selectedIndex}
+                    windowStart={windowStart}
+                    totalFiltered={1}
+                    onSelect={setSelectedIndex}
+                    onExecute={() => {}}
+                />
+            )}
+            <TestTrigger onTrigger={() => handleContentChange('/pl')} />
+        </>
+    )
+}
+
+function TestTrigger({ onTrigger }: { onTrigger: () => void }) {
+    React.useLayoutEffect(() => {
+        onTrigger()
+    }, [onTrigger])
+    return null
+}
+
+describe('CommandMenu Component (Unit)', () => {
+    it('registers /plan slash command', () => {
+        const planCmd = COMMANDS.find((c) => c.name === 'plan')
+        expect(planCmd).toBeDefined()
+        expect(planCmd?.value).toBe('/plan')
+    })
+
+    it('autocompletes highlighted command on Tab keypress', () => {
+        const onAutocomplete = mock()
+        const { stdin } = render(
+            <KeyboardLayerProvider>
+                <CommandInputHarness onAutocomplete={onAutocomplete} />
+            </KeyboardLayerProvider>
+        )
+
+        stdin.write('\t')
+        expect(onAutocomplete).toHaveBeenCalledWith('/plan ')
+    })
+})

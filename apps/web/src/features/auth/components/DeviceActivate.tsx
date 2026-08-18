@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { AuthModal } from '@/features/auth/components/AuthModal'
 import { profileAPI } from '@/features/profile/api/profile'
@@ -7,6 +8,7 @@ import { apiRequest } from '@/shared/api/client'
 import { Icons } from '@/shared/components/ui/Icons'
 
 export const DeviceActivate: React.FC = () => {
+    const [searchParams] = useSearchParams()
     const [userCode, setUserCode] = useState('')
     const [showAuthModal, setShowAuthModal] = useState(false)
     const [status, setStatus] = useState<'idle' | 'verifying' | 'success' | 'error'>('idle')
@@ -22,6 +24,17 @@ export const DeviceActivate: React.FC = () => {
         queryFn: profileAPI.getProfile,
         retry: false,
     })
+
+    useEffect(() => {
+        const rawCode = searchParams.get('code') || searchParams.get('user_code')
+        if (rawCode) {
+            let val = rawCode.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+            if (val.length > 4) {
+                val = val.substring(0, 4) + '-' + val.substring(4, 8)
+            }
+            setUserCode(val)
+        }
+    }, [searchParams])
 
     const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         // format as abcd-efgh automatically

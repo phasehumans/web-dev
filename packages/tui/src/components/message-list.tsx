@@ -34,12 +34,15 @@ function renderSingleMessage(
         const hasTopMargin = prevRole !== 'user'
         return <ErrorMessage key={key} message={msg.text ?? ''} hasTopMargin={hasTopMargin} />
     }
+    const prevRole = index > 0 ? allMessages[index - 1]?.role : null
+    const hasTopMargin = prevRole === 'assistant'
     return (
         <BotMessage
             key={key}
             blocks={msg.blocks ?? []}
             usage={msg.usage}
             expandCommands={expandCommands}
+            hasTopMargin={hasTopMargin}
         />
     )
 }

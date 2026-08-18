@@ -1,9 +1,11 @@
 import { safeParseJson } from '@december/shared'
-import { GoogleGenAI, Content } from '@google/genai'
+import { GoogleGenAI } from '@google/genai'
 import { v4 as uuidv4 } from 'uuid'
 
 import { createProvider } from '../models.ts'
-import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
+
+import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
+import type { Content } from '@google/genai'
 
 function sanitizeSchemaForGemini(schema: any): any {
     if (!schema || typeof schema !== 'object') return schema
@@ -96,7 +98,7 @@ export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLM
 
                     for (let i = geminiMessages.length - 1; i >= 0; i--) {
                         const prev = geminiMessages[i]
-                        if (prev.role === 'model') {
+                        if (prev && prev.role === 'model') {
                             const call = prev.parts?.find(
                                 (p) =>
                                     p.functionCall && (p.functionCall as any).id === extraFields.id

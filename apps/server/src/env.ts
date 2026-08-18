@@ -60,6 +60,10 @@ const envSchema = z
         COINBASE_API_KEY: z.string().min(1).optional(),
         COINBASE_WEBHOOK_SECRET: z.string().min(1).optional(),
 
+        GEMINI_API_KEY: z.string().min(1).optional(),
+        OPENAI_API_KEY: z.string().min(1).optional(),
+        ANTHROPIC_API_KEY: z.string().min(1).optional(),
+        DEEPSEEK_API_KEY: z.string().min(1).optional(),
         OPENROUTER_API_KEY: z.string().min(1).optional(),
         AUTO_MODEL: z.string().optional(),
         DEFAULT_MODEL: z.string().optional(),

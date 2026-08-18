@@ -1,7 +1,8 @@
 import { OpenAI } from 'openai'
 
 import { createProvider, getModelContextWindow } from '../models.ts'
-import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
+
+import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
 export function resolveOllamaModel(model?: string): string {
     let name = model || 'qwen2.5-coder:7b'

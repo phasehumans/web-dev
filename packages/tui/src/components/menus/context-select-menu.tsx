@@ -1,33 +1,39 @@
 import { getModelContextWindow } from '@december/providers'
 import { Box, Text } from 'ink'
+import React from 'react'
+
+import { THEME } from '../../theme'
+
+import { MenuFooter } from './menu-footer'
 
 function getModelLabel(id: string) {
     return id
 }
 
 export function ContextSelectMenu(props: any) {
-    const { agent, handleContextSelect } = props
-    const activeModelId = agent.modelOptions?.model || 'gemini-3.6-flash'
+    const { agent } = props
+    const activeModelId = agent?.modelOptions?.model || 'gemini-3.6-flash'
     const currentModelName = getModelLabel(activeModelId)
     const maxTokens = getModelContextWindow(activeModelId)
 
     const userTokens = Math.round(
-        agent.messages
-            .filter((m) => m.role === 'user')
-            .reduce((acc, m) => acc + (m.content?.length || 0) / 4, 0)
+        (agent?.messages || [])
+            .filter((m: any) => m.role === 'user')
+            .reduce((acc: number, m: any) => acc + (m.content?.length || 0) / 4, 0)
     )
     const agentTokens = Math.round(
-        agent.messages
-            .filter((m) => m.role === 'assistant')
-            .reduce((acc, m) => acc + (m.content?.length || 0) / 4, 0)
+        (agent?.messages || [])
+            .filter((m: any) => m.role === 'assistant')
+            .reduce((acc: number, m: any) => acc + (m.content?.length || 0) / 4, 0)
     )
     const toolTokens = Math.round(
-        agent.messages.reduce(
-            (acc, m) => acc + (m.toolCalls ? JSON.stringify(m.toolCalls).length / 4 : 0),
+        (agent?.messages || []).reduce(
+            (acc: number, m: any) =>
+                acc + (m.toolCalls ? JSON.stringify(m.toolCalls).length / 4 : 0),
             0
         )
     )
-    const sysTokens = Math.round((agent.systemPrompt?.length || 0) / 4)
+    const sysTokens = Math.round((agent?.systemPrompt?.length || 0) / 4)
     const totalTokens = userTokens + agentTokens + toolTokens + sysTokens
     const freeTokens = Math.max(0, maxTokens - totalTokens)
 
@@ -47,14 +53,14 @@ export function ContextSelectMenu(props: any) {
             filled++
         }
     }
-    addSquares(Math.round((userTokens / maxTokens) * totalSquares), '●', '#89B4F8') // blue
-    addSquares(Math.round((agentTokens / maxTokens) * totalSquares), '●', '#6EE7B7') // green
-    addSquares(Math.round((toolTokens / maxTokens) * totalSquares), '●', '#FCD34D') // yellow
-    addSquares(Math.round((sysTokens / maxTokens) * totalSquares), '●', '#AAAAAA') // grey
+    addSquares(Math.round((userTokens / maxTokens) * totalSquares), '●', THEME.colors.brand)
+    addSquares(Math.round((agentTokens / maxTokens) * totalSquares), '●', THEME.colors.success)
+    addSquares(Math.round((toolTokens / maxTokens) * totalSquares), '●', THEME.colors.warning)
+    addSquares(Math.round((sysTokens / maxTokens) * totalSquares), '●', THEME.colors.muted)
 
     while (filled < totalSquares) {
         squares.push(
-            <Text key={filled} color="#444444">
+            <Text key={filled} color={THEME.colors.border}>
                 □
             </Text>
         )
@@ -71,9 +77,9 @@ export function ContextSelectMenu(props: any) {
     }
 
     return (
-        <Box flexDirection="column" paddingX={1}>
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text bold color="white">
+                <Text bold color={THEME.colors.text}>
                     Context
                 </Text>
             </Box>
@@ -82,54 +88,51 @@ export function ContextSelectMenu(props: any) {
 
                 <Box flexDirection="column">
                     <Box gap={1}>
-                        <Text color="#AAAAAA">
+                        <Text color={THEME.colors.muted}>
                             {currentModelName} · {formatK(totalTokens)}/{formatK(maxTokens)} tokens
                             ({pct(totalTokens)}%)
                         </Text>
                     </Box>
                     <Box marginTop={1}>
-                        <Text color="white">Token usage by category</Text>
+                        <Text color={THEME.colors.text} bold>
+                            Token usage by category
+                        </Text>
                     </Box>
                     <Box flexDirection="column">
                         <Box gap={1}>
-                            <Text color="#89B4F8">●</Text>
-                            <Text color="#AAAAAA">
+                            <Text color={THEME.colors.brand}>●</Text>
+                            <Text color={THEME.colors.muted}>
                                 User messages: {formatK(userTokens)} tokens ({pct(userTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color="#6EE7B7">●</Text>
-                            <Text color="#AAAAAA">
+                            <Text color={THEME.colors.success}>●</Text>
+                            <Text color={THEME.colors.muted}>
                                 Agent responses: {formatK(agentTokens)} tokens ({pct(agentTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color="#FCD34D">●</Text>
-                            <Text color="#AAAAAA">
+                            <Text color={THEME.colors.warning}>●</Text>
+                            <Text color={THEME.colors.muted}>
                                 Tool calls: {formatK(toolTokens)} tokens ({pct(toolTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color="#AAAAAA">●</Text>
-                            <Text color="#AAAAAA">
+                            <Text color={THEME.colors.muted}>●</Text>
+                            <Text color={THEME.colors.muted}>
                                 System prompt: {formatK(sysTokens)} tokens ({pct(sysTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color="#444444">□</Text>
-                            <Text color="#AAAAAA">
+                            <Text color={THEME.colors.border}>□</Text>
+                            <Text color={THEME.colors.muted}>
                                 Free space: {formatK(freeTokens)} ({pct(freeTokens)}%)
                             </Text>
                         </Box>
                     </Box>
                 </Box>
             </Box>
-            <Box paddingTop={1}>
-                <Box gap={1}>
-                    <Text color="#89B4F8">esc</Text>
-                    <Text color="#AAAAAA">Cancel</Text>
-                </Box>
-            </Box>
+            <MenuFooter items={[{ key: 'esc', label: 'Cancel' }]} />
         </Box>
     )
 }

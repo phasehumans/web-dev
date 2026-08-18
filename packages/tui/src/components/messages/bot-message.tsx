@@ -1,6 +1,7 @@
-import { Box, Text, useFocus, useInput } from 'ink'
-import React, { useState } from 'react'
+import { Box, Text } from 'ink'
+import React from 'react'
 
+import { THEME } from '../../theme'
 import { Spinner } from '../spinner'
 
 import { SmoothMarkdown } from './smooth-markdown'
@@ -33,6 +34,7 @@ type Props = {
     blocks: MessageBlock[]
     usage?: { promptTokens: number; completionTokens: number }
     expandCommands?: boolean
+    hasTopMargin?: boolean
 }
 
 function CollapsibleThought({
@@ -44,37 +46,27 @@ function CollapsibleThought({
     isStreaming?: boolean
     forceExpanded?: boolean
 }) {
-    const [userExpanded, setUserExpanded] = useState<boolean | null>(null)
-    const expanded = userExpanded !== null ? userExpanded : (forceExpanded ?? true)
+    const expanded = forceExpanded ?? true
 
     const words = content.trim() ? content.trim().split(/\s+/).length : 0
     const tokenCount = Math.max(1, Math.round(words * 1.33))
 
-    useInput((input, key) => {
-        if ((key.ctrl && input.toLowerCase() === 'o') || input === '\x0f') {
-            setUserExpanded((prev) => {
-                const current = prev !== null ? prev : (forceExpanded ?? true)
-                return !current
-            })
-        }
-    })
-
     if (isStreaming) {
         return (
             <Box flexDirection="column" marginY={0}>
-                <Text color="gray">{content}</Text>
+                <Text color={THEME.colors.muted}>{content}</Text>
             </Box>
         )
     }
 
     return (
         <Box flexDirection="column" marginY={0}>
-            <Text color="gray" italic>
+            <Text color={THEME.colors.muted} italic>
                 Thoughts ({tokenCount} tokens{expanded ? ' · ctrl+o to collapse' : ''})
             </Text>
             {expanded && (
                 <Box paddingLeft={1} paddingTop={0.5}>
-                    <Text color="gray">{content}</Text>
+                    <Text color={THEME.colors.muted}>{content}</Text>
                 </Box>
             )}
         </Box>
@@ -88,15 +80,15 @@ function StyledCommand({ command, truncate = true }: { command: string; truncate
         if (truncate && args.length > 80) {
             args = args.substring(0, 80) + '...'
         }
-        const cmdColor = '#fef08a' // yellow
+        const cmdColor = THEME.colors.warning
 
         return (
             <Text>
-                <Text color={cmdColor}>● </Text>
+                <Text color={cmdColor}>{`${THEME.glyphs.status} `}</Text>
                 <Text color={cmdColor} bold>
                     {match[1]}
                 </Text>
-                <Text color="#cbd5e1">({args})</Text>
+                <Text color={THEME.colors.muted}>({args})</Text>
             </Text>
         )
     }
@@ -104,7 +96,7 @@ function StyledCommand({ command, truncate = true }: { command: string; truncate
     if (truncate && displayCmd.length > 80) {
         displayCmd = displayCmd.substring(0, 80) + '...'
     }
-    return <Text color="white">{displayCmd}</Text>
+    return <Text color={THEME.colors.text}>{displayCmd}</Text>
 }
 
 function CollapsibleCommandOutput({
@@ -116,22 +108,7 @@ function CollapsibleCommandOutput({
     output?: string
     forceExpanded?: boolean
 }) {
-    const { isFocused } = useFocus({ autoFocus: true })
-    const [userExpanded, setUserExpanded] = useState<boolean | null>(null)
-
-    const isExpanded = userExpanded !== null ? userExpanded : (forceExpanded ?? true)
-
-    useInput((input, key) => {
-        if (
-            (key.ctrl && ((key as any).name === 'o' || input?.toLowerCase() === 'o')) ||
-            input === '\x0f'
-        ) {
-            setUserExpanded((prev) => {
-                const current = prev !== null ? prev : (forceExpanded ?? true)
-                return !current
-            })
-        }
-    })
+    const isExpanded = forceExpanded ?? true
 
     const lines = output ? output.trim().split(/\r?\n/) : []
     const MAX_VISIBLE_LINES = 20
@@ -143,7 +120,7 @@ function CollapsibleCommandOutput({
             <Box alignItems="center" gap={1}>
                 <StyledCommand command={command} />
                 {lines.length > 0 && (
-                    <Text color="gray">
+                    <Text color={THEME.colors.muted}>
                         ({isExpanded ? 'ctrl+o to collapse' : 'ctrl+o to expand'})
                     </Text>
                 )}
@@ -151,14 +128,14 @@ function CollapsibleCommandOutput({
             {isExpanded && lines.length > 0 && (
                 <Box flexDirection="column" marginTop={0} paddingX={1}>
                     {visibleLines.map((line, lidx) => {
-                        let color = '#d1d5db'
+                        let color: string = THEME.colors.text
                         let bgColor: string | undefined = undefined
 
                         if (line.startsWith('+')) {
-                            color = '#6EE7B7'
+                            color = THEME.colors.success
                             bgColor = '#122f1e'
                         } else if (line.startsWith('-')) {
-                            color = '#FCA5A5'
+                            color = THEME.colors.error
                             bgColor = '#3f1316'
                         } else if (
                             line.startsWith('@@') ||
@@ -166,7 +143,7 @@ function CollapsibleCommandOutput({
                             line.startsWith('---') ||
                             line.startsWith('+++')
                         ) {
-                            color = '#d1d5db'
+                            color = THEME.colors.muted
                         }
 
                         return (
@@ -179,7 +156,7 @@ function CollapsibleCommandOutput({
                     })}
                     {isTruncated && (
                         <Box paddingTop={0}>
-                            <Text color="#AAAAAA">
+                            <Text color={THEME.colors.muted}>
                                 ... ({lines.length - MAX_VISIBLE_LINES} more lines)
                             </Text>
                         </Box>
@@ -190,9 +167,20 @@ function CollapsibleCommandOutput({
     )
 }
 
-export const BotMessage = React.memo(function BotMessage({ blocks, usage, expandCommands }: Props) {
+export const BotMessage = React.memo(function BotMessage({
+    blocks,
+    usage,
+    expandCommands,
+    hasTopMargin = false,
+}: Props) {
     return (
-        <Box flexDirection="column" paddingX={4} paddingY={0} gap={0} marginTop={0}>
+        <Box
+            flexDirection="column"
+            paddingX={THEME.padding.paddingX}
+            paddingY={0}
+            gap={0}
+            marginTop={hasTopMargin ? 1 : 0}
+        >
             {blocks.map((block, idx) => {
                 let prevBlock: MessageBlock | null = null
                 for (let i = idx - 1; i >= 0; i--) {
@@ -234,7 +222,7 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                                     {needsTopMargin && <Text> </Text>}
                                     <Box gap={1} alignItems="center">
                                         <Spinner />
-                                        <Text color="gray">{block.content}</Text>
+                                        <Text color={THEME.colors.muted}>{block.content}</Text>
                                     </Box>
                                 </Box>
                             )
@@ -277,8 +265,12 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                                         )
                                     }
                                     if (part.trim() === '') return null
+                                    const hasLeadingNewline =
+                                        part.startsWith('\n') ||
+                                        (pidx === 0 && block.content.startsWith('\n'))
                                     return (
-                                        <Box key={pidx}>
+                                        <Box key={pidx} flexDirection="column">
+                                            {hasLeadingNewline && <Text> </Text>}
                                             <SmoothMarkdown text={part.trim()} isRunning={true} />
                                         </Box>
                                     )
@@ -290,14 +282,14 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                         return (
                             <Box key={idx} flexDirection="column">
                                 {needsTopMargin && <Text> </Text>}
-                                <Text color="#FCA5A5">{block.error}</Text>
+                                <Text color={THEME.colors.error}>{block.error}</Text>
                             </Box>
                         )
                     }
                     case 'interrupt': {
                         return (
                             <Box key={idx} flexDirection="row" paddingY={1}>
-                                <Text color="gray">
+                                <Text color={THEME.colors.muted}>
                                     Interrupted · What should December do instead?
                                 </Text>
                             </Box>
@@ -318,12 +310,12 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                         return (
                             <Box key={idx} flexDirection="column" paddingY={1}>
                                 <Box flexDirection="row" gap={1} alignItems="center">
-                                    <Text color="#fef08a" italic>
+                                    <Text color={THEME.colors.warning} italic>
                                         Context Compacted
                                     </Text>
                                 </Box>
                                 <Box paddingLeft={1} paddingTop={1}>
-                                    <Text color="gray">
+                                    <Text color={THEME.colors.muted}>
                                         {block.summary.replace(
                                             /^\[COMPACTED HISTORY SUMMARY\]\n/,
                                             ''
@@ -335,7 +327,6 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                     }
                     case 'command': {
                         const isRunning = block.status === 'running'
-                        const isSuccess = block.status === 'success'
 
                         let parsedInput: any = {}
                         try {
@@ -487,7 +478,7 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                             <Box key={idx} flexDirection="column">
                                 <Box gap={1} alignItems="center">
                                     <Spinner />
-                                    <Text color="gray">{statusLabel}</Text>
+                                    <Text color={THEME.colors.muted}>{statusLabel}</Text>
                                 </Box>
                                 {block.output && (
                                     <Box
@@ -504,7 +495,7 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                                             .map((line, lidx) => (
                                                 <Text
                                                     key={lidx}
-                                                    color="#94a3b8"
+                                                    color={THEME.colors.muted}
                                                     wrap="truncate-end"
                                                 >
                                                     │ {line}
@@ -526,11 +517,13 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
 
                         return (
                             <Box key={idx} gap={1} alignItems="center">
-                                <Text color="#fef08a">● </Text>
-                                <Text color="#fef08a" bold>
+                                <Text
+                                    color={THEME.colors.warning}
+                                >{`${THEME.glyphs.status} `}</Text>
+                                <Text color={THEME.colors.warning} bold>
                                     {actionLabel}
                                 </Text>
-                                <Text color="#cbd5e1">{block.filePath}</Text>
+                                <Text color={THEME.colors.muted}>{block.filePath}</Text>
                             </Box>
                         )
                     }
@@ -538,7 +531,7 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                         return (
                             <Box key={idx} flexDirection="column" paddingLeft={2} paddingY={0.5}>
                                 {block.code.split(/\r?\n/).map((line, lidx) => (
-                                    <Text key={lidx} color="#E2E8F0">
+                                    <Text key={lidx} color={THEME.colors.text}>
                                         {line}
                                     </Text>
                                 ))}
@@ -548,7 +541,11 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                     case 'status': {
                         return (
                             <Box key={idx} gap={1} alignItems="center">
-                                <Text color={block.success ? '#6EE7B7' : '#FCA5A5'}>
+                                <Text
+                                    color={
+                                        block.success ? THEME.colors.success : THEME.colors.error
+                                    }
+                                >
                                     {block.label}
                                 </Text>
                             </Box>

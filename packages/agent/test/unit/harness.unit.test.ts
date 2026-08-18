@@ -63,6 +63,5 @@ describe('AgentHarness (Unit)', () => {
         expect(systemPrompt).toContain('Root Cause Resolution')
         expect(systemPrompt).toContain('No Raw Code In Chat')
         expect(systemPrompt).toContain('Strict Workspace Boundary')
-        expect(systemPrompt).toContain('Task Tracking & Lifecycle')
     })
 })

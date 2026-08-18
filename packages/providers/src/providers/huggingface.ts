@@ -1,7 +1,7 @@
 import { OpenAIProvider } from './openai.ts'
 
 export class HuggingFaceProvider extends OpenAIProvider {
-    public id = 'huggingface'
+    public override id = 'huggingface'
 
     constructor(apiKey?: string) {
         super(

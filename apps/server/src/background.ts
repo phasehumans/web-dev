@@ -3,7 +3,17 @@ import { Worker, Queue } from 'bullmq'
 import Redis from 'ioredis'
 
 import { authService } from './modules/auth/auth.service'
+import { fetchLiveModelRates } from './modules/usage/usage.rates'
 import { deletePrefix } from './shared/project-storage'
+
+// Initialize live model rates catalog
+fetchLiveModelRates().catch((err) => {
+    // Intentionally swallowed: fallback to embedded official catalog if offline
+    console.warn(
+        '[Background] Live model rates initial fetch failed, using official catalog:',
+        err?.message || err
+    )
+})
 
 const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
     maxRetriesPerRequest: null,

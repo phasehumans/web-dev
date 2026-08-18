@@ -1,12 +1,15 @@
 import { Box, Text } from 'ink'
 import SelectInput from 'ink-select-input'
+import React from 'react'
 
+import { THEME } from '../../theme'
+
+import { MenuFooter } from './menu-footer'
 import { CustomIndicator, CustomItem } from './menu-items'
 
 export function SettingsMainMenu(props: any) {
     const {
         settingsNonWorkspace,
-        settingsShowTasks,
         settingsToolPermission,
         settingsThinkingLevel,
         settingsSteeringMode,
@@ -19,10 +22,6 @@ export function SettingsMainMenu(props: any) {
         {
             label: `Non-Workspace Access     [${settingsNonWorkspace ? 'on' : 'off'}]`,
             value: 'nonWorkspaceAccess',
-        },
-        {
-            label: `Show Active Tasks        [${settingsShowTasks ? 'on' : 'off'}]`,
-            value: 'showActiveTasks',
         },
         {
             label: `Tool Permission          [${settingsToolPermission}]`,
@@ -50,9 +49,9 @@ export function SettingsMainMenu(props: any) {
     }
 
     return (
-        <Box flexDirection="column" paddingX={1}>
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text bold color="white">
+                <Text bold color={THEME.colors.text}>
                     Settings
                 </Text>
             </Box>
@@ -62,18 +61,13 @@ export function SettingsMainMenu(props: any) {
                 indicatorComponent={CustomIndicator}
                 itemComponent={CustomItem}
             />
-            <Box paddingTop={1}>
-                <Box gap={1}>
-                    <Text color="#89B4F8">↑↓</Text>
-                    <Text color="#AAAAAA">Navigate</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">enter</Text>
-                    <Text color="#AAAAAA">Toggle</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">esc</Text>
-                    <Text color="#AAAAAA">Cancel</Text>
-                </Box>
-            </Box>
+            <MenuFooter
+                items={[
+                    { key: '↑/↓', label: 'Navigate' },
+                    { key: 'enter', label: 'Toggle' },
+                    { key: 'esc', label: 'Cancel' },
+                ]}
+            />
         </Box>
     )
 }

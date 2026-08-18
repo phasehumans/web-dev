@@ -1,6 +1,6 @@
-import { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
-
 import { openaiProvider } from './openai.ts'
+
+import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
 export const OPENROUTER_DEFAULT_MAX_TOKENS = 4096
 export const OPENROUTER_MIN_AFFORDABLE_TOKENS = 50

@@ -1,5 +1,6 @@
 import { AppError } from '../../shared/appError'
 
+import { resolveModelRate } from './usage.rates'
 import { usageRepository } from './usage.repository'
 
 import type {
@@ -10,25 +11,7 @@ import type {
     CalculateGenerationCost,
     CanRunSelfCorrection,
     UsageUser,
-    ModelRate,
 } from './usage.types'
-
-const getModelRatesFromEnv = (): ModelRate[] => {
-    const rates: ModelRate[] = []
-    for (let i = 1; i <= 8; i++) {
-        const name = process.env[`MODEL_${i}_NAME`]
-        const inputRateStr = process.env[`MODEL_${i}_INPUT_RATE`]
-        const outputRateStr = process.env[`MODEL_${i}_OUTPUT_RATE`]
-        if (name) {
-            rates.push({
-                name: name.trim(),
-                inputRate: parseFloat(inputRateStr ?? '0'),
-                outputRate: parseFloat(outputRateStr ?? '0'),
-            })
-        }
-    }
-    return rates
-}
 
 const calculateGenerationCost = (data: CalculateGenerationCost): number => {
     const { modelName, inputTokens, outputTokens } = data
@@ -36,30 +19,21 @@ const calculateGenerationCost = (data: CalculateGenerationCost): number => {
         return 0
     }
 
-    const rates = getModelRatesFromEnv()
-    let matchedRate = rates.find((r) => r.name.toLowerCase() === modelName.trim().toLowerCase())
-
-    if (!matchedRate && modelName === 'auto') {
-        const resolvedAuto = (
+    let targetModel = modelName
+    if (targetModel === 'auto') {
+        targetModel = (
             process.env.DEFAULT_MODEL ||
             process.env.AUTO_MODEL ||
             'openai/gpt-oss-20b:free'
         ).trim()
-        matchedRate = rates.find((r) => r.name.toLowerCase() === resolvedAuto.toLowerCase())
     }
 
-    let inputRatePer1M = parseFloat(process.env.FALLBACK_MODEL_INPUT_RATE ?? '2.00')
-    let outputRatePer1M = parseFloat(process.env.FALLBACK_MODEL_OUTPUT_RATE ?? '8.00')
-
-    if (matchedRate) {
-        inputRatePer1M = matchedRate.inputRate
-        outputRatePer1M = matchedRate.outputRate
-    }
+    const rate = resolveModelRate(targetModel)
 
     // convert usd per 1m tokens to cents per token:
     // cents/token = (usd/1m * 100) / 1,000,000 = usd/1m / 10,000
-    const inputCentsPerToken = inputRatePer1M / 10000
-    const outputCentsPerToken = outputRatePer1M / 10000
+    const inputCentsPerToken = rate.inputRate / 10000
+    const outputCentsPerToken = rate.outputRate / 10000
 
     const rawCost = inputTokens * inputCentsPerToken + outputTokens * outputCentsPerToken
 
@@ -155,11 +129,22 @@ const findExternalUsageEvent = (externalRequestId: string) => {
 }
 
 const recordUsageEvent = async (data: RecordUsageEvent) => {
-    const user = await getUsageUser(data.userId)
-    await assertProjectOwnership(user.id, data.projectId)
+    const {
+        userId,
+        model,
+        inputTokens,
+        outputTokens,
+        totalTokens,
+        projectId,
+        chatId,
+        externalRequestId,
+        metadata,
+    } = data
+    const user = await getUsageUser(userId)
+    await assertProjectOwnership(user.id, projectId)
 
-    if (data.externalRequestId) {
-        const existingEvent = await findExternalUsageEvent(data.externalRequestId)
+    if (externalRequestId) {
+        const existingEvent = await findExternalUsageEvent(externalRequestId)
 
         if (existingEvent) {
             if (existingEvent.userId !== user.id) {
@@ -175,9 +160,9 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
 
     const { periodStart, periodEnd } = resolveCurrentPeriod(user)
     const calculatedCost = calculateGenerationCost({
-        modelName: data.model,
-        inputTokens: data.inputTokens,
-        outputTokens: data.outputTokens,
+        modelName: model,
+        inputTokens,
+        outputTokens,
     })
 
     try {
@@ -206,17 +191,17 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
             const event = await usageRepository.createUsageEvent(
                 {
                     userId: user.id,
-                    model: data.model,
-                    inputTokens: data.inputTokens,
-                    outputTokens: data.outputTokens,
-                    totalTokens: data.totalTokens,
+                    model,
+                    inputTokens,
+                    outputTokens,
+                    totalTokens,
                     costInCents: costLogged,
-                    projectId: data.projectId,
-                    chatId: data.chatId,
-                    externalRequestId: data.externalRequestId,
+                    projectId,
+                    chatId,
+                    externalRequestId,
                     periodStart,
                     periodEnd,
-                    metadata: data.metadata,
+                    metadata,
                 },
                 tx
             )
@@ -229,8 +214,8 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
             idempotent: false,
         }
     } catch (error: any) {
-        if (error?.code === 'P2002' && data.externalRequestId) {
-            const existingEvent = await findExternalUsageEvent(data.externalRequestId)
+        if (error?.code === 'P2002' && externalRequestId) {
+            const existingEvent = await findExternalUsageEvent(externalRequestId)
 
             if (existingEvent && existingEvent.userId === user.id) {
                 return {
@@ -245,14 +230,15 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
 }
 
 const canRunSelfCorrection = async (data: CanRunSelfCorrection): Promise<boolean> => {
+    const { userId } = data
     try {
-        const { userId } = data
         const user = await usageRepository.findUserCredits({ userId })
         if (!user) return false
 
         const threshold = parseInt(process.env.SELF_CORRECTION_CREDIT_THRESHOLD || '5', 10) // default 5 cents
         return user.creditBalance >= threshold
     } catch {
+        // Intentionally swallowed: fallback to false if user not found or error occurred
         return false
     }
 }

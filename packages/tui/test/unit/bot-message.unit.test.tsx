@@ -12,11 +12,12 @@ describe('BotMessage Component (Unit)', () => {
         expect(lastFrame()).toContain('Assistant response text')
     })
 
-    it('renders completed thought blocks expanded by default and collapses on Ctrl+O', async () => {
+    it('renders completed thought blocks expanded by default and respects expandCommands', () => {
         const thoughtContent =
             'Line 1: Planning search\nLine 2: Locating files\nLine 3: Reading contents\nLine 4: Done'
-        const { lastFrame, stdin } = render(
+        const { lastFrame, rerender } = render(
             <BotMessage
+                expandCommands={true}
                 blocks={[
                     { type: 'thinking', content: thoughtContent },
                     { type: 'text', content: 'Final answer' },
@@ -28,9 +29,16 @@ describe('BotMessage Component (Unit)', () => {
         expect(frame).toContain('20 tokens')
         expect(frame).toContain('Line 1: Planning search')
 
-        // Send Ctrl+O keystroke (\x0f) to collapse
-        stdin.write('\x0f')
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        // Re-render with expandCommands=false
+        rerender(
+            <BotMessage
+                expandCommands={false}
+                blocks={[
+                    { type: 'thinking', content: thoughtContent },
+                    { type: 'text', content: 'Final answer' },
+                ]}
+            />
+        )
 
         frame = lastFrame() || ''
         expect(frame).toContain('Thoughts')
@@ -82,10 +90,11 @@ describe('BotMessage Component (Unit)', () => {
         expect(frame).not.toContain('HIGH DEMAND')
     })
 
-    it('renders git diff outputs expanded by default and collapses on Ctrl+O', async () => {
+    it('renders git diff outputs expanded by default and respects expandCommands', () => {
         const diffOutput = '--- a/file.ts\n+++ b/file.ts\n@@ -1,2 +1,2 @@\n-old code\n+new code'
-        const { lastFrame, stdin } = render(
+        const { lastFrame, rerender } = render(
             <BotMessage
+                expandCommands={true}
                 blocks={[
                     {
                         type: 'command',
@@ -103,9 +112,22 @@ describe('BotMessage Component (Unit)', () => {
         expect(frame).toContain('-old code')
         expect(frame).toContain('+new code')
 
-        // Send Ctrl+O keystroke (\x0f) to collapse
-        stdin.write('\x0f')
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        // Re-render with expandCommands=false
+        rerender(
+            <BotMessage
+                expandCommands={false}
+                blocks={[
+                    {
+                        type: 'command',
+                        toolCallId: '101',
+                        toolName: 'bash',
+                        command: 'git diff',
+                        status: 'success',
+                        output: diffOutput,
+                    },
+                ]}
+            />
+        )
 
         frame = lastFrame() || ''
         expect(frame).toContain('ctrl+o to expand')

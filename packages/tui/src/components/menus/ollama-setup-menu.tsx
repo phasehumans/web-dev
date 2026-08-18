@@ -3,6 +3,9 @@ import SelectInput from 'ink-select-input'
 import TextInput from 'ink-text-input'
 import React, { useState } from 'react'
 
+import { THEME } from '../../theme'
+
+import { MenuFooter } from './menu-footer'
 import { CustomIndicator, CustomItem } from './menu-items'
 
 export interface OllamaStatus {
@@ -50,25 +53,27 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
     }
 
     return (
-        <Box flexDirection="column" paddingX={1}>
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color="#89B4F8" bold>
+                <Text color={THEME.colors.brand} bold>
                     Ollama Local Provider Diagnostics & Setup
                 </Text>
             </Box>
 
             {/* Server Status */}
             <Box flexDirection="column" marginBottom={1}>
-                <Text color="white">
+                <Text color={THEME.colors.text}>
                     Ollama Server:{' '}
-                    <Text color={isRunning ? '#86EFAC' : '#FCA5A5'}>
+                    <Text color={isRunning ? THEME.colors.success : THEME.colors.error}>
                         {isRunning ? `Running (${baseUrl})` : `Not detected at ${baseUrl}`}
                     </Text>
                 </Text>
                 {isRunning && (
-                    <Text color="white">
+                    <Text color={THEME.colors.text}>
                         Tool-Compatible Models:{' '}
-                        <Text color={hasCompatibleModel ? '#86EFAC' : '#FDE047'}>
+                        <Text
+                            color={hasCompatibleModel ? THEME.colors.success : THEME.colors.warning}
+                        >
                             {hasCompatibleModel
                                 ? compatibleModels.join(', ')
                                 : 'None found (Agent requires function calling)'}
@@ -80,18 +85,18 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
             {/* Step-by-Step Guidance */}
             {(!isRunning || !hasCompatibleModel) && (
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color="#93C5FD" bold>
+                    <Text color={THEME.colors.brand} bold>
                         Setup Instructions:
                     </Text>
                     {!isRunning ? (
                         <>
-                            <Text color="#E5E7EB">
+                            <Text color={THEME.colors.text}>
                                 1. Install Ollama: https://ollama.com/download (or `curl -fsSL
                                 https://ollama.com/install.sh | sh`)
                             </Text>
-                            <Text color="#E5E7EB">
+                            <Text color={THEME.colors.text}>
                                 2. Start daemon in your terminal:{' '}
-                                <Text color="#86EFAC" bold>
+                                <Text color={THEME.colors.success} bold>
                                     ollama serve
                                 </Text>
                             </Text>
@@ -99,14 +104,14 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
                     ) : null}
                     {!hasCompatibleModel ? (
                         <>
-                            <Text color="#E5E7EB">
+                            <Text color={THEME.colors.text}>
                                 {isRunning ? '1' : '3'}. Pull a tool-compatible model:
                             </Text>
                             <Box paddingLeft={2} flexDirection="column">
-                                <Text color="#86EFAC" bold>
+                                <Text color={THEME.colors.success} bold>
                                     ollama pull qwen2.5-coder:7b
                                 </Text>
-                                <Text color="#9CA3AF">
+                                <Text color={THEME.colors.muted}>
                                     (Recommended for 8GB+ RAM. For 32GB+ RAM: `ollama pull
                                     llama3.3:70b`)
                                 </Text>
@@ -119,9 +124,9 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
             {/* Custom URL Input Mode */}
             {isEditingUrl ? (
                 <Box flexDirection="column" marginTop={1}>
-                    <Text color="white">Enter Ollama Base URL:</Text>
+                    <Text color={THEME.colors.text}>Enter Ollama Base URL:</Text>
                     <Box>
-                        <Text color="#89B4F8">❭ </Text>
+                        <Text color={THEME.colors.brand}>{`${THEME.glyphs.prompt} `}</Text>
                         <TextInput
                             focus={true}
                             value={customUrl}
@@ -149,18 +154,13 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
                 />
             )}
 
-            <Box paddingTop={1}>
-                <Box gap={1}>
-                    <Text color="#89B4F8">↑↓</Text>
-                    <Text color="#AAAAAA">Navigate</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">enter</Text>
-                    <Text color="#AAAAAA">Select / Submit</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">esc</Text>
-                    <Text color="#AAAAAA">Back</Text>
-                </Box>
-            </Box>
+            <MenuFooter
+                items={[
+                    { key: '↑/↓', label: 'Navigate' },
+                    { key: 'enter', label: 'Select / Submit' },
+                    { key: 'esc', label: 'Back' },
+                ]}
+            />
         </Box>
     )
 }
