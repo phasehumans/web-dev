@@ -29,7 +29,7 @@ export function useCommandMenu(options?: UseCommandMenuOptions): UseCommandMenuR
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [windowStart, setWindowStart] = useState(0)
     const [showCommandMenu, setShowCommandMenu] = useState(false)
-    const { push, pop, isTopLayer } = useKeyboardLayer()
+    const { push, pop } = useKeyboardLayer()
 
     const commandQuery = showCommandMenu && textValue.startsWith('/') ? textValue.slice(1) : ''
     const filteredCommands = useMemo(() => getFilteredCommands(commandQuery), [commandQuery])
@@ -97,8 +97,8 @@ export function useCommandMenu(options?: UseCommandMenuOptions): UseCommandMenuR
         [showCommandMenu, filteredCommands.length]
     )
 
-    useInput((_input, key) => {
-        if (!showCommandMenu || !isTopLayer('command')) return
+    useInput((input, key) => {
+        if (!showCommandMenu) return
 
         if (key.escape) {
             close()
@@ -106,7 +106,7 @@ export function useCommandMenu(options?: UseCommandMenuOptions): UseCommandMenuR
             moveSelection('up')
         } else if (key.downArrow) {
             moveSelection('down')
-        } else if (key.tab) {
+        } else if (key.tab || input === '\t') {
             const command = filteredCommands[selectedIndex]
             if (command) {
                 if (options?.onAutocomplete) {

@@ -10,7 +10,7 @@ export const THEME = {
         border: '#333333',
         success: '#6EE7B7',
         error: '#FCA5A5',
-        warning: '#FBBF24',
+        warning: '#FDD663',
     },
     padding: {
         paddingX: 2,

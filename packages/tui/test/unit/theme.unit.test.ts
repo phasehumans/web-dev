@@ -11,7 +11,7 @@ describe('THEME Contract (Unit)', () => {
         expect(THEME.colors.border).toBe('#333333')
         expect(THEME.colors.success).toBe('#6EE7B7')
         expect(THEME.colors.error).toBe('#FCA5A5')
-        expect(THEME.colors.warning).toBe('#FBBF24')
+        expect(THEME.colors.warning).toBe('#FDD663')
     })
 
     it('exports standardized horizontal padding token', () => {

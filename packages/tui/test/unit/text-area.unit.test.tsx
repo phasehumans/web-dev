@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it, mock } from 'bun:test'
 import { render } from 'ink-testing-library'
 import React from 'react'
 
@@ -22,5 +22,42 @@ describe('TextArea Component (Unit)', () => {
             <TextArea value="User typed content" onChange={() => {}} onSubmit={() => {}} />
         )
         expect(lastFrame()).toContain('User typed content')
+    })
+
+    it('highlights slash commands and arguments separately', () => {
+        const { lastFrame } = render(
+            <TextArea value="/model gemini-3.6-flash" onChange={() => {}} onSubmit={() => {}} />
+        )
+        const frame = lastFrame() || ''
+        expect(frame).toContain('/model')
+        expect(frame).toContain('gemini-3.6-flash')
+    })
+
+    it('positions cursor at the end when value is updated via autocomplete', () => {
+        const { lastFrame, rerender } = render(
+            <TextArea value="/mod" onChange={() => {}} onSubmit={() => {}} />
+        )
+        expect(lastFrame()).toContain('/mod')
+
+        // Autocomplete to '/model '
+        rerender(<TextArea value="/model " onChange={() => {}} onSubmit={() => {}} />)
+        const frame = lastFrame() || ''
+        expect(frame).toContain('/model')
+    })
+
+    it('respects disableHistoryNav prop and ignores up arrow when dropdown is open', () => {
+        const onHistoryUp = mock()
+        const { stdin } = render(
+            <TextArea
+                value="/"
+                onChange={() => {}}
+                onSubmit={() => {}}
+                onHistoryUp={onHistoryUp}
+                disableHistoryNav={true}
+            />
+        )
+
+        stdin.write('\u001B[A') // Up arrow
+        expect(onHistoryUp).not.toHaveBeenCalled()
     })
 })

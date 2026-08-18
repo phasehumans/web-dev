@@ -366,6 +366,7 @@ export function InputBar({
                                   : placeholder
                         }
                         focus={!disabled && !dialog.isOpen}
+                        disableHistoryNav={showCommandMenu || showFileMenu || showShortcutsMenu}
                     />
                 )}
             </Box>

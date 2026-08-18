@@ -1,5 +1,7 @@
 import { Text, useInput } from 'ink'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+
+import { THEME } from '../theme'
 
 type Props = {
     value: string
@@ -9,6 +11,7 @@ type Props = {
     onHistoryDown?: () => void
     placeholder?: string
     focus?: boolean
+    disableHistoryNav?: boolean
 }
 
 export function TextArea({
@@ -19,12 +22,23 @@ export function TextArea({
     onHistoryDown,
     placeholder = '',
     focus = true,
+    disableHistoryNav = false,
 }: Props) {
     const [cursorOffset, setCursorOffset] = useState(value.length)
+    const prevValueRef = useRef(value)
 
     useEffect(() => {
-        if (cursorOffset > value.length) {
-            setCursorOffset(value.length)
+        if (value !== prevValueRef.current) {
+            // When value changes from outside (e.g. autocomplete, history navigation, clear)
+            if (
+                Math.abs(value.length - prevValueRef.current.length) > 1 ||
+                !value.startsWith(prevValueRef.current)
+            ) {
+                setCursorOffset(value.length)
+            } else if (cursorOffset > value.length) {
+                setCursorOffset(value.length)
+            }
+            prevValueRef.current = value
         }
     }, [value, cursorOffset])
 
@@ -51,6 +65,7 @@ export function TextArea({
             return
         }
         if (key.upArrow) {
+            if (disableHistoryNav) return
             const lines = value.slice(0, cursorOffset).split('\n')
             if (lines.length > 1) {
                 const currentLineLength = lines[lines.length - 1]?.length || 0
@@ -68,6 +83,7 @@ export function TextArea({
             return
         }
         if (key.downArrow) {
+            if (disableHistoryNav) return
             const postLines = value.slice(cursorOffset).split('\n')
             if (postLines.length > 1) {
                 const preLines = value.slice(0, cursorOffset).split('\n')
@@ -125,18 +141,73 @@ export function TextArea({
     })
 
     if (!value && placeholder) {
-        return <Text color="gray">{placeholder}</Text>
+        return (
+            <Text color={THEME.colors.muted}>
+                {focus ? <Text inverse>{placeholder[0] || ' '}</Text> : null}
+                {placeholder.slice(focus ? 1 : 0)}
+            </Text>
+        )
     }
 
-    const beforeCursor = value.slice(0, cursorOffset)
-    const atCursor = value.slice(cursorOffset, cursorOffset + 1) || ' '
-    const afterCursor = value.slice(cursorOffset + 1)
+    // Determine token colors for syntax highlighting
+    // 1. Slash command at start (e.g. /model, /plan)
+    let cmdEnd = -1
+    if (value.startsWith('/')) {
+        const spaceIdx = value.indexOf(' ')
+        cmdEnd = spaceIdx === -1 ? value.length : spaceIdx
+    }
 
-    return (
-        <Text>
-            {beforeCursor}
-            {focus ? <Text inverse>{atCursor}</Text> : <Text>{atCursor}</Text>}
-            {afterCursor}
-        </Text>
-    )
+    // 2. @file mentions (e.g. @src/app.tsx)
+    const mentionRanges: [number, number][] = []
+    const mentionRegex = /@\S+/g
+    let match: RegExpExecArray | null
+    while ((match = mentionRegex.exec(value)) !== null) {
+        mentionRanges.push([match.index, match.index + match[0].length])
+    }
+
+    const getCharColor = (index: number): string => {
+        if (cmdEnd > 0 && index < cmdEnd) {
+            return THEME.colors.brand
+        }
+        for (const [start, end] of mentionRanges) {
+            if (index >= start && index < end) {
+                return THEME.colors.brand
+            }
+        }
+        return THEME.colors.text
+    }
+
+    const chars = value.split('')
+    const elements: React.ReactNode[] = []
+
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i]
+        const isCursor = i === cursorOffset && focus
+        const color = getCharColor(i)
+
+        if (isCursor) {
+            elements.push(
+                <Text key={i} color={color} inverse>
+                    {char}
+                </Text>
+            )
+        } else {
+            elements.push(
+                <Text key={i} color={color}>
+                    {char}
+                </Text>
+            )
+        }
+    }
+
+    // Cursor at the very end of the line
+    if (cursorOffset >= chars.length && focus) {
+        elements.push(
+            <Text key="cursor-end" inverse>
+                {' '}
+            </Text>
+        )
+    }
+
+    return <Text>{elements}</Text>
 }
