@@ -2,6 +2,42 @@
 
 ### Features
 
+- Real-time thought streaming and chat output discipline guardrails
+- Automated task.md lifecycle and interactive tasks tab tracking
+- Workspace file synchronization and changes tab git diff generation
+- _(cli)_ Support dynamic openrouter models with free tier detection and fallback
+- Add local ollama provider support with model discovery and setup guidance
+- _(server,cli)_ Support multi-provider proxy, dynamic rates & instant device auth
+- _(server)_ Unify cli proxy multi-provider dispatch via packages/providers adapters (#405)
+- _(cli/tui)_ Comprehensive visual, ergonomic, and functional tui overhaul
+- _(cli/tui)_ Direct shell command execution with live stream and context memory
+- _(tui)_ Render entire line in brand blue for ! direct shell commands
+- _(cli,server,tui)_ Multi-provider dispatch, dynamic rates, direct shell execution, and tui polish (#419)
+
+### Bug Fixes
+
+- _(review)_ Resolve code review standards, boundary guards, and workspace empty states
+- _(workspace)_ Fix e2b workspace and agent stream (#404)
+- _(openrouter)_ Handle low credits, dynamic token clamping, and clean error messages
+- _(providers)_ Fix openrouter and add ollama has provider
+- _(server)_ Polish multi-provider dispatch, rates boot sync & integration tests
+- _(tui)_ Brand color command styling, cursor position, and arrow nav
+- _(tui)_ Highlight standalone @ character in brand color
+- _(tui)_ Highlight ? shortcut symbol in brand color
+- _(cli)_ Streamline /usage output with direct provider links and minimal formatting
+
+### Styling
+
+- Polish ollama setup menu presentation and remove icons
+
+### Miscellaneous Tasks
+
+- _(env)_ Add .env.example with multi-provider llm configuration
+
+## [0.3.8] - 2026-08-15
+
+### Features
+
 - _(web)_ Native agent stream & live thought reasoning display
 - _(web)_ Interactive tool call cards & execution diffs
 - _(worker)_ Automated multi-turn message persistence & s3 workspace sync
@@ -12,6 +48,10 @@
 - _(template)_ Fix line and mail templates
 - _(workspace)_ Fix workspace stream and ui
 - _(workspace)_ Fix workspace stream and ui (#392)
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.8
 
 ## [0.3.7] - 2026-08-13
 
