@@ -168,6 +168,9 @@ export function TextArea({
     }
 
     const getCharColor = (index: number): string => {
+        if (value.startsWith('?') && index === 0) {
+            return THEME.colors.brand
+        }
         if (cmdEnd > 0 && index < cmdEnd) {
             return THEME.colors.brand
         }

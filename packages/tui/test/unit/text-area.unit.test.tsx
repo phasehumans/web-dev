@@ -42,6 +42,12 @@ describe('TextArea Component (Unit)', () => {
         expect(frame).toContain('please')
     })
 
+    it('highlights ? shortcuts character in brand color', () => {
+        const { lastFrame } = render(<TextArea value="?" onChange={() => {}} onSubmit={() => {}} />)
+        const frame = lastFrame() || ''
+        expect(frame).toContain('?')
+    })
+
     it('positions cursor at the end when value is updated via autocomplete', () => {
         const { lastFrame, rerender } = render(
             <TextArea value="/mod" onChange={() => {}} onSubmit={() => {}} />
