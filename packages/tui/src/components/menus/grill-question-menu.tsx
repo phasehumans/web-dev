@@ -1,7 +1,11 @@
 import { Box, Text } from 'ink'
 import SelectInput from 'ink-select-input'
 import TextInput from 'ink-text-input'
+import React from 'react'
 
+import { THEME } from '../../theme'
+
+import { MenuFooter } from './menu-footer'
 import { CustomIndicator, CustomItem } from './menu-items'
 
 export function GrillQuestionMenu(props: any) {
@@ -21,21 +25,24 @@ export function GrillQuestionMenu(props: any) {
     const q = grillQuestions[currentGrillIndex]
     if (q) {
         const items = [
-            ...q.options.map((opt, i) => ({ label: `${i + 1}. ${opt}`, value: opt })),
+            ...q.options.map((opt: string, i: number) => ({
+                label: `${i + 1}. ${opt}`,
+                value: opt,
+            })),
             { label: `${q.options.length + 1}. Write-in...`, value: 'custom' },
         ]
         return (
-            <Box flexDirection="column" paddingX={1}>
+            <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
                 <Box marginBottom={1} flexDirection="column">
                     {q.docSource && (
-                        <Text color="#7DD3FC" bold>
+                        <Text color={THEME.colors.brand} bold>
                             [Doc Grounding: {q.docSource}]
                         </Text>
                     )}
-                    <Text color="#89B4F8" bold>
+                    <Text color={THEME.colors.brand} bold>
                         Question {currentGrillIndex + 1}/{grillQuestions.length}:
                     </Text>
-                    <Text color="white" bold>
+                    <Text color={THEME.colors.text} bold>
                         {q.question}
                     </Text>
                 </Box>
@@ -47,23 +54,18 @@ export function GrillQuestionMenu(props: any) {
                             indicatorComponent={CustomIndicator}
                             itemComponent={CustomItem}
                         />
-                        <Box paddingTop={1}>
-                            <Box gap={1}>
-                                <Text color="#89B4F8">↑↓</Text>
-                                <Text color="#AAAAAA">Navigate</Text>
-                                <Text color="#AAAAAA">·</Text>
-                                <Text color="#89B4F8">enter</Text>
-                                <Text color="#AAAAAA">Select</Text>
-                                <Text color="#AAAAAA">·</Text>
-                                <Text color="#89B4F8">esc</Text>
-                                <Text color="#AAAAAA">Cancel</Text>
-                            </Box>
-                        </Box>
+                        <MenuFooter
+                            items={[
+                                { key: '↑/↓', label: 'Navigate' },
+                                { key: 'enter', label: 'Select' },
+                                { key: 'esc', label: 'Cancel' },
+                            ]}
+                        />
                     </>
                 ) : (
                     <Box flexDirection="column" gap={1}>
                         <Box flexDirection="row" gap={1}>
-                            <Text color="#89B4F8">Your answer:</Text>
+                            <Text color={THEME.colors.brand}>Your answer:</Text>
                             <TextInput
                                 focus={true}
                                 value={customAnswer}
@@ -89,15 +91,12 @@ export function GrillQuestionMenu(props: any) {
                                 }}
                             />
                         </Box>
-                        <Box paddingTop={1}>
-                            <Box gap={1}>
-                                <Text color="#89B4F8">enter</Text>
-                                <Text color="#AAAAAA">Submit</Text>
-                                <Text color="#AAAAAA">·</Text>
-                                <Text color="#89B4F8">esc</Text>
-                                <Text color="#AAAAAA">Cancel</Text>
-                            </Box>
-                        </Box>
+                        <MenuFooter
+                            items={[
+                                { key: 'enter', label: 'Submit' },
+                                { key: 'esc', label: 'Cancel' },
+                            ]}
+                        />
                     </Box>
                 )}
             </Box>

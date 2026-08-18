@@ -58,7 +58,7 @@ export function useAuthHandlers(
                     {
                         id: codeMsgId,
                         role: 'assistant',
-                        blocks: [{ type: 'text', content: `Generating device code...` }],
+                        blocks: [{ type: 'text', content: `\nGenerating device code...` }],
                     },
                 ])
 
@@ -70,7 +70,7 @@ export function useAuthHandlers(
                             blocks: [
                                 {
                                     type: 'text',
-                                    content: `Please open [${uri}](${uri}) on any device and enter code: \`${code}\``,
+                                    content: `\nPlease open [${uri}](${uri}) on any device and enter code: \`${code}\``,
                                 },
                                 {
                                     type: 'text',
@@ -116,7 +116,13 @@ export function useAuthHandlers(
                     {
                         id: getNextMsgId(),
                         role: 'assistant',
-                        blocks: [{ type: 'text', content: MESSAGES.AUTH.LOGIN_SUCCESS_DEVICE }],
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: MESSAGES.AUTH.LOGIN_SUCCESS_DEVICE,
+                                color: '#6EE7B7',
+                            },
+                        ],
                     },
                 ])
             } catch (err: any) {

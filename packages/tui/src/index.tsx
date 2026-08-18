@@ -12,7 +12,6 @@ export * from './components/menus/ask-question-menu'
 
 export { Spinner } from './components/spinner'
 export { Pill } from './components/pill'
-export { TaskHUD } from './components/task-hud'
 
 export * from './components/menus/menu-menu'
 export * from './components/menus/byok-provider-menu'

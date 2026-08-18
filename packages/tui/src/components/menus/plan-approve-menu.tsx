@@ -1,23 +1,69 @@
-import { Box, Text } from 'ink'
+import { Box, Text, useInput } from 'ink'
 import SelectInput from 'ink-select-input'
+import React from 'react'
 
-import { CustomIndicator, CustomItem } from './menu-items'
+import { THEME } from '../../theme'
 
-export function PlanApproveMenu(props: any) {
-    const { handlePlanApprovalSelect, planSummary } = props
-    const planItems = [
-        { label: '1. Approve and Execute', value: 'approve' },
-        { label: '2. Reject / Cancel', value: 'reject' },
-    ]
+import { MenuFooter } from './menu-footer'
+import { CustomIndicator } from './menu-items'
+
+export interface PlanApproveMenuProps {
+    handlePlanApprovalSelect: (item: { label: string; value: string }) => void
+    planSummary?: string
+}
+
+function PlanItemComponent({
+    label,
+    value,
+    isSelected,
+}: {
+    label: string
+    value?: string
+    isSelected?: boolean
+}) {
+    let color: string = THEME.colors.text
+    if (value === 'approve') {
+        color = THEME.colors.success
+    } else if (value === 'reject') {
+        color = THEME.colors.error
+    } else if (value === 'edit') {
+        color = THEME.colors.brand
+    }
+
     return (
-        <Box flexDirection="column" paddingX={1}>
+        <Text color={color} bold={isSelected}>
+            {label}
+        </Text>
+    )
+}
+
+export function PlanApproveMenu({ handlePlanApprovalSelect, planSummary }: PlanApproveMenuProps) {
+    const planItems = [
+        { label: '✓ [y] Approve & Execute', value: 'approve' },
+        { label: '✗ [n] Reject / Cancel', value: 'reject' },
+        { label: '✎ [e] Edit Plan', value: 'edit' },
+    ]
+
+    useInput((input, key) => {
+        const lower = (input || '').toLowerCase()
+        if (lower === 'y') {
+            handlePlanApprovalSelect({ label: '✓ [y] Approve & Execute', value: 'approve' })
+        } else if (lower === 'n' || key.escape) {
+            handlePlanApprovalSelect({ label: '✗ [n] Reject / Cancel', value: 'reject' })
+        } else if (lower === 'e') {
+            handlePlanApprovalSelect({ label: '✎ [e] Edit Plan', value: 'edit' })
+        }
+    })
+
+    return (
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1} flexDirection="column" gap={1}>
                 {planSummary && (
-                    <Box borderStyle="round" borderColor="cyan" paddingX={1}>
-                        <Text color="cyan">{planSummary}</Text>
+                    <Box borderStyle="round" borderColor={THEME.colors.border} paddingX={1}>
+                        <Text color={THEME.colors.brand}>{planSummary}</Text>
                     </Box>
                 )}
-                <Text color="white" bold>
+                <Text color={THEME.colors.text} bold>
                     Plan generated. Please approve or reject:
                 </Text>
             </Box>
@@ -25,17 +71,17 @@ export function PlanApproveMenu(props: any) {
                 items={planItems}
                 onSelect={handlePlanApprovalSelect}
                 indicatorComponent={CustomIndicator}
-                itemComponent={CustomItem}
+                itemComponent={PlanItemComponent}
             />
-            <Box paddingTop={1}>
-                <Box gap={1}>
-                    <Text color="#89B4F8">↑↓</Text>
-                    <Text color="#AAAAAA">Navigate</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">enter</Text>
-                    <Text color="#AAAAAA">Select</Text>
-                </Box>
-            </Box>
+            <MenuFooter
+                items={[
+                    { key: 'y', label: 'Approve' },
+                    { key: 'n', label: 'Reject' },
+                    { key: 'e', label: 'Edit' },
+                    { key: '↑/↓', label: 'Navigate' },
+                    { key: 'enter', label: 'Select' },
+                ]}
+            />
         </Box>
     )
 }

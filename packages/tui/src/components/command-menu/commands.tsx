@@ -188,7 +188,6 @@ export const COMMANDS: Command[] = [
             }
         },
     },
-
     {
         name: 'init',
         description: 'Create initial rules, skills, and AGENTS.md configuration',
@@ -255,7 +254,6 @@ export const COMMANDS: Command[] = [
             ctx.toast.show({ variant: 'success', message: 'Signed out' })
         },
     },
-
     {
         name: 'model',
         description: 'Select a model',
@@ -277,6 +275,14 @@ export const COMMANDS: Command[] = [
         },
     },
     {
+        name: 'plan',
+        description: 'Generate a step-by-step implementation plan',
+        value: '/plan',
+        action: (ctx) => {
+            // forwarded to chat screen
+        },
+    },
+    {
         name: 'resume',
         description: 'Browse and resume past conversations',
         value: '/resume',
@@ -284,7 +290,6 @@ export const COMMANDS: Command[] = [
             // forwarded to chat screen
         },
     },
-
     {
         name: 'settings',
         description: 'Open settings',
@@ -293,7 +298,6 @@ export const COMMANDS: Command[] = [
             // forwarded to chat screen
         },
     },
-
     {
         name: 'tasks',
         description: 'View background tasks',

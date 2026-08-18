@@ -1,14 +1,20 @@
 import { Box, Text, useInput } from 'ink'
 import TextInput from 'ink-text-input'
+import React, { useState, useMemo, useRef } from 'react'
+
+import { useTerminalColumns } from '../../hooks/use-terminal-columns'
+import { THEME } from '../../theme'
+
+import { MenuFooter } from './menu-footer'
 
 export function SessionSelectMenu(props: any) {
     const {
         sessionRenameMode,
         sessionNewName,
         setSessionNewName,
-        sessionsData,
-        sessionPage,
-        sessionSelectedIndex,
+        sessionsData = [],
+        sessionPage = 0,
+        sessionSelectedIndex = 0,
         sessionRepository,
         setSessionsData,
         setSessionRenameMode,
@@ -17,15 +23,37 @@ export function SessionSelectMenu(props: any) {
         handleSessionSelect,
         setAuthMode,
     } = props
+
+    const [searchQuery, setSearchQuery] = useState('')
+    const columns = useTerminalColumns()
     const SESSION_PAGE_SIZE = 10
-    const totalItems = sessionsData.length
+
+    const filteredSessions = useMemo(() => {
+        if (!searchQuery.trim()) return sessionsData
+        const q = searchQuery.toLowerCase()
+        return sessionsData.filter((s: any) => {
+            const idMatch = (s.id || '').toLowerCase().includes(q)
+            const previewMatch = (s.preview || '').toLowerCase().includes(q)
+            return idMatch || previewMatch
+        })
+    }, [sessionsData, searchQuery])
+
+    const totalItems = filteredSessions.length
     const maxPage = Math.max(0, Math.ceil(totalItems / SESSION_PAGE_SIZE) - 1)
     const startIndex = sessionPage * SESSION_PAGE_SIZE
-    const visibleItems = sessionsData.slice(startIndex, startIndex + SESSION_PAGE_SIZE)
+    const visibleItems = filteredSessions.slice(startIndex, startIndex + SESSION_PAGE_SIZE)
 
-    const timeAgo = (date: Date) => {
-        const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000)
-        if (seconds < 60) return `${seconds}s ago`
+    const selectedIdxRef = useRef(sessionSelectedIndex)
+    selectedIdxRef.current = sessionSelectedIndex
+
+    const pageRef = useRef(sessionPage)
+    pageRef.current = sessionPage
+
+    const timeAgo = (date: Date | string) => {
+        if (!date) return ''
+        const d = typeof date === 'string' ? new Date(date) : date
+        const seconds = Math.floor((new Date().getTime() - d.getTime()) / 1000)
+        if (seconds < 60) return `${Math.max(0, seconds)}s ago`
         const minutes = Math.floor(seconds / 60)
         if (minutes < 60) return `${minutes}m ago`
         const hours = Math.floor(minutes / 60)
@@ -35,14 +63,15 @@ export function SessionSelectMenu(props: any) {
     }
 
     const handleRenameSubmit = (val: string) => {
-        const absIndex = startIndex + sessionSelectedIndex
-        const session = sessionsData[absIndex]
+        const absIndex = startIndex + selectedIdxRef.current
+        const session = filteredSessions[absIndex]
         const newName = val.trim()
         if (session && newName && newName !== session.id) {
             if (sessionRepository?.renameSession) {
                 sessionRepository.renameSession(session.id, newName).then(() => {
-                    const nextData = [...sessionsData]
-                    nextData[absIndex] = { ...session, id: newName, preview: newName }
+                    const nextData = sessionsData.map((s: any) =>
+                        s.id === session.id ? { ...s, id: newName, preview: newName } : s
+                    )
                     setSessionsData(nextData)
                 })
             }
@@ -55,89 +84,88 @@ export function SessionSelectMenu(props: any) {
         if (sessionRenameMode) return
 
         if (key.upArrow) {
-            if (sessionSelectedIndex > 0) {
-                setSessionSelectedIndex(sessionSelectedIndex - 1)
-            } else if (sessionPage > 0) {
-                setSessionPage(sessionPage - 1)
+            if (selectedIdxRef.current > 0) {
+                setSessionSelectedIndex(selectedIdxRef.current - 1)
+            } else if (pageRef.current > 0) {
+                setSessionPage(pageRef.current - 1)
                 setSessionSelectedIndex(SESSION_PAGE_SIZE - 1)
             }
-        } else if (key.downArrow) {
-            if (sessionSelectedIndex < visibleItems.length - 1) {
-                setSessionSelectedIndex(sessionSelectedIndex + 1)
-            } else if (sessionPage < maxPage) {
-                setSessionPage(sessionPage + 1)
+            return
+        }
+        if (key.downArrow) {
+            if (selectedIdxRef.current < visibleItems.length - 1) {
+                setSessionSelectedIndex(selectedIdxRef.current + 1)
+            } else if (pageRef.current < maxPage) {
+                setSessionPage(pageRef.current + 1)
                 setSessionSelectedIndex(0)
             }
-        } else if (key.leftArrow) {
-            if (sessionPage > 0) {
-                setSessionPage(sessionPage - 1)
+            return
+        }
+        if (key.leftArrow) {
+            if (pageRef.current > 0) {
+                setSessionPage(pageRef.current - 1)
                 setSessionSelectedIndex(0)
             }
-        } else if (key.rightArrow) {
-            if (sessionPage < maxPage) {
-                setSessionPage(sessionPage + 1)
+            return
+        }
+        if (key.rightArrow) {
+            if (pageRef.current < maxPage) {
+                setSessionPage(pageRef.current + 1)
                 setSessionSelectedIndex(0)
             }
-        } else if (key.return) {
-            const absIndex = startIndex + sessionSelectedIndex
-            const session = sessionsData[absIndex]
+            return
+        }
+        if (key.return) {
+            const absIndex = startIndex + selectedIdxRef.current
+            const session = filteredSessions[absIndex]
             if (session) {
                 handleSessionSelect({ value: session.id })
             }
-        } else if (input === 'r') {
-            const absIndex = startIndex + sessionSelectedIndex
-            const session = sessionsData[absIndex]
-            if (session) {
-                setSessionRenameMode(true)
-                setSessionNewName(session.preview || session.id)
-            }
-        } else if (input === 'd') {
-            const absIndex = startIndex + sessionSelectedIndex
-            const session = sessionsData[absIndex]
-            if (session && sessionRepository?.deleteSession) {
-                sessionRepository.deleteSession(session.id).then(() => {
-                    const nextData = sessionsData.filter((_: any, i: number) => i !== absIndex)
-                    setSessionsData(nextData)
-                    if (nextData.length === 0) {
-                        setAuthMode('none')
-                    } else {
-                        const newTotal = nextData.length
-                        const newMaxPage = Math.max(0, Math.ceil(newTotal / SESSION_PAGE_SIZE) - 1)
-                        if (sessionPage > newMaxPage) {
-                            setSessionPage(newMaxPage)
-                            setSessionSelectedIndex(
-                                Math.max(0, newTotal - newMaxPage * SESSION_PAGE_SIZE - 1)
-                            )
-                        } else {
-                            const remainingInPage = Math.min(
-                                SESSION_PAGE_SIZE,
-                                newTotal - sessionPage * SESSION_PAGE_SIZE
-                            )
-                            if (sessionSelectedIndex >= remainingInPage) {
-                                setSessionSelectedIndex(Math.max(0, remainingInPage - 1))
-                            }
-                        }
-                    }
-                })
-            }
+            return
+        }
+        if (key.escape) {
+            if (setAuthMode) setAuthMode('none')
+            return
         }
     })
 
+    // Compute dynamic width for session title
+    const paddingWidth = THEME.padding.paddingX * 2
+    const indicatorWidth = 2
+    const timeWidth = 14
+    const availableWidth = Math.max(20, columns - paddingWidth - indicatorWidth - timeWidth - 4)
+
     return (
-        <Box flexDirection="column" paddingX={1}>
-            <Box marginBottom={1}>
-                <Text bold color="white">
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
+            <Box marginBottom={1} flexDirection="column" gap={1}>
+                <Text bold color={THEME.colors.text}>
                     Sessions
                 </Text>
+                <Box flexDirection="row" gap={1}>
+                    <Text color={THEME.colors.brand}>Search:</Text>
+                    <TextInput
+                        value={searchQuery}
+                        onChange={(val) => {
+                            setSearchQuery(val)
+                            setSessionPage(0)
+                            setSessionSelectedIndex(0)
+                        }}
+                        placeholder="Filter by title or ID..."
+                        focus={!sessionRenameMode}
+                    />
+                </Box>
             </Box>
-            {visibleItems.map((session, idx) => {
+
+            {visibleItems.map((session: any, idx: number) => {
                 const isSelected = idx === sessionSelectedIndex
 
                 if (isSelected && sessionRenameMode) {
                     return (
                         <Box key={session.id} flexDirection="row">
                             <Box width={2}>
-                                <Text color="#89B4F8">{'❭ '}</Text>
+                                <Text
+                                    color={THEME.colors.brand}
+                                >{`${THEME.glyphs.selector} `}</Text>
                             </Box>
                             <TextInput
                                 value={sessionNewName}
@@ -153,25 +181,28 @@ export function SessionSelectMenu(props: any) {
                 const rawTitle = isCustomName ? session.id : session.preview || session.id
                 const singleLineTitle = (rawTitle || '').replace(/\s+/g, ' ').trim()
                 const title =
-                    singleLineTitle.length > 50
-                        ? singleLineTitle.slice(0, 50) + '...'
+                    singleLineTitle.length > availableWidth
+                        ? singleLineTitle.slice(0, availableWidth - 3) + '...'
                         : singleLineTitle
-                const timeStr = timeAgo(session.updatedAt).padStart(10)
+                const timeStr = timeAgo(session.updatedAt).padStart(12)
 
                 return (
                     <Box key={session.id} flexDirection="row">
                         <Box width={2}>
-                            <Text color={isSelected ? '#89B4F8' : 'white'}>
-                                {isSelected ? '❭ ' : '  '}
+                            <Text color={isSelected ? THEME.colors.brand : THEME.colors.muted}>
+                                {isSelected ? `${THEME.glyphs.selector} ` : '  '}
                             </Text>
                         </Box>
-                        <Box width={97}>
-                            <Text color={isSelected ? '#89B4F8' : '#AAAAAA'} wrap="truncate">
+                        <Box width={availableWidth}>
+                            <Text
+                                color={isSelected ? THEME.colors.brand : THEME.colors.muted}
+                                wrap="truncate"
+                            >
                                 {title}
                             </Text>
                         </Box>
-                        <Box width={12}>
-                            <Text color="#AAAAAA">{timeStr}</Text>
+                        <Box width={timeWidth}>
+                            <Text color={THEME.colors.muted}>{timeStr}</Text>
                         </Box>
                     </Box>
                 )
@@ -179,40 +210,29 @@ export function SessionSelectMenu(props: any) {
 
             {totalItems === 0 && (
                 <Box paddingLeft={2}>
-                    <Text color="#555555">No sessions found.</Text>
+                    <Text color={THEME.colors.muted}>No sessions found.</Text>
                 </Box>
             )}
 
             {totalItems > 0 && (
                 <Box marginTop={1} paddingLeft={2}>
-                    <Text color="#555555">
+                    <Text color={THEME.colors.muted}>
                         [{startIndex + 1}-{Math.min(startIndex + SESSION_PAGE_SIZE, totalItems)} of{' '}
                         {totalItems} items]
                     </Text>
                 </Box>
             )}
 
-            <Box paddingTop={1}>
-                <Box gap={1}>
-                    <Text color="#89B4F8">↑/↓</Text>
-                    <Text color="#AAAAAA">Navigate</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">←/→</Text>
-                    <Text color="#AAAAAA">Page</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">enter</Text>
-                    <Text color="#AAAAAA">Select</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">r</Text>
-                    <Text color="#AAAAAA">Rename</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">d</Text>
-                    <Text color="#AAAAAA">Delete</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">esc</Text>
-                    <Text color="#AAAAAA">Cancel</Text>
-                </Box>
-            </Box>
+            <MenuFooter
+                items={[
+                    { key: '↑/↓', label: 'Navigate' },
+                    { key: '←/→', label: 'Page' },
+                    { key: 'enter', label: 'Select' },
+                    { key: 'r', label: 'Rename' },
+                    { key: 'd', label: 'Delete' },
+                    { key: 'esc', label: 'Cancel' },
+                ]}
+            />
         </Box>
     )
 }

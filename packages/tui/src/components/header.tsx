@@ -4,6 +4,8 @@ import { homedir } from 'node:os'
 import { Box, Text } from 'ink'
 import React from 'react'
 
+import { THEME } from '../theme'
+
 function getGitBranch(): string | null {
     try {
         return execSync('git rev-parse --abbrev-ref HEAD', { stdio: 'pipe' }).toString().trim()
@@ -37,25 +39,32 @@ export function Header({
     const branch = getGitBranch()
 
     return (
-        <Box flexDirection="column" paddingLeft={2} paddingTop={1} paddingBottom={0}>
-            <Text bold color="white">
+        <Box
+            flexDirection="column"
+            paddingX={THEME.padding.paddingX}
+            paddingTop={1}
+            paddingBottom={0}
+        >
+            <Text bold color={THEME.colors.text}>
                 ✱ December CLI {cliVersion.replace(/^v/, '')}
             </Text>
-            {userEmail && <Text color="gray">{userEmail}</Text>}
+            {userEmail && <Text color={THEME.colors.muted}>{userEmail}</Text>}
             <Box gap={1}>
-                <Text color="gray">{cwd}</Text>
-                {branch && <Text color="gray">({branch})</Text>}
+                <Text color={THEME.colors.muted}>{cwd}</Text>
+                {branch && <Text color={THEME.colors.muted}>({branch})</Text>}
             </Box>
             <Box flexDirection="column" marginTop={1}>
-                <Text color="#89B4F8">Tips for getting started</Text>
-                <Text color="gray">
+                <Text color={THEME.colors.brand}>Tips for getting started</Text>
+                <Text color={THEME.colors.muted}>
                     Run /init to scaffold .december workspace for custom rules and skills
                 </Text>
-                <Text color="gray">
+                <Text color={THEME.colors.muted}>
                     Use /handoff to continue this session in December (trydecember.com)
                 </Text>
                 {latestVersion && (
-                    <Text color="gray">Run /update to install December CLI {latestVersion}</Text>
+                    <Text color={THEME.colors.muted}>
+                        Run /update to install December CLI {latestVersion}
+                    </Text>
                 )}
             </Box>
         </Box>

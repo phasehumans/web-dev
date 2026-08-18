@@ -91,8 +91,6 @@ export interface CliState {
     // settings feature
     settingsNonWorkspace: boolean
     setSettingsNonWorkspace: (val: boolean) => void
-    settingsShowTasks: boolean
-    setSettingsShowTasks: (val: boolean) => void
     settingsToolPermission: 'always-ask' | 'always-proceed'
     setSettingsToolPermission: (val: 'always-ask' | 'always-proceed') => void
     settingsCompactMode: boolean
@@ -237,8 +235,6 @@ export const useCliStore = create<CliState>((set) => ({
     // settings feature
     settingsNonWorkspace: false,
     setSettingsNonWorkspace: (settingsNonWorkspace) => set({ settingsNonWorkspace }),
-    settingsShowTasks: true,
-    setSettingsShowTasks: (settingsShowTasks) => set({ settingsShowTasks }),
     settingsToolPermission: 'always-proceed',
     setSettingsToolPermission: (settingsToolPermission) => set({ settingsToolPermission }),
     settingsCompactMode: false,

@@ -1,4 +1,7 @@
 import { Box, Text } from 'ink'
+import React from 'react'
+
+import { THEME } from '../../theme'
 
 type Props = {
     message: string
@@ -7,9 +10,9 @@ type Props = {
 
 export function ErrorMessage({ message, hasTopMargin = false }: Props) {
     return (
-        <Box paddingX={4} paddingY={0} flexDirection="column">
+        <Box paddingX={THEME.padding.paddingX} paddingY={0} flexDirection="column">
             {hasTopMargin && <Text> </Text>}
-            <Text color="#FCA5A5">{message.trim()}</Text>
+            <Text color={THEME.colors.error}>{message.trim()}</Text>
         </Box>
     )
 }

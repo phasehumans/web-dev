@@ -1,14 +1,17 @@
+import fg from 'fast-glob'
 import { Box, Text, useInput } from 'ink'
-import { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
 
+import { useTerminalColumns } from '../hooks/use-terminal-columns'
 import { useDialog, InlineDialog } from '../providers/dialog'
 import { useToast } from '../providers/toast'
+import { THEME } from '../theme'
+import { defaultPromptHistory } from '../utils/prompt-history'
 
 import { CommandMenu } from './command-menu'
 import { useCommandMenu } from './command-menu/use-command-menu'
 import { ShortcutsMenu } from './menus/shortcuts-menu'
 import { TextArea } from './text-area'
-// modelselector removed in favor of passing activemodel as prop
 
 import type { Command } from './command-menu/types'
 
@@ -34,6 +37,8 @@ type Props = {
     queuedPrompts?: string[]
 }
 
+const MAX_FILE_SUGGESTIONS = 5
+
 export function InputBar({
     onSubmit,
     disabled = false,
@@ -57,6 +62,10 @@ export function InputBar({
     const [value, setValue] = useState('')
     const toast = useToast()
     const dialog = useDialog()
+    const columns = useTerminalColumns()
+
+    const [selectedFileIndex, setSelectedFileIndex] = useState(0)
+    const [allWorkspaceFiles, setAllWorkspaceFiles] = useState<string[]>([])
 
     const activeToast =
         toasts && toasts.length > 0
@@ -64,6 +73,13 @@ export function InputBar({
             : toast.currentToast
               ? { message: toast.currentToast.message, variant: toast.currentToast.variant }
               : null
+
+    const handleContentChangeRef = useRef<(text: string) => void>(() => {})
+
+    const handleAutocompleteCommand = useCallback((completedText: string) => {
+        setValue(completedText)
+        handleContentChangeRef.current(completedText)
+    }, [])
 
     const {
         showCommandMenu,
@@ -73,12 +89,77 @@ export function InputBar({
         handleContentChange,
         resolveCommand,
         setSelectedIndex,
-    } = useCommandMenu()
+    } = useCommandMenu({ onAutocomplete: handleAutocompleteCommand })
+
+    handleContentChangeRef.current = handleContentChange
 
     const [showShortcutsMenu, setShowShortcutsMenu] = useState(false)
 
+    // Load workspace files lazily for @ mention autocomplete
+    useEffect(() => {
+        try {
+            const files = fg.sync(['**/*'], {
+                dot: true,
+                ignore: [
+                    '**/node_modules/**',
+                    '**/.git/**',
+                    '**/dist/**',
+                    '**/.next/**',
+                    '**/build/**',
+                    '**/.turbo/**',
+                    '**/.december/**',
+                ],
+                onlyFiles: true,
+                suppressErrors: true,
+            })
+            setAllWorkspaceFiles(files)
+        } catch {
+            // Intentionally swallowed: ignore file listing errors
+            setAllWorkspaceFiles([])
+        }
+    }, [])
+
+    // Check for @filename mention query
+    const fileMatch = value.match(/@(\S*)$/)
+    const showFileMenu = Boolean(fileMatch) && !showCommandMenu && !showShortcutsMenu
+    const fileQuery = fileMatch ? fileMatch[1]?.toLowerCase() || '' : ''
+
+    const matchingFiles = useMemo(() => {
+        if (!showFileMenu) return []
+        return allWorkspaceFiles
+            .filter((f) => f.toLowerCase().includes(fileQuery))
+            .slice(0, MAX_FILE_SUGGESTIONS)
+    }, [showFileMenu, allWorkspaceFiles, fileQuery])
+
     const isCtrlW = useRef(false)
     useInput((input, key) => {
+        if (showFileMenu && matchingFiles.length > 0) {
+            if (key.upArrow) {
+                setSelectedFileIndex((prev) => Math.max(0, prev - 1))
+                return
+            }
+            if (key.downArrow) {
+                setSelectedFileIndex((prev) => Math.min(matchingFiles.length - 1, prev + 1))
+                return
+            }
+            if (key.tab || key.return) {
+                const selectedFile = matchingFiles[selectedFileIndex]
+                if (selectedFile) {
+                    const nextVal = value.replace(/@\S*$/, `@${selectedFile} `)
+                    setValue(nextVal)
+                    handleContentChange(nextVal)
+                    setSelectedFileIndex(0)
+                }
+                return
+            }
+            if (key.escape) {
+                const nextVal = value.replace(/@\S*$/, '')
+                setValue(nextVal)
+                handleContentChange(nextVal)
+                return
+            }
+        }
+
         if (key.ctrl && input === 'w') {
             isCtrlW.current = true
             setValue((prev) => {
@@ -117,9 +198,26 @@ export function InputBar({
             }
             setValue(newValue)
             handleContentChange(newValue)
+            setSelectedFileIndex(0)
         },
         [disabled, handleContentChange, showShortcutsMenu]
     )
+
+    const handleHistoryUp = useCallback(() => {
+        const prev = defaultPromptHistory.getPrevious(value)
+        if (prev !== value) {
+            setValue(prev)
+            handleContentChange(prev)
+        }
+    }, [value, handleContentChange])
+
+    const handleHistoryDown = useCallback(() => {
+        const next = defaultPromptHistory.getNext()
+        if (next !== value) {
+            setValue(next)
+            handleContentChange(next)
+        }
+    }, [value, handleContentChange])
 
     const handleCommand = useCallback(
         (command: Command | undefined) => {
@@ -129,13 +227,14 @@ export function InputBar({
             setValue('')
             handleContentChange('')
 
-            // forward auth commands to chat component
+            // forward auth & session commands to chat component
             if (
                 command.value === '/grill-me' ||
                 command.value === '/login' ||
                 command.value === '/logout' ||
                 command.value === '/exit' ||
                 command.value === '/model' ||
+                command.value === '/plan' ||
                 command.value === '/resume' ||
                 command.value === '/settings' ||
                 command.value === '/context' ||
@@ -177,12 +276,12 @@ export function InputBar({
                 return
             }
             if (showShortcutsMenu) {
-                // ignoring submit for shortcuts menu, it closes on escape
                 return
             }
             const trimmed = text.trim()
             if (trimmed.length === 0) return
-            // save to history (we will implement global history in app, or just pass it in here later)
+            defaultPromptHistory.append(trimmed)
+            defaultPromptHistory.resetCursor()
             onSubmit(trimmed)
             setValue('')
             handleContentChange('')
@@ -199,10 +298,11 @@ export function InputBar({
         ]
     )
 
-    const sep = '─'.repeat(400)
+    const sepWidth = Math.max(10, columns - THEME.padding.paddingX * 2)
+    const sep = '─'.repeat(sepWidth)
 
     return (
-        <Box flexDirection="column" paddingX={2} marginTop={1}>
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX} marginTop={1}>
             {/* inline dialog — shown on right above prompt when open */}
             {dialog.isOpen && dialog.currentDialog && (
                 <Box justifyContent="flex-end">
@@ -212,28 +312,52 @@ export function InputBar({
             {/* queued prompts indicator */}
             {queuedPrompts && queuedPrompts.length > 0 && (
                 <Box width="100%" marginBottom={0}>
-                    <Text color="#89B4F8">
+                    <Text color={THEME.colors.brand}>
                         {`Queued (${queuedPrompts.length}): "${queuedPrompts[0]}"`}
                         {queuedPrompts.length > 1 ? ` (+${queuedPrompts.length - 1} more)` : ''}
                     </Text>
                 </Box>
             )}
+
+            {/* file mention popup */}
+            {showFileMenu && matchingFiles.length > 0 && (
+                <Box flexDirection="column" paddingLeft={1} marginBottom={0}>
+                    {matchingFiles.map((file, idx) => {
+                        const isSelected = idx === selectedFileIndex
+                        return (
+                            <Box key={file} flexDirection="row" gap={1}>
+                                <Text color={isSelected ? THEME.colors.brand : THEME.colors.muted}>
+                                    {isSelected ? `${THEME.glyphs.selector} ` : '  '}
+                                </Text>
+                                <Text color={isSelected ? THEME.colors.brand : THEME.colors.text}>
+                                    {file}
+                                </Text>
+                            </Box>
+                        )
+                    })}
+                </Box>
+            )}
+
             {/* top separator */}
             <Box overflow="hidden" height={1} width="100%">
-                <Text color="#555555" wrap="truncate">
+                <Text color={THEME.colors.border} wrap="truncate">
                     {sep}
                 </Text>
             </Box>
 
             {/* content: prompt */}
             <Box width="100%" paddingRight={4}>
-                <Text color={disabled ? '#555555' : '#89B4F8'}>{`❭ `}</Text>
-                {grillMode && <Text color="#89B4F8">/grill-me </Text>}
+                <Text
+                    color={disabled ? THEME.colors.muted : THEME.colors.brand}
+                >{`${THEME.glyphs.prompt} `}</Text>
+                {grillMode && <Text color={THEME.colors.brand}>/grill-me </Text>}
                 {(!authUI || customInputMode) && (
                     <TextArea
                         value={value}
                         onChange={handleChange}
                         onSubmit={handleSubmit}
+                        onHistoryUp={handleHistoryUp}
+                        onHistoryDown={handleHistoryDown}
                         placeholder={
                             customInputMode
                                 ? 'Type your custom answer...'
@@ -248,17 +372,17 @@ export function InputBar({
 
             {/* bottom separator */}
             <Box overflow="hidden" height={1} width="100%">
-                <Text color="#555555" wrap="truncate">
+                <Text color={THEME.colors.border} wrap="truncate">
                     {sep}
                 </Text>
             </Box>
 
-            {/* status row — model left, december studio right */}
+            {/* status row — clean & minimal: <model> (<authMethod>)                  ? for shortcuts */}
             {!showCommandMenu && !showShortcutsMenu && !authUI && (
                 <Box width="100%" justifyContent="space-between">
                     <Box gap={2} alignItems="center" flexShrink={1}>
                         <Box gap={1} flexShrink={1}>
-                            <Text color="#AAAAAA">
+                            <Text color={THEME.colors.muted}>
                                 {activeModel}
                                 {hasBothAuth && authMethod
                                     ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
@@ -269,26 +393,21 @@ export function InputBar({
                                     wrap="truncate"
                                     color={
                                         activeToast.variant === 'success'
-                                            ? '#6EE7B7'
+                                            ? THEME.colors.success
                                             : activeToast.variant === 'error'
-                                              ? '#FCA5A5'
-                                              : 'gray'
+                                              ? THEME.colors.error
+                                              : THEME.colors.muted
                                     }
                                 >
                                     · {activeToast.message.replace(/\s+/g, ' ').trim()}
                                 </Text>
                             ) : showExitConfirm ? (
-                                <Text color="gray">· Press Ctrl+C again to exit</Text>
-                            ) : (
-                                contextTokens !== undefined &&
-                                contextTokens > 0 && (
-                                    <Text color="#AAAAAA">· {contextTokens} tokens</Text>
-                                )
-                            )}
+                                <Text color={THEME.colors.muted}>· Press Ctrl+C again to exit</Text>
+                            ) : null}
                         </Box>
                     </Box>
                     <Box gap={0} flexShrink={0} marginLeft={2}>
-                        <Text color="#AAAAAA">? for shortcuts</Text>
+                        <Text color={THEME.colors.muted}>? for shortcuts</Text>
                     </Box>
                 </Box>
             )}

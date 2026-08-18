@@ -1,16 +1,23 @@
 import { Box, Text } from 'ink'
 import TextInput from 'ink-text-input'
+import React from 'react'
+
+import { THEME } from '../../theme'
+
+import { MenuFooter } from './menu-footer'
 
 export function ByokKeyMenu(props: any) {
     const { selectedProvider, apiKey, setApiKey, handleKeySubmit } = props
     return (
-        <Box flexDirection="column" paddingX={1}>
+        <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color="white">Enter API Key for {selectedProvider}:</Text>
+                <Text color={THEME.colors.text} bold>
+                    Enter API Key for {selectedProvider}:
+                </Text>
             </Box>
             <Box>
-                <Text color="#89B4F8" bold={false}>
-                    ❭{' '}
+                <Text color={THEME.colors.brand} bold={false}>
+                    {`${THEME.glyphs.prompt} `}
                 </Text>
                 <TextInput
                     focus={true}
@@ -21,18 +28,15 @@ export function ByokKeyMenu(props: any) {
             </Box>
             {props.authError && (
                 <Box marginTop={1}>
-                    <Text color="#FCA5A5">{props.authError}</Text>
+                    <Text color={THEME.colors.error}>{props.authError}</Text>
                 </Box>
             )}
-            <Box paddingTop={1}>
-                <Box gap={1}>
-                    <Text color="#89B4F8">enter</Text>
-                    <Text color="#AAAAAA">Submit</Text>
-                    <Text color="#AAAAAA">·</Text>
-                    <Text color="#89B4F8">esc</Text>
-                    <Text color="#AAAAAA">Cancel</Text>
-                </Box>
-            </Box>
+            <MenuFooter
+                items={[
+                    { key: 'enter', label: 'Submit' },
+                    { key: 'esc', label: 'Cancel' },
+                ]}
+            />
         </Box>
     )
 }

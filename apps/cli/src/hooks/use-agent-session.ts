@@ -9,6 +9,7 @@ import { parseErrorMessage } from '../utils/error-parser'
 import { extractJsonArray } from '../utils/json-parser'
 import { getProviderModels } from '../utils/models'
 import { fetchOpenRouterModels } from '../utils/openrouter-models'
+import { formatUsageCard } from '../utils/usage-rates'
 
 import { getNextMsgId, processAgentStream } from './use-agent-runner'
 import { useAuthHandlers } from './use-auth-handlers'
@@ -129,8 +130,6 @@ export function useAgentSession({
 
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsShowTasks,
-        setSettingsShowTasks,
         settingsToolPermission,
         setSettingsToolPermission,
         settingsCompactMode,
@@ -444,8 +443,38 @@ export function useAgentSession({
                 return
             }
 
-            if (text.trim() === '/hooks') {
-                setAuthMode('hooks' as any)
+            if (text.trim() === '/plan' || text.trim().startsWith('/plan ')) {
+                const goal = text.trim().slice('/plan'.length).trim()
+                if (!goal) {
+                    addToast('Usage: /plan <goal description>', 'info')
+                    return
+                }
+                setCurrentPlannedPrompt(goal)
+                const planPrompt = `You are an autonomous software engineer.\nThe user wants to implement: "${goal}"\n\nPlease create a detailed, step-by-step implementation plan based on these requirements.\nDo NOT execute any tools. Only describe the plan.\nStart your response with '### Implementation Plan' and list the concrete steps.\nExplain which files need to be created, modified, or deleted, and what the changes will be.`
+
+                setIsStreaming(true)
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                const assistantMsgId = getNextMsgId()
+                setActiveMessages([
+                    {
+                        id: getNextMsgId(),
+                        role: 'user',
+                        text: `/plan ${goal}`,
+                    },
+                    { id: assistantMsgId, role: 'assistant', blocks: [] },
+                ])
+                try {
+                    const stream = runAgentLoop(agent, planPrompt)
+                    await processAgentStream({ stream, setActiveMessages, assistantMsgId })
+                } catch (err: any) {
+                    setActiveMessages((prev) => [
+                        ...prev,
+                        { id: getNextMsgId(), role: 'error', text: err.message },
+                    ])
+                } finally {
+                    setIsStreaming(false)
+                    setAuthMode('plan_approve')
+                }
                 return
             }
 
@@ -552,7 +581,6 @@ export function useAgentSession({
             if (text.trim() === '/settings') {
                 loadConfig().then((config) => {
                     setSettingsNonWorkspace(config.nonWorkspaceAccess ?? false)
-                    setSettingsShowTasks(config.showActiveTasks ?? true)
                     setSettingsToolPermission(config.toolPermission ?? 'always-proceed')
                     setSettingsThinkingLevel(config.thinkingLevel ?? 'auto')
                     setSettingsSteeringMode(config.steeringMode ?? 'all')
@@ -568,8 +596,45 @@ export function useAgentSession({
             }
 
             if (text.trim() === '/usage') {
-                const baseUrl = process.env.WEB_URL || 'https://trydecember.com'
-                const url = `${baseUrl}/settings/analytics`
+                const allMsgs = [
+                    ...useCliStore.getState().staticMessages,
+                    ...useCliStore.getState().activeMessages,
+                ]
+                let promptTokens = 0
+                let completionTokens = 0
+                let cachedPromptTokens = 0
+
+                for (const m of allMsgs) {
+                    if (m.usage) {
+                        promptTokens += m.usage.promptTokens || 0
+                        completionTokens += m.usage.completionTokens || 0
+                        if ((m.usage as any).cachedPromptTokens) {
+                            cachedPromptTokens += (m.usage as any).cachedPromptTokens
+                        }
+                    }
+                }
+
+                const currentModel = agent.modelOptions?.model || 'gemini-3.6-flash'
+                const provider = currentModel.startsWith('claude')
+                    ? 'anthropic'
+                    : currentModel.startsWith('gpt') ||
+                        currentModel.startsWith('o1') ||
+                        currentModel.startsWith('o3')
+                      ? 'openai'
+                      : currentModel.startsWith('deepseek')
+                        ? 'deepseek'
+                        : currentModel.includes('ollama')
+                          ? 'ollama'
+                          : 'google'
+
+                const card = formatUsageCard({
+                    model: currentModel,
+                    promptTokens,
+                    completionTokens,
+                    cachedPromptTokens,
+                    provider,
+                })
+
                 setActiveMessages((prev) => [
                     ...prev,
                     {
@@ -578,16 +643,11 @@ export function useAgentSession({
                         blocks: [
                             {
                                 type: 'text',
-                                content: `\nOpening usage dashboard...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})`,
+                                content: `\n${card}\n`,
                             },
                         ],
                     },
                 ])
-                import('../utils/open')
-                    .then((openUtils) => {
-                        openUtils.openUrl(url)
-                    })
-                    .catch(console.error)
                 return
             }
 
@@ -699,13 +759,13 @@ export function useAgentSession({
             setSessionsData,
             setSettingsFollowUpMode,
             setSettingsNonWorkspace,
-            setSettingsShowTasks,
             setSettingsSteeringMode,
             setSettingsThinkingLevel,
             setSettingsToolPermission,
             setShouldExit,
             setStaticMessages,
             setOllamaModels,
+            setCurrentPlannedPrompt,
         ]
     )
 
@@ -820,8 +880,6 @@ export function useAgentSession({
         setSessionNewName,
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsShowTasks,
-        setSettingsShowTasks,
         settingsToolPermission,
         setSettingsToolPermission,
         settingsThinkingLevel,
@@ -862,5 +920,7 @@ export function useAgentSession({
         handleOllamaRetry,
         handleOllamaCancel,
         handleOllamaProceed,
+        pendingToolCall,
+        setPendingToolCall,
     }
 }

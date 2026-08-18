@@ -2,7 +2,6 @@ import { useState } from 'react'
 
 export function useSettings() {
     const [settingsNonWorkspace, setSettingsNonWorkspace] = useState(false)
-    const [settingsShowTasks, setSettingsShowTasks] = useState(true)
     const [settingsToolPermission, setSettingsToolPermission] = useState<
         'always-proceed' | 'always-ask'
     >('always-proceed')
@@ -13,8 +12,6 @@ export function useSettings() {
     return {
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsShowTasks,
-        setSettingsShowTasks,
         settingsToolPermission,
         setSettingsToolPermission,
         settingsSelectedIndex,

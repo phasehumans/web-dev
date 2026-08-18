@@ -182,8 +182,7 @@ export const TasksWorkspace: React.FC<TasksWorkspaceProps> = ({ generatedFiles }
                     <CheckCircle2 className="w-6 h-6 text-[#3F3F46]" />
                     <p className="text-[13px] text-[#A1A1AA] font-medium">No tasks initialized</p>
                     <p className="text-[12px] text-[#52525B]">
-                        The agent will create and maintain a structured TASK.md checklist as work
-                        progresses.
+                        No task checklist found in the workspace.
                     </p>
                 </div>
             </div>

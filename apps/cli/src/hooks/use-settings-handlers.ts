@@ -6,8 +6,6 @@ export function useSettingsHandlers() {
     const {
         settingsNonWorkspace,
         setSettingsNonWorkspace,
-        settingsShowTasks,
-        setSettingsShowTasks,
         settingsToolPermission,
         setSettingsToolPermission,
         setAuthMode,
@@ -34,11 +32,6 @@ export function useSettingsHandlers() {
             case 'nonWorkspaceAccess':
                 config.nonWorkspaceAccess = !settingsNonWorkspace
                 setSettingsNonWorkspace(!settingsNonWorkspace)
-                updated = true
-                break
-            case 'showActiveTasks':
-                config.showActiveTasks = !settingsShowTasks
-                setSettingsShowTasks(!settingsShowTasks)
                 updated = true
                 break
             case 'toolPermission':

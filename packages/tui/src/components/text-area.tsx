@@ -5,11 +5,21 @@ type Props = {
     value: string
     onChange: (value: string) => void
     onSubmit: (value: string) => void
+    onHistoryUp?: () => void
+    onHistoryDown?: () => void
     placeholder?: string
     focus?: boolean
 }
 
-export function TextArea({ value, onChange, onSubmit, placeholder = '', focus = true }: Props) {
+export function TextArea({
+    value,
+    onChange,
+    onSubmit,
+    onHistoryUp,
+    onHistoryDown,
+    placeholder = '',
+    focus = true,
+}: Props) {
     const [cursorOffset, setCursorOffset] = useState(value.length)
 
     useEffect(() => {
@@ -22,9 +32,6 @@ export function TextArea({ value, onChange, onSubmit, placeholder = '', focus = 
         if (!focus) return
 
         if (key.return) {
-            // some terminals send shift+enter as a specific escape sequence, but usually it's indistinguishable.
-            // let's check for alt+enter (meta) or we can just make enter submit.
-            // if we want alt+enter for newline:
             if (key.meta) {
                 const newValue = value.slice(0, cursorOffset) + '\n' + value.slice(cursorOffset)
                 onChange(newValue)
@@ -44,7 +51,6 @@ export function TextArea({ value, onChange, onSubmit, placeholder = '', focus = 
             return
         }
         if (key.upArrow) {
-            // simple up: go to start of line or previous line
             const lines = value.slice(0, cursorOffset).split('\n')
             if (lines.length > 1) {
                 const currentLineLength = lines[lines.length - 1]?.length || 0
@@ -53,23 +59,30 @@ export function TextArea({ value, onChange, onSubmit, placeholder = '', focus = 
                 const newOffset = cursorOffset - currentLineLength - 1 - (prevLineLength - newCol)
                 setCursorOffset(Math.max(0, newOffset))
             } else {
-                setCursorOffset(0)
+                if (cursorOffset === 0 && onHistoryUp) {
+                    onHistoryUp()
+                } else {
+                    setCursorOffset(0)
+                }
             }
             return
         }
         if (key.downArrow) {
-            const preLines = value.slice(0, cursorOffset).split('\n')
-            const currentLineLength = preLines[preLines.length - 1]?.length || 0
-
             const postLines = value.slice(cursorOffset).split('\n')
             if (postLines.length > 1) {
+                const preLines = value.slice(0, cursorOffset).split('\n')
+                const currentLineLength = preLines[preLines.length - 1]?.length || 0
                 const nextLineLength = postLines[1]?.length || 0
                 const newCol = Math.min(currentLineLength, nextLineLength)
                 const postLineZeroLength = postLines[0]?.length || 0
                 const newOffset = cursorOffset + postLineZeroLength + 1 + newCol
                 setCursorOffset(Math.min(value.length, newOffset))
             } else {
-                setCursorOffset(value.length)
+                if (cursorOffset === value.length && onHistoryDown) {
+                    onHistoryDown()
+                } else {
+                    setCursorOffset(value.length)
+                }
             }
             return
         }
@@ -102,7 +115,6 @@ export function TextArea({ value, onChange, onSubmit, placeholder = '', focus = 
             return
         }
 
-        // ignore other ctrl commands here, let parent handle ctrl+w or handle it here
         if (key.ctrl) return
 
         if (input) {

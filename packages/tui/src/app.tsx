@@ -6,8 +6,8 @@ import { GlobalShortcuts } from './components/global-shortcuts'
 import { InputBar } from './components/input-bar'
 import { AskQuestionMenu } from './components/menus/ask-question-menu'
 import { AuthMenus } from './components/menus/auth-menus'
+import { ToolPermissionMenu } from './components/menus/tool-permission-menu'
 import { MessageList } from './components/message-list'
-import { TaskHUD } from './components/task-hud'
 
 export function ChatApp({
     agent,
@@ -68,6 +68,15 @@ export function ChatApp({
                         session.setPendingQuestions(null)
                     }}
                 />
+            ) : authMode === 'tool_permission' && session.pendingToolCall ? (
+                <ToolPermissionMenu
+                    toolCall={session.pendingToolCall.toolCall}
+                    onComplete={(result) => {
+                        session.pendingToolCall?.resolve(result)
+                        setAuthMode('none')
+                        session.setPendingToolCall(null)
+                    }}
+                />
             ) : (
                 <AuthMenus
                     {...session}
@@ -94,7 +103,6 @@ export function ChatApp({
     return (
         <Box flexDirection="column" width="100%">
             <GlobalShortcuts {...session} agent={agent} />
-            <TaskHUD cwd={process.cwd()} showTasks={session.settingsShowTasks} />
             <MessageList
                 staticKey={staticKey}
                 staticMessages={staticMessages}
@@ -129,8 +137,9 @@ export function ChatApp({
                                 .find((m) => m.role === 'assistant' && m.blocks)
                             if (lastAssistant) {
                                 const text =
-                                    lastAssistant.blocks?.map((b) => b.content || '').join('\n') ||
-                                    ''
+                                    lastAssistant.blocks
+                                        ?.map((b: any) => b.content || '')
+                                        .join('\n') || ''
                                 cb.writeToClipboard(text)
                             }
                         })
@@ -147,7 +156,7 @@ export function ChatApp({
                 resetChat={() => {
                     console.clear()
                     setStaticMessages([{ id: 'header-' + Date.now(), role: 'header' }])
-                    setStaticKey((k) => k + 1)
+                    setStaticKey((k: number) => k + 1)
                     setActiveMessages([])
                     session.setQueuedPrompts?.([])
                     session.addToast?.('Started a new conversation.', 'success')

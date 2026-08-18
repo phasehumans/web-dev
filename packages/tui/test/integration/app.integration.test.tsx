@@ -5,7 +5,7 @@ import { ChatApp } from '../../src/app'
 import { renderWithProviders } from '../test-providers'
 
 describe('ChatApp TUI Integration', () => {
-    it('renders top task HUD, header, message list, and input bar correctly', () => {
+    it('renders header, message list, and input bar correctly', () => {
         const mockAgent = {
             abort: mock(),
             modelOptions: { model: 'test-model' },

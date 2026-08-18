@@ -310,6 +310,7 @@
         "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
         "cli-highlight": "2.1.11",
+        "fast-glob": "3.3.3",
         "ink": "^7.0.5",
         "ink-big-text": "2.0.0",
         "ink-select-input": "6.2.0",
