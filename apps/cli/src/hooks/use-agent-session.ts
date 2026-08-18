@@ -1,10 +1,11 @@
 import { Agent, runAgentLoop } from '@december/agent'
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 
 import { loadConfig } from '../config'
 import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
 import { useCliStore } from '../store'
 import { taskManager } from '../task-manager'
+import { startDirectCommand } from '../utils/direct-shell'
 import { parseErrorMessage } from '../utils/error-parser'
 import { extractJsonArray } from '../utils/json-parser'
 import { getProviderModels } from '../utils/models'
@@ -217,6 +218,8 @@ export function useAgentSession({
         }
     }, [agent, setAuthMode, setPendingQuestions])
 
+    const activeShellAbortRef = useRef<(() => void) | null>(null)
+
     // hooks state
 
     useEffect(() => {
@@ -407,6 +410,133 @@ export function useAgentSession({
             if (text.trim() === '/exit') {
                 setShouldExit(true)
                 process.exit(0)
+                return
+            }
+
+            if (text.trim().startsWith('!')) {
+                const rawCmd = text.trim().slice(1).trim()
+                if (!rawCmd) {
+                    addToast('Usage: !<command> (e.g. !git status)', 'info')
+                    return
+                }
+
+                const userMsgId = getNextMsgId()
+                const assistantMsgId = getNextMsgId()
+
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                setActiveMessages([
+                    {
+                        id: userMsgId,
+                        role: 'user',
+                        text: `!${rawCmd}`,
+                    },
+                    {
+                        id: assistantMsgId,
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'command',
+                                toolName: 'bash',
+                                command: rawCmd,
+                                status: 'running',
+                                output: '',
+                            },
+                        ],
+                    },
+                ])
+
+                setIsStreaming(true)
+
+                const { promise, abort } = startDirectCommand(rawCmd, {
+                    timeoutMs: 60_000,
+                    onData: (chunk) => {
+                        setActiveMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id !== assistantMsgId) return msg
+                                const blocks = msg.blocks || []
+                                const newBlocks = blocks.map((b) => {
+                                    if (b.type === 'command' && b.command === rawCmd) {
+                                        return {
+                                            ...b,
+                                            output: (b.output || '') + chunk,
+                                        }
+                                    }
+                                    return b
+                                })
+                                return { ...msg, blocks: newBlocks }
+                            })
+                        )
+                    },
+                    onBackground: (taskId) => {
+                        addToast(
+                            `Command running > 60s moved to background (${taskId}). Use /tasks to view logs.`,
+                            'info'
+                        )
+                        setActiveMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id !== assistantMsgId) return msg
+                                const blocks = msg.blocks || []
+                                const newBlocks = blocks.map((b) => {
+                                    if (b.type === 'command' && b.command === rawCmd) {
+                                        return {
+                                            ...b,
+                                            status: 'success' as const,
+                                            output:
+                                                (b.output || '') +
+                                                `\n[Moved to background task: ${taskId}. Use /tasks to inspect.]`,
+                                        }
+                                    }
+                                    return b
+                                })
+                                return { ...msg, blocks: newBlocks }
+                            })
+                        )
+                    },
+                })
+
+                activeShellAbortRef.current = abort
+
+                try {
+                    const result = await promise
+                    if (!result.isBackground) {
+                        setActiveMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id !== assistantMsgId) return msg
+                                const blocks = msg.blocks || []
+                                const newBlocks = blocks.map((b) => {
+                                    if (b.type === 'command' && b.command === rawCmd) {
+                                        return {
+                                            ...b,
+                                            status: (result.exitCode === 0
+                                                ? 'success'
+                                                : 'error') as 'success' | 'error',
+                                            output: result.output,
+                                        }
+                                    }
+                                    return b
+                                })
+                                return { ...msg, blocks: newBlocks }
+                            })
+                        )
+
+                        // Append to agent.messages so LLM has context for subsequent user turns
+                        if (agent && agent.messages) {
+                            agent.messages.push({
+                                role: 'user',
+                                content: `!${rawCmd}`,
+                            })
+                            agent.messages.push({
+                                role: 'assistant',
+                                content: `[Direct Shell Output: ${rawCmd}]\n${result.output}`,
+                            })
+                        }
+                    }
+                } finally {
+                    activeShellAbortRef.current = null
+                    setIsStreaming(false)
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([])
+                }
                 return
             }
 
@@ -770,6 +900,10 @@ export function useAgentSession({
     )
 
     const handleAbort = useCallback(() => {
+        if (activeShellAbortRef.current) {
+            activeShellAbortRef.current()
+            activeShellAbortRef.current = null
+        }
         if (isStreaming && agent) {
             agent.abort()
             setQueuedPrompts([])

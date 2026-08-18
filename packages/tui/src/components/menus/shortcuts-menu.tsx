@@ -10,6 +10,7 @@ const WINDOW_SIZE = 15
 
 export const SHORTCUTS = [
     { key: '/', desc: 'Open slash commands' },
+    { key: '! <cmd>', desc: 'Execute shell command directly (e.g. !git status)' },
     { key: 'ctrl+a', desc: 'Go to start' },
     { key: 'ctrl+e', desc: 'Go to end' },
     { key: 'ctrl+k', desc: 'Delete to end' },
