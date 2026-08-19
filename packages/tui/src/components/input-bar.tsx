@@ -1,3 +1,4 @@
+import { getWorkspaceIgnores } from '@december/shared'
 import fg from 'fast-glob'
 import { Box, Text, useInput } from 'ink'
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
@@ -98,17 +99,10 @@ export function InputBar({
     // Load workspace files lazily for @ mention autocomplete
     useEffect(() => {
         try {
+            const ignores = getWorkspaceIgnores()
             const files = fg.sync(['**/*'], {
                 dot: true,
-                ignore: [
-                    '**/node_modules/**',
-                    '**/.git/**',
-                    '**/dist/**',
-                    '**/.next/**',
-                    '**/build/**',
-                    '**/.turbo/**',
-                    '**/.december/**',
-                ],
+                ignore: ignores,
                 onlyFiles: true,
                 suppressErrors: true,
             })

@@ -18,7 +18,26 @@ describe('SettingsMainMenu Component (Unit)', () => {
         )
 
         expect(lastFrame()).toContain('Settings')
+        expect(lastFrame()).toContain('PathGuard Protection')
         expect(lastFrame()).toContain('MCP Servers')
         expect(lastFrame()).toContain('[Configure]')
+    })
+
+    it('renders Monorepo Scope when settingsScope is provided', () => {
+        const { lastFrame } = render(
+            <SettingsMainMenu
+                settingsNonWorkspace={false}
+                settingsToolPermission="always-ask"
+                settingsThinkingLevel="auto"
+                settingsSteeringMode="all"
+                settingsFollowUpMode="all"
+                settingsPathGuard={true}
+                settingsScope="packages/agent"
+                handleSettingsMainSelect={mock(() => {})}
+            />
+        )
+
+        expect(lastFrame()).toContain('Monorepo Scope')
+        expect(lastFrame()).toContain('packages/agent')
     })
 })

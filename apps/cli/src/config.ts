@@ -39,6 +39,8 @@ export interface DecemberConfig {
     thinkingLevel?: 'auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high'
     steeringMode?: 'all' | 'one-at-a-time'
     followUpMode?: 'all' | 'one-at-a-time'
+    pathGuard?: boolean
+    scope?: string
     authPriority?: 'byok' | 'december'
     versionCheckCache?: {
         latestVersion: string

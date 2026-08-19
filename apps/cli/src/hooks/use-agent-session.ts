@@ -1,4 +1,5 @@
 import { Agent, runAgentLoop } from '@december/agent'
+import { loadCustomCommands, interpolateCommandPrompt } from '@december/shared'
 import { useEffect, useCallback, useState, useRef } from 'react'
 
 import { loadConfig } from '../config'
@@ -754,6 +755,18 @@ export function useAgentSession({
                 return
             }
 
+            // Check if input matches a custom slash command from commands.json
+            if (text.trim().startsWith('/')) {
+                const rawTrimmed = text.trim()
+                const [firstToken, ...restArgs] = rawTrimmed.split(/\s+/)
+                const potentialCmd = firstToken.slice(1).toLowerCase()
+                const customCommands = loadCustomCommands()
+                const matchedCmd = customCommands.find((c) => c.name.toLowerCase() === potentialCmd)
+                if (matchedCmd) {
+                    text = interpolateCommandPrompt(matchedCmd.prompt, restArgs)
+                }
+            }
+
             if (!isAuthenticated) {
                 const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
                 const noticeMsg: Message = {
@@ -846,6 +859,8 @@ export function useAgentSession({
             setStaticMessages,
             setOllamaModels,
             setCurrentPlannedPrompt,
+            authMethod,
+            selectedProvider,
         ]
     )
 

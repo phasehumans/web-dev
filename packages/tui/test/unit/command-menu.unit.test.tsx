@@ -4,6 +4,10 @@ import React from 'react'
 
 import { CommandMenu } from '../../src/components/command-menu'
 import { COMMANDS } from '../../src/components/command-menu/commands'
+import {
+    getFilteredCommands,
+    getAllAvailableCommands,
+} from '../../src/components/command-menu/filter-commands'
 import { useCommandMenu } from '../../src/components/command-menu/use-command-menu'
 import { KeyboardLayerProvider } from '../../src/providers/keyboard-layer'
 
@@ -65,5 +69,13 @@ describe('CommandMenu Component (Unit)', () => {
 
         stdin.write('\t')
         expect(onAutocomplete).toHaveBeenCalledWith('/plan ')
+    })
+
+    it('filters commands including dynamically loaded custom commands', () => {
+        const all = getAllAvailableCommands()
+        expect(all.some((c: any) => c.name === 'plan')).toBe(true)
+
+        const filtered = getFilteredCommands('pl')
+        expect(filtered.some((c: any) => c.name === 'plan')).toBe(true)
     })
 })

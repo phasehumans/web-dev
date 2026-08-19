@@ -14,11 +14,17 @@ export function SettingsMainMenu(props: any) {
         settingsThinkingLevel,
         settingsSteeringMode,
         settingsFollowUpMode,
+        settingsPathGuard = true,
+        settingsScope,
         hasBothAuth,
         settingsAuthPriority,
         handleSettingsMainSelect,
     } = props
     const mainItems = [
+        {
+            label: `PathGuard Protection     [${settingsPathGuard !== false ? 'on' : 'off'}]`,
+            value: 'pathGuard',
+        },
         {
             label: `Non-Workspace Access     [${settingsNonWorkspace ? 'on' : 'off'}]`,
             value: 'nonWorkspaceAccess',
@@ -44,6 +50,13 @@ export function SettingsMainMenu(props: any) {
             value: 'mcpServers',
         },
     ]
+
+    if (settingsScope) {
+        mainItems.splice(2, 0, {
+            label: `Monorepo Scope           [${settingsScope}]`,
+            value: 'scope',
+        })
+    }
 
     if (hasBothAuth) {
         mainItems.unshift({

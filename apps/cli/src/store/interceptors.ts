@@ -3,9 +3,18 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import { Agent } from '@december/agent'
+import {
+    classifyOperation,
+    checkPathGuard,
+    extractTargetPaths,
+    isDestructiveCommand,
+    SessionWhitelistStore,
+} from '@december/shared'
 import { generateUnifiedDiff } from '@december/tools'
 
 import { loadConfig, saveConfig } from '../config'
+
+export const globalSessionWhitelist = new SessionWhitelistStore()
 
 async function computeToolCallDiff(toolCall: any): Promise<string | undefined> {
     if (toolCall.input?.diff) {
@@ -78,19 +87,32 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
     agent.operations.ui.requestPermission = async (toolCall: any) => {
         const config = await loadConfig()
 
-        const fileTools = [
-            'view_file',
-            'write_to_file',
-            'replace_file_content',
-            'multi_replace_file_content',
-        ]
-        if (fileTools.includes(toolCall.name)) {
-            const targetPath =
-                toolCall.input?.TargetFile ||
-                toolCall.input?.AbsolutePath ||
-                toolCall.input?.filePath ||
-                toolCall.input?.path
-            if (targetPath) {
+        // 1. PathGuard & Non-Workspace Access Checks
+        const targetPaths = extractTargetPaths(toolCall)
+        for (const targetPath of targetPaths) {
+            if (config.pathGuard !== false) {
+                const pg = checkPathGuard(targetPath)
+                if (pg.isSystemBlocked) {
+                    return {
+                        block: true,
+                        error: 'Access denied: PathGuard restricted system or credential path',
+                    }
+                }
+                if (pg.isSecretAccess) {
+                    toolCall.isSecretAccess = true
+                }
+            }
+
+            const fileTools = [
+                'view_file',
+                'write_to_file',
+                'replace_file_content',
+                'multi_replace_file_content',
+                'read_file',
+                'edit_file',
+                'edit_diff',
+            ]
+            if (fileTools.includes(toolCall.name)) {
                 const cwd = process.cwd()
                 const resolved = path.resolve(cwd, targetPath)
                 const relative = path.relative(cwd, resolved)
@@ -104,8 +126,8 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
             }
         }
 
-        // Check MCP auto-approval if the tool is a dynamic MCP tool
-        if (toolCall.name.includes('__')) {
+        // 2. Check MCP auto-approval if the tool is a dynamic MCP tool
+        if (toolCall.name?.includes('__')) {
             const [serverName, ...toolParts] = toolCall.name.split('__')
             const mcpToolName = toolParts.join('__')
             if (agent.mcpPool?.isAutoApproved(serverName, mcpToolName)) {
@@ -113,59 +135,76 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
             }
         }
 
-        if (config.toolPermission === 'always-proceed') return { block: false }
+        // 3. Classify operation
+        const classification = classifyOperation(toolCall)
 
-        const modifyingTools = [
-            'replace_file_content',
-            'multi_replace_file_content',
-            'write_to_file',
-            'write',
-            'edit_file',
-            'edit_diff',
-            'run_command',
-            'bash',
-        ]
-        const isMcpTool = toolCall.name.includes('__')
-        if (modifyingTools.includes(toolCall.name) || isMcpTool) {
-            let cmdString = toolCall.name
-            if (toolCall.name === 'run_command' || toolCall.name === 'bash') {
-                cmdString = toolCall.input?.CommandLine || toolCall.input?.command || toolCall.name
-            } else if (
+        // Safe operations bypass UI prompts entirely, unless accessing secret files
+        if (classification.tier === 'safe' && !toolCall.isSecretAccess) {
+            return { block: false }
+        }
+
+        // Build command string for whitelist matching
+        let cmdString = toolCall.name
+        if (toolCall.name === 'run_command' || toolCall.name === 'bash') {
+            cmdString = (toolCall.input?.CommandLine || toolCall.input?.command || toolCall.name)
+                .toString()
+                .trim()
+        } else if (
+            toolCall.input?.TargetFile ||
+            toolCall.input?.path ||
+            toolCall.input?.filePath ||
+            toolCall.input?.AbsolutePath
+        ) {
+            const target =
                 toolCall.input?.TargetFile ||
                 toolCall.input?.path ||
-                toolCall.input?.filePath
-            ) {
-                const target =
-                    toolCall.input?.TargetFile || toolCall.input?.path || toolCall.input?.filePath
-                cmdString = `${toolCall.name}: ${target}`
-            }
+                toolCall.input?.filePath ||
+                toolCall.input?.AbsolutePath
+            cmdString = `${toolCall.name}: ${target}`
+        }
+
+        // Modifying operations check always-proceed or session whitelist
+        if (classification.tier === 'modifying' && !toolCall.isSecretAccess) {
+            if (config.toolPermission === 'always-proceed') return { block: false }
 
             if (
+                globalSessionWhitelist.isApproved(cmdString) ||
+                globalSessionWhitelist.isApproved(toolCall.name) ||
                 config.approvedTools?.includes(cmdString) ||
-                config.approvedTools?.includes(toolCall.name)
+                config.approvedTools?.includes(toolCall.name) ||
+                config.approvedTools?.some((pattern) => {
+                    if (pattern.endsWith('*') && cmdString.startsWith(pattern.slice(0, -1))) {
+                        return true
+                    }
+                    return false
+                })
             ) {
                 return { block: false }
             }
+        }
 
-            try {
-                const diff = await computeToolCallDiff(toolCall)
-                if (diff) {
-                    toolCall.diff = diff
-                }
-            } catch {
-                // Intentionally swallowed: fallback to displaying toolSummary without diff preview
+        // 4. Interactive Confirmation Dialogue
+        try {
+            const diff = await computeToolCallDiff(toolCall)
+            if (diff) {
+                toolCall.diff = diff
             }
+        } catch {
+            // Intentionally swallowed: fallback to displaying toolSummary without diff preview
+        }
 
-            const result: any = await new Promise((resolve) => {
-                storeState.setAuthMode('tool_permission')
-                storeState.setPendingToolCall({ toolCall, resolve })
-            })
+        const result: any = await new Promise((resolve) => {
+            storeState.setAuthMode('tool_permission')
+            storeState.setPendingToolCall({ toolCall, resolve })
+        })
 
-            if (result?.block) {
-                return { block: true, error: result.error || 'User denied permission' }
-            }
+        if (result?.block) {
+            return { block: true, error: result.error || 'User denied permission' }
+        }
 
-            if (result?.allowAlways) {
+        if (result?.allowAlways) {
+            if (!isDestructiveCommand(cmdString)) {
+                globalSessionWhitelist.add(cmdString)
                 if (!config.approvedTools) config.approvedTools = []
                 if (!config.approvedTools.includes(cmdString)) {
                     config.approvedTools.push(cmdString)
@@ -174,35 +213,33 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
                     config.approvedTools.push(toolCall.name)
                 }
                 await saveConfig(config)
-                return { block: false }
             }
+            return { block: false }
+        }
 
-            if (result?.gitTrackedOnly) {
-                const targetPath =
-                    toolCall.input?.TargetFile ||
-                    toolCall.input?.AbsolutePath ||
-                    toolCall.input?.filePath ||
-                    toolCall.input?.path
-                if (targetPath) {
-                    const cwd = process.cwd()
-                    const resolved = path.resolve(cwd, targetPath)
-                    const relative = path.relative(cwd, resolved)
-                    try {
-                        execSync(`git ls-files --error-unmatch "${relative}"`, {
-                            cwd,
-                            stdio: 'pipe',
-                        })
-                        return { block: false }
-                    } catch {
-                        return {
-                            block: true,
-                            error: `Permission denied: ${relative} is not a git-tracked file.`,
-                        }
+        if (result?.gitTrackedOnly) {
+            const targetPath =
+                toolCall.input?.TargetFile ||
+                toolCall.input?.AbsolutePath ||
+                toolCall.input?.filePath ||
+                toolCall.input?.path
+            if (targetPath) {
+                const cwd = process.cwd()
+                const resolved = path.resolve(cwd, targetPath)
+                const relative = path.relative(cwd, resolved)
+                try {
+                    execSync(`git ls-files --error-unmatch "${relative}"`, {
+                        cwd,
+                        stdio: 'pipe',
+                    })
+                    return { block: false }
+                } catch {
+                    return {
+                        block: true,
+                        error: `Permission denied: ${relative} is not a git-tracked file.`,
                     }
                 }
             }
-
-            return { block: false }
         }
 
         return { block: false }

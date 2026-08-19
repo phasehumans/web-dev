@@ -31,6 +31,12 @@ describe('CLI Args Parser (Unit)', () => {
         expect(parseCliArgs(['init']).command).toBe('init')
     })
 
+    it('parses --scope and --cwd flags', () => {
+        const parsed = parseCliArgs(['--scope', 'packages/agent', '--cwd', '/tmp'])
+        expect(parsed.scope).toBe('packages/agent')
+        expect(parsed.cwd).toBe('/tmp')
+    })
+
     it('formats help text containing version number', () => {
         const help = getHelpText('0.3.9')
         expect(help).toContain('December CLI v0.3.9')

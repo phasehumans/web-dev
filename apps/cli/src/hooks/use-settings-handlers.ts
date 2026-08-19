@@ -29,6 +29,11 @@ export function useSettingsHandlers() {
         let updated = false
 
         switch (item.value) {
+            case 'pathGuard': {
+                config.pathGuard = !(config.pathGuard !== false)
+                updated = true
+                break
+            }
             case 'nonWorkspaceAccess':
                 config.nonWorkspaceAccess = !settingsNonWorkspace
                 setSettingsNonWorkspace(!settingsNonWorkspace)

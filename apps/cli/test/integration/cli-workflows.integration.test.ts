@@ -16,6 +16,8 @@ describe('CLI Commands & Workflows (Integration)', () => {
             await handleInitCommand()
 
             expect(fs.existsSync(path.join(tmpDir, 'AGENTS.md'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.decemberignore'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'commands.json'))).toBe(true)
             const rulesContent = fs.readFileSync(
                 path.join(tmpDir, '.december', 'rules.md'),
                 'utf-8'

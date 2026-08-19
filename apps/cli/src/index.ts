@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import path from 'node:path'
+
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
@@ -53,6 +55,10 @@ async function main() {
         process.exit(0)
     }
 
+    if (parsedArgs.cwd) {
+        process.chdir(parsedArgs.cwd)
+    }
+
     // Lazy load heavy dependencies ONLY when running an interactive session or headless task
     const [
         { AgentHarness },
@@ -65,7 +71,7 @@ async function main() {
         { getProviderConfig, loadConfig, getAuthStatus },
         { runHeadlessTask, suppressConsole },
         { useAgentSession },
-        { localOperations },
+        { localOperations, setActiveScopeDir },
         { instantiateProvider },
     ] = await Promise.all([
         import('@december/agent'),
@@ -81,6 +87,10 @@ async function main() {
         import('./local-operations'),
         import('./utils/provider-factory'),
     ])
+
+    if (parsedArgs.scope) {
+        setActiveScopeDir(parsedArgs.scope)
+    }
 
     const React = reactModule.default || reactModule
     const { render } = inkModule
@@ -137,7 +147,9 @@ async function main() {
         },
         sessionRepository,
         sessionId: parsedArgs.sessionId || sessionId,
-        workspaceDir: process.cwd(),
+        workspaceDir: parsedArgs.scope
+            ? path.resolve(process.cwd(), parsedArgs.scope)
+            : process.cwd(),
         hooks: {
             beforeToolCall: async (toolCall) => {
                 // Future integration: hook into the TUI to request user approval for destructive bash commands
