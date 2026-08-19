@@ -104,6 +104,86 @@ export async function archiveWorkspaceState(data: {
     }
 }
 
+export async function syncExtractedDirectoryToS3(data: {
+    sessionId: string
+    sourceDir: string
+}): Promise<string[]> {
+    const { sessionId, sourceDir } = data
+    const bucket = process.env.S3_BUCKET || 'december-storage'
+    const uploadedPaths: string[] = []
+
+    const walk = (dir: string, baseDir: string): string[] => {
+        let results: string[] = []
+        if (!fs.existsSync(dir)) return results
+        const list = fs.readdirSync(dir)
+        for (const file of list) {
+            const fullPath = `${dir}/${file}`
+            const stat = fs.statSync(fullPath)
+            if (stat && stat.isDirectory()) {
+                if (
+                    file === 'node_modules' ||
+                    file === '.git' ||
+                    file === '.next' ||
+                    file === 'dist' ||
+                    file === 'build'
+                ) {
+                    continue
+                }
+                results = results.concat(walk(fullPath, baseDir))
+            } else {
+                const relativePath = fullPath.substring(baseDir.length + 1)
+                results.push(relativePath)
+            }
+        }
+        return results
+    }
+
+    const relativeFiles = walk(sourceDir, sourceDir)
+
+    for (const relativePath of relativeFiles) {
+        const fullPath = `${sourceDir}/${relativePath}`
+        try {
+            const content = fs.readFileSync(fullPath)
+            const objectKey = `sessions/${sessionId}/workspace/${relativePath}`
+            const isJson = relativePath.endsWith('.json')
+            const isHtml = relativePath.endsWith('.html')
+            const isCss = relativePath.endsWith('.css')
+            const isJs =
+                relativePath.endsWith('.js') ||
+                relativePath.endsWith('.ts') ||
+                relativePath.endsWith('.tsx') ||
+                relativePath.endsWith('.jsx')
+
+            const contentType = isJson
+                ? 'application/json'
+                : isHtml
+                  ? 'text/html; charset=utf-8'
+                  : isCss
+                    ? 'text/css; charset=utf-8'
+                    : isJs
+                      ? 'application/javascript; charset=utf-8'
+                      : 'text/plain; charset=utf-8'
+
+            await s3.send(
+                new PutObjectCommand({
+                    Bucket: bucket,
+                    Key: objectKey,
+                    Body: content,
+                    ContentType: contentType,
+                })
+            )
+            uploadedPaths.push(relativePath)
+        } catch (err) {
+            console.error(
+                `[Workspace Sync] Failed to upload ${relativePath} to S3 for session ${sessionId}:`,
+                err
+            )
+        }
+    }
+
+    return uploadedPaths
+}
+
 export async function restoreWorkspaceState(data: {
     sessionId: string
     workspaceDir: string
@@ -112,10 +192,11 @@ export async function restoreWorkspaceState(data: {
 }): Promise<boolean> {
     const { sessionId, workspaceDir, objectKey, sandbox } = data
     const key = objectKey || `sessions/${sessionId}/workspace.tar.gz`
+    const bucket = process.env.S3_BUCKET || 'december-storage'
 
     try {
         const getCommand = new GetObjectCommand({
-            Bucket: process.env.S3_BUCKET || 'december-storage',
+            Bucket: bucket,
             Key: key,
         })
         const response = await s3.send(getCommand)
@@ -125,30 +206,63 @@ export async function restoreWorkspaceState(data: {
         const buffer = await response.Body.transformToByteArray()
         fs.writeFileSync(tempZipPath, buffer)
 
+        // 1. Restore in remote E2B sandbox via direct presigned S3 download with cURL (avoids ARG_MAX buffer overflows)
         if (sandbox && sandbox.commands && typeof sandbox.commands.run === 'function') {
-            const base64Str = Buffer.from(buffer).toString('base64')
-            await sandbox.commands
-                .run(
-                    `echo "${base64Str}" | base64 -d > /tmp/restore.tar.gz && mkdir -p /workspace && tar -xzf /tmp/restore.tar.gz -C /workspace && rm -f /tmp/restore.tar.gz`,
-                    { cwd: '/workspace' }
-                )
-                .catch((e: any) => {
-                    console.error(
-                        `[Workspace] Remote sandbox restoration warning for session ${sessionId}:`,
-                        e
+            try {
+                const downloadUrl = await getSignedUrl(s3, getCommand, { expiresIn: 900 })
+                await sandbox.commands
+                    .run(
+                        `curl -sSL "${downloadUrl}" -o /tmp/restore.tar.gz && mkdir -p /workspace && tar -xzf /tmp/restore.tar.gz -C /workspace && rm -f /tmp/restore.tar.gz`,
+                        { cwd: '/workspace' }
                     )
-                })
+                    .catch((e: any) => {
+                        console.error(
+                            `[Workspace] Remote sandbox restoration warning for session ${sessionId}:`,
+                            e
+                        )
+                    })
+            } catch (urlErr) {
+                console.error(
+                    `[Workspace] Failed to generate presigned download URL for session ${sessionId}:`,
+                    urlErr
+                )
+            }
         }
 
-        if (!fs.existsSync(workspaceDir)) {
-            fs.mkdirSync(workspaceDir, { recursive: true })
-        }
+        // 2. Extract locally and sync uncompressed files to S3 so web file explorer renders immediately
+        const tempExtractDir = `/tmp/extracted-${sessionId}-${Date.now()}`
+        fs.mkdirSync(tempExtractDir, { recursive: true })
 
         try {
-            execSync(`tar -xzf "${tempZipPath}" -C "${workspaceDir}"`)
+            execSync(`tar -xzf "${tempZipPath}" -C "${tempExtractDir}"`)
+
+            if (workspaceDir && workspaceDir !== '/workspace') {
+                if (!fs.existsSync(workspaceDir)) {
+                    fs.mkdirSync(workspaceDir, { recursive: true })
+                }
+                execSync(`cp -r "${tempExtractDir}"/* "${workspaceDir}"/ 2>/dev/null || true`)
+            }
+
+            // Sync uncompressed files to sessions/${sessionId}/workspace/ in S3
+            await syncExtractedDirectoryToS3({
+                sessionId,
+                sourceDir: tempExtractDir,
+            }).catch((syncErr) => {
+                console.error(
+                    `[Workspace] Failed to sync unpacked workspace files to S3 for session ${sessionId}:`,
+                    syncErr
+                )
+            })
         } catch (e) {
             console.error(`[Workspace] Failed to extract archive for session ${sessionId}:`, e)
         } finally {
+            if (fs.existsSync(tempExtractDir)) {
+                try {
+                    fs.rmSync(tempExtractDir, { recursive: true, force: true })
+                } catch {
+                    // Intentionally swallowed: cleanup fallback
+                }
+            }
             if (fs.existsSync(tempZipPath)) {
                 try {
                     fs.unlinkSync(tempZipPath)

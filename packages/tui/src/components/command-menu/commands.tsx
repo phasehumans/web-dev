@@ -1,9 +1,9 @@
-import { execSync, exec } from 'child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
 import { writeToClipboard } from '../../utils/clipboard'
+import { createWorkspaceArchive } from '../../utils/handoff'
 
 import type { Command } from './types'
 
@@ -88,6 +88,7 @@ export const COMMANDS: Command[] = [
         description: 'Hand off a task to a remote December session (cloud)',
         value: '/handoff',
         action: async (ctx) => {
+            const archivePath = '.december-handoff.tar.gz'
             try {
                 const configPath = path.join(os.homedir(), '.config', 'december', 'config.json')
                 let config: any = {}
@@ -96,7 +97,7 @@ export const COMMANDS: Command[] = [
                         config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
                     }
                 } catch {
-                    // Ignore unreadable config file
+                    // Intentionally swallowed: unreadable config file fallback
                 }
 
                 if (!config.decemberToken) {
@@ -109,39 +110,7 @@ export const COMMANDS: Command[] = [
 
                 ctx.toast.show({ variant: 'info', message: 'Zipping workspace...' })
 
-                const archivePath = '.december-handoff.tar.gz'
-                const excludes = [
-                    '--exclude=node_modules',
-                    '--exclude=.git',
-                    `--exclude=${archivePath}`,
-                ]
-                try {
-                    if (fs.existsSync('.gitignore')) {
-                        const lines = fs.readFileSync('.gitignore', 'utf8').split('\n')
-                        for (const line of lines) {
-                            const t = line.trim()
-                            if (t && !t.startsWith('#'))
-                                excludes.push(`--exclude=${t.endsWith('/') ? t.slice(0, -1) : t}`)
-                        }
-                    }
-                    if (fs.existsSync('.decemberignore')) {
-                        const lines = fs.readFileSync('.decemberignore', 'utf8').split('\n')
-                        for (const line of lines) {
-                            const t = line.trim()
-                            if (t && !t.startsWith('#'))
-                                excludes.push(`--exclude=${t.endsWith('/') ? t.slice(0, -1) : t}`)
-                        }
-                    }
-                } catch {
-                    // Ignore unreadable ignore files
-                }
-
-                const excludeArgs = excludes.join(' ')
-                try {
-                    execSync(`tar -czf ${archivePath} ${excludeArgs} .`, { stdio: 'ignore' })
-                } catch (e: any) {
-                    if (e.status !== 1) throw e
-                }
+                await createWorkspaceArchive(archivePath)
 
                 ctx.toast.show({ variant: 'info', message: 'Requesting upload URL...' })
 
@@ -155,7 +124,7 @@ export const COMMANDS: Command[] = [
 
                 ctx.toast.show({ variant: 'info', message: 'Uploading to MinIO...' })
 
-                const fileData = fs.readFileSync(archivePath)
+                const fileData = await fs.promises.readFile(archivePath)
                 const uploadRes = await fetch(uploadUrl, {
                     method: 'PUT',
                     body: fileData,
@@ -178,12 +147,13 @@ export const COMMANDS: Command[] = [
                 })
                 if (!sessionRes.ok) throw new Error(await sessionRes.text())
 
-                fs.unlinkSync(archivePath)
+                await fs.promises.unlink(archivePath).catch(() => {})
 
                 ctx.toast.show({ variant: 'success', message: 'Handoff complete! Exiting in 3s.' })
 
                 setTimeout(() => ctx.exit(), 3000)
             } catch (e: any) {
+                await fs.promises.unlink(archivePath).catch(() => {})
                 ctx.toast.show({ variant: 'error', message: `Handoff failed: ${e.message}` })
             }
         },

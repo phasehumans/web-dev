@@ -1,9 +1,13 @@
 import { prisma } from '@december/database'
 
+import { reconcileCliMessages } from './cli.utils'
+
 import type { CreateCliSession } from './cli.types'
 
 const createSession = async (data: CreateCliSession) => {
     const { userId, title, messages, minioPrefix } = data
+    const reconciledMessages = reconcileCliMessages(messages)
+
     return prisma.session.create({
         data: {
             userId,
@@ -11,16 +15,11 @@ const createSession = async (data: CreateCliSession) => {
             type: 'CLI',
             minioPrefix,
             messages: {
-                create: messages.map((msg: any, i: number) => ({
-                    role:
-                        msg.role === 'assistant'
-                            ? 'ASSISTANT'
-                            : msg.role === 'system'
-                              ? 'SYSTEM'
-                              : 'USER',
-                    content:
-                        typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
-                    sequence: i,
+                create: reconciledMessages.map((msg) => ({
+                    role: msg.role,
+                    content: msg.content,
+                    blocks: msg.blocks,
+                    sequence: msg.sequence,
                 })),
             },
         },
