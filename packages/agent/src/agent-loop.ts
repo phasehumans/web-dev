@@ -4,6 +4,7 @@ import { safeParseJson } from '@december/shared'
 import pRetry, { AbortError } from 'p-retry'
 
 import { Agent } from './agent'
+import { createRequestLogEntry, appendTurnLog } from './utils/request-logger'
 import { trimToolSchema } from './utils/schema-trimmer'
 
 import type { AgentEvent, AgentMessage, ToolCall, ToolResult } from '@december/shared'
@@ -262,7 +263,8 @@ async function runInnerLoop(agent: Agent, eventQueue: AsyncQueue<AgentEvent>, si
         const { assistantMessage, toolCalls, error } = await streamAssistantResponse(
             agent,
             eventQueue,
-            signal
+            signal,
+            turnCount
         )
 
         if (error || signal.aborted) {
@@ -303,16 +305,27 @@ async function runInnerLoop(agent: Agent, eventQueue: AsyncQueue<AgentEvent>, si
 async function streamAssistantResponse(
     agent: Agent,
     eventQueue: AsyncQueue<AgentEvent>,
-    signal: AbortSignal
+    signal: AbortSignal,
+    turnCount: number = 1
 ): Promise<{ assistantMessage: string; toolCalls: ToolCall[]; error?: string }> {
     let assistantMessage = ''
     let toolCalls: ToolCall[] = []
+    let thinkingText = ''
+    let lastUsage:
+        | { promptTokens?: number; completionTokens?: number; totalTokens?: number }
+        | undefined = undefined
+    let loggedTools: any[] = []
+    let loggedMessages: any[] = []
+    let loggedModel = agent.modelOptions?.model
+    const startTime = Date.now()
 
     try {
         const retryPromise = pRetry(
             async () => {
                 assistantMessage = ''
                 toolCalls = []
+                thinkingText = ''
+                lastUsage = undefined
                 if (signal.aborted) throw new AbortError(new Error('Aborted'))
 
                 eventQueue.push({ type: 'AgentStatus', message: 'Preparing...' })
@@ -357,6 +370,10 @@ async function streamAssistantResponse(
                     thinkingLevel: effectiveThinkingLevel,
                 }
 
+                loggedTools = activeTools
+                loggedMessages = providerMessages
+                loggedModel = (providerModelOptions as any).model || agent.modelOptions?.model
+
                 eventQueue.push({ type: 'AgentStatus', message: 'Thinking...' })
 
                 const generator = agent.llm.stream(
@@ -378,6 +395,7 @@ async function streamAssistantResponse(
                         assistantMessage += chunk.text
                         eventQueue.push({ type: 'StreamChunk', content: chunk.text })
                     } else if (chunk.type === 'thinking_delta') {
+                        thinkingText += chunk.text
                         eventQueue.push({ type: 'ThinkingChunk', content: chunk.text })
                     } else if (chunk.type === 'tool_call_delta') {
                         if (!activeToolCalls.has(chunk.id)) {
@@ -394,6 +412,11 @@ async function streamAssistantResponse(
                     } else if (chunk.type === 'tool_call') {
                         activeToolCalls.set(chunk.toolCall.id, chunk.toolCall)
                     } else if (chunk.type === 'usage') {
+                        lastUsage = {
+                            promptTokens: chunk.promptTokens,
+                            completionTokens: chunk.completionTokens,
+                            totalTokens: (chunk.promptTokens || 0) + (chunk.completionTokens || 0),
+                        }
                         eventQueue.push({
                             type: 'AgentUsage',
                             promptTokens: chunk.promptTokens,
@@ -467,10 +490,49 @@ async function streamAssistantResponse(
         assistantMessage = result.assistantMessage
         toolCalls = result.toolCalls
 
+        const durationMs = Date.now() - startTime
+        const logEntry = createRequestLogEntry({
+            turn: turnCount,
+            sessionId: agent.sessionId,
+            model: loggedModel,
+            systemPrompt: agent.systemPrompt,
+            tools: loggedTools.length > 0 ? loggedTools : Array.from(agent.tools.values()),
+            messages:
+                loggedMessages.length > 0 ? loggedMessages : agent.convertToLlm(agent.messages),
+            assistantMessage,
+            thinking: thinkingText,
+            toolCalls,
+            usage: lastUsage,
+            durationMs,
+        })
+        await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
+            // Intentionally swallowed: Request logging must not block or crash agent loop
+        })
+
         eventQueue.push({ type: 'AgentStatus', message: '' }) // clear status on success
         return { assistantMessage, toolCalls }
     } catch (error: any) {
         let errorMsg = formatError(error)
+
+        const durationMs = Date.now() - startTime
+        const logEntry = createRequestLogEntry({
+            turn: turnCount,
+            sessionId: agent.sessionId,
+            model: loggedModel,
+            systemPrompt: agent.systemPrompt,
+            tools: loggedTools.length > 0 ? loggedTools : Array.from(agent.tools.values()),
+            messages:
+                loggedMessages.length > 0 ? loggedMessages : agent.convertToLlm(agent.messages),
+            assistantMessage,
+            thinking: thinkingText,
+            toolCalls,
+            usage: lastUsage,
+            durationMs,
+            error: errorMsg,
+        })
+        await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
+            // Intentionally swallowed: Request logging must not block or crash agent loop
+        })
 
         if (signal.aborted || (error.name === 'AbortError' && errorMsg === 'Aborted')) {
             eventQueue.push({ type: 'AgentInterrupt' })

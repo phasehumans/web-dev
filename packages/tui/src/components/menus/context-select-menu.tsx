@@ -1,4 +1,5 @@
 import { getModelContextWindow } from '@december/providers'
+import { decomposeContext } from '@december/shared'
 import { Box, Text } from 'ink'
 import React from 'react'
 
@@ -14,28 +15,23 @@ export function ContextSelectMenu(props: any) {
     const { agent } = props
     const activeModelId = agent?.modelOptions?.model || 'gemini-3.6-flash'
     const currentModelName = getModelLabel(activeModelId)
-    const maxTokens = getModelContextWindow(activeModelId)
+    const maxTokens = getModelContextWindow(activeModelId) || 1000000
 
-    const userTokens = Math.round(
-        (agent?.messages || [])
-            .filter((m: any) => m.role === 'user')
-            .reduce((acc: number, m: any) => acc + (m.content?.length || 0) / 4, 0)
-    )
-    const agentTokens = Math.round(
-        (agent?.messages || [])
-            .filter((m: any) => m.role === 'assistant')
-            .reduce((acc: number, m: any) => acc + (m.content?.length || 0) / 4, 0)
-    )
-    const toolTokens = Math.round(
-        (agent?.messages || []).reduce(
-            (acc: number, m: any) =>
-                acc + (m.toolCalls ? JSON.stringify(m.toolCalls).length / 4 : 0),
-            0
-        )
-    )
-    const sysTokens = Math.round((agent?.systemPrompt?.length || 0) / 4)
-    const totalTokens = userTokens + agentTokens + toolTokens + sysTokens
-    const freeTokens = Math.max(0, maxTokens - totalTokens)
+    const decomp = decomposeContext({
+        agent,
+        model: activeModelId,
+        maxTokens,
+    })
+
+    const basePromptTokens = decomp.basePrompt.tokens
+    const rulesTokens = decomp.rules.tokens
+    const skillsTokens = decomp.skills.tokens
+    const builtInToolsTokens = decomp.builtInTools.tokens
+    const dynamicMcpToolsTokens = decomp.dynamicMcpTools.tokens
+    const conversationHistoryTokens = decomp.conversationHistory.totalTokens
+    const totalTokens = decomp.totalTokens
+    const freeTokens = decomp.freeTokens
+    const cacheableStaticPrefixTokens = decomp.cacheableStaticPrefixTokens
 
     const pct = (n: number) => ((n / maxTokens) * 100).toFixed(1)
     const formatK = (n: number) => (n > 1000 ? (n / 1000).toFixed(1) + 'k' : n.toString())
@@ -53,10 +49,21 @@ export function ContextSelectMenu(props: any) {
             filled++
         }
     }
-    addSquares(Math.round((userTokens / maxTokens) * totalSquares), '●', THEME.colors.brand)
-    addSquares(Math.round((agentTokens / maxTokens) * totalSquares), '●', THEME.colors.success)
-    addSquares(Math.round((toolTokens / maxTokens) * totalSquares), '●', THEME.colors.warning)
-    addSquares(Math.round((sysTokens / maxTokens) * totalSquares), '●', THEME.colors.muted)
+
+    addSquares(Math.round((basePromptTokens / maxTokens) * totalSquares), '●', THEME.colors.muted)
+    addSquares(Math.round((rulesTokens / maxTokens) * totalSquares), '●', THEME.colors.warning)
+    addSquares(Math.round((skillsTokens / maxTokens) * totalSquares), '●', THEME.colors.error)
+    addSquares(Math.round((builtInToolsTokens / maxTokens) * totalSquares), '●', THEME.colors.brand)
+    addSquares(
+        Math.round((dynamicMcpToolsTokens / maxTokens) * totalSquares),
+        '●',
+        THEME.colors.dim
+    )
+    addSquares(
+        Math.round((conversationHistoryTokens / maxTokens) * totalSquares),
+        '●',
+        THEME.colors.success
+    )
 
     while (filled < totalSquares) {
         squares.push(
@@ -100,27 +107,45 @@ export function ContextSelectMenu(props: any) {
                     </Box>
                     <Box flexDirection="column">
                         <Box gap={1}>
-                            <Text color={THEME.colors.brand}>●</Text>
+                            <Text color={THEME.colors.muted}>●</Text>
                             <Text color={THEME.colors.muted}>
-                                User messages: {formatK(userTokens)} tokens ({pct(userTokens)}%)
-                            </Text>
-                        </Box>
-                        <Box gap={1}>
-                            <Text color={THEME.colors.success}>●</Text>
-                            <Text color={THEME.colors.muted}>
-                                Agent responses: {formatK(agentTokens)} tokens ({pct(agentTokens)}%)
+                                Base System Prompt: {formatK(basePromptTokens)} tokens (
+                                {pct(basePromptTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
                             <Text color={THEME.colors.warning}>●</Text>
                             <Text color={THEME.colors.muted}>
-                                Tool calls: {formatK(toolTokens)} tokens ({pct(toolTokens)}%)
+                                Project Rules (AGENTS.md / rules.md): {formatK(rulesTokens)} tokens
+                                ({pct(rulesTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color={THEME.colors.muted}>●</Text>
+                            <Text color={THEME.colors.error}>●</Text>
                             <Text color={THEME.colors.muted}>
-                                System prompt: {formatK(sysTokens)} tokens ({pct(sysTokens)}%)
+                                Workspace Skills (skills.md): {formatK(skillsTokens)} tokens (
+                                {pct(skillsTokens)}%)
+                            </Text>
+                        </Box>
+                        <Box gap={1}>
+                            <Text color={THEME.colors.brand}>●</Text>
+                            <Text color={THEME.colors.muted}>
+                                Built-in Tool Schemas: {formatK(builtInToolsTokens)} tokens (
+                                {pct(builtInToolsTokens)}%)
+                            </Text>
+                        </Box>
+                        <Box gap={1}>
+                            <Text color={THEME.colors.dim}>●</Text>
+                            <Text color={THEME.colors.muted}>
+                                Dynamic MCP Tools: {formatK(dynamicMcpToolsTokens)} tokens (
+                                {pct(dynamicMcpToolsTokens)}%)
+                            </Text>
+                        </Box>
+                        <Box gap={1}>
+                            <Text color={THEME.colors.success}>●</Text>
+                            <Text color={THEME.colors.muted}>
+                                Conversation History: {formatK(conversationHistoryTokens)} tokens (
+                                {pct(conversationHistoryTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
@@ -129,6 +154,13 @@ export function ContextSelectMenu(props: any) {
                                 Free space: {formatK(freeTokens)} ({pct(freeTokens)}%)
                             </Text>
                         </Box>
+                    </Box>
+                    <Box marginTop={1} gap={1}>
+                        <Text color={THEME.colors.brand}>★</Text>
+                        <Text color={THEME.colors.muted}>
+                            Cacheable static prefix: {formatK(cacheableStaticPrefixTokens)} tokens (
+                            {pct(cacheableStaticPrefixTokens)}%)
+                        </Text>
                     </Box>
                 </Box>
             </Box>

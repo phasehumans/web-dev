@@ -18,6 +18,7 @@ export interface AgentConfig {
     thinkingLevel?: 'auto' | 'off' | 'minimal' | 'low' | 'medium' | 'high'
     steeringMode?: 'all' | 'one-at-a-time'
     followUpMode?: 'all' | 'one-at-a-time'
+    workspaceDir?: string
 }
 
 class PendingMessageQueue {
@@ -66,6 +67,7 @@ export class Agent {
     public activeAbortController?: AbortController
     public convertToLlm: (messages: AgentMessage[]) => Message[]
     public mcpPool?: any
+    public workspaceDir: string
 
     constructor(config: AgentConfig) {
         this.llm = config.llm
@@ -81,6 +83,7 @@ export class Agent {
         this.steeringQueue = new PendingMessageQueue(config.steeringMode || 'all')
         this.followUpQueue = new PendingMessageQueue(config.followUpMode || 'all')
         this.conversation = new ConversationManager()
+        this.workspaceDir = config.workspaceDir || process.cwd()
 
         for (const tool of config.tools) {
             this.tools.set(tool.name, tool)
