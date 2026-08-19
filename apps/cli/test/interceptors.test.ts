@@ -160,5 +160,50 @@ describe('setupAgentInterceptors', () => {
             const result = await mockAgent.operations.ui.requestPermission(toolCall)
             expect(result).toEqual({ block: false })
         })
+
+        it('allows auto-approved MCP tools without prompting', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({
+                toolPermission: 'always-ask',
+            })
+            mockAgent.mcpPool = {
+                isAutoApproved: vi.fn(
+                    (server, tool) => server === 'github' && tool === 'list_repos'
+                ),
+            }
+
+            const toolCall = {
+                name: 'github__list_repos',
+                input: {},
+            }
+            const result = await mockAgent.operations.ui.requestPermission(toolCall)
+            expect(result).toEqual({ block: false })
+            expect(mockStoreState.setAuthMode).not.toHaveBeenCalled()
+        })
+
+        it('prompts user for non-autoapproved MCP tools when confirmation mode is enabled', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({
+                toolPermission: 'always-ask',
+            })
+            mockAgent.mcpPool = {
+                isAutoApproved: vi.fn(() => false),
+            }
+
+            const toolCall = {
+                name: 'github__delete_repo',
+                input: { repo: 'phasehumans/december' },
+            }
+            const p = mockAgent.operations.ui.requestPermission(toolCall)
+
+            await new Promise((r) => setTimeout(r, 10))
+
+            expect(mockStoreState.setAuthMode).toHaveBeenCalledWith('tool_permission')
+            expect(mockStoreState.setPendingToolCall).toHaveBeenCalledWith(
+                expect.objectContaining({ toolCall })
+            )
+
+            const { resolve } = mockStoreState.setPendingToolCall.mock.calls[0][0]
+            resolve({ block: false })
+            await expect(p).resolves.toEqual({ block: false })
+        })
     })
 })

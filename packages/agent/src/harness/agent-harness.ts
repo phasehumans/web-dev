@@ -1,9 +1,13 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { McpClientPool } from '@december/tools'
+
 import { Agent } from '../agent'
 
 import type { AgentConfig } from '../agent'
+import type { Tool } from '@december/shared'
+import type { McpConfigFile } from '@december/tools'
 
 export const DEFAULT_BASE_SYSTEM_PROMPT = `You are December, an autonomous, expert coding agent. You help the user by exploring codebases, executing terminal commands, editing files, and resolving complex tasks.
 
@@ -34,11 +38,15 @@ You operate across two environments seamlessly: locally via a terminal CLI, and 
 export interface HarnessConfig extends Omit<AgentConfig, 'systemPrompt'> {
     baseSystemPrompt?: string
     workspaceDir: string
+    mcpPool?: McpClientPool
+    mcpConfig?: McpConfigFile
+    skipMcp?: boolean
 }
 
 export class AgentHarness {
     private agent: Agent
     private config: HarnessConfig
+    private mcpPool: McpClientPool
 
     constructor(config: HarnessConfig) {
         this.config = config
@@ -74,6 +82,36 @@ export class AgentHarness {
             ...config,
             systemPrompt: finalPrompt,
         })
+
+        // 5. attach mcp pool
+        this.mcpPool =
+            config.mcpPool ||
+            new McpClientPool({
+                workspaceDir: config.workspaceDir,
+                operations: config.operations,
+            })
+        this.agent.mcpPool = this.mcpPool
+    }
+
+    public async initMCP(config?: McpConfigFile): Promise<Tool[]> {
+        const serverInfos = await this.mcpPool.initialize(config || this.config.mcpConfig)
+        const tools = this.mcpPool.getTools()
+        for (const tool of tools) {
+            this.agent.registerTool(tool)
+        }
+        return tools
+    }
+
+    public getMcpPool(): McpClientPool {
+        return this.mcpPool
+    }
+
+    public static async create(config: HarnessConfig): Promise<AgentHarness> {
+        const harness = new AgentHarness(config)
+        if (!config.skipMcp) {
+            await harness.initMCP(config.mcpConfig)
+        }
+        return harness
     }
 
     private discoverSkills(): string[] {

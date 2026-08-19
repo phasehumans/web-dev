@@ -39,6 +39,10 @@ export function SettingsMainMenu(props: any) {
             label: `Follow-Up Mode           [${settingsFollowUpMode}]`,
             value: 'followUpMode',
         },
+        {
+            label: `MCP Servers              [Configure]`,
+            value: 'mcpServers',
+        },
     ]
 
     if (hasBothAuth) {

@@ -152,18 +152,20 @@ async function main() {
 
     if (parsedArgs.prompt) {
         await agent.loadContext()
+        await harness.initMCP().catch(() => {})
         console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
         const result = await runHeadlessTask(parsedArgs.prompt, { agent })
         process.exit(result.success ? 0 : 1)
     }
 
-    // Non-blocking session context loading during TUI mounting
+    // Non-blocking MCP initialization and session context loading during TUI mounting
+    harness.initMCP().catch(() => {})
     agent.loadContext().catch((err: any) => {
         // Log silently or ignore context load errors on fresh sessions
     })
 
     function AppWrapper(props: any) {
-        const [latestVersion, setLatestVersion] = React.useState<string | undefined>(undefined)
+        const [latestVersion, setLatestVersion] = React.useState(undefined as string | undefined)
         React.useEffect(() => {
             import('./utils/version-check')
                 .then(({ checkForLatestVersion }) => {

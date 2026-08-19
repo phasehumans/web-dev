@@ -117,6 +117,21 @@ export async function runHeadlessTask(
         if (isNonInteractive) {
             return { block: false }
         }
+
+        if (toolCall.name.includes('__')) {
+            const [serverName, ...toolParts] = toolCall.name.split('__')
+            const mcpToolName = toolParts.join('__')
+            if (agent.mcpPool?.isAutoApproved(serverName, mcpToolName)) {
+                return { block: false }
+            }
+            const answer = await promptUser(`\nExecute MCP tool ${toolCall.name}? (y/n): `)
+            if (answer.toLowerCase().startsWith('y')) {
+                return { block: false }
+            } else {
+                return { block: true, reason: 'User denied execution in UI.' }
+            }
+        }
+
         if (
             ['replace_file_content', 'multi_replace_file_content', 'run_command'].includes(
                 toolCall.name

@@ -48,6 +48,13 @@ describe('CommandMenu Component (Unit)', () => {
         expect(planCmd?.value).toBe('/plan')
     })
 
+    it('registers /mcp slash command', () => {
+        const mcpCmd = COMMANDS.find((c) => c.name === 'mcp')
+        expect(mcpCmd).toBeDefined()
+        expect(mcpCmd?.value).toBe('/mcp')
+        expect(mcpCmd?.description).toContain('Model Context Protocol')
+    })
+
     it('autocompletes highlighted command on Tab keypress', () => {
         const onAutocomplete = mock()
         const { stdin } = render(

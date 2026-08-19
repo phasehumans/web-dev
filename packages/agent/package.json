@@ -24,6 +24,7 @@
         "@anthropic-ai/sdk": "0.109.0",
         "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
+        "@december/tools": "workspace:*",
         "@types/uuid": "11.0.0",
         "openai": "6.45.0",
         "p-retry": "8.0.0",

@@ -65,6 +65,7 @@ export class Agent {
     public followUpQueue: PendingMessageQueue
     public activeAbortController?: AbortController
     public convertToLlm: (messages: AgentMessage[]) => Message[]
+    public mcpPool?: any
 
     constructor(config: AgentConfig) {
         this.llm = config.llm
@@ -116,6 +117,14 @@ export class Agent {
 
     public followUp(message: AgentMessage) {
         this.followUpQueue.push(message)
+    }
+
+    public registerTool(tool: Tool): void {
+        this.tools.set(tool.name, tool)
+    }
+
+    public unregisterTool(toolName: string): void {
+        this.tools.delete(toolName)
     }
 
     public abort() {

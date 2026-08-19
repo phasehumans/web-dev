@@ -24,13 +24,7 @@
             "@december/tui": ["./packages/tui/src/index.tsx"],
             "@december/shared": ["./packages/shared/src/index.ts"],
             "@december/tools": ["./packages/tools/src/index.ts"],
-            "@december/providers": ["./packages/providers/src/index.ts"],
-            "react": ["./packages/tui/node_modules/react"],
-            "react/*": ["./packages/tui/node_modules/react/*"],
-            "react/jsx-runtime": ["./packages/tui/node_modules/react/jsx-runtime.js"],
-            "react/jsx-dev-runtime": ["./packages/tui/node_modules/react/jsx-dev-runtime.js"],
-            "ink": ["./packages/tui/node_modules/ink"],
-            "ink-testing-library": ["./packages/tui/node_modules/ink-testing-library"]
+            "@december/providers": ["./packages/providers/src/index.ts"]
         },
 
         "noUnusedLocals": false,

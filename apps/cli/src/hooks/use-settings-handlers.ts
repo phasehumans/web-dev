@@ -116,6 +116,10 @@ export function useSettingsHandlers() {
                 }
                 break
             }
+            case 'mcpServers': {
+                setAuthMode('mcp_manager')
+                break
+            }
             case 'back':
                 setAuthMode('none')
                 break

@@ -29,7 +29,6 @@ async function computeToolCallDiff(toolCall: any): Promise<string | undefined> {
         oldContent = await fs.readFile(resolved, 'utf-8')
     } catch {
         // Intentionally swallowed: file does not exist yet (new file creation)
-        oldContent = ''
     }
 
     if (toolCall.name === 'write_to_file' || toolCall.name === 'write') {
@@ -105,6 +104,15 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
             }
         }
 
+        // Check MCP auto-approval if the tool is a dynamic MCP tool
+        if (toolCall.name.includes('__')) {
+            const [serverName, ...toolParts] = toolCall.name.split('__')
+            const mcpToolName = toolParts.join('__')
+            if (agent.mcpPool?.isAutoApproved(serverName, mcpToolName)) {
+                return { block: false }
+            }
+        }
+
         if (config.toolPermission === 'always-proceed') return { block: false }
 
         const modifyingTools = [
@@ -117,7 +125,8 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
             'run_command',
             'bash',
         ]
-        if (modifyingTools.includes(toolCall.name)) {
+        const isMcpTool = toolCall.name.includes('__')
+        if (modifyingTools.includes(toolCall.name) || isMcpTool) {
             let cmdString = toolCall.name
             if (toolCall.name === 'run_command' || toolCall.name === 'bash') {
                 cmdString = toolCall.input?.CommandLine || toolCall.input?.command || toolCall.name

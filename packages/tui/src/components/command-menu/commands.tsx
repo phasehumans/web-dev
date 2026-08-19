@@ -255,6 +255,14 @@ export const COMMANDS: Command[] = [
         },
     },
     {
+        name: 'mcp',
+        description: 'Manage Model Context Protocol (MCP) servers and tools',
+        value: '/mcp',
+        action: (ctx) => {
+            // forwarded to chat screen
+        },
+    },
+    {
         name: 'model',
         description: 'Select a model',
         value: '/model',

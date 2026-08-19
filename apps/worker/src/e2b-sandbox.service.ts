@@ -603,6 +603,7 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
 
     const streamGenerator = (async function* () {
         try {
+            await harness.initMCP().catch(() => {})
             console.log(
                 `[AGENT EXECUTION] Agent loop started for session '${sessionId}'. Running AgentHarness loop...`
             )

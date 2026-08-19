@@ -586,6 +586,11 @@ export function useAgentSession({
                 return
             }
 
+            if (text.trim() === '/mcp') {
+                setAuthMode('mcp_manager')
+                return
+            }
+
             if (text.trim() === '/model') {
                 const { getAuthStatus } = await import('../config')
                 const status = await getAuthStatus()
@@ -893,6 +898,46 @@ export function useAgentSession({
 
     const handleContextSelect = () => {}
 
+    const handleToggleMcpServer = async (serverName: string) => {
+        try {
+            const { loadMcpConfig, saveMcpConfig } = await import('@december/tools')
+            const config = await loadMcpConfig({ workspaceDir: process.cwd() })
+            if (config.mcpServers?.[serverName]) {
+                config.mcpServers[serverName].disabled = !config.mcpServers[serverName].disabled
+                await saveMcpConfig({ config, scope: 'workspace', workspaceDir: process.cwd() })
+                if (agent.mcpPool) {
+                    await agent.mcpPool.reload(config)
+                    for (const tool of agent.mcpPool.getTools()) {
+                        agent.registerTool(tool)
+                    }
+                }
+                addToast(
+                    `MCP server '${serverName}' ${config.mcpServers[serverName].disabled ? 'disabled' : 'enabled'}`
+                )
+                setStaticKey((k: number) => k + 1)
+            }
+        } catch (err: any) {
+            addToast(`Failed to toggle MCP server: ${err.message}`, 'error')
+        }
+    }
+
+    const handleReloadMcp = async () => {
+        try {
+            if (agent.mcpPool) {
+                const { tools } = await agent.mcpPool.reload()
+                for (const tool of tools) {
+                    agent.registerTool(tool)
+                }
+                addToast('MCP servers and tools reloaded successfully')
+                setStaticKey((k: number) => k + 1)
+            } else {
+                addToast('MCP pool not initialized', 'error')
+            }
+        } catch (err: any) {
+            addToast(`Failed to reload MCP servers: ${err.message}`, 'error')
+        }
+    }
+
     return {
         currentPlannedPrompt,
         setCurrentPlannedPrompt,
@@ -1001,5 +1046,7 @@ export function useAgentSession({
         handleOllamaProceed,
         pendingToolCall,
         setPendingToolCall,
+        handleToggleMcpServer,
+        handleReloadMcp,
     }
 }
