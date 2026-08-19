@@ -201,6 +201,12 @@ export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLM
                 thinkingConfig = { includeThoughts: true }
             }
 
+            const DEFAULT_GEMINI_MAX_OUTPUT_TOKENS = 65536
+            let maxOutputTokens = modelOptions?.max_tokens || DEFAULT_GEMINI_MAX_OUTPUT_TOKENS
+            if (thinkingConfig?.thinkingBudget && thinkingConfig.thinkingBudget > 0) {
+                maxOutputTokens = Math.max(maxOutputTokens, thinkingConfig.thinkingBudget + 16384)
+            }
+
             const responseStream = await (client.models.generateContentStream as any)({
                 model: resolveGeminiModel(modelOptions?.model),
                 contents: geminiMessages,
@@ -210,7 +216,7 @@ export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLM
                         : undefined,
                     tools: geminiTools,
                     temperature: modelOptions?.temperature,
-                    maxOutputTokens: modelOptions?.max_tokens,
+                    maxOutputTokens,
                     thinkingConfig,
                 },
                 abortSignal: signal,
@@ -225,7 +231,11 @@ export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLM
                     totalCompletionTokens =
                         chunk.usageMetadata.candidatesTokenCount || totalCompletionTokens
                 }
-                const parts = chunk.candidates?.[0]?.content?.parts || []
+                const candidate = chunk.candidates?.[0]
+                if (candidate?.finishReason === 'MAX_TOKENS') {
+                    console.warn('[gemini provider] candidate reached MAX_TOKENS output limit')
+                }
+                const parts = candidate?.content?.parts || []
                 let chunkText = ''
 
                 for (const part of parts) {

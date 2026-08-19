@@ -88,8 +88,15 @@ export function GlobalShortcuts(session: any) {
             return
         }
 
+        if (authMode === 'session_select') {
+            return
+        }
+
         if (authMode !== 'none') {
             if (key.escape && authMode !== 'login') {
+                if (session.isStreaming) {
+                    return
+                }
                 if (authMode === 'grill_question') {
                     setGrillQuestions([])
                     setCurrentGrillIndex(0)
@@ -97,6 +104,13 @@ export function GlobalShortcuts(session: any) {
                     setGrillPrompt(null)
                     setCustomInputMode(false)
                     setGrillMode(false)
+                } else if (authMode === 'byok_key') {
+                    if (session.setAuthError) {
+                        session.setAuthError(null)
+                    }
+                    if (session.setApiKey) {
+                        session.setApiKey('')
+                    }
                 }
                 setAuthMode('none')
             }

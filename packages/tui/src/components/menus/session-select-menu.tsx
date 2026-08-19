@@ -24,6 +24,7 @@ export function SessionSelectMenu(props: any) {
         setAuthMode,
     } = props
 
+    const [isSearching, setIsSearching] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const columns = useTerminalColumns()
     const SESSION_PAGE_SIZE = 10
@@ -48,6 +49,9 @@ export function SessionSelectMenu(props: any) {
 
     const pageRef = useRef(sessionPage)
     pageRef.current = sessionPage
+
+    const isSearchingRef = useRef(isSearching)
+    isSearchingRef.current = isSearching
 
     const timeAgo = (date: Date | string) => {
         if (!date) return ''
@@ -81,9 +85,84 @@ export function SessionSelectMenu(props: any) {
     }
 
     useInput((input, key) => {
-        if (sessionRenameMode) return
+        // 1. Rename Mode
+        if (sessionRenameMode) {
+            if (key.escape) {
+                setSessionRenameMode(false)
+                setSessionNewName('')
+            }
+            return
+        }
 
-        if (key.upArrow) {
+        // 2. Search Mode (Vim style / search active)
+        if (isSearchingRef.current) {
+            if (key.escape) {
+                setIsSearching(false)
+                return
+            }
+            if (key.downArrow || key.return) {
+                setIsSearching(false)
+                return
+            }
+            return
+        }
+
+        // 3. Normal / Navigation Mode (Vim style single-key hotkeys)
+        if (input === '/' || input === 's') {
+            setIsSearching(true)
+            return
+        }
+
+        if (input === 'r' || input === 'R') {
+            const absIndex = startIndex + selectedIdxRef.current
+            const session = filteredSessions[absIndex]
+            if (session) {
+                setSessionNewName(session.id)
+                setSessionRenameMode(true)
+            }
+            return
+        }
+
+        if (input === 'd' || input === 'D') {
+            const absIndex = startIndex + selectedIdxRef.current
+            const session = filteredSessions[absIndex]
+            if (session) {
+                if (sessionRepository?.deleteSession) {
+                    sessionRepository.deleteSession(session.id).catch(() => {
+                        // Intentionally swallowed: ignore session deletion failures
+                    })
+                }
+                const nextData = sessionsData.filter((s: any) => s.id !== session.id)
+                setSessionsData(nextData)
+
+                const nextFiltered = searchQuery.trim()
+                    ? nextData.filter((s: any) => {
+                          const q = searchQuery.toLowerCase()
+                          return (
+                              (s.id || '').toLowerCase().includes(q) ||
+                              (s.preview || '').toLowerCase().includes(q)
+                          )
+                      })
+                    : nextData
+
+                const nextTotalItems = nextFiltered.length
+                const nextMaxPage = Math.max(0, Math.ceil(nextTotalItems / SESSION_PAGE_SIZE) - 1)
+                const newPage = Math.min(pageRef.current, nextMaxPage)
+                setSessionPage(newPage)
+
+                const newStartIndex = newPage * SESSION_PAGE_SIZE
+                const newVisibleCount = nextFiltered.slice(
+                    newStartIndex,
+                    newStartIndex + SESSION_PAGE_SIZE
+                ).length
+                if (selectedIdxRef.current >= newVisibleCount) {
+                    setSessionSelectedIndex(Math.max(0, newVisibleCount - 1))
+                }
+            }
+            return
+        }
+
+        if (key.upArrow || input === 'k') {
             if (selectedIdxRef.current > 0) {
                 setSessionSelectedIndex(selectedIdxRef.current - 1)
             } else if (pageRef.current > 0) {
@@ -92,7 +171,7 @@ export function SessionSelectMenu(props: any) {
             }
             return
         }
-        if (key.downArrow) {
+        if (key.downArrow || input === 'j') {
             if (selectedIdxRef.current < visibleItems.length - 1) {
                 setSessionSelectedIndex(selectedIdxRef.current + 1)
             } else if (pageRef.current < maxPage) {
@@ -101,14 +180,14 @@ export function SessionSelectMenu(props: any) {
             }
             return
         }
-        if (key.leftArrow) {
+        if (key.leftArrow || input === 'h') {
             if (pageRef.current > 0) {
                 setSessionPage(pageRef.current - 1)
                 setSessionSelectedIndex(0)
             }
             return
         }
-        if (key.rightArrow) {
+        if (key.rightArrow || input === 'l') {
             if (pageRef.current < maxPage) {
                 setSessionPage(pageRef.current + 1)
                 setSessionSelectedIndex(0)
@@ -124,6 +203,12 @@ export function SessionSelectMenu(props: any) {
             return
         }
         if (key.escape) {
+            if (searchQuery) {
+                setSearchQuery('')
+                setSessionPage(0)
+                setSessionSelectedIndex(0)
+                return
+            }
             if (setAuthMode) setAuthMode('none')
             return
         }
@@ -135,6 +220,26 @@ export function SessionSelectMenu(props: any) {
     const timeWidth = 14
     const availableWidth = Math.max(20, columns - paddingWidth - indicatorWidth - timeWidth - 4)
 
+    const footerItems = sessionRenameMode
+        ? [
+              { key: 'enter', label: 'Save Name' },
+              { key: 'esc', label: 'Cancel' },
+          ]
+        : isSearching
+          ? [
+                { key: 'enter / ↓', label: 'Focus List' },
+                { key: 'esc', label: 'Exit Search' },
+            ]
+          : [
+                { key: '↑/↓', label: 'Navigate' },
+                { key: '←/→', label: 'Page' },
+                { key: 'enter', label: 'Select' },
+                { key: '/', label: 'Search' },
+                { key: 'r', label: 'Rename' },
+                { key: 'd', label: 'Delete' },
+                { key: 'esc', label: 'Cancel' },
+            ]
+
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1} flexDirection="column" gap={1}>
@@ -142,17 +247,33 @@ export function SessionSelectMenu(props: any) {
                     Sessions
                 </Text>
                 <Box flexDirection="row" gap={1}>
-                    <Text color={THEME.colors.brand}>Search:</Text>
-                    <TextInput
-                        value={searchQuery}
-                        onChange={(val) => {
-                            setSearchQuery(val)
-                            setSessionPage(0)
-                            setSessionSelectedIndex(0)
-                        }}
-                        placeholder="Filter by title or ID..."
-                        focus={!sessionRenameMode}
-                    />
+                    <Text color={isSearching ? THEME.colors.brand : THEME.colors.muted}>
+                        Search:
+                    </Text>
+                    {isSearching ? (
+                        <TextInput
+                            value={searchQuery}
+                            onChange={(val) => {
+                                setSearchQuery(val)
+                                setSessionPage(0)
+                                setSessionSelectedIndex(0)
+                            }}
+                            onSubmit={() => setIsSearching(false)}
+                            placeholder="Filter by title or ID..."
+                            focus={true}
+                        />
+                    ) : (
+                        <Text color={searchQuery ? THEME.colors.text : THEME.colors.muted}>
+                            {searchQuery ? (
+                                <Text>
+                                    {searchQuery}{' '}
+                                    <Text color={THEME.colors.muted}>[/ to filter]</Text>
+                                </Text>
+                            ) : (
+                                '[/ to filter]'
+                            )}
+                        </Text>
+                    )}
                 </Box>
             </Box>
 
@@ -223,16 +344,7 @@ export function SessionSelectMenu(props: any) {
                 </Box>
             )}
 
-            <MenuFooter
-                items={[
-                    { key: '↑/↓', label: 'Navigate' },
-                    { key: '←/→', label: 'Page' },
-                    { key: 'enter', label: 'Select' },
-                    { key: 'r', label: 'Rename' },
-                    { key: 'd', label: 'Delete' },
-                    { key: 'esc', label: 'Cancel' },
-                ]}
-            />
+            <MenuFooter items={footerItems} />
         </Box>
     )
 }

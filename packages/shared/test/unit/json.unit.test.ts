@@ -36,4 +36,11 @@ describe('safeParseJson (Unit)', () => {
             safeParseJson('invalid json string')
         }).toThrow('Failed to parse JSON tool arguments')
     })
+
+    test('throws actionable truncation error when string is unterminated due to token limit', () => {
+        const truncatedJson = '{"filePath": "/code/index.html", "content": "<div>incomplete'
+        expect(() => {
+            safeParseJson(truncatedJson)
+        }).toThrow('Tool arguments JSON was truncated mid-generation')
+    })
 })

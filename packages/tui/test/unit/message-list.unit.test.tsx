@@ -94,4 +94,107 @@ describe('MessageList Component (Unit)', () => {
         expect(frame).toContain('git status')
         expect(frame).toContain('On branch main')
     })
+
+    it('renders consecutive assistant tool call messages compactly without gaps', () => {
+        const staticMessages = [
+            {
+                id: 'cmd-1',
+                role: 'assistant' as const,
+                blocks: [
+                    {
+                        type: 'command' as const,
+                        command: 'ListDir(/root)',
+                        output: 'ok',
+                        status: 'success' as const,
+                    },
+                ],
+            },
+            {
+                id: 'cmd-2',
+                role: 'assistant' as const,
+                blocks: [
+                    {
+                        type: 'command' as const,
+                        command: 'Create(/root/index.html)',
+                        output: 'ok',
+                        status: 'success' as const,
+                    },
+                ],
+            },
+            {
+                id: 'cmd-3',
+                role: 'assistant' as const,
+                blocks: [
+                    {
+                        type: 'command' as const,
+                        command: 'Bash(npm test)',
+                        output: 'ok',
+                        status: 'success' as const,
+                    },
+                ],
+            },
+        ]
+
+        const { lastFrame } = renderWithProviders(
+            <MessageList
+                staticKey={0}
+                staticMessages={staticMessages}
+                activeMessages={[]}
+                isAuthenticated={true}
+                expandCommands={false}
+            />
+        )
+
+        const frame = lastFrame() || ''
+        const rawLines = frame.split('\n')
+        const firstIdx = rawLines.findIndex((l) => l.includes('ListDir'))
+        const slice = rawLines.slice(firstIdx, firstIdx + 3)
+        expect(slice.every((l) => l.trim().length > 0)).toBe(true)
+        expect(slice.length).toBe(3)
+    })
+
+    it('locks spacing contract: multi-turn conversation maintains 1-line margin between turns', () => {
+        const staticMessages = [
+            { id: 'u1', role: 'user' as const, text: 'First user prompt' },
+            {
+                id: 'b1',
+                role: 'assistant' as const,
+                blocks: [{ type: 'text' as const, content: 'First assistant response' }],
+            },
+            { id: 'u2', role: 'user' as const, text: 'Second user prompt' },
+            {
+                id: 'b2',
+                role: 'assistant' as const,
+                blocks: [{ type: 'text' as const, content: 'Second assistant response' }],
+            },
+        ]
+
+        const { lastFrame } = renderWithProviders(
+            <MessageList
+                staticKey={0}
+                staticMessages={staticMessages}
+                activeMessages={[]}
+                isAuthenticated={true}
+            />
+        )
+
+        const frame = lastFrame() || ''
+        const rawLines = frame.split('\n')
+        const u1Idx = rawLines.findIndex((l) => l.includes('First user prompt'))
+        const b1Idx = rawLines.findIndex((l) => l.includes('First assistant response'))
+        const u2Idx = rawLines.findIndex((l) => l.includes('Second user prompt'))
+        const b2Idx = rawLines.findIndex((l) => l.includes('Second assistant response'))
+
+        // User 1 to Bot 1: exactly 1 blank line
+        expect(b1Idx).toBe(u1Idx + 2)
+        expect(rawLines[u1Idx + 1]?.trim()).toBe('')
+
+        // Bot 1 to User 2: exactly 1 blank line
+        expect(u2Idx).toBe(b1Idx + 2)
+        expect(rawLines[b1Idx + 1]?.trim()).toBe('')
+
+        // User 2 to Bot 2: exactly 1 blank line
+        expect(b2Idx).toBe(u2Idx + 2)
+        expect(rawLines[u2Idx + 1]?.trim()).toBe('')
+    })
 })

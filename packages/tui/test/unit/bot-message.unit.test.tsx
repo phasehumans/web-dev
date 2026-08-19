@@ -133,4 +133,119 @@ describe('BotMessage Component (Unit)', () => {
         expect(frame).toContain('ctrl+o to expand')
         expect(frame).not.toContain('-old code')
     })
+
+    it('renders multiple command blocks compactly without gaps between them', () => {
+        const blocks: any[] = [
+            { type: 'text', content: 'Working...' },
+            {
+                type: 'command',
+                command: 'ListDir(/home/chaitanya/code/december)',
+                status: 'success',
+                output: 'dir1\ndir2',
+            },
+            { type: 'text', content: 'Working...' },
+            {
+                type: 'command',
+                command: 'Create(/home/chaitanya/code/december/lion/index.html)',
+                status: 'success',
+                output: '+html',
+            },
+            { type: 'text', content: 'Working...' },
+            {
+                type: 'command',
+                command: 'Create(/home/chaitanya/code/december/lion/styles.css)',
+                status: 'success',
+                output: '+css',
+            },
+            { type: 'text', content: 'Working...' },
+            {
+                type: 'command',
+                command: 'Create(/home/chaitanya/code/december/lion/script.js)',
+                status: 'success',
+                output: '+js',
+            },
+            { type: 'text', content: 'Working...' },
+            {
+                type: 'command',
+                command: 'Bash(node -c lion/script.js)',
+                status: 'success',
+                output: 'ok',
+            },
+        ]
+        const { lastFrame } = render(<BotMessage blocks={blocks} expandCommands={false} />)
+        const frame = lastFrame() || ''
+        const lines = frame.split('\n').filter((l) => l.includes('ctrl+o to expand'))
+        expect(lines.length).toBe(5)
+        // Verify there are no empty lines between the 5 command lines
+        const rawLines = frame.split('\n')
+        const firstIdx = rawLines.findIndex((l) => l.includes('ListDir'))
+        const slice = rawLines.slice(firstIdx, firstIdx + 5)
+        expect(slice.every((l) => l.trim().length > 0)).toBe(true)
+    })
+
+    it('locks spacing contract: tool calls followed by text response has exactly 1 blank line margin', () => {
+        const blocks: any[] = [
+            {
+                type: 'command',
+                command: 'ListDir(/home/chaitanya/code/december)',
+                status: 'success',
+                output: 'ok',
+            },
+            {
+                type: 'text',
+                content: 'I have finished listing the directory.',
+            },
+        ]
+        const { lastFrame } = render(<BotMessage blocks={blocks} expandCommands={false} />)
+        const frame = lastFrame() || ''
+        const rawLines = frame.split('\n')
+        const cmdIdx = rawLines.findIndex((l) => l.includes('ListDir'))
+        const textIdx = rawLines.findIndex((l) => l.includes('I have finished'))
+        // Exactly 1 blank line between command and text (textIdx should be cmdIdx + 2)
+        expect(textIdx).toBe(cmdIdx + 2)
+        expect(rawLines[cmdIdx + 1]?.trim()).toBe('')
+    })
+
+    it('locks spacing contract: thoughts followed by tool calls has 0 blank lines (adjacent lines)', () => {
+        const blocks: any[] = [
+            {
+                type: 'thinking',
+                content: 'Planning next steps',
+            },
+            {
+                type: 'command',
+                command: 'ListDir(/home/chaitanya/code/december)',
+                status: 'success',
+                output: 'ok',
+            },
+        ]
+        const { lastFrame } = render(<BotMessage blocks={blocks} expandCommands={false} />)
+        const frame = lastFrame() || ''
+        const rawLines = frame.split('\n')
+        const thoughtIdx = rawLines.findIndex((l) => l.includes('Thoughts'))
+        const cmdIdx = rawLines.findIndex((l) => l.includes('ListDir'))
+        // 0 blank lines: cmdIdx is directly thoughtIdx + 1
+        expect(cmdIdx).toBe(thoughtIdx + 1)
+    })
+
+    it('locks spacing contract: thoughts followed directly by text response has exactly 1 blank line', () => {
+        const blocks: any[] = [
+            {
+                type: 'thinking',
+                content: 'Planning next steps',
+            },
+            {
+                type: 'text',
+                content: 'Here is the answer without tools.',
+            },
+        ]
+        const { lastFrame } = render(<BotMessage blocks={blocks} expandCommands={false} />)
+        const frame = lastFrame() || ''
+        const rawLines = frame.split('\n')
+        const thoughtIdx = rawLines.findIndex((l) => l.includes('Thoughts'))
+        const textIdx = rawLines.findIndex((l) => l.includes('Here is the answer'))
+        // Exactly 1 blank line between thoughts summary and text response
+        expect(textIdx).toBe(thoughtIdx + 2)
+        expect(rawLines[thoughtIdx + 1]?.trim()).toBe('')
+    })
 })

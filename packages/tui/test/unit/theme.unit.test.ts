@@ -5,7 +5,7 @@ import { THEME, COLORS } from '../../src/theme'
 describe('THEME Contract (Unit)', () => {
     it('exports required semantic color tokens', () => {
         expect(THEME.colors.brand).toBe('#89B4F8')
-        expect(THEME.colors.text).toBe('#FFFFFF')
+        expect(THEME.colors.text).toBe('white')
         expect(THEME.colors.muted).toBe('#AAAAAA')
         expect(THEME.colors.dim).toBe('#666666')
         expect(THEME.colors.border).toBe('#333333')

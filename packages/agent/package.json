@@ -7,9 +7,12 @@
     "private": true,
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "test": "bun test test/unit test/integration",
+        "test": "bun test test/unit test/integration test/load test/benchmark test/smoke",
         "test:unit": "bun test test/unit",
-        "test:integration": "bun test test/integration"
+        "test:integration": "bun test test/integration",
+        "test:load": "bun test test/load",
+        "test:benchmark": "bun test test/benchmark",
+        "test:smoke": "bun test test/smoke"
     },
     "devDependencies": {
         "@types/bun": "latest"

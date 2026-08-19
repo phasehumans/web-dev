@@ -5,6 +5,7 @@ import { setupAgentInterceptors } from '../src/store/interceptors'
 
 vi.mock('../src/config', () => ({
     loadConfig: vi.fn(),
+    saveConfig: vi.fn(),
 }))
 
 describe('setupAgentInterceptors', () => {
@@ -32,7 +33,6 @@ describe('setupAgentInterceptors', () => {
         expect(mockStoreState.setPendingQuestions).toHaveBeenCalledWith(
             expect.objectContaining({ questions: ['q1', 'q2'] })
         )
-        // ensure it resolves correctly if we simulate resolve
         const { resolve } = mockStoreState.setPendingQuestions.mock.calls[0][0]
         resolve('answer')
         await expect(p).resolves.toBe('answer')
@@ -76,8 +76,7 @@ describe('setupAgentInterceptors', () => {
             const tc = { name: 'replace_file_content', input: { TargetFile: 'a.txt' } }
             const p = mockAgent.operations.ui.requestPermission(tc)
 
-            // Should flush microtasks to let config load
-            await Promise.resolve()
+            await new Promise((r) => setTimeout(r, 10))
 
             expect(mockStoreState.setAuthMode).toHaveBeenCalledWith('tool_permission')
             expect(mockStoreState.setPendingToolCall).toHaveBeenCalledWith(
@@ -87,6 +86,40 @@ describe('setupAgentInterceptors', () => {
             const { resolve } = mockStoreState.setPendingToolCall.mock.calls[0][0]
             resolve({ block: false })
             await expect(p).resolves.toEqual({ block: false })
+        })
+
+        it('persists session approval when allowAlways is selected', async () => {
+            const configObj: any = { approvedTools: [] }
+            ;(configModule.loadConfig as any).mockResolvedValue(configObj)
+            const tc = { name: 'write_to_file', input: { TargetFile: 'new.ts' } }
+            const p = mockAgent.operations.ui.requestPermission(tc)
+
+            await new Promise((r) => setTimeout(r, 10))
+
+            const { resolve } = mockStoreState.setPendingToolCall.mock.calls[0][0]
+            resolve({ block: false, allowAlways: true })
+            await expect(p).resolves.toEqual({ block: false })
+
+            expect(configModule.saveConfig).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    approvedTools: expect.arrayContaining([
+                        'write_to_file',
+                        'write_to_file: new.ts',
+                    ]),
+                })
+            )
+        })
+
+        it('returns block=true when user denies permission', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({} as any)
+            const tc = { name: 'run_command', input: { CommandLine: 'rm -rf /' } }
+            const p = mockAgent.operations.ui.requestPermission(tc)
+
+            await new Promise((r) => setTimeout(r, 10))
+
+            const { resolve } = mockStoreState.setPendingToolCall.mock.calls[0][0]
+            resolve({ block: true, error: 'User denied permission' })
+            await expect(p).resolves.toEqual({ block: true, error: 'User denied permission' })
         })
 
         it('blocks file operations outside process.cwd() when nonWorkspaceAccess is false', async () => {

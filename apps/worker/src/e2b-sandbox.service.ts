@@ -16,6 +16,8 @@ import {
     GrepSearchTool,
     LsTool,
     ManageTaskTool,
+    MCPTool,
+    PythonReplTool,
     ReadFileTool,
     WebSearchTool,
     WriteFileTool,
@@ -581,6 +583,8 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         ManageTaskTool,
         BrowserTool,
         WebSearchTool,
+        PythonReplTool,
+        MCPTool,
     ]
 
     const harness = new AgentHarness({

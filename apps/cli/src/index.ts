@@ -123,6 +123,8 @@ async function main() {
             toolsModule.ManageTaskTool,
             toolsModule.BrowserTool,
             toolsModule.WebSearchTool,
+            toolsModule.PythonReplTool,
+            toolsModule.MCPTool,
         ],
         operations: localOperations,
         modelOptions: {

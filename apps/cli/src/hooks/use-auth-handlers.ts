@@ -247,12 +247,16 @@ export function useAuthHandlers(
             )
         } else {
             setSelectedProvider(item.value)
+            setAuthError(null)
             setAuthMode('byok_key')
         }
     }
 
     const handleKeySubmit = async (key: string) => {
         if (isStreaming) return
+        const trimmedKey = key.trim()
+        if (!trimmedKey) return
+
         setIsStreaming(true)
         setAuthError(null)
 
@@ -260,7 +264,7 @@ export function useAuthHandlers(
         let testModel: string | undefined
 
         try {
-            testProvider = instantiateProvider(selectedProvider, key)
+            testProvider = instantiateProvider(selectedProvider, trimmedKey)
             const providerModels = getProviderModels(selectedProvider)
             if (providerModels && providerModels.length > 0) {
                 testModel = providerModels[0].value
@@ -287,7 +291,7 @@ export function useAuthHandlers(
             }
 
             const config = await loadConfig()
-            config.providers[selectedProvider] = key
+            config.providers[selectedProvider] = trimmedKey
             config.activeProvider = selectedProvider
             config.activeModel = testModel
             await saveConfig(config)
@@ -328,7 +332,7 @@ export function useAuthHandlers(
                 isLowCredit
             ) {
                 const config = await loadConfig()
-                config.providers[selectedProvider] = key
+                config.providers[selectedProvider] = trimmedKey
                 config.activeProvider = selectedProvider
                 config.activeModel = testModel
                 await saveConfig(config)
@@ -409,16 +413,6 @@ export function useAuthHandlers(
                 }
 
                 setAuthError(errorText)
-                setAuthMode('none')
-                setApiKey('')
-                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
-                setActiveMessages([
-                    {
-                        id: getNextMsgId(),
-                        role: 'error',
-                        text: errorText,
-                    },
-                ])
                 addToast(errorText, 'error')
             }
         } finally {
@@ -517,11 +511,16 @@ export function useAuthHandlers(
                     }
 
                     if (blocks.length > 0) {
-                        resumedMessages.push({
-                            id: getNextMsgId(),
-                            role: 'assistant',
-                            blocks,
-                        })
+                        const lastResumed = resumedMessages[resumedMessages.length - 1]
+                        if (lastResumed && lastResumed.role === 'assistant' && lastResumed.blocks) {
+                            lastResumed.blocks.push(...blocks)
+                        } else {
+                            resumedMessages.push({
+                                id: getNextMsgId(),
+                                role: 'assistant',
+                                blocks,
+                            })
+                        }
                     }
                 }
             }

@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState, useRef } from 'react'
 import { loadConfig } from '../config'
 import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
 import { useCliStore } from '../store'
+import { setupAgentInterceptors } from '../store/interceptors'
 import { taskManager } from '../task-manager'
 import { startDirectCommand } from '../utils/direct-shell'
 import { parseErrorMessage } from '../utils/error-parser'
@@ -182,41 +183,13 @@ export function useAgentSession({
 
     useEffect(() => {
         if (agent) {
-            if (!agent.operations) agent.operations = {} as any
-            if (!agent.operations.ui) agent.operations.ui = {} as any
-            agent.operations.ui!.askQuestion = (questions) => {
-                return new Promise((resolve) => {
-                    setAuthMode('ask_question')
-                    setPendingQuestions({ questions, resolve })
-                })
-            }
-
-            agent.operations.ui!.requestPermission = async (toolCall: any) => {
-                if (
-                    ['replace_file_content', 'multi_replace_file_content', 'run_command'].includes(
-                        toolCall.name
-                    )
-                ) {
-                    const answer = await new Promise<string>((resolve) => {
-                        setAuthMode('ask_question')
-                        setPendingQuestions({
-                            questions: [
-                                {
-                                    question: `Execute ${toolCall.name}? (Diff is previewed in chat)`,
-                                    options: ['Yes (Approve)', 'No (Deny)'],
-                                },
-                            ],
-                            resolve,
-                        })
-                    })
-                    if (answer !== 'Yes (Approve)') {
-                        return { block: true, reason: 'User denied execution in UI.' }
-                    }
-                }
-                return { block: false }
-            }
+            setupAgentInterceptors(agent, {
+                setAuthMode,
+                setPendingQuestions,
+                setPendingToolCall,
+            })
         }
-    }, [agent, setAuthMode, setPendingQuestions])
+    }, [agent, setAuthMode, setPendingQuestions, setPendingToolCall])
 
     const activeShellAbortRef = useRef<(() => void) | null>(null)
 

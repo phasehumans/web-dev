@@ -49,6 +49,18 @@ describe('formatters', () => {
             )
         })
 
+        test('formats python_repl and mcp', () => {
+            expect(
+                getToolSummary(
+                    'python_repl',
+                    JSON.stringify({ code: 'import numpy as np\nprint(1)' })
+                )
+            ).toBe('PythonRepl(import numpy as np)')
+            expect(
+                getToolSummary('mcp', JSON.stringify({ server: 'github', tool: 'search_repos' }))
+            ).toBe('MCP(github:search_repos)')
+        })
+
         test('handles unknown tools', () => {
             expect(getToolSummary('unknown_tool', JSON.stringify({ foo: 'bar' }))).toBe(
                 'unknown_tool()'

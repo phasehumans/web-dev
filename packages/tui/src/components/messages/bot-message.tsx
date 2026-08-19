@@ -34,7 +34,6 @@ type Props = {
     blocks: MessageBlock[]
     usage?: { promptTokens: number; completionTokens: number }
     expandCommands?: boolean
-    hasTopMargin?: boolean
 }
 
 function CollapsibleThought({
@@ -167,19 +166,14 @@ function CollapsibleCommandOutput({
     )
 }
 
-export const BotMessage = React.memo(function BotMessage({
-    blocks,
-    usage,
-    expandCommands,
-    hasTopMargin = false,
-}: Props) {
+export const BotMessage = React.memo(function BotMessage({ blocks, usage, expandCommands }: Props) {
     return (
         <Box
             flexDirection="column"
             paddingX={THEME.padding.paddingX}
             paddingY={0}
             gap={0}
-            marginTop={hasTopMargin ? 1 : 0}
+            marginTop={0}
         >
             {blocks.map((block, idx) => {
                 let prevBlock: MessageBlock | null = null

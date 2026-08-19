@@ -187,4 +187,55 @@ describe('Gemini Provider Adapter (Unit)', () => {
             includeThoughts: true,
         })
     })
+
+    it('configures maxOutputTokens defaulting to 65536 and scales with thinkingBudget', async () => {
+        let capturedConfig: any = null
+
+        const mockClient: any = {
+            models: {
+                generateContentStream: async (config: any) => {
+                    capturedConfig = config
+                    return (async function* () {
+                        yield {
+                            candidates: [
+                                {
+                                    finishReason: 'MAX_TOKENS',
+                                    content: { parts: [{ text: 'truncated' }] },
+                                },
+                            ],
+                        }
+                    })()
+                },
+            },
+        }
+
+        const provider = geminiProvider('test-key', mockClient)
+
+        // 1. Default maxOutputTokens when unspecified
+        const stream1 = provider.stream([{ role: 'user', content: 'hi' }])
+        for await (const _ of stream1) {
+            // consume
+        }
+        expect(capturedConfig.config.maxOutputTokens).toBe(65536)
+
+        // 2. Explicit max_tokens preserved
+        const stream2 = provider.stream([{ role: 'user', content: 'hi' }], [], undefined, {
+            max_tokens: 8192,
+        })
+        for await (const _ of stream2) {
+            // consume
+        }
+        expect(capturedConfig.config.maxOutputTokens).toBe(8192)
+
+        // 3. High thinkingLevel scales maxOutputTokens headroom
+        const stream3 = provider.stream([{ role: 'user', content: 'hi' }], [], undefined, {
+            thinkingLevel: 'high',
+            max_tokens: 4096,
+        })
+        for await (const _ of stream3) {
+            // consume
+        }
+        // high budget = 8192, budget + 16384 = 24576
+        expect(capturedConfig.config.maxOutputTokens).toBe(24576)
+    })
 })
