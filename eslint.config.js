@@ -26,6 +26,7 @@ export default tseslint.config(
             '**/runtime/**',
             '**/infra/**',
             '**/.december-imports/**',
+            '**/.december/logs/**',
             '**/packages/database/src/generated/**',
             '**/generated/**',
         ],

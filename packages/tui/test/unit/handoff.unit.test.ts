@@ -21,6 +21,7 @@ describe('Handoff Secret Redaction and Archiving Utilities (Unit)', () => {
         expect(MANDATORY_HANDOFF_EXCLUDES).toContain('.ssh/**')
         expect(MANDATORY_HANDOFF_EXCLUDES).toContain('.npmrc')
         expect(MANDATORY_HANDOFF_EXCLUDES).toContain('.december/config.json')
+        expect(MANDATORY_HANDOFF_EXCLUDES).toContain('.december/logs')
         expect(MANDATORY_HANDOFF_EXCLUDES).toContain('node_modules/**')
     })
 

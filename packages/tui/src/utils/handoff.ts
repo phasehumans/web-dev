@@ -30,6 +30,8 @@ export const MANDATORY_HANDOFF_EXCLUDES = [
     '.npmrc',
     '.pypirc',
     '.december/config.json',
+    '.december/logs',
+    '.december/logs/**',
     '*.log',
     '.next',
     '.next/**',
