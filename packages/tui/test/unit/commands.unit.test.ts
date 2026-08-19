@@ -65,11 +65,18 @@ describe('/init command action', () => {
             initCmd?.action(mockContext)
 
             const agentsFile = path.join(tmpDir, 'AGENTS.md')
+            const ignoreFile = path.join(tmpDir, '.decemberignore')
             const rulesFile = path.join(tmpDir, '.december', 'rules.md')
             const skillsFile = path.join(tmpDir, '.december', 'skills.md')
+            const commandsFile = path.join(tmpDir, '.december', 'commands.json')
+            const settingsFile = path.join(tmpDir, '.december', 'settings.json')
 
             expect(fs.existsSync(agentsFile)).toBe(true)
             expect(fs.readFileSync(agentsFile, 'utf8')).toBe('')
+
+            expect(fs.existsSync(ignoreFile)).toBe(true)
+            expect(fs.existsSync(commandsFile)).toBe(true)
+            expect(fs.existsSync(settingsFile)).toBe(true)
 
             expect(fs.existsSync(rulesFile)).toBe(true)
             const rulesContent = fs.readFileSync(rulesFile, 'utf8')

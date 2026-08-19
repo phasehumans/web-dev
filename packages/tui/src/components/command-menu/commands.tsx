@@ -161,7 +161,7 @@ export const COMMANDS: Command[] = [
     },
     {
         name: 'init',
-        description: 'Create initial rules, skills, and AGENTS.md configuration',
+        description: 'Create initial configuration, rules, skills, and .decemberignore',
         value: '/init',
         action: (ctx) => {
             try {
@@ -169,13 +169,19 @@ export const COMMANDS: Command[] = [
                 const decDir = path.join(rootDir, '.december')
 
                 const agentsFile = path.join(rootDir, 'AGENTS.md')
+                const ignoreFile = path.join(rootDir, '.decemberignore')
                 const rulesFile = path.join(decDir, 'rules.md')
                 const skillsFile = path.join(decDir, 'skills.md')
+                const commandsFile = path.join(decDir, 'commands.json')
+                const settingsFile = path.join(decDir, 'settings.json')
 
                 if (
                     fs.existsSync(agentsFile) &&
+                    fs.existsSync(ignoreFile) &&
                     fs.existsSync(rulesFile) &&
-                    fs.existsSync(skillsFile)
+                    fs.existsSync(skillsFile) &&
+                    fs.existsSync(commandsFile) &&
+                    fs.existsSync(settingsFile)
                 ) {
                     ctx.toast.show({ message: 'December workspace is already initialized.' })
                     return
@@ -185,6 +191,12 @@ export const COMMANDS: Command[] = [
 
                 if (!fs.existsSync(agentsFile)) {
                     fs.writeFileSync(agentsFile, '')
+                }
+                if (!fs.existsSync(ignoreFile)) {
+                    fs.writeFileSync(
+                        ignoreFile,
+                        `# Build outputs and dependencies\nnode_modules/\ndist/\nbuild/\n.next/\n.turbo/\n*.log\n\n# Environment and secrets\n.env*\n*.pem\n*.key\n`
+                    )
                 }
                 if (!fs.existsSync(rulesFile)) {
                     fs.writeFileSync(
@@ -198,12 +210,55 @@ export const COMMANDS: Command[] = [
                         'Add skills in this file for the agent to use as context.\n'
                     )
                 }
+                if (!fs.existsSync(commandsFile)) {
+                    fs.writeFileSync(
+                        commandsFile,
+                        JSON.stringify(
+                            {
+                                commands: [
+                                    {
+                                        name: 'test',
+                                        description: 'Run tests and fix failures',
+                                        prompt: "Run 'bun test $PKG'. If any test fails, fix the root cause and verify.",
+                                    },
+                                    {
+                                        name: 'lint',
+                                        description: 'Run linter and fix errors',
+                                        prompt: 'Run linter and fix any reported issues in $FILE.',
+                                    },
+                                    {
+                                        name: 'commit',
+                                        description: 'Create conventional git commit',
+                                        prompt: 'Inspect git status and staged changes, then create a clean git commit adhering strictly to lowercase conventional commits.',
+                                    },
+                                ],
+                            },
+                            null,
+                            2
+                        ) + '\n'
+                    )
+                }
+                if (!fs.existsSync(settingsFile)) {
+                    fs.writeFileSync(
+                        settingsFile,
+                        JSON.stringify(
+                            {
+                                thinkingLevel: 'low',
+                                steeringMode: 'all',
+                                toolPermission: 'always-ask',
+                                pathGuard: true,
+                            },
+                            null,
+                            2
+                        ) + '\n'
+                    )
+                }
 
                 ctx.toast.show({
                     variant: 'success',
                     message: 'Initialized December workspace successfully!',
                 })
-            } catch (err) {
+            } catch {
                 ctx.toast.show({
                     variant: 'error',
                     message: 'Failed to initialize December workspace',

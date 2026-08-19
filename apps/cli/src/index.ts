@@ -28,6 +28,10 @@ async function main() {
         process.exit(0)
     }
 
+    if (parsedArgs.cwd) {
+        process.chdir(parsedArgs.cwd)
+    }
+
     if (parsedArgs.command === 'logout') {
         await handleLogoutCommand()
         process.exit(0)
@@ -53,10 +57,6 @@ async function main() {
         await saveConfig(configToSave)
         console.log('\x1b[32mSuccessfully logged in via device code!\x1b[0m\n')
         process.exit(0)
-    }
-
-    if (parsedArgs.cwd) {
-        process.chdir(parsedArgs.cwd)
     }
 
     // Lazy load heavy dependencies ONLY when running an interactive session or headless task

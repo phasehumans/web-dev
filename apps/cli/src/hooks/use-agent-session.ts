@@ -582,6 +582,13 @@ export function useAgentSession({
                 return
             }
 
+            if (text.trim() === '/init') {
+                const { handleInitCommand } = await import('../commands')
+                await handleInitCommand()
+                addToast('Initialized December workspace successfully!', 'success')
+                return
+            }
+
             if (text.trim() === '/context') {
                 setAuthMode('context_select')
                 return
