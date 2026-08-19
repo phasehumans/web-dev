@@ -32,4 +32,8 @@ if [ -d ".december-imports" ]; then
     rm -rf .december-imports/*
 fi
 
+# Clean session log files and test artifacts
+echo "Clearing .december/logs and test log directories..."
+rm -rf .december/logs packages/*/.december/logs apps/*/.december/logs 2>/dev/null || true
+
 echo "Cleanup completed successfully!"

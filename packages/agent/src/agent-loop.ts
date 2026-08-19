@@ -505,9 +505,15 @@ async function streamAssistantResponse(
             usage: lastUsage,
             durationMs,
         })
-        await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
-            // Intentionally swallowed: Request logging must not block or crash agent loop
-        })
+        if (
+            agent.workspaceDir &&
+            !agent.disableLogging &&
+            process.env.DECEMBER_DISABLE_LOGGING !== 'true'
+        ) {
+            await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
+                // Intentionally swallowed: Request logging must not block or crash agent loop
+            })
+        }
 
         eventQueue.push({ type: 'AgentStatus', message: '' }) // clear status on success
         return { assistantMessage, toolCalls }
@@ -530,9 +536,15 @@ async function streamAssistantResponse(
             durationMs,
             error: errorMsg,
         })
-        await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
-            // Intentionally swallowed: Request logging must not block or crash agent loop
-        })
+        if (
+            agent.workspaceDir &&
+            !agent.disableLogging &&
+            process.env.DECEMBER_DISABLE_LOGGING !== 'true'
+        ) {
+            await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
+                // Intentionally swallowed: Request logging must not block or crash agent loop
+            })
+        }
 
         if (signal.aborted || (error.name === 'AbortError' && errorMsg === 'Aborted')) {
             eventQueue.push({ type: 'AgentInterrupt' })

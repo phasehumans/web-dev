@@ -77,17 +77,20 @@ export function createRequestLogEntry(params: CreateRequestLogEntryParams): Requ
 }
 
 export function getSessionLogPath(workspaceDir: string, sessionId: string): string {
+    if (!workspaceDir) return ''
     const cleanSessionId = sessionId.startsWith('session-') ? sessionId : `session-${sessionId}`
     return path.join(workspaceDir, '.december', 'logs', `${cleanSessionId}.jsonl`)
 }
 
 export async function appendTurnLog(
-    workspaceDir: string,
+    workspaceDir: string | undefined,
     sessionId: string,
     entry: RequestLogEntry
 ): Promise<void> {
+    if (!workspaceDir) return
     try {
         const logFile = getSessionLogPath(workspaceDir, sessionId)
+        if (!logFile) return
         const logsDir = path.dirname(logFile)
         await fs.promises.mkdir(logsDir, { recursive: true })
         const line = JSON.stringify(entry) + '\n'
@@ -98,12 +101,13 @@ export async function appendTurnLog(
 }
 
 export async function getTurnLogs(
-    workspaceDir: string,
+    workspaceDir: string | undefined,
     sessionId: string
 ): Promise<RequestLogEntry[]> {
+    if (!workspaceDir) return []
     try {
         const logFile = getSessionLogPath(workspaceDir, sessionId)
-        if (!fs.existsSync(logFile)) {
+        if (!logFile || !fs.existsSync(logFile)) {
             return []
         }
         const content = await fs.promises.readFile(logFile, 'utf8')
