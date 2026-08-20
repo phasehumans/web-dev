@@ -53,11 +53,12 @@ export function AuthMenus(props: any) {
         case 'tool_permission':
             return (
                 <ToolPermissionMenu
+                    toolCall={props.pendingToolCall?.toolCall}
                     questions={props.pendingQuestions?.questions || []}
-                    onComplete={(answer) => {
-                        props.pendingQuestions?.resolve(answer)
+                    onComplete={(result) => {
+                        props.pendingToolCall?.resolve(result)
                         props.setAuthMode('none')
-                        props.setPendingQuestions(null)
+                        props.setPendingToolCall(null)
                     }}
                 />
             )

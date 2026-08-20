@@ -93,7 +93,7 @@ export function GlobalShortcuts(session: any) {
         }
 
         if (authMode !== 'none') {
-            if (key.escape && authMode !== 'login') {
+            if (key.escape && authMode !== 'menu') {
                 if (session.isStreaming) {
                     return
                 }
@@ -123,9 +123,24 @@ export function GlobalShortcuts(session: any) {
         }
 
         if (key.ctrl && input === 'l') {
-            setAuthMode('login')
+            setAuthMode('menu')
         } else if (key.ctrl && input === 'h') {
-            setAuthMode('sessions')
+            if (session.sessionRepository?.listSessions) {
+                session.sessionRepository
+                    .listSessions()
+                    .then((sessions: any[]) => {
+                        if (session.setSessionsData) session.setSessionsData(sessions)
+                        if (session.setSessionPage) session.setSessionPage(0)
+                        if (session.setSessionSelectedIndex) session.setSessionSelectedIndex(0)
+                        if (session.setSessionRenameMode) session.setSessionRenameMode(false)
+                        setAuthMode('session_select')
+                    })
+                    .catch(() => {
+                        setAuthMode('session_select')
+                    })
+            } else {
+                setAuthMode('session_select')
+            }
         } else if (key.ctrl && input === 't') {
             setAuthMode('tasks_mode')
         } else if (

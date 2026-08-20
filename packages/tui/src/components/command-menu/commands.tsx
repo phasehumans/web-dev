@@ -173,6 +173,7 @@ export const COMMANDS: Command[] = [
                 const rulesFile = path.join(decDir, 'rules.md')
                 const skillsFile = path.join(decDir, 'skills.md')
                 const commandsFile = path.join(decDir, 'commands.json')
+                const mcpFile = path.join(decDir, 'mcp.json')
                 const settingsFile = path.join(decDir, 'settings.json')
 
                 if (
@@ -181,6 +182,7 @@ export const COMMANDS: Command[] = [
                     fs.existsSync(rulesFile) &&
                     fs.existsSync(skillsFile) &&
                     fs.existsSync(commandsFile) &&
+                    fs.existsSync(mcpFile) &&
                     fs.existsSync(settingsFile)
                 ) {
                     ctx.toast.show({ message: 'December workspace is already initialized.' })
@@ -190,7 +192,10 @@ export const COMMANDS: Command[] = [
                 fs.mkdirSync(decDir, { recursive: true })
 
                 if (!fs.existsSync(agentsFile)) {
-                    fs.writeFileSync(agentsFile, '')
+                    fs.writeFileSync(
+                        agentsFile,
+                        '# Agent Guidelines & Project Instructions\n\nAdd project-specific guidelines, testing commands, architecture patterns, and conventions in this file for December to follow.\n'
+                    )
                 }
                 if (!fs.existsSync(ignoreFile)) {
                     fs.writeFileSync(
@@ -232,6 +237,18 @@ export const COMMANDS: Command[] = [
                                         prompt: 'Inspect git status and staged changes, then create a clean git commit adhering strictly to lowercase conventional commits.',
                                     },
                                 ],
+                            },
+                            null,
+                            2
+                        ) + '\n'
+                    )
+                }
+                if (!fs.existsSync(mcpFile)) {
+                    fs.writeFileSync(
+                        mcpFile,
+                        JSON.stringify(
+                            {
+                                mcpServers: {},
                             },
                             null,
                             2

@@ -15,7 +15,10 @@ export async function handleLogoutCommand(): Promise<void> {
     console.log('Logged out successfully. Stored credentials removed.')
 }
 
-const DEFAULT_AGENTS_MD = ''
+const DEFAULT_AGENTS_MD = `# Agent Guidelines & Project Instructions
+
+Add project-specific guidelines, testing commands, architecture patterns, and conventions in this file for December to follow.
+`
 
 const DEFAULT_RULES_MD = 'Add rules in this file for the agent to use as context.\n'
 
@@ -55,6 +58,15 @@ const DEFAULT_COMMANDS_JSON =
                     prompt: 'Inspect git status and staged changes, then create a clean git commit adhering strictly to lowercase conventional commits.',
                 },
             ],
+        },
+        null,
+        2
+    ) + '\n'
+
+const DEFAULT_MCP_JSON =
+    JSON.stringify(
+        {
+            mcpServers: {},
         },
         null,
         2
@@ -100,6 +112,12 @@ export async function handleInitCommand(): Promise<void> {
             targetPath: path.join(decDir, 'commands.json'),
             displayPath: '.december/commands.json',
             content: DEFAULT_COMMANDS_JSON,
+        },
+        {
+            name: 'mcp.json',
+            targetPath: path.join(decDir, 'mcp.json'),
+            displayPath: '.december/mcp.json',
+            content: DEFAULT_MCP_JSON,
         },
         {
             name: 'settings.json',

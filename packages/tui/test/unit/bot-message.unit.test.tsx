@@ -248,4 +248,16 @@ describe('BotMessage Component (Unit)', () => {
         expect(textIdx).toBe(thoughtIdx + 2)
         expect(rawLines[thoughtIdx + 1]?.trim()).toBe('')
     })
+
+    it('renders analyzing and generating questions status labels with spinner', () => {
+        const { lastFrame: frame1 } = render(
+            <BotMessage blocks={[{ type: 'text', content: 'Analyzing prompt...' }]} />
+        )
+        expect(frame1()).toContain('Analyzing prompt...')
+
+        const { lastFrame: frame2 } = render(
+            <BotMessage blocks={[{ type: 'text', content: 'Generating questions...' }]} />
+        )
+        expect(frame2()).toContain('Generating questions...')
+    })
 })

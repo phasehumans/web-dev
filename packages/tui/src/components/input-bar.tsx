@@ -221,21 +221,24 @@ export function InputBar({
             setValue('')
             handleContentChange('')
 
-            // forward auth & session commands to chat component
-            if (
-                command.value === '/grill-me' ||
-                command.value === '/login' ||
-                command.value === '/logout' ||
-                command.value === '/exit' ||
-                command.value === '/model' ||
-                command.value === '/plan' ||
-                command.value === '/resume' ||
-                command.value === '/settings' ||
-                command.value === '/context' ||
-                command.value === '/tasks' ||
-                command.value === '/usage' ||
-                command.value === '/feedback'
-            ) {
+            // Forward chat & session commands and custom commands to chat component
+            const forwardCommands = [
+                '/grill-me',
+                '/login',
+                '/logout',
+                '/exit',
+                '/model',
+                '/plan',
+                '/resume',
+                '/settings',
+                '/context',
+                '/tasks',
+                '/usage',
+                '/feedback',
+                '/mcp',
+            ]
+
+            if (forwardCommands.includes(command.value) || !command.action) {
                 if (
                     currentValue.length > command.value.length &&
                     currentValue.toLowerCase().startsWith(command.value.toLowerCase())

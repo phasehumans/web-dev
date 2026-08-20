@@ -208,7 +208,11 @@ export const BotMessage = React.memo(function BotMessage({ blocks, usage, expand
                             block.content === 'Working...' ||
                             block.content === 'Preparing...' ||
                             block.content === 'Compacting...' ||
-                            block.content === 'Generating...'
+                            block.content === 'Generating...' ||
+                            block.content === 'Analyzing...' ||
+                            block.content === 'Analyzing prompt...' ||
+                            block.content === 'Generating questions...' ||
+                            block.content === 'Understanding...'
                         if (isThinking) {
                             if (idx !== blocks.length - 1) return null
                             return (

@@ -5,8 +5,6 @@ import React from 'react'
 
 import { THEME } from '../../theme'
 
-import { MenuFooter } from './menu-footer'
-
 function getModelLabel(id: string) {
     return id
 }
@@ -86,12 +84,16 @@ export function ContextSelectMenu(props: any) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text bold color={THEME.colors.text}>
-                    Context
-                </Text>
+                <Text color={THEME.colors.text}>Context</Text>
             </Box>
             <Box flexDirection="row" gap={4}>
-                <Box flexDirection="column">{gridRows}</Box>
+                <Box flexDirection="column">
+                    {gridRows}
+                    <Box marginTop={1} gap={1}>
+                        <Text color={THEME.colors.brand}>esc</Text>
+                        <Text color={THEME.colors.muted}>Cancel</Text>
+                    </Box>
+                </Box>
 
                 <Box flexDirection="column">
                     <Box gap={1}>
@@ -101,9 +103,7 @@ export function ContextSelectMenu(props: any) {
                         </Text>
                     </Box>
                     <Box marginTop={1}>
-                        <Text color={THEME.colors.text} bold>
-                            Token usage by category
-                        </Text>
+                        <Text color={THEME.colors.text}>Token usage by category</Text>
                     </Box>
                     <Box flexDirection="column">
                         <Box gap={1}>
@@ -164,7 +164,6 @@ export function ContextSelectMenu(props: any) {
                     </Box>
                 </Box>
             </Box>
-            <MenuFooter items={[{ key: 'esc', label: 'Cancel' }]} />
         </Box>
     )
 }

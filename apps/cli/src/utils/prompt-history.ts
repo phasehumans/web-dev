@@ -9,7 +9,14 @@ export class PromptHistory {
     private currentDraft: string = ''
 
     constructor(customPath?: string) {
-        this.historyPath = customPath || path.join(os.homedir(), '.december', 'history')
+        if (customPath) {
+            this.historyPath = customPath
+        } else {
+            const configPath = path.join(os.homedir(), '.config', 'december', 'history')
+            const legacyPath = path.join(os.homedir(), '.december', 'history')
+            this.historyPath =
+                fs.existsSync(configPath) || !fs.existsSync(legacyPath) ? configPath : legacyPath
+        }
         this.load()
     }
 

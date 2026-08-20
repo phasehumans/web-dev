@@ -48,9 +48,9 @@ describe('CLI Standalone Commands', () => {
             expect(agentsExists).toBe(true)
 
             const agentsContent = await fs.readFile(rootAgentsPath, 'utf-8')
-            expect(agentsContent).toBe('')
+            expect(agentsContent).toContain('Agent Guidelines')
 
-            const decFiles = ['rules.md', 'skills.md', 'settings.json', 'commands.json']
+            const decFiles = ['rules.md', 'skills.md', 'settings.json', 'commands.json', 'mcp.json']
             for (const file of decFiles) {
                 const exists = await fs
                     .access(path.join(tmpDir, '.december', file))
@@ -79,11 +79,13 @@ describe('CLI Standalone Commands', () => {
             expect(skillsContent).not.toContain('#')
             expect(skillsContent).toBe('Add skills in this file for the agent to use as context.\n')
 
-            const commandsContent = JSON.parse(
-                await fs.readFile(path.join(tmpDir, '.december', 'commands.json'), 'utf-8')
+            const rawCommandsContent = await fs.readFile(
+                path.join(tmpDir, '.december', 'commands.json'),
+                'utf-8'
             )
-            expect(commandsContent.commands).toBeDefined()
-            expect(commandsContent.commands.some((c: any) => c.name === 'test')).toBe(true)
+            const parsedCommands = JSON.parse(rawCommandsContent)
+            expect(Array.isArray(parsedCommands.commands)).toBe(true)
+            expect(parsedCommands.commands.some((c: any) => c.name === 'test')).toBe(true)
         } finally {
             process.chdir(originalCwd)
         }

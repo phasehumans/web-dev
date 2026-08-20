@@ -76,6 +76,10 @@ describe('ContextSelectMenu Component (Unit)', () => {
         expect(frame).toContain('●')
         expect(frame).toContain('□')
         expect(frame).toContain('★')
+
+        // Verify esc Cancel is rendered on the left
+        expect(frame).toContain('esc')
+        expect(frame).toContain('Cancel')
     })
 
     it('renders safely when agent is empty or undefined', () => {

@@ -55,9 +55,7 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color={THEME.colors.brand} bold>
-                    Ollama Local Provider Diagnostics & Setup
-                </Text>
+                <Text color={THEME.colors.brand}>Ollama Local Provider Diagnostics & Setup</Text>
             </Box>
 
             {/* Server Status */}
@@ -85,9 +83,7 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
             {/* Step-by-Step Guidance */}
             {(!isRunning || !hasCompatibleModel) && (
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color={THEME.colors.brand} bold>
-                        Setup Instructions:
-                    </Text>
+                    <Text color={THEME.colors.brand}>Setup Instructions:</Text>
                     {!isRunning ? (
                         <>
                             <Text color={THEME.colors.text}>
@@ -96,9 +92,7 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
                             </Text>
                             <Text color={THEME.colors.text}>
                                 2. Start daemon in your terminal:{' '}
-                                <Text color={THEME.colors.success} bold>
-                                    ollama serve
-                                </Text>
+                                <Text color={THEME.colors.success}>ollama serve</Text>
                             </Text>
                         </>
                     ) : null}
@@ -108,7 +102,7 @@ export function OllamaSetupMenu({ status, onRetry, onCancel, onProceed }: Ollama
                                 {isRunning ? '1' : '3'}. Pull a tool-compatible model:
                             </Text>
                             <Box paddingLeft={2} flexDirection="column">
-                                <Text color={THEME.colors.success} bold>
+                                <Text color={THEME.colors.success}>
                                     ollama pull qwen2.5-coder:7b
                                 </Text>
                                 <Text color={THEME.colors.muted}>

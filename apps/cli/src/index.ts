@@ -165,8 +165,14 @@ async function main() {
     if (parsedArgs.prompt) {
         await agent.loadContext()
         await harness.initMCP().catch(() => {})
-        console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
-        const result = await runHeadlessTask(parsedArgs.prompt, { agent })
+        if (!parsedArgs.json) {
+            console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
+        }
+        const result = await runHeadlessTask(parsedArgs.prompt, {
+            agent,
+            nonInteractive: parsedArgs.yes,
+            json: parsedArgs.json,
+        })
         process.exit(result.success ? 0 : 1)
     }
 

@@ -35,16 +35,12 @@ export function GrillQuestionMenu(props: any) {
             <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
                 <Box marginBottom={1} flexDirection="column">
                     {q.docSource && (
-                        <Text color={THEME.colors.brand} bold>
-                            [Doc Grounding: {q.docSource}]
-                        </Text>
+                        <Text color={THEME.colors.brand}>[Doc Grounding: {q.docSource}]</Text>
                     )}
-                    <Text color={THEME.colors.brand} bold>
+                    <Text color={THEME.colors.brand}>
                         Question {currentGrillIndex + 1}/{grillQuestions.length}:
                     </Text>
-                    <Text color={THEME.colors.text} bold>
-                        {q.question}
-                    </Text>
+                    <Text color={THEME.colors.text}>{q.question}</Text>
                 </Box>
                 {!customInputMode ? (
                     <>

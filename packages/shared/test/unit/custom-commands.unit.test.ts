@@ -62,4 +62,25 @@ describe('Custom Command Engine (Unit)', () => {
         expect(testCmd).toBeDefined()
         expect(testCmd?.prompt).toBe('Run bun test $PKG')
     })
+
+    it('handles commented JSON templates without applying commented commands', () => {
+        const decDir = path.join(tmpDir, '.december')
+        fs.mkdirSync(decDir, { recursive: true })
+        fs.writeFileSync(
+            path.join(decDir, 'commands.json'),
+            `{
+  "commands": [
+    // Define custom slash commands here.
+    // {
+    //   "name": "test",
+    //   "description": "Run tests and fix failures",
+    //   "prompt": "Run 'bun test $PKG'."
+    // }
+  ]
+}`
+        )
+
+        const commands = loadCustomCommands(tmpDir)
+        expect(commands).toEqual([])
+    })
 })

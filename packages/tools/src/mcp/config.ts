@@ -90,10 +90,17 @@ export async function loadMcpConfig(options: LoadMcpConfigOptions = {}): Promise
         // Global config is optional
     }
 
-    // 2. Read workspace .december/mcp.json
+    // 2. Read workspace .december/mcp.json (or root mcp.json)
     try {
         const workspacePath = path.join(workspaceDir, '.december', 'mcp.json')
-        const raw = await fs.readFile(workspacePath, 'utf8')
+        const rootMcpPath = path.join(workspaceDir, 'mcp.json')
+        let raw = ''
+        try {
+            raw = await fs.readFile(workspacePath, 'utf8')
+        } catch {
+            // Fallback to root mcp.json
+            raw = await fs.readFile(rootMcpPath, 'utf8')
+        }
         const parsed = JSON.parse(raw)
         if (parsed && typeof parsed.mcpServers === 'object') {
             workspaceConfig = parsed

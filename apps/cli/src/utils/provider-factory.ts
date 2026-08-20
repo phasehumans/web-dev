@@ -7,7 +7,8 @@ import {
 } from '@december/providers'
 
 export function instantiateProvider(provider: string, apiKey: string): any {
-    switch (provider) {
+    const normalized = (provider || '').toLowerCase().trim()
+    switch (normalized) {
         case 'openai':
             return openaiProvider(undefined, apiKey)
         case 'anthropic':
@@ -23,7 +24,10 @@ export function instantiateProvider(provider: string, apiKey: string): any {
             return openaiProvider('https://api.groq.com/openai/v1', apiKey)
         case 'huggingface':
             return openaiProvider('https://api-inference.huggingface.co/v1/', apiKey)
+        case 'kimi':
+            return anthropicProvider('https://api.kimi.com/coding', apiKey)
         case 'moonshot':
+        case 'moonshoot':
             return openaiProvider('https://api.moonshot.cn/v1', apiKey)
         case 'mistral':
             return openaiProvider('https://api.mistral.ai/v1', apiKey)

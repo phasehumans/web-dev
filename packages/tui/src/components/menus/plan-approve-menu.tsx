@@ -26,32 +26,23 @@ function PlanItemComponent({
         color = THEME.colors.success
     } else if (value === 'reject') {
         color = THEME.colors.error
-    } else if (value === 'edit') {
-        color = THEME.colors.brand
     }
 
-    return (
-        <Text color={color} bold={isSelected}>
-            {label}
-        </Text>
-    )
+    return <Text color={color}>{label}</Text>
 }
 
 export function PlanApproveMenu({ handlePlanApprovalSelect, planSummary }: PlanApproveMenuProps) {
     const planItems = [
-        { label: '✓ [y] Approve & Execute', value: 'approve' },
-        { label: '✗ [n] Reject / Cancel', value: 'reject' },
-        { label: '✎ [e] Edit Plan', value: 'edit' },
+        { label: '[y] Approve & Execute', value: 'approve' },
+        { label: '[n] Reject / Cancel', value: 'reject' },
     ]
 
     useInput((input, key) => {
         const lower = (input || '').toLowerCase()
         if (lower === 'y') {
-            handlePlanApprovalSelect({ label: '✓ [y] Approve & Execute', value: 'approve' })
+            handlePlanApprovalSelect({ label: '[y] Approve & Execute', value: 'approve' })
         } else if (lower === 'n' || key.escape) {
-            handlePlanApprovalSelect({ label: '✗ [n] Reject / Cancel', value: 'reject' })
-        } else if (lower === 'e') {
-            handlePlanApprovalSelect({ label: '✎ [e] Edit Plan', value: 'edit' })
+            handlePlanApprovalSelect({ label: '[n] Reject / Cancel', value: 'reject' })
         }
     })
 
@@ -63,9 +54,7 @@ export function PlanApproveMenu({ handlePlanApprovalSelect, planSummary }: PlanA
                         <Text color={THEME.colors.brand}>{planSummary}</Text>
                     </Box>
                 )}
-                <Text color={THEME.colors.text} bold>
-                    Plan generated. Please approve or reject:
-                </Text>
+                <Text color={THEME.colors.text}>Plan generated. Please approve or reject:</Text>
             </Box>
             <SelectInput
                 items={planItems}
@@ -77,7 +66,6 @@ export function PlanApproveMenu({ handlePlanApprovalSelect, planSummary }: PlanA
                 items={[
                     { key: 'y', label: 'Approve' },
                     { key: 'n', label: 'Reject' },
-                    { key: 'e', label: 'Edit' },
                     { key: '↑/↓', label: 'Navigate' },
                     { key: 'enter', label: 'Select' },
                 ]}

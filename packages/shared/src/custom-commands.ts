@@ -12,6 +12,14 @@ export interface CustomCommandsFile {
     commands: CustomCommand[]
 }
 
+export function parseJsonWithComments<T = any>(content: string): T {
+    const sanitized = content
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '')
+        .trim()
+    return JSON.parse(sanitized) as T
+}
+
 export function loadCustomCommands(workspaceDir: string = process.cwd()): CustomCommand[] {
     const commandsMap = new Map<string, CustomCommand>()
 
@@ -20,7 +28,7 @@ export function loadCustomCommands(workspaceDir: string = process.cwd()): Custom
         const globalPath = path.join(os.homedir(), '.config', 'december', 'commands.json')
         if (fs.existsSync(globalPath)) {
             const content = fs.readFileSync(globalPath, 'utf-8')
-            const parsed = JSON.parse(content) as CustomCommandsFile
+            const parsed = parseJsonWithComments<CustomCommandsFile>(content)
             if (Array.isArray(parsed?.commands)) {
                 for (const cmd of parsed.commands) {
                     if (cmd.name && cmd.prompt) {
@@ -42,7 +50,7 @@ export function loadCustomCommands(workspaceDir: string = process.cwd()): Custom
         const workspacePath = path.join(workspaceDir, '.december', 'commands.json')
         if (fs.existsSync(workspacePath)) {
             const content = fs.readFileSync(workspacePath, 'utf-8')
-            const parsed = JSON.parse(content) as CustomCommandsFile
+            const parsed = parseJsonWithComments<CustomCommandsFile>(content)
             if (Array.isArray(parsed?.commands)) {
                 for (const cmd of parsed.commands) {
                     if (cmd.name && cmd.prompt) {

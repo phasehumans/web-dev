@@ -35,9 +35,7 @@ export function ByokKeyMenu(props: any) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color={THEME.colors.text} bold>
-                    Enter API Key for {formattedProvider}:
-                </Text>
+                <Text color={THEME.colors.text}>Enter API Key for {formattedProvider}:</Text>
             </Box>
             <Box>
                 <Text color={THEME.colors.brand} bold={false}>

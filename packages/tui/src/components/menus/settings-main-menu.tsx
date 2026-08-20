@@ -68,9 +68,7 @@ export function SettingsMainMenu(props: any) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text bold color={THEME.colors.text}>
-                    Settings
-                </Text>
+                <Text color={THEME.colors.text}>Settings</Text>
             </Box>
             <SelectInput
                 items={mainItems}

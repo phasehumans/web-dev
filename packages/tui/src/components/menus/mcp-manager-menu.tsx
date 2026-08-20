@@ -53,9 +53,7 @@ export function McpManagerMenu({
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text bold color={THEME.colors.text}>
-                    MCP Server Manager
-                </Text>
+                <Text color={THEME.colors.text}>MCP Server Manager</Text>
             </Box>
 
             {serverInfos.length === 0 ? (
@@ -89,9 +87,7 @@ export function McpManagerMenu({
                                     <Text color={isSelected ? THEME.colors.brand : 'transparent'}>
                                         {isSelected ? '›' : ' '}
                                     </Text>
-                                    <Text bold={isSelected} color={THEME.colors.text}>
-                                        {srv.name}
-                                    </Text>
+                                    <Text color={THEME.colors.text}>{srv.name}</Text>
                                     <Text color={statusColor}>[{srv.status}]</Text>
                                     <Text color={THEME.colors.muted}>
                                         ({toolCount} tool{toolCount === 1 ? '' : 's'})
@@ -129,7 +125,7 @@ export function McpManagerMenu({
 
                                         {srv.tools && srv.tools.length > 0 ? (
                                             <Box flexDirection="column">
-                                                <Text bold color={THEME.colors.muted}>
+                                                <Text color={THEME.colors.muted}>
                                                     Available Tools:
                                                 </Text>
                                                 {srv.tools.map((t: any) => (
@@ -140,7 +136,7 @@ export function McpManagerMenu({
                                                     >
                                                         <Text color={THEME.colors.text}>
                                                             •{' '}
-                                                            <Text bold color={THEME.colors.brand}>
+                                                            <Text color={THEME.colors.brand}>
                                                                 {t.name}
                                                             </Text>
                                                             {t.description

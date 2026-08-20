@@ -32,11 +32,7 @@ function PermissionItemComponent({
         color = THEME.colors.error
     }
 
-    return (
-        <Text color={color} bold={isSelected}>
-            {label}
-        </Text>
-    )
+    return <Text color={color}>{label}</Text>
 }
 
 export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPermissionMenuProps) {
@@ -134,9 +130,7 @@ export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPerm
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1} flexDirection="column" gap={0}>
-                <Text color={THEME.colors.text} bold>
-                    {title}
-                </Text>
+                <Text color={THEME.colors.text}>{title}</Text>
                 {toolSummary && (
                     <Box
                         flexDirection="column"
@@ -146,9 +140,7 @@ export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPerm
                         marginTop={1}
                         marginBottom={1}
                     >
-                        <Text color={THEME.colors.brand} bold>
-                            {toolSummary}
-                        </Text>
+                        <Text color={THEME.colors.brand}>{toolSummary}</Text>
                         {visibleDiffLines.length > 0 && (
                             <Box flexDirection="column" marginTop={1}>
                                 {visibleDiffLines.map((line, lidx) => {

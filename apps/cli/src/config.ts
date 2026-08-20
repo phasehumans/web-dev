@@ -106,6 +106,37 @@ export async function loadConfig(): Promise<DecemberConfig> {
 export async function saveConfig(config: DecemberConfig): Promise<void> {
     await fs.mkdir(CONFIG_DIR, { recursive: true })
     await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8')
+
+    try {
+        const workspacePath = path.join(process.cwd(), '.december', 'settings.json')
+        await fs.access(workspacePath)
+        let currentWorkspaceSettings: any = {}
+        try {
+            const raw = await fs.readFile(workspacePath, 'utf-8')
+            currentWorkspaceSettings = JSON.parse(raw)
+        } catch {
+            // Intentionally swallowed: fallback to empty workspace settings if unreadable
+        }
+        if (config.thinkingLevel !== undefined)
+            currentWorkspaceSettings.thinkingLevel = config.thinkingLevel
+        if (config.steeringMode !== undefined)
+            currentWorkspaceSettings.steeringMode = config.steeringMode
+        if (config.followUpMode !== undefined)
+            currentWorkspaceSettings.followUpMode = config.followUpMode
+        if (config.toolPermission !== undefined)
+            currentWorkspaceSettings.toolPermission = config.toolPermission
+        if (config.pathGuard !== undefined) currentWorkspaceSettings.pathGuard = config.pathGuard
+        if (config.nonWorkspaceAccess !== undefined)
+            currentWorkspaceSettings.nonWorkspaceAccess = config.nonWorkspaceAccess
+
+        await fs.writeFile(
+            workspacePath,
+            JSON.stringify(currentWorkspaceSettings, null, 2) + '\n',
+            'utf-8'
+        )
+    } catch {
+        // Intentionally swallowed: workspace settings file does not exist or is not writable
+    }
 }
 
 export async function getProviderConfig(): Promise<ProviderConfig | undefined> {

@@ -100,11 +100,8 @@ export function AskQuestionMenu({ questions, onComplete }: AskQuestionMenuProps)
             <Box flexDirection="row" gap={1}>
                 <Text
                     color={THEME.colors.brand}
-                    bold
                 >{`Q${currentQuestionIdx + 1}/${questions.length}:`}</Text>
-                <Text color={THEME.colors.text} bold>
-                    {currentQ.question}
-                </Text>
+                <Text color={THEME.colors.text}>{currentQ.question}</Text>
             </Box>
             <Box flexDirection="column" paddingLeft={1}>
                 {options.map((opt, idx) => {
@@ -117,10 +114,7 @@ export function AskQuestionMenu({ questions, onComplete }: AskQuestionMenuProps)
                                 {isHighlighted ? THEME.glyphs.selector : ' '}
                             </Text>
                             {isMulti && (
-                                <Text
-                                    color={isChecked ? THEME.colors.success : THEME.colors.muted}
-                                    bold={isChecked}
-                                >
+                                <Text color={isChecked ? THEME.colors.success : THEME.colors.muted}>
                                     {isChecked ? '[x]' : '[ ]'}
                                 </Text>
                             )}

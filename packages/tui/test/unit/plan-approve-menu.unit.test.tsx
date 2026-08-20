@@ -5,7 +5,7 @@ import React from 'react'
 import { PlanApproveMenu } from '../../src/components/menus/plan-approve-menu'
 
 describe('PlanApproveMenu Component (Unit)', () => {
-    it('renders approve, reject, and edit options with semantic icons and keys', () => {
+    it('renders approve and reject options with keys', () => {
         const handlePlanApprovalSelect = mock()
         const { lastFrame } = render(
             <PlanApproveMenu
