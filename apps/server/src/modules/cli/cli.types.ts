@@ -32,6 +32,13 @@ export type CreateCliSession = {
     minioPrefix?: string
 }
 
+export type ReconciledCliMessage = {
+    role: 'USER' | 'ASSISTANT' | 'SYSTEM'
+    content: string
+    blocks?: any
+    sequence: number
+}
+
 export type ServerProviderResolution = {
     provider: any
     providerName: 'gemini' | 'anthropic' | 'openai' | 'deepseek' | 'openrouter'

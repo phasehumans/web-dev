@@ -33,6 +33,27 @@ describe('ReadFileTool (Unit)', () => {
         expect(result.length).toBe(50000)
     })
 
+    test('should truncate and summarize files exceeding 2000 lines', async () => {
+        const context = createMockContext()
+        const massiveLines = Array.from({ length: 2500 }, (_, i) => `line ${i + 1}`).join('\n')
+        context.operations.fs.readFile = mock(async () => massiveLines)
+
+        const result = await ReadFileTool.execute({ path: '/massive.log' }, context)
+        expect(result).toContain('File exceeds size limit (500 KB / 2,000 lines)')
+        expect(result).toContain('--- Header Snippet (first 50 lines) ---')
+        expect(result).toContain('--- Footer Snippet (last 50 lines) ---')
+        expect(result).toContain("Use 'startLine' and 'endLine'")
+    })
+
+    test('should truncate and summarize files exceeding 500 KB', async () => {
+        const context = createMockContext()
+        const bigContent = 'x'.repeat(600 * 1024)
+        context.operations.fs.readFile = mock(async () => bigContent)
+
+        const result = await ReadFileTool.execute({ path: '/bundle.js' }, context)
+        expect(result).toContain('File exceeds size limit (500 KB / 2,000 lines)')
+    })
+
     test('should handle read errors gracefully', async () => {
         const context = createMockContext()
         context.operations.fs.readFile = mock(async () => {

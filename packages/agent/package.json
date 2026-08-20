@@ -7,9 +7,12 @@
     "private": true,
     "scripts": {
         "typecheck": "tsc --noEmit",
-        "test": "bun test test/unit test/integration",
+        "test": "bun test test/unit test/integration test/load test/benchmark test/smoke",
         "test:unit": "bun test test/unit",
-        "test:integration": "bun test test/integration"
+        "test:integration": "bun test test/integration",
+        "test:load": "bun test test/load",
+        "test:benchmark": "bun test test/benchmark",
+        "test:smoke": "bun test test/smoke"
     },
     "devDependencies": {
         "@types/bun": "latest"
@@ -21,6 +24,7 @@
         "@anthropic-ai/sdk": "0.109.0",
         "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
+        "@december/tools": "workspace:*",
         "@types/uuid": "11.0.0",
         "openai": "6.45.0",
         "p-retry": "8.0.0",

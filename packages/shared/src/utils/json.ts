@@ -38,7 +38,21 @@ export function safeParseJson(text: string): any {
             }
         }
 
-        throw new Error(`Failed to parse JSON tool arguments: ${err.message}\nRaw text: ${text}`, {
+        const errMsg = err?.message || String(err)
+        const isUnterminated =
+            errMsg.toLowerCase().includes('unterminated string') ||
+            errMsg.toLowerCase().includes('unexpected end of json') ||
+            errMsg.toLowerCase().includes('end of data') ||
+            errMsg.toLowerCase().includes('unexpected end of input')
+
+        if (isUnterminated) {
+            throw new Error(
+                `Failed to parse JSON tool arguments: ${errMsg}\nReason: Tool arguments JSON was truncated mid-generation (unterminated string/JSON), likely because the response exceeded the maximum output token limit. Please avoid massive single-argument payloads: for modifying existing files use 'edit_file' or 'edit_diff' with targeted diffs, and for large new files write them in smaller modular sections.\nRaw text: ${text}`,
+                { cause: err }
+            )
+        }
+
+        throw new Error(`Failed to parse JSON tool arguments: ${errMsg}\nRaw text: ${text}`, {
             cause: err,
         })
     }

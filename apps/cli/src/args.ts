@@ -10,6 +10,8 @@ export interface ParsedCliArgs {
     model?: string
     provider?: string
     sessionId?: string
+    scope?: string
+    cwd?: string
     positionals: string[]
 }
 
@@ -25,6 +27,8 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
                 model: { type: 'string', short: 'm' },
                 provider: { type: 'string', short: 'p' },
                 'session-id': { type: 'string' },
+                scope: { type: 'string' },
+                cwd: { type: 'string' },
             },
             allowPositionals: true,
             strict: false,
@@ -37,6 +41,8 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
         const model = values.model as string | undefined
         const provider = values.provider as string | undefined
         const sessionId = values['session-id'] as string | undefined
+        const scope = values.scope as string | undefined
+        const cwd = values.cwd as string | undefined
 
         const knownCommands = ['login', 'logout', 'init']
         let command: string | undefined
@@ -61,6 +67,8 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
             model,
             provider,
             sessionId,
+            scope,
+            cwd,
             positionals,
         }
     } catch {
@@ -93,5 +101,7 @@ Options:
   -m, --model <model>               Override target LLM model
   -p, --provider <provider>         Override target LLM provider
   --session-id <id>                 Specify session ID
+  --scope <dir>                     Confine agent searches and tools to a specific subpackage
+  --cwd <dir>                       Set the working directory root
 `
 }

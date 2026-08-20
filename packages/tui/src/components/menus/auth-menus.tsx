@@ -5,6 +5,7 @@ import { ByokProviderMenu } from './byok-provider-menu'
 import { ContextSelectMenu } from './context-select-menu'
 import { GrillQuestionMenu } from './grill-question-menu'
 import { LogoutSelectMenu } from './logout-select-menu'
+import { McpManagerMenu } from './mcp-manager-menu'
 import { MenuMenu } from './menu-menu'
 import { ModelSelectMenu } from './model-select-menu'
 import { OllamaSetupMenu } from './ollama-setup-menu'
@@ -18,6 +19,8 @@ export function AuthMenus(props: any) {
     switch (props.authMode) {
         case 'menu':
             return <MenuMenu {...props} />
+        case 'mcp_manager':
+            return <McpManagerMenu {...props} />
         case 'byok_provider':
             return <ByokProviderMenu {...props} />
         case 'byok_key':
@@ -50,11 +53,12 @@ export function AuthMenus(props: any) {
         case 'tool_permission':
             return (
                 <ToolPermissionMenu
+                    toolCall={props.pendingToolCall?.toolCall}
                     questions={props.pendingQuestions?.questions || []}
-                    onComplete={(answer) => {
-                        props.pendingQuestions?.resolve(answer)
+                    onComplete={(result) => {
+                        props.pendingToolCall?.resolve(result)
                         props.setAuthMode('none')
-                        props.setPendingQuestions(null)
+                        props.setPendingToolCall(null)
                     }}
                 />
             )

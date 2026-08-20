@@ -1,3 +1,4 @@
+import { getWorkspaceIgnores } from '@december/shared'
 import fg from 'fast-glob'
 import { Box, Text, useInput } from 'ink'
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react'
@@ -98,17 +99,10 @@ export function InputBar({
     // Load workspace files lazily for @ mention autocomplete
     useEffect(() => {
         try {
+            const ignores = getWorkspaceIgnores()
             const files = fg.sync(['**/*'], {
                 dot: true,
-                ignore: [
-                    '**/node_modules/**',
-                    '**/.git/**',
-                    '**/dist/**',
-                    '**/.next/**',
-                    '**/build/**',
-                    '**/.turbo/**',
-                    '**/.december/**',
-                ],
+                ignore: ignores,
                 onlyFiles: true,
                 suppressErrors: true,
             })
@@ -227,21 +221,24 @@ export function InputBar({
             setValue('')
             handleContentChange('')
 
-            // forward auth & session commands to chat component
-            if (
-                command.value === '/grill-me' ||
-                command.value === '/login' ||
-                command.value === '/logout' ||
-                command.value === '/exit' ||
-                command.value === '/model' ||
-                command.value === '/plan' ||
-                command.value === '/resume' ||
-                command.value === '/settings' ||
-                command.value === '/context' ||
-                command.value === '/tasks' ||
-                command.value === '/usage' ||
-                command.value === '/feedback'
-            ) {
+            // Forward chat & session commands and custom commands to chat component
+            const forwardCommands = [
+                '/grill-me',
+                '/login',
+                '/logout',
+                '/exit',
+                '/model',
+                '/plan',
+                '/resume',
+                '/settings',
+                '/context',
+                '/tasks',
+                '/usage',
+                '/feedback',
+                '/mcp',
+            ]
+
+            if (forwardCommands.includes(command.value) || !command.action) {
                 if (
                     currentValue.length > command.value.length &&
                     currentValue.toLowerCase().startsWith(command.value.toLowerCase())

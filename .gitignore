@@ -44,6 +44,8 @@ packages/database/src/generated/
 logs/
 *.log
 log.txt
+.december/logs/
+**/.december/logs/
 
 # Local infrastructure & runtimes
 docker-compose.override.yml

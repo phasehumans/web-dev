@@ -22,3 +22,4 @@ export type AuthMode =
     | 'tasks_mode'
     | 'usage'
     | 'ollama_setup'
+    | 'mcp_manager'

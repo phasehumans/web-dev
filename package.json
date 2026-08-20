@@ -25,6 +25,9 @@
         "test": "turbo run test",
         "test:unit": "turbo run test:unit",
         "test:integration": "turbo run test:integration",
+        "test:load": "turbo run test:load",
+        "test:benchmark": "turbo run test:benchmark",
+        "test:smoke": "turbo run test:smoke",
         "test:tools": "cd packages/tools && bun test",
         "test:providers": "cd packages/providers && bun test",
         "test:shared": "cd packages/shared && bun test",
@@ -109,6 +112,7 @@
     "license": "MIT",
     "dependencies": {
         "crelt": "^1.0.7",
+        "react": "^19.2.4",
         "style-mod": "^4.1.3",
         "w3c-keyname": "^2.2.8"
     }

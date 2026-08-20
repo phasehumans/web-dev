@@ -32,6 +32,7 @@ export interface HeadlessTaskOptions {
     stderr?: NodeJS.WritableStream
     nonInteractive?: boolean
     isAuthenticated?: boolean
+    json?: boolean
 }
 
 export interface HeadlessTaskResult {
@@ -52,6 +53,8 @@ export async function runHeadlessTask(
         stderr = process.stderr,
     } = options
 
+    const isJson = Boolean(options.json)
+
     const writeOut = (msg: string) => {
         if (stdout && stdout.write) stdout.write(msg)
     }
@@ -60,10 +63,18 @@ export async function runHeadlessTask(
         if (stderr && stderr.write) stderr.write(msg)
     }
 
+    const writeJson = (data: any) => {
+        writeOut(JSON.stringify(data) + '\n')
+    }
+
     if (options.isAuthenticated === false) {
-        writeErr(
-            'Error: Not authenticated. Please run `december login` or configure an API key (e.g. OPENAI_API_KEY, ANTHROPIC_API_KEY).\n'
-        )
+        if (isJson) {
+            writeJson({ type: 'error', error: 'Not authenticated' })
+        } else {
+            writeErr(
+                'Error: Not authenticated. Please run `december login` or configure an API key (e.g. OPENAI_API_KEY, ANTHROPIC_API_KEY).\n'
+            )
+        }
         return { success: false, error: 'Not authenticated' }
     }
 
@@ -117,6 +128,21 @@ export async function runHeadlessTask(
         if (isNonInteractive) {
             return { block: false }
         }
+
+        if (toolCall.name.includes('__')) {
+            const [serverName, ...toolParts] = toolCall.name.split('__')
+            const mcpToolName = toolParts.join('__')
+            if (agent.mcpPool?.isAutoApproved(serverName, mcpToolName)) {
+                return { block: false }
+            }
+            const answer = await promptUser(`\nExecute MCP tool ${toolCall.name}? (y/n): `)
+            if (answer.toLowerCase().startsWith('y')) {
+                return { block: false }
+            } else {
+                return { block: true, reason: 'User denied execution in UI.' }
+            }
+        }
+
         if (
             ['replace_file_content', 'multi_replace_file_content', 'run_command'].includes(
                 toolCall.name
@@ -149,46 +175,84 @@ export async function runHeadlessTask(
         for await (const event of stream) {
             switch (event.type) {
                 case 'StreamChunk':
-                    writeOut(event.content)
+                    if (isJson) {
+                        writeJson({ type: 'content', content: event.content })
+                    } else {
+                        writeOut(event.content)
+                    }
                     break
                 case 'ThinkingChunk':
-                    // Intentionally suppressed from stdout to optimize output performance
+                    if (isJson) {
+                        writeJson({ type: 'thinking', content: event.content })
+                    }
                     break
                 case 'AgentStatus':
-                    writeOut(`\n[Status: ${event.message}]\n`)
+                    if (isJson) {
+                        writeJson({ type: 'status', message: event.message })
+                    } else {
+                        writeOut(`\n[Status: ${event.message}]\n`)
+                    }
                     break
                 case 'ContextCompacted':
-                    writeOut(`\n[Context Compacted: ${event.summary}]\n`)
+                    if (isJson) {
+                        writeJson({ type: 'compacted', summary: event.summary })
+                    } else {
+                        writeOut(`\n[Context Compacted: ${event.summary}]\n`)
+                    }
                     break
                 case 'ToolCallStart':
-                    writeOut(`\n\n[Tool Executing: ${event.toolCall.name}]\n`)
-                    writeOut(
-                        typeof event.toolCall.input === 'string'
-                            ? event.toolCall.input
-                            : JSON.stringify(event.toolCall.input)
-                    )
-                    writeOut('\n')
+                    if (isJson) {
+                        writeJson({ type: 'tool_start', toolCall: event.toolCall })
+                    } else {
+                        writeOut(`\n\n[Tool Executing: ${event.toolCall.name}]\n`)
+                        writeOut(
+                            typeof event.toolCall.input === 'string'
+                                ? event.toolCall.input
+                                : JSON.stringify(event.toolCall.input)
+                        )
+                        writeOut('\n')
+                    }
                     break
                 case 'ToolCallResult':
-                    if (event.result.error) {
-                        writeErr(`\n[Tool Error] ${event.result.error}\n`)
+                    if (isJson) {
+                        writeJson({ type: 'tool_result', result: event.result })
                     } else {
-                        writeOut(`\n[Tool Result Received]\n`)
+                        if (event.result.error) {
+                            writeErr(`\n[Tool Error] ${event.result.error}\n`)
+                        } else {
+                            writeOut(`\n[Tool Result Received]\n`)
+                        }
                     }
                     break
                 case 'AgentUsage':
-                    writeOut(
-                        `\n[Usage: ${event.promptTokens} prompt, ${event.completionTokens} completion]\n`
-                    )
+                    if (isJson) {
+                        writeJson({
+                            type: 'usage',
+                            promptTokens: event.promptTokens,
+                            completionTokens: event.completionTokens,
+                        })
+                    } else {
+                        writeOut(
+                            `\n[Usage: ${event.promptTokens} prompt, ${event.completionTokens} completion]\n`
+                        )
+                    }
                     break
                 case 'AgentError':
                     hasError = true
                     errorMessage = event.error
-                    writeErr(`\n[Error: ${event.error}]\n`)
+                    if (isJson) {
+                        writeJson({ type: 'error', error: event.error })
+                    } else {
+                        writeErr(`\n[Error: ${event.error}]\n`)
+                    }
                     break
             }
         }
-        writeOut('\n\nHeadless task complete.\n')
+        if (isJson) {
+            writeJson({ type: 'done', success: !hasError })
+        } else {
+            writeOut('\n\nHeadless task complete.\n')
+        }
     } finally {
         rl.close()
     }

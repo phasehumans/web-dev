@@ -41,6 +41,12 @@ describe('parseCliArgs', () => {
         expect(parseCliArgs(['handoff']).prompt).toBe('handoff')
     })
 
+    it('parses --scope and --cwd flags correctly', () => {
+        const parsed = parseCliArgs(['--scope', 'packages/agent', '--cwd', '/workspace'])
+        expect(parsed.scope).toBe('packages/agent')
+        expect(parsed.cwd).toBe('/workspace')
+    })
+
     it('returns formatted help text', () => {
         const help = getHelpText('0.2.20')
         expect(help).toContain('AI coding assistant that lives in your terminal.')
@@ -48,5 +54,7 @@ describe('parseCliArgs', () => {
         expect(help).toContain('december')
         expect(help).toContain('--help')
         expect(help).toContain('--version')
+        expect(help).toContain('--scope')
+        expect(help).toContain('--cwd')
     })
 })

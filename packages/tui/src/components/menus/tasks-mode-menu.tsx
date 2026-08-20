@@ -46,17 +46,13 @@ export function TasksModeMenu(props: TasksModeMenuProps) {
             return (
                 <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
                     <Box marginBottom={1} justifyContent="space-between">
-                        <Text bold color={THEME.colors.text}>
-                            Task: {task.id}
-                        </Text>
-                        <Text bold color={getStatusColor(task.status)}>
+                        <Text color={THEME.colors.text}>Task: {task.id}</Text>
+                        <Text color={getStatusColor(task.status)}>
                             [{task.status.toUpperCase()}]
                         </Text>
                     </Box>
                     <Box marginBottom={1}>
-                        <Text color={THEME.colors.muted} bold>
-                            Cmd: {task.command}
-                        </Text>
+                        <Text color={THEME.colors.muted}>Cmd: {task.command}</Text>
                     </Box>
                     <Box
                         borderColor={THEME.colors.border}
@@ -101,9 +97,7 @@ export function TasksModeMenu(props: TasksModeMenuProps) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text bold color={THEME.colors.text}>
-                    Tasks
-                </Text>
+                <Text color={THEME.colors.text}>Tasks</Text>
             </Box>
             {tasksData.length === 0 ? (
                 <Box paddingLeft={2}>

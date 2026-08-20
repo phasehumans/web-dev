@@ -42,9 +42,7 @@ export function ModelSelectMenu({
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color={THEME.colors.text} bold>
-                    Select Model:
-                </Text>
+                <Text color={THEME.colors.text}>Select Model:</Text>
             </Box>
             <SelectInput
                 items={items}

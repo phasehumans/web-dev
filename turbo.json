@@ -40,6 +40,15 @@
         "test:integration": {
             "cache": false
         },
+        "test:load": {
+            "cache": false
+        },
+        "test:benchmark": {
+            "cache": false
+        },
+        "test:smoke": {
+            "cache": false
+        },
         "dev": {
             "dependsOn": ["db:generate"],
             "cache": false,

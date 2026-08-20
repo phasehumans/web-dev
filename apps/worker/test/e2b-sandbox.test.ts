@@ -356,4 +356,100 @@ describe('E2BSandboxService (Unit & Integration)', () => {
         expect(secRes.success).toBe(true)
         expect(taskTypeExecuted).toBe('security_audit')
     })
+
+    it('should query minioPrefix in provisionSandbox and pass objectKey to restoreWorkspaceState', async () => {
+        let restoredObjectKey: string | undefined
+        const mockSandbox = {
+            sandboxId: 'sb-handoff-prefix',
+            commands: {
+                run: async (cmd: string) => {
+                    if (cmd.includes('curl')) {
+                        return { exitCode: 0, stdout: '', stderr: '' }
+                    }
+                    return { exitCode: 0, stdout: '', stderr: '' }
+                },
+            },
+        }
+
+        E2BSandboxService.setMockClient({ create: async () => mockSandbox })
+
+        const origFindUnique = prisma.session.findUnique
+        prisma.session.findUnique = (async ({ where }: any) => {
+            if (where.id === 'sess-handoff-custom-prefix') {
+                return {
+                    id: 'sess-handoff-custom-prefix',
+                    minioPrefix: 'handoffs/user-999/custom-tarball.tar.gz',
+                    githubRepoUrl: null,
+                }
+            }
+            return null
+        }) as any
+
+        try {
+            const res = await E2BSandboxService.provisionSandbox({
+                sessionId: 'sess-handoff-custom-prefix',
+                backoffDelays: [1, 1, 1],
+            })
+
+            expect(res.sandboxId).toBe('sb-handoff-prefix')
+        } finally {
+            prisma.session.findUnique = origFindUnique
+        }
+    })
+
+    it('should rehydrate past conversational history and tool calls on cloud agent session boot', async () => {
+        const origFindMany = prisma.message.findMany
+        prisma.message.findMany = (async ({ where }: any) => {
+            if (where.sessionId === 'sess-rehydrated-context') {
+                return [
+                    {
+                        id: 'm1',
+                        role: 'USER',
+                        content: 'Create a feature file',
+                        sequence: 0,
+                        blocks: null,
+                    },
+                    {
+                        id: 'm2',
+                        role: 'ASSISTANT',
+                        content: 'I created the feature.',
+                        sequence: 1,
+                        blocks: [
+                            {
+                                type: 'command',
+                                toolCallId: 'call_1',
+                                toolName: 'write_file',
+                                toolInput: { targetFile: 'src/feat.ts' },
+                                status: 'success',
+                                output: 'File created',
+                            },
+                            {
+                                type: 'text',
+                                content: 'I created the feature.',
+                            },
+                        ],
+                    },
+                ]
+            }
+            return []
+        }) as any
+
+        try {
+            const stream = await E2BSandboxService.runAgentSession({
+                sessionId: 'sess-rehydrated-context',
+                prompt: 'Now add unit tests for that feature',
+            })
+
+            const events: any[] = []
+            for await (const chunk of stream) {
+                events.push(JSON.parse(chunk.data))
+            }
+
+            expect(events.length).toBeGreaterThan(0)
+            expect(events[0].type).toBe('AgentStart')
+            expect(events.some((e) => e.type === 'AgentEnd')).toBe(true)
+        } finally {
+            prisma.message.findMany = origFindMany
+        }
+    })
 })

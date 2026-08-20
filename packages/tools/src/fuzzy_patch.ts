@@ -142,8 +142,8 @@ function findBestMatchOffset(fileLines: string[], hunk: Hunk, fuzzFactor: number
 
     // Search outwards from expectedIdx
     const maxRadius = fileLines.length
-    let bestIdx = -1
-    let bestScore = fuzzFactor
+    let bestIdx = score > fuzzFactor ? expectedIdx : -1
+    let bestScore = Math.max(fuzzFactor, score)
 
     for (let r = 1; r <= maxRadius; r++) {
         const up = expectedIdx - r

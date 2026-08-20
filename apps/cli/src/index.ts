@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import path from 'node:path'
+
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
@@ -24,6 +26,10 @@ async function main() {
     if (parsedArgs.isVersion) {
         console.log(pkg.version)
         process.exit(0)
+    }
+
+    if (parsedArgs.cwd) {
+        process.chdir(parsedArgs.cwd)
     }
 
     if (parsedArgs.command === 'logout') {
@@ -65,7 +71,7 @@ async function main() {
         { getProviderConfig, loadConfig, getAuthStatus },
         { runHeadlessTask, suppressConsole },
         { useAgentSession },
-        { localOperations },
+        { localOperations, setActiveScopeDir },
         { instantiateProvider },
     ] = await Promise.all([
         import('@december/agent'),
@@ -81,6 +87,10 @@ async function main() {
         import('./local-operations'),
         import('./utils/provider-factory'),
     ])
+
+    if (parsedArgs.scope) {
+        setActiveScopeDir(parsedArgs.scope)
+    }
 
     const React = reactModule.default || reactModule
     const { render } = inkModule
@@ -123,6 +133,8 @@ async function main() {
             toolsModule.ManageTaskTool,
             toolsModule.BrowserTool,
             toolsModule.WebSearchTool,
+            toolsModule.PythonReplTool,
+            toolsModule.MCPTool,
         ],
         operations: localOperations,
         modelOptions: {
@@ -135,7 +147,9 @@ async function main() {
         },
         sessionRepository,
         sessionId: parsedArgs.sessionId || sessionId,
-        workspaceDir: process.cwd(),
+        workspaceDir: parsedArgs.scope
+            ? path.resolve(process.cwd(), parsedArgs.scope)
+            : process.cwd(),
         hooks: {
             beforeToolCall: async (toolCall) => {
                 // Future integration: hook into the TUI to request user approval for destructive bash commands
@@ -150,18 +164,26 @@ async function main() {
 
     if (parsedArgs.prompt) {
         await agent.loadContext()
-        console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
-        const result = await runHeadlessTask(parsedArgs.prompt, { agent })
+        await harness.initMCP().catch(() => {})
+        if (!parsedArgs.json) {
+            console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
+        }
+        const result = await runHeadlessTask(parsedArgs.prompt, {
+            agent,
+            nonInteractive: parsedArgs.yes,
+            json: parsedArgs.json,
+        })
         process.exit(result.success ? 0 : 1)
     }
 
-    // Non-blocking session context loading during TUI mounting
+    // Non-blocking MCP initialization and session context loading during TUI mounting
+    harness.initMCP().catch(() => {})
     agent.loadContext().catch((err: any) => {
         // Log silently or ignore context load errors on fresh sessions
     })
 
     function AppWrapper(props: any) {
-        const [latestVersion, setLatestVersion] = React.useState<string | undefined>(undefined)
+        const [latestVersion, setLatestVersion] = React.useState(undefined as string | undefined)
         React.useEffect(() => {
             import('./utils/version-check')
                 .then(({ checkForLatestVersion }) => {

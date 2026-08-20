@@ -4,6 +4,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 
 import { PlatformAdapter } from '@december/agent'
+import { getWorkspaceIgnores, isPathIgnored } from '@december/shared'
 import { createLocalBashOperations } from '@december/tools'
 import fg from 'fast-glob'
 
@@ -12,12 +13,26 @@ import { taskManager } from './task-manager'
 const execAsync = promisify(exec)
 const localBashOps = createLocalBashOperations()
 
+export let activeScopeDir: string | undefined
+
+export function setActiveScopeDir(dir: string | undefined) {
+    activeScopeDir = dir
+}
+
+export function getScopedCwd(): string {
+    if (activeScopeDir) {
+        return path.resolve(process.cwd(), activeScopeDir)
+    }
+    return process.cwd()
+}
+
 export const localOperations: PlatformAdapter = {
     bash: {
         exec: async (command, cwd, options) => {
+            const targetCwd = cwd || getScopedCwd()
             return new Promise((resolve, reject) => {
                 const child = spawn(command, {
-                    cwd,
+                    cwd: targetCwd,
                     detached: process.platform !== 'win32',
                     env: options.env ?? process.env,
                     shell: true,
@@ -77,27 +92,36 @@ export const localOperations: PlatformAdapter = {
     } as any,
     fs: {
         readFile: async (filepath) => {
-            return fs.readFile(path.resolve(process.cwd(), filepath), 'utf8')
+            const root = getScopedCwd()
+            const absolutePath = path.isAbsolute(filepath) ? filepath : path.resolve(root, filepath)
+            return fs.readFile(absolutePath, 'utf8')
         },
         writeFile: async (filepath, content) => {
-            const absolutePath = path.resolve(process.cwd(), filepath)
+            const root = getScopedCwd()
+            const absolutePath = path.isAbsolute(filepath) ? filepath : path.resolve(root, filepath)
             await fs.mkdir(path.dirname(absolutePath), { recursive: true })
             await fs.writeFile(absolutePath, content, 'utf8')
         },
         readdir: async (dirPath) => {
-            const absolutePath = path.resolve(process.cwd(), dirPath)
+            const root = getScopedCwd()
+            const absolutePath = path.isAbsolute(dirPath) ? dirPath : path.resolve(root, dirPath)
             const entries = await fs.readdir(absolutePath, { withFileTypes: true })
-            return entries.map((entry) => {
-                const type = entry.isDirectory() ? 'DIR ' : 'FILE'
-                return `[${type}] ${entry.name}`
-            })
+            const ignores = getWorkspaceIgnores(root)
+            return entries
+                .filter((entry) => !isPathIgnored(entry.name, ignores))
+                .map((entry) => {
+                    const type = entry.isDirectory() ? 'DIR ' : 'FILE'
+                    return `[${type}] ${entry.name}`
+                })
         },
         mkdir: async (dirPath, options) => {
-            const absolutePath = path.resolve(process.cwd(), dirPath)
+            const root = getScopedCwd()
+            const absolutePath = path.isAbsolute(dirPath) ? dirPath : path.resolve(root, dirPath)
             await fs.mkdir(absolutePath, options)
         },
         exists: async (filepath) => {
-            const absolutePath = path.resolve(process.cwd(), filepath)
+            const root = getScopedCwd()
+            const absolutePath = path.isAbsolute(filepath) ? filepath : path.resolve(root, filepath)
             try {
                 await fs.access(absolutePath)
                 return true
@@ -108,18 +132,31 @@ export const localOperations: PlatformAdapter = {
     },
     search: {
         find: async (dirPath, query) => {
+            const root = getScopedCwd()
+            const targetDir = path.isAbsolute(dirPath) ? dirPath : path.resolve(root, dirPath)
+            const ignores = getWorkspaceIgnores(root)
             const files = await fg([query], {
-                cwd: dirPath,
-                ignore: ['**/node_modules/**', '**/.git/**'],
+                cwd: targetDir,
+                ignore: ignores,
                 dot: true,
             })
             return files.join('\n')
         },
         grep: async (dirPath, query) => {
+            const root = getScopedCwd()
+            const targetDir = path.isAbsolute(dirPath) ? dirPath : path.resolve(root, dirPath)
+            const ignores = getWorkspaceIgnores(root)
             try {
-                const cmd = `git grep -nI "${query}" ${dirPath} || grep -rnI --exclude-dir=node_modules --exclude-dir=.git "${query}" ${dirPath}`
+                const cmd = `git grep -nI "${query}" ${targetDir} || grep -rnI --exclude-dir=node_modules --exclude-dir=.git "${query}" ${targetDir}`
                 const { stdout } = await execAsync(cmd)
-                return stdout
+                if (!stdout) return ''
+                const lines = stdout.split('\n')
+                const filtered = lines.filter((line) => {
+                    if (!line.trim()) return false
+                    const filePath = line.split(':')[0]
+                    return !isPathIgnored(filePath, ignores)
+                })
+                return filtered.join('\n')
             } catch (error: any) {
                 if (error.code === 1) return '' // grep returns 1 when no matches
                 throw error
@@ -127,7 +164,7 @@ export const localOperations: PlatformAdapter = {
         },
     },
     env: {
-        cwd: () => process.cwd(),
+        cwd: () => getScopedCwd(),
         get: (key) => process.env[key],
     },
     ui: {

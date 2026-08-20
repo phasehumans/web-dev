@@ -11,7 +11,7 @@ export type WriteFileInput = Static<typeof writeSchema>
 export const WriteFileTool: Tool<WriteFileInput> = {
     name: 'write_file',
     description:
-        'Creates a new file or completely overwrites an existing file with the provided content.',
+        'Creates a new file or completely overwrites an existing file with the provided content. Note: For modifying existing files, always use edit_file or edit_diff instead to prevent token limit truncation and preserve untouched lines.',
     inputSchema: writeSchema,
     execute: async ({ filePath, content }, context: ToolExecuteContext) => {
         try {

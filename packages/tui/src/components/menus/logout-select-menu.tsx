@@ -12,9 +12,7 @@ export function LogoutSelectMenu(props: any) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color={THEME.colors.text} bold>
-                    Select credential to remove:
-                </Text>
+                <Text color={THEME.colors.text}>Select credential to remove:</Text>
             </Box>
             <SelectInput
                 items={logoutItems}

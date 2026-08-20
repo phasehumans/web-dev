@@ -47,6 +47,10 @@ export async function processAgentStream({
                     content === 'Preparing...' ||
                     content === 'Compacting...' ||
                     content === 'Generating...' ||
+                    content === 'Analyzing...' ||
+                    content === 'Analyzing prompt...' ||
+                    content === 'Generating questions...' ||
+                    content === 'Understanding...' ||
                     content.startsWith('Rate limit') ||
                     content.startsWith('High demand') ||
                     content.startsWith('LLM Provider rate limit') ||

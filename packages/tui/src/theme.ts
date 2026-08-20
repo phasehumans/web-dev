@@ -4,7 +4,7 @@
 export const THEME = {
     colors: {
         brand: '#89B4F8',
-        text: '#FFFFFF',
+        text: 'white',
         muted: '#AAAAAA',
         dim: '#666666',
         border: '#333333',

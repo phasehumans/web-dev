@@ -1,9 +1,12 @@
 import { Agent, runAgentLoop } from '@december/agent'
+import { loadCustomCommands, interpolateCommandPrompt } from '@december/shared'
 import { useEffect, useCallback, useState, useRef } from 'react'
 
 import { loadConfig } from '../config'
+import { AUTH_REQUIRED_NOTICE } from '../constants/messages'
 import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
 import { useCliStore } from '../store'
+import { setupAgentInterceptors } from '../store/interceptors'
 import { taskManager } from '../task-manager'
 import { startDirectCommand } from '../utils/direct-shell'
 import { parseErrorMessage } from '../utils/error-parser'
@@ -182,41 +185,13 @@ export function useAgentSession({
 
     useEffect(() => {
         if (agent) {
-            if (!agent.operations) agent.operations = {} as any
-            if (!agent.operations.ui) agent.operations.ui = {} as any
-            agent.operations.ui!.askQuestion = (questions) => {
-                return new Promise((resolve) => {
-                    setAuthMode('ask_question')
-                    setPendingQuestions({ questions, resolve })
-                })
-            }
-
-            agent.operations.ui!.requestPermission = async (toolCall: any) => {
-                if (
-                    ['replace_file_content', 'multi_replace_file_content', 'run_command'].includes(
-                        toolCall.name
-                    )
-                ) {
-                    const answer = await new Promise<string>((resolve) => {
-                        setAuthMode('ask_question')
-                        setPendingQuestions({
-                            questions: [
-                                {
-                                    question: `Execute ${toolCall.name}? (Diff is previewed in chat)`,
-                                    options: ['Yes (Approve)', 'No (Deny)'],
-                                },
-                            ],
-                            resolve,
-                        })
-                    })
-                    if (answer !== 'Yes (Approve)') {
-                        return { block: true, reason: 'User denied execution in UI.' }
-                    }
-                }
-                return { block: false }
-            }
+            setupAgentInterceptors(agent, {
+                setAuthMode,
+                setPendingQuestions,
+                setPendingToolCall,
+            })
         }
-    }, [agent, setAuthMode, setPendingQuestions])
+    }, [agent, setAuthMode, setPendingQuestions, setPendingToolCall])
 
     const activeShellAbortRef = useRef<(() => void) | null>(null)
 
@@ -256,23 +231,61 @@ export function useAgentSession({
 
     const generateGrillQuestions = useCallback(
         async (userPrompt: string) => {
-            setIsStreaming(true)
-            setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
-            setActiveMessages([
-                {
+            const trimmedPrompt = userPrompt.trim()
+            const displayPrompt = trimmedPrompt.startsWith('/')
+                ? trimmedPrompt
+                : `/grill ${trimmedPrompt}`
+
+            if (!isAuthenticated) {
+                const userMsg: Message = {
+                    id: getNextMsgId(),
+                    role: 'user',
+                    text: displayPrompt,
+                }
+                const noticeMsg: Message = {
                     id: getNextMsgId(),
                     role: 'assistant',
                     blocks: [
                         {
                             type: 'text',
-                            content: '*Analyzing prompt and generating grill questions...*',
+                            content: AUTH_REQUIRED_NOTICE,
+                        },
+                    ],
+                }
+                setStaticMessages((prev) => [
+                    ...prev,
+                    ...useCliStore.getState().activeMessages,
+                    userMsg,
+                    noticeMsg,
+                ])
+                setActiveMessages([])
+                return
+            }
+
+            setIsStreaming(true)
+            const userMsgId = getNextMsgId()
+            const assistantMsgId = getNextMsgId()
+
+            setStaticMessages((prev) => [
+                ...prev,
+                ...useCliStore.getState().activeMessages,
+                { id: userMsgId, role: 'user', text: displayPrompt },
+            ])
+            setActiveMessages([
+                {
+                    id: assistantMsgId,
+                    role: 'assistant',
+                    blocks: [
+                        {
+                            type: 'text',
+                            content: 'Analyzing prompt...',
                         },
                     ],
                 },
             ])
 
             try {
-                const prompt = getGrillPrompt(userPrompt)
+                const prompt = getGrillPrompt(trimmedPrompt)
 
                 const stream = agent.llm.stream(
                     [{ role: 'user', content: prompt }],
@@ -284,6 +297,20 @@ export function useAgentSession({
                 for await (const chunk of stream) {
                     if (chunk.type === 'text') {
                         accumulatedText += chunk.text
+                        setActiveMessages((prev) =>
+                            prev.map((msg) => {
+                                if (msg.id !== assistantMsgId) return msg
+                                return {
+                                    ...msg,
+                                    blocks: [
+                                        {
+                                            type: 'text',
+                                            content: 'Generating questions...',
+                                        },
+                                    ],
+                                }
+                            })
+                        )
                     }
                 }
 
@@ -293,7 +320,7 @@ export function useAgentSession({
                 }
 
                 setGrillQuestions(questions)
-                setGrillPrompt(userPrompt)
+                setGrillPrompt(trimmedPrompt)
                 setGrillAnswers([])
                 setCurrentGrillIndex(0)
                 setAuthMode('grill_question')
@@ -302,13 +329,42 @@ export function useAgentSession({
                 setActiveMessages([])
             } catch (err: any) {
                 const cleanError = parseErrorMessage(err)
-                addToast(`Grill Failed: ${cleanError}`, 'error')
+                const isAuthErr =
+                    cleanError.includes('401') ||
+                    cleanError.includes('dummy-key') ||
+                    cleanError.toLowerCase().includes('incorrect api key') ||
+                    cleanError.toLowerCase().includes('invalid api key') ||
+                    cleanError.toLowerCase().includes('unauthorized')
+
+                if (isAuthErr) {
+                    setActiveMessages([])
+                    const noticeMsg: Message = {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: AUTH_REQUIRED_NOTICE,
+                            },
+                        ],
+                    }
+                    setStaticMessages((prev) => [...prev, noticeMsg])
+                } else {
+                    setActiveMessages([])
+                    const errorMsg: Message = {
+                        id: getNextMsgId(),
+                        role: 'error',
+                        text: cleanError,
+                    }
+                    setStaticMessages((prev) => [...prev, errorMsg])
+                }
             } finally {
                 setIsStreaming(false)
             }
         },
         [
             agent,
+            isAuthenticated,
             addToast,
             setActiveMessages,
             setAuthMode,
@@ -332,6 +388,32 @@ export function useAgentSession({
 
             if (!originalPrompt) return
 
+            if (!isAuthenticated) {
+                const userMsg: Message = {
+                    id: getNextMsgId(),
+                    role: 'user',
+                    text: `Generate plan from grill interview for: "${originalPrompt}"`,
+                }
+                const noticeMsg: Message = {
+                    id: getNextMsgId(),
+                    role: 'assistant',
+                    blocks: [
+                        {
+                            type: 'text',
+                            content: AUTH_REQUIRED_NOTICE,
+                        },
+                    ],
+                }
+                setStaticMessages((prev) => [
+                    ...prev,
+                    ...useCliStore.getState().activeMessages,
+                    userMsg,
+                    noticeMsg,
+                ])
+                setActiveMessages([])
+                return
+            }
+
             setCurrentPlannedPrompt(originalPrompt)
 
             const planPrompt = getPlanPrompt(
@@ -350,21 +432,31 @@ export function useAgentSession({
                 },
                 { id: assistantMsgId, role: 'assistant', blocks: [] },
             ])
+            let planSuccess = false
             try {
                 const stream = runAgentLoop(agent, planPrompt)
                 await processAgentStream({ stream, setActiveMessages, assistantMsgId })
+                planSuccess = true
             } catch (err: any) {
+                const cleanError = parseErrorMessage(err)
                 setActiveMessages((prev) => [
                     ...prev,
-                    { id: getNextMsgId(), role: 'error', text: err.message },
+                    { id: getNextMsgId(), role: 'error', text: cleanError },
                 ])
             } finally {
                 setIsStreaming(false)
-                setAuthMode('plan_approve')
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                setActiveMessages([])
+                if (planSuccess) {
+                    setAuthMode('plan_approve')
+                } else {
+                    setAuthMode('none')
+                }
             }
         },
         [
             agent,
+            isAuthenticated,
             grillPrompt,
             grillQuestions,
             setActiveMessages,
@@ -579,6 +671,27 @@ export function useAgentSession({
                     addToast('Usage: /plan <goal description>', 'info')
                     return
                 }
+                if (!isAuthenticated) {
+                    const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
+                    const noticeMsg: Message = {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: AUTH_REQUIRED_NOTICE,
+                            },
+                        ],
+                    }
+                    setStaticMessages((prev) => [
+                        ...prev,
+                        ...useCliStore.getState().activeMessages,
+                        userMsg,
+                        noticeMsg,
+                    ])
+                    setActiveMessages([])
+                    return
+                }
                 setCurrentPlannedPrompt(goal)
                 const planPrompt = `You are an autonomous software engineer.\nThe user wants to implement: "${goal}"\n\nPlease create a detailed, step-by-step implementation plan based on these requirements.\nDo NOT execute any tools. Only describe the plan.\nStart your response with '### Implementation Plan' and list the concrete steps.\nExplain which files need to be created, modified, or deleted, and what the changes will be.`
 
@@ -593,23 +706,42 @@ export function useAgentSession({
                     },
                     { id: assistantMsgId, role: 'assistant', blocks: [] },
                 ])
+                let planSuccess = false
                 try {
                     const stream = runAgentLoop(agent, planPrompt)
                     await processAgentStream({ stream, setActiveMessages, assistantMsgId })
+                    planSuccess = true
                 } catch (err: any) {
+                    const cleanError = parseErrorMessage(err)
                     setActiveMessages((prev) => [
                         ...prev,
-                        { id: getNextMsgId(), role: 'error', text: err.message },
+                        { id: getNextMsgId(), role: 'error', text: cleanError },
                     ])
                 } finally {
                     setIsStreaming(false)
-                    setAuthMode('plan_approve')
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([])
+                    if (planSuccess) {
+                        setAuthMode('plan_approve')
+                    }
                 }
+                return
+            }
+
+            if (text.trim() === '/init') {
+                const { handleInitCommand } = await import('../commands')
+                await handleInitCommand()
+                addToast('Initialized December workspace successfully!', 'success')
                 return
             }
 
             if (text.trim() === '/context') {
                 setAuthMode('context_select')
+                return
+            }
+
+            if (text.trim() === '/mcp') {
+                setAuthMode('mcp_manager')
                 return
             }
 
@@ -624,8 +756,7 @@ export function useAgentSession({
                         blocks: [
                             {
                                 type: 'text',
-                                content:
-                                    'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
+                                content: AUTH_REQUIRED_NOTICE,
                             },
                         ],
                     }
@@ -776,6 +907,18 @@ export function useAgentSession({
                 return
             }
 
+            // Check if input matches a custom slash command from commands.json
+            if (text.trim().startsWith('/')) {
+                const rawTrimmed = text.trim()
+                const [firstToken, ...restArgs] = rawTrimmed.split(/\s+/)
+                const potentialCmd = firstToken.slice(1).toLowerCase()
+                const customCommands = loadCustomCommands()
+                const matchedCmd = customCommands.find((c) => c.name.toLowerCase() === potentialCmd)
+                if (matchedCmd) {
+                    text = interpolateCommandPrompt(matchedCmd.prompt, restArgs)
+                }
+            }
+
             if (!isAuthenticated) {
                 const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
                 const noticeMsg: Message = {
@@ -784,8 +927,7 @@ export function useAgentSession({
                     blocks: [
                         {
                             type: 'text',
-                            content:
-                                'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.',
+                            content: AUTH_REQUIRED_NOTICE,
                         },
                     ],
                 }
@@ -868,6 +1010,8 @@ export function useAgentSession({
             setStaticMessages,
             setOllamaModels,
             setCurrentPlannedPrompt,
+            authMethod,
+            selectedProvider,
         ]
     )
 
@@ -919,6 +1063,46 @@ export function useAgentSession({
     )
 
     const handleContextSelect = () => {}
+
+    const handleToggleMcpServer = async (serverName: string) => {
+        try {
+            const { loadMcpConfig, saveMcpConfig } = await import('@december/tools')
+            const config = await loadMcpConfig({ workspaceDir: process.cwd() })
+            if (config.mcpServers?.[serverName]) {
+                config.mcpServers[serverName].disabled = !config.mcpServers[serverName].disabled
+                await saveMcpConfig({ config, scope: 'workspace', workspaceDir: process.cwd() })
+                if (agent.mcpPool) {
+                    await agent.mcpPool.reload(config)
+                    for (const tool of agent.mcpPool.getTools()) {
+                        agent.registerTool(tool)
+                    }
+                }
+                addToast(
+                    `MCP server '${serverName}' ${config.mcpServers[serverName].disabled ? 'disabled' : 'enabled'}`
+                )
+                setStaticKey((k: number) => k + 1)
+            }
+        } catch (err: any) {
+            addToast(`Failed to toggle MCP server: ${err.message}`, 'error')
+        }
+    }
+
+    const handleReloadMcp = async () => {
+        try {
+            if (agent.mcpPool) {
+                const { tools } = await agent.mcpPool.reload()
+                for (const tool of tools) {
+                    agent.registerTool(tool)
+                }
+                addToast('MCP servers and tools reloaded successfully')
+                setStaticKey((k: number) => k + 1)
+            } else {
+                addToast('MCP pool not initialized', 'error')
+            }
+        } catch (err: any) {
+            addToast(`Failed to reload MCP servers: ${err.message}`, 'error')
+        }
+    }
 
     return {
         currentPlannedPrompt,
@@ -1028,5 +1212,7 @@ export function useAgentSession({
         handleOllamaProceed,
         pendingToolCall,
         setPendingToolCall,
+        handleToggleMcpServer,
+        handleReloadMcp,
     }
 }

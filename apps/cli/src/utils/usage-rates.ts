@@ -1,3 +1,5 @@
+import { AUTH_REQUIRED_NOTICE } from '../constants/messages'
+
 export interface ModelRate {
     name: string
     inputRate: number // $ per 1M tokens
@@ -181,11 +183,7 @@ export function formatUsageCard(params: FormatUsageCardParams): string {
     let providerKey = (params.provider || '').toLowerCase()
 
     if (!isAuthenticated) {
-        return `You are not logged in and have no custom API keys (BYOK) configured.
-
-Please run \`/login\` to:
-- Sign in with your December account (Cloud Wallet), or
-- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.`
+        return AUTH_REQUIRED_NOTICE
     }
 
     if (authMethod === 'december') {

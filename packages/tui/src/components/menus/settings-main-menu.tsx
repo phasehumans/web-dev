@@ -14,11 +14,17 @@ export function SettingsMainMenu(props: any) {
         settingsThinkingLevel,
         settingsSteeringMode,
         settingsFollowUpMode,
+        settingsPathGuard = true,
+        settingsScope,
         hasBothAuth,
         settingsAuthPriority,
         handleSettingsMainSelect,
     } = props
     const mainItems = [
+        {
+            label: `PathGuard Protection     [${settingsPathGuard !== false ? 'on' : 'off'}]`,
+            value: 'pathGuard',
+        },
         {
             label: `Non-Workspace Access     [${settingsNonWorkspace ? 'on' : 'off'}]`,
             value: 'nonWorkspaceAccess',
@@ -39,7 +45,18 @@ export function SettingsMainMenu(props: any) {
             label: `Follow-Up Mode           [${settingsFollowUpMode}]`,
             value: 'followUpMode',
         },
+        {
+            label: `MCP Servers              [Configure]`,
+            value: 'mcpServers',
+        },
     ]
+
+    if (settingsScope) {
+        mainItems.splice(2, 0, {
+            label: `Monorepo Scope           [${settingsScope}]`,
+            value: 'scope',
+        })
+    }
 
     if (hasBothAuth) {
         mainItems.unshift({
@@ -51,9 +68,7 @@ export function SettingsMainMenu(props: any) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text bold color={THEME.colors.text}>
-                    Settings
-                </Text>
+                <Text color={THEME.colors.text}>Settings</Text>
             </Box>
             <SelectInput
                 items={mainItems}

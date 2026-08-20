@@ -1,5 +1,7 @@
 import { Tool, ToolExecuteContext } from '@december/shared'
 
+export * from './mcp/index'
+
 let mcpServersConfig: Record<string, any> = {}
 
 export function configureMCP(config: Record<string, any>) {

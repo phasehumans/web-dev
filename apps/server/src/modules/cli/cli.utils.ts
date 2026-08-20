@@ -8,7 +8,7 @@ import {
 import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 
-import type { ServerProviderResolution } from './cli.types'
+import type { ServerProviderResolution, ReconciledCliMessage } from './cli.types'
 import type { Message, ProviderTool } from '@december/providers'
 
 export function generateCliSessionName(): string {
@@ -170,4 +170,109 @@ export function resolveServerProvider(modelInput?: string): ServerProviderResolu
         `No upstream provider API key configured for model "${model}". Please configure GEMINI_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, or OPENROUTER_API_KEY on the server.`,
         500
     )
+}
+
+export function reconcileCliMessages(messages?: any[]): ReconciledCliMessage[] {
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return []
+    }
+
+    const reconciled: ReconciledCliMessage[] = []
+    let sequence = 0
+
+    for (let i = 0; i < messages.length; i++) {
+        const msg = messages[i]
+        if (!msg) continue
+
+        const role = (msg.role || '').toLowerCase()
+
+        if (role === 'system') {
+            reconciled.push({
+                role: 'SYSTEM',
+                content:
+                    typeof msg.content === 'string'
+                        ? msg.content
+                        : JSON.stringify(msg.content ?? ''),
+                sequence: sequence++,
+            })
+        } else if (role === 'user') {
+            reconciled.push({
+                role: 'USER',
+                content:
+                    typeof msg.content === 'string'
+                        ? msg.content
+                        : JSON.stringify(msg.content ?? ''),
+                sequence: sequence++,
+            })
+        } else if (role === 'assistant') {
+            let blocks: any[] = []
+
+            if (Array.isArray(msg.blocks) && msg.blocks.length > 0) {
+                blocks = msg.blocks
+            } else {
+                if (msg.thoughts) {
+                    blocks.push({
+                        type: 'thinking',
+                        content: msg.thoughts,
+                    })
+                }
+
+                if (Array.isArray(msg.toolCalls) && msg.toolCalls.length > 0) {
+                    for (const tc of msg.toolCalls) {
+                        const toolMsg = messages.find(
+                            (m: any) =>
+                                (m.role || '').toLowerCase() === 'tool' && m.toolCallId === tc.id
+                        )
+                        const output = toolMsg?.content || ''
+                        const hasError =
+                            Boolean(toolMsg?.isError) ||
+                            Boolean(toolMsg?.error) ||
+                            output.startsWith('Tool execution failed:') ||
+                            output.startsWith('Error executing tool:') ||
+                            output.startsWith('Tool execution blocked:')
+
+                        let toolInput = tc.input
+                        if (typeof toolInput === 'string') {
+                            try {
+                                toolInput = JSON.parse(toolInput)
+                            } catch {
+                                // Keep string as toolInput
+                            }
+                        }
+
+                        blocks.push({
+                            type: 'command',
+                            toolCallId: tc.id,
+                            toolName: tc.name,
+                            toolInput,
+                            status: hasError ? 'error' : 'success',
+                            output,
+                        })
+                    }
+                }
+
+                if (msg.errorMessage) {
+                    blocks.push({
+                        type: 'error',
+                        error: msg.errorMessage,
+                    })
+                } else if (msg.content && typeof msg.content === 'string' && msg.content.trim()) {
+                    blocks.push({
+                        type: 'text',
+                        content: msg.content,
+                    })
+                }
+            }
+
+            reconciled.push({
+                role: 'ASSISTANT',
+                content: typeof msg.content === 'string' ? msg.content : '',
+                blocks: blocks.length > 0 ? blocks : undefined,
+                sequence: sequence++,
+            })
+        }
+        // Standalone 'tool' messages are incorporated into the assistant message blocks above
+    }
+
+    return reconciled
 }

@@ -61,4 +61,18 @@ describe('useCliStore activeMessages handling', () => {
         store.setQueuedPrompts([])
         expect(useCliStore.getState().queuedPrompts).toEqual([])
     })
+
+    it('contains AUTH_REQUIRED_NOTICE in messages constants matching expected prompt', async () => {
+        const { AUTH_REQUIRED_NOTICE } = await import('../src/constants/messages')
+        expect(AUTH_REQUIRED_NOTICE).toContain(
+            'You are not logged in and have no custom API keys (BYOK) configured.'
+        )
+        expect(AUTH_REQUIRED_NOTICE).toContain('Please run `/login` to:')
+        expect(AUTH_REQUIRED_NOTICE).toContain(
+            '- Sign in with your December account (Cloud Wallet), or'
+        )
+        expect(AUTH_REQUIRED_NOTICE).toContain(
+            '- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.'
+        )
+    })
 })

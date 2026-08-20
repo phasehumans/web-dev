@@ -88,8 +88,15 @@ export function GlobalShortcuts(session: any) {
             return
         }
 
+        if (authMode === 'session_select') {
+            return
+        }
+
         if (authMode !== 'none') {
-            if (key.escape && authMode !== 'login') {
+            if (key.escape && authMode !== 'menu') {
+                if (session.isStreaming) {
+                    return
+                }
                 if (authMode === 'grill_question') {
                     setGrillQuestions([])
                     setCurrentGrillIndex(0)
@@ -97,6 +104,13 @@ export function GlobalShortcuts(session: any) {
                     setGrillPrompt(null)
                     setCustomInputMode(false)
                     setGrillMode(false)
+                } else if (authMode === 'byok_key') {
+                    if (session.setAuthError) {
+                        session.setAuthError(null)
+                    }
+                    if (session.setApiKey) {
+                        session.setApiKey('')
+                    }
                 }
                 setAuthMode('none')
             }
@@ -109,9 +123,24 @@ export function GlobalShortcuts(session: any) {
         }
 
         if (key.ctrl && input === 'l') {
-            setAuthMode('login')
+            setAuthMode('menu')
         } else if (key.ctrl && input === 'h') {
-            setAuthMode('sessions')
+            if (session.sessionRepository?.listSessions) {
+                session.sessionRepository
+                    .listSessions()
+                    .then((sessions: any[]) => {
+                        if (session.setSessionsData) session.setSessionsData(sessions)
+                        if (session.setSessionPage) session.setSessionPage(0)
+                        if (session.setSessionSelectedIndex) session.setSessionSelectedIndex(0)
+                        if (session.setSessionRenameMode) session.setSessionRenameMode(false)
+                        setAuthMode('session_select')
+                    })
+                    .catch(() => {
+                        setAuthMode('session_select')
+                    })
+            } else {
+                setAuthMode('session_select')
+            }
         } else if (key.ctrl && input === 't') {
             setAuthMode('tasks_mode')
         } else if (

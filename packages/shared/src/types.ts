@@ -169,3 +169,109 @@ export function toWire(event: AgentEvent): WireAgentEvent {
 export function fromWire(wireEvent: WireAgentEvent): AgentEvent {
     return wireEvent.data as AgentEvent
 }
+
+export interface RequestLogToolEntry {
+    name: string
+    description?: string
+    inputSchema?: any
+    tokens: number
+    isMcp: boolean
+    serverName?: string
+}
+
+export interface RequestLogRuleEntry {
+    path?: string
+    content: string
+    tokens: number
+}
+
+export interface RequestLogSystemPromptDecomposition {
+    basePrompt: string
+    basePromptTokens: number
+    rules: RequestLogRuleEntry[]
+    rulesText: string
+    rulesTokens: number
+    skills: string[]
+    skillsText: string
+    skillsTokens: number
+    dynamicEnv: string
+    dynamicEnvTokens: number
+    totalTokens: number
+}
+
+export interface RequestLogEntry {
+    turn: number
+    timestamp: string
+    sessionId: string
+    model?: string
+    request: {
+        systemPrompt: string
+        systemPromptDecomposition: RequestLogSystemPromptDecomposition
+        tools: RequestLogToolEntry[]
+        messages: any[]
+        toolTokens: number
+        messagesTokens: number
+        totalEstimatedTokens: number
+    }
+    response: {
+        assistantMessage: string
+        thinking?: string
+        toolCalls: ToolCall[]
+        usage?: {
+            promptTokens?: number
+            completionTokens?: number
+            totalTokens?: number
+        }
+        durationMs: number
+        error?: string
+    }
+}
+
+export interface ContextDecomposition {
+    model: string
+    maxTokens: number
+    basePrompt: {
+        text: string
+        tokens: number
+    }
+    rules: {
+        files: RequestLogRuleEntry[]
+        text: string
+        tokens: number
+    }
+    skills: {
+        items: string[]
+        text: string
+        tokens: number
+    }
+    dynamicEnv: {
+        text: string
+        tokens: number
+    }
+    builtInTools: {
+        tools: RequestLogToolEntry[]
+        tokens: number
+    }
+    dynamicMcpTools: {
+        tools: RequestLogToolEntry[]
+        tokens: number
+    }
+    conversationHistory: {
+        userTokens: number
+        assistantTokens: number
+        toolTokens: number
+        totalTokens: number
+    }
+    totalTokens: number
+    freeTokens: number
+    cacheableStaticPrefixTokens: number
+}
+
+export interface DecomposeContextOptions {
+    agent?: any
+    systemPrompt?: string
+    tools?: any[] | Map<string, any>
+    messages?: any[]
+    model?: string
+    maxTokens?: number
+}

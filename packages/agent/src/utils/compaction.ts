@@ -32,8 +32,8 @@ export async function compactContextIfNeeded(
 
     const currentTokens = estimateTokens(messages)
 
-    // trigger at 80% capacity
-    if (currentTokens < limit * 0.8) {
+    // trigger at 75% capacity
+    if (currentTokens < limit * 0.75) {
         return messages
     }
 

@@ -12,9 +12,7 @@ export function ByokProviderMenu(props: any) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color={THEME.colors.text} bold>
-                    Select API Provider:
-                </Text>
+                <Text color={THEME.colors.text}>Select API Provider:</Text>
             </Box>
             <SelectInput
                 items={[
@@ -25,11 +23,11 @@ export function ByokProviderMenu(props: any) {
                     { label: 'Hugging Face', value: 'huggingface' },
                     { label: 'Kimi', value: 'kimi' },
                     { label: 'Mistral', value: 'mistral' },
-                    { label: 'Moonshoot AI', value: 'moonshoot' },
+                    { label: 'Moonshot AI', value: 'moonshot' },
                     { label: 'Ollama (Local Models)', value: 'ollama' },
                     { label: 'OpenAI', value: 'openai' },
                     { label: 'OpenRouter', value: 'openrouter' },
-                    { label: 'xAI', value: 'xAI' },
+                    { label: 'xAI', value: 'xai' },
                     { label: 'ZAI', value: 'zai' },
                 ]}
                 onSelect={handleProviderSelect}

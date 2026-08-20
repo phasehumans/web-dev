@@ -1,9 +1,10 @@
-import { execSync, exec } from 'child_process'
+import { exec } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
 import { writeToClipboard } from '../../utils/clipboard'
+import { createWorkspaceArchive } from '../../utils/handoff'
 
 import type { Command } from './types'
 
@@ -88,6 +89,7 @@ export const COMMANDS: Command[] = [
         description: 'Hand off a task to a remote December session (cloud)',
         value: '/handoff',
         action: async (ctx) => {
+            const archivePath = '.december-handoff.tar.gz'
             try {
                 const configPath = path.join(os.homedir(), '.config', 'december', 'config.json')
                 let config: any = {}
@@ -96,7 +98,7 @@ export const COMMANDS: Command[] = [
                         config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
                     }
                 } catch {
-                    // Ignore unreadable config file
+                    // Intentionally swallowed: unreadable config file fallback
                 }
 
                 if (!config.decemberToken) {
@@ -109,39 +111,7 @@ export const COMMANDS: Command[] = [
 
                 ctx.toast.show({ variant: 'info', message: 'Zipping workspace...' })
 
-                const archivePath = '.december-handoff.tar.gz'
-                const excludes = [
-                    '--exclude=node_modules',
-                    '--exclude=.git',
-                    `--exclude=${archivePath}`,
-                ]
-                try {
-                    if (fs.existsSync('.gitignore')) {
-                        const lines = fs.readFileSync('.gitignore', 'utf8').split('\n')
-                        for (const line of lines) {
-                            const t = line.trim()
-                            if (t && !t.startsWith('#'))
-                                excludes.push(`--exclude=${t.endsWith('/') ? t.slice(0, -1) : t}`)
-                        }
-                    }
-                    if (fs.existsSync('.decemberignore')) {
-                        const lines = fs.readFileSync('.decemberignore', 'utf8').split('\n')
-                        for (const line of lines) {
-                            const t = line.trim()
-                            if (t && !t.startsWith('#'))
-                                excludes.push(`--exclude=${t.endsWith('/') ? t.slice(0, -1) : t}`)
-                        }
-                    }
-                } catch {
-                    // Ignore unreadable ignore files
-                }
-
-                const excludeArgs = excludes.join(' ')
-                try {
-                    execSync(`tar -czf ${archivePath} ${excludeArgs} .`, { stdio: 'ignore' })
-                } catch (e: any) {
-                    if (e.status !== 1) throw e
-                }
+                await createWorkspaceArchive(archivePath)
 
                 ctx.toast.show({ variant: 'info', message: 'Requesting upload URL...' })
 
@@ -155,7 +125,7 @@ export const COMMANDS: Command[] = [
 
                 ctx.toast.show({ variant: 'info', message: 'Uploading to MinIO...' })
 
-                const fileData = fs.readFileSync(archivePath)
+                const fileData = await fs.promises.readFile(archivePath)
                 const uploadRes = await fetch(uploadUrl, {
                     method: 'PUT',
                     body: fileData,
@@ -178,19 +148,20 @@ export const COMMANDS: Command[] = [
                 })
                 if (!sessionRes.ok) throw new Error(await sessionRes.text())
 
-                fs.unlinkSync(archivePath)
+                await fs.promises.unlink(archivePath).catch(() => {})
 
                 ctx.toast.show({ variant: 'success', message: 'Handoff complete! Exiting in 3s.' })
 
                 setTimeout(() => ctx.exit(), 3000)
             } catch (e: any) {
+                await fs.promises.unlink(archivePath).catch(() => {})
                 ctx.toast.show({ variant: 'error', message: `Handoff failed: ${e.message}` })
             }
         },
     },
     {
         name: 'init',
-        description: 'Create initial rules, skills, and AGENTS.md configuration',
+        description: 'Create initial configuration, rules, skills, and .decemberignore',
         value: '/init',
         action: (ctx) => {
             try {
@@ -198,13 +169,21 @@ export const COMMANDS: Command[] = [
                 const decDir = path.join(rootDir, '.december')
 
                 const agentsFile = path.join(rootDir, 'AGENTS.md')
+                const ignoreFile = path.join(rootDir, '.decemberignore')
                 const rulesFile = path.join(decDir, 'rules.md')
                 const skillsFile = path.join(decDir, 'skills.md')
+                const commandsFile = path.join(decDir, 'commands.json')
+                const mcpFile = path.join(decDir, 'mcp.json')
+                const settingsFile = path.join(decDir, 'settings.json')
 
                 if (
                     fs.existsSync(agentsFile) &&
+                    fs.existsSync(ignoreFile) &&
                     fs.existsSync(rulesFile) &&
-                    fs.existsSync(skillsFile)
+                    fs.existsSync(skillsFile) &&
+                    fs.existsSync(commandsFile) &&
+                    fs.existsSync(mcpFile) &&
+                    fs.existsSync(settingsFile)
                 ) {
                     ctx.toast.show({ message: 'December workspace is already initialized.' })
                     return
@@ -213,7 +192,16 @@ export const COMMANDS: Command[] = [
                 fs.mkdirSync(decDir, { recursive: true })
 
                 if (!fs.existsSync(agentsFile)) {
-                    fs.writeFileSync(agentsFile, '')
+                    fs.writeFileSync(
+                        agentsFile,
+                        '# Agent Guidelines & Project Instructions\n\nAdd project-specific guidelines, testing commands, architecture patterns, and conventions in this file for December to follow.\n'
+                    )
+                }
+                if (!fs.existsSync(ignoreFile)) {
+                    fs.writeFileSync(
+                        ignoreFile,
+                        `# Build outputs and dependencies\nnode_modules/\ndist/\nbuild/\n.next/\n.turbo/\n*.log\n\n# Environment and secrets\n.env*\n*.pem\n*.key\n`
+                    )
                 }
                 if (!fs.existsSync(rulesFile)) {
                     fs.writeFileSync(
@@ -227,12 +215,67 @@ export const COMMANDS: Command[] = [
                         'Add skills in this file for the agent to use as context.\n'
                     )
                 }
+                if (!fs.existsSync(commandsFile)) {
+                    fs.writeFileSync(
+                        commandsFile,
+                        JSON.stringify(
+                            {
+                                commands: [
+                                    {
+                                        name: 'test',
+                                        description: 'Run tests and fix failures',
+                                        prompt: "Run 'bun test $PKG'. If any test fails, fix the root cause and verify.",
+                                    },
+                                    {
+                                        name: 'lint',
+                                        description: 'Run linter and fix errors',
+                                        prompt: 'Run linter and fix any reported issues in $FILE.',
+                                    },
+                                    {
+                                        name: 'commit',
+                                        description: 'Create conventional git commit',
+                                        prompt: 'Inspect git status and staged changes, then create a clean git commit adhering strictly to lowercase conventional commits.',
+                                    },
+                                ],
+                            },
+                            null,
+                            2
+                        ) + '\n'
+                    )
+                }
+                if (!fs.existsSync(mcpFile)) {
+                    fs.writeFileSync(
+                        mcpFile,
+                        JSON.stringify(
+                            {
+                                mcpServers: {},
+                            },
+                            null,
+                            2
+                        ) + '\n'
+                    )
+                }
+                if (!fs.existsSync(settingsFile)) {
+                    fs.writeFileSync(
+                        settingsFile,
+                        JSON.stringify(
+                            {
+                                thinkingLevel: 'low',
+                                steeringMode: 'all',
+                                toolPermission: 'always-ask',
+                                pathGuard: true,
+                            },
+                            null,
+                            2
+                        ) + '\n'
+                    )
+                }
 
                 ctx.toast.show({
                     variant: 'success',
                     message: 'Initialized December workspace successfully!',
                 })
-            } catch (err) {
+            } catch {
                 ctx.toast.show({
                     variant: 'error',
                     message: 'Failed to initialize December workspace',
@@ -252,6 +295,14 @@ export const COMMANDS: Command[] = [
         value: '/logout',
         action: (ctx) => {
             ctx.toast.show({ variant: 'success', message: 'Signed out' })
+        },
+    },
+    {
+        name: 'mcp',
+        description: 'Manage Model Context Protocol (MCP) servers and tools',
+        value: '/mcp',
+        action: (ctx) => {
+            // forwarded to chat screen
         },
     },
     {

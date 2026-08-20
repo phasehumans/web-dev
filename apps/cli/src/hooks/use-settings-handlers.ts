@@ -29,6 +29,11 @@ export function useSettingsHandlers() {
         let updated = false
 
         switch (item.value) {
+            case 'pathGuard': {
+                config.pathGuard = !(config.pathGuard !== false)
+                updated = true
+                break
+            }
             case 'nonWorkspaceAccess':
                 config.nonWorkspaceAccess = !settingsNonWorkspace
                 setSettingsNonWorkspace(!settingsNonWorkspace)
@@ -114,6 +119,10 @@ export function useSettingsHandlers() {
                         `Auth priority set to ${newPriority === 'december' ? 'December Cloud Wallet' : 'BYOK'}`
                     )
                 }
+                break
+            }
+            case 'mcpServers': {
+                setAuthMode('mcp_manager')
                 break
             }
             case 'back':

@@ -12,7 +12,7 @@ export type EditFileInput = Static<typeof editSchema>
 export const EditFileTool: Tool<EditFileInput> = {
     name: 'edit_file',
     description:
-        'Edits an existing file by searching for a specific block of text (targetContent) and replacing it with replacementContent. Preserves unchanged lines.',
+        'Edits an existing file by searching for a specific block of text (targetContent) and replacing it with replacementContent. Preferred over write_file for modifying existing code to avoid token limit truncation.',
     inputSchema: editSchema,
     execute: async ({ path, targetContent, replacementContent }, context: ToolExecuteContext) => {
         try {

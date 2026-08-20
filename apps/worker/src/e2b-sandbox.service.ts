@@ -16,6 +16,8 @@ import {
     GrepSearchTool,
     LsTool,
     ManageTaskTool,
+    MCPTool,
+    PythonReplTool,
     ReadFileTool,
     WebSearchTool,
     WriteFileTool,
@@ -40,6 +42,7 @@ import type {
     EphemeralTaskInput,
     EphemeralTaskResult,
 } from './e2b-sandbox.types'
+import type { AgentMessage } from '@december/shared'
 
 let redisPub: Redis | null = null
 
@@ -172,12 +175,26 @@ const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionS
                 }
             }
 
+            const sessionRecord = await prisma.session
+                .findUnique({
+                    where: { id: sessionId },
+                    select: { minioPrefix: true, githubRepoUrl: true },
+                })
+                .catch(() => null)
+
             const effectiveApiKey = apiKey || process.env.E2B_API_KEY
             if (!effectiveApiKey) {
                 // Dev mode fallback when no key available
                 const mockId = `mock-sandbox-${sessionId}`
                 activeSandboxes.set(sessionId, { sandboxId: mockId, isMock: true })
                 activeSandboxes.set(mockId, { sandboxId: mockId, isMock: true })
+
+                await restoreWorkspaceState({
+                    sessionId,
+                    workspaceDir: '/workspace',
+                    objectKey: sessionRecord?.minioPrefix || undefined,
+                    sandbox: { sandboxId: mockId, isMock: true },
+                }).catch(() => {})
 
                 await prisma.session
                     .update({
@@ -215,18 +232,12 @@ const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionS
             const restored = await restoreWorkspaceState({
                 sessionId,
                 workspaceDir: '/workspace',
+                objectKey: sessionRecord?.minioPrefix || undefined,
                 sandbox,
             }).catch(() => false)
 
             if (!restored) {
                 try {
-                    const sessionRecord = await prisma.session
-                        .findUnique({
-                            where: { id: sessionId },
-                            select: { githubRepoUrl: true },
-                        })
-                        .catch(() => null)
-
                     if (sessionRecord?.githubRepoUrl && sandbox?.commands?.run) {
                         console.log(
                             `[E2BSandboxService] Initializing sandbox workspace from GitHub repo: ${sessionRecord.githubRepoUrl}`
@@ -581,6 +592,8 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         ManageTaskTool,
         BrowserTool,
         WebSearchTool,
+        PythonReplTool,
+        MCPTool,
     ]
 
     const harness = new AgentHarness({
@@ -597,8 +610,71 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
 
     const agent = harness.getAgent()
 
+    // Rehydrate past conversational history from PostgreSQL
+    try {
+        const historicalDbMessages = await prisma.message.findMany({
+            where: { sessionId },
+            orderBy: { sequence: 'asc' },
+        })
+
+        if (historicalDbMessages && historicalDbMessages.length > 0) {
+            const rehydratedMessages: AgentMessage[] = []
+            for (const msg of historicalDbMessages) {
+                if (msg.role === 'SYSTEM') {
+                    rehydratedMessages.push({ role: 'system', content: msg.content })
+                } else if (msg.role === 'USER') {
+                    rehydratedMessages.push({ role: 'user', content: msg.content })
+                } else if (msg.role === 'ASSISTANT') {
+                    const blocks = Array.isArray(msg.blocks) ? (msg.blocks as any[]) : []
+                    const commandBlocks = blocks.filter((b: any) => b && b.type === 'command')
+                    if (commandBlocks.length > 0) {
+                        const toolCalls = commandBlocks.map((b: any) => ({
+                            id: b.toolCallId,
+                            name: b.toolName,
+                            input:
+                                typeof b.toolInput === 'string'
+                                    ? b.toolInput
+                                    : JSON.stringify(b.toolInput || {}),
+                        }))
+                        rehydratedMessages.push({
+                            role: 'assistant',
+                            content: msg.content || '',
+                            toolCalls,
+                        })
+                        for (const cmd of commandBlocks) {
+                            rehydratedMessages.push({
+                                role: 'tool',
+                                toolCallId: (cmd as any).toolCallId,
+                                content: (cmd as any).output || '',
+                            })
+                        }
+                    } else {
+                        rehydratedMessages.push({
+                            role: 'assistant',
+                            content: msg.content || '',
+                        })
+                    }
+                }
+            }
+
+            const nonSystemMessages = rehydratedMessages.filter((m) => m.role !== 'system')
+            if (nonSystemMessages.length > 0) {
+                agent.messages = [
+                    { role: 'system', content: agent.systemPrompt },
+                    ...nonSystemMessages,
+                ]
+            }
+        }
+    } catch (rehydrateErr) {
+        console.error(
+            `[AGENT EXECUTION] Error rehydrating context for session '${sessionId}':`,
+            rehydrateErr
+        )
+    }
+
     const streamGenerator = (async function* () {
         try {
+            await harness.initMCP().catch(() => {})
             console.log(
                 `[AGENT EXECUTION] Agent loop started for session '${sessionId}'. Running AgentHarness loop...`
             )
