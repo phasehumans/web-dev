@@ -75,6 +75,12 @@ export const useAppController = () => {
         }
     }, [queryClient, setIsAuthenticated])
 
+    React.useEffect(() => {
+        if (isAuthenticated && view === 'landing') {
+            navigate('/', { replace: true })
+        }
+    }, [isAuthenticated, view, navigate])
+
     const { data: profile } = useQuery({
         queryKey: ['profile'],
         queryFn: profileAPI.getProfile,

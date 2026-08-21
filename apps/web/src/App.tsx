@@ -46,6 +46,8 @@ const App: React.FC = () => {
         resetImportState,
     } = useAppController()
 
+    const isLanding = !isAuthenticated && (view === 'landing' || isHome)
+
     return (
         <>
             {(showLoader || isProjectOpening) && (
@@ -60,9 +62,11 @@ const App: React.FC = () => {
                     </div>
                 </div>
             )}
-            <div className="flex w-full h-screen bg-background text-textMain overflow-hidden font-sans">
+            <div
+                className={`flex w-full h-screen ${isLanding ? 'bg-white' : 'bg-background'} text-textMain overflow-hidden font-sans`}
+            >
                 <AppSideNavigation
-                    showSidebar={showSidebar}
+                    showSidebar={showSidebar && isAuthenticated && !isLanding}
                     isMobileSidebarOpen={isMobileSidebarOpen}
                     setIsMobileSidebarOpen={setIsMobileSidebarOpen}
                     onNewThread={handleNewThread}
@@ -86,10 +90,11 @@ const App: React.FC = () => {
                     }}
                 />
 
-                <div className="flex-1 flex flex-col h-full min-h-0 relative overflow-hidden">
+                <div className="flex-1 flex flex-col h-full min-h-0 relative overflow-y-auto no-scrollbar">
                     <AppContentView
                         view={view}
                         isHome={isHome}
+                        isAuthenticated={isAuthenticated}
                         onHomePromptSubmit={handlePromptSubmit}
                         onOutputPromptSubmit={handleOutputPromptSubmit}
                         onPreviewRuntimeError={handlePreviewRuntimeError}

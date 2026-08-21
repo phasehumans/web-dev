@@ -9,6 +9,7 @@ import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/pre
 
 import { DocsView } from '@/features/docs/components/DocsView'
 import { HomeHero } from '@/features/home/components/HomeHero'
+import { LandingPage } from '@/features/landing/LandingPage'
 import { WorkspaceScreen } from '@/features/preview/components/WorkspaceScreen'
 import { ProfileSettings } from '@/features/profile/components/ProfileSettings'
 import { SearchSpaceScreen } from '@/features/search/components/SearchSpaceScreen'
@@ -18,6 +19,7 @@ import { WikiView } from '@/features/wiki/components/WikiView'
 interface AppContentViewProps {
     view: ViewState
     isHome: boolean
+    isAuthenticated: boolean
     onHomePromptSubmit: (prompt: string) => void
     onOutputPromptSubmit: (
         prompt: string,
@@ -71,6 +73,7 @@ const AnimatedPage: React.FC<{ pageKey: string; children: React.ReactNode }> = (
 export const AppContentView: React.FC<AppContentViewProps> = ({
     view,
     isHome,
+    isAuthenticated,
     onHomePromptSubmit,
     onOutputPromptSubmit,
     onPreviewRuntimeError,
@@ -89,6 +92,23 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
 }) => {
     return (
         <AnimatePresence mode="wait" initial={false}>
+            {view === 'landing' &&
+                (!isAuthenticated ? (
+                    <AnimatedPage pageKey="landing">
+                        <LandingPage onLaunchApp={onOpenAuth} onSignIn={onOpenAuth} />
+                    </AnimatedPage>
+                ) : (
+                    <AnimatedPage pageKey="chat-home">
+                        <HomeHero
+                            onPromptSubmit={onHomePromptSubmit}
+                            onOpenAuth={onOpenAuth}
+                            onImportGithub={onImportGithub}
+                            onImportZip={onImportZip}
+                            onResetImportState={onResetImportState}
+                        />
+                    </AnimatedPage>
+                ))}
+
             {view === 'sessions' && (
                 <AnimatedPage pageKey="sessions">
                     <SessionList onNewProject={onNewProject} onOpenProject={onOpenProject} />
@@ -133,15 +153,21 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
 
             {(view === 'chat' || view === 'project') &&
                 (isHome ? (
-                    <AnimatedPage pageKey="chat-home">
-                        <HomeHero
-                            onPromptSubmit={onHomePromptSubmit}
-                            onOpenAuth={onOpenAuth}
-                            onImportGithub={onImportGithub}
-                            onImportZip={onImportZip}
-                            onResetImportState={onResetImportState}
-                        />
-                    </AnimatedPage>
+                    !isAuthenticated ? (
+                        <AnimatedPage pageKey="landing-home">
+                            <LandingPage onLaunchApp={onOpenAuth} onSignIn={onOpenAuth} />
+                        </AnimatedPage>
+                    ) : (
+                        <AnimatedPage pageKey="chat-home">
+                            <HomeHero
+                                onPromptSubmit={onHomePromptSubmit}
+                                onOpenAuth={onOpenAuth}
+                                onImportGithub={onImportGithub}
+                                onImportZip={onImportZip}
+                                onResetImportState={onResetImportState}
+                            />
+                        </AnimatedPage>
+                    )
                 ) : (
                     <AnimatedPage pageKey="chat-output">
                         <WorkspaceScreen
