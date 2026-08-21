@@ -33,11 +33,13 @@
     },
     "files": [
         "dist",
+        "scripts",
         "README.md",
         "LICENSE"
     ],
     "scripts": {
         "build": "bun build ./src/index.ts --target=node --outfile=./dist/december.js",
+        "postinstall": "node scripts/postinstall.js",
         "prepublishOnly": "bun run build",
         "typecheck": "tsc --noEmit",
         "test": "bun test",

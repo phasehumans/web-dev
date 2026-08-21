@@ -3,7 +3,7 @@ import { Paperclip, KeyRound, Code2, Puzzle, Folder } from 'lucide-react'
 import React, { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import sidebarPng from '../../../../public/sidebar.png'
+import sidebarPng from '../../../../assets/sidebar.png'
 
 import { Icons } from './Icons'
 

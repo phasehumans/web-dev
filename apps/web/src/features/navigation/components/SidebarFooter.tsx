@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Inbox, Copy, Check } from 'lucide-react'
 import React, { useState, useRef } from 'react'
 
-import sidebarPng from '../../../../public/sidebar.png'
+import sidebarPng from '../../../../assets/sidebar.png'
 
 import { NotificationsPopover } from './NotificationsPopover'
 

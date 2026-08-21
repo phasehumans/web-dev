@@ -58,9 +58,9 @@ const server = serve({
             })
         }
 
-        // 2. serve static files from 'public' directory
-        const publicFilePath = path.join(import.meta.dir, '../public', pathname)
-        const file = Bun.file(publicFilePath)
+        // 2. serve static files from 'assets' directory
+        const assetsFilePath = path.join(import.meta.dir, '../assets', pathname)
+        const file = Bun.file(assetsFilePath)
         const exists = await file.exists()
         if (exists) {
             return new Response(file)

@@ -1,4 +1,6 @@
-# December
+<p align="center">
+  <img src="./apps/web/assets/logo.svg" alt="december" height="40" />
+</p>
 
 December is an open-source AI coding assistant that helps you build faster by writing code, fixing bugs, and running commands across your entire workflow.
 
@@ -15,6 +17,26 @@ December is an open-source AI coding assistant that helps you build faster by wr
 - **Cloud Handoff:** Start a session in your terminal and seamlessly hand it off to the web.
 - **Agentic Capabilities:** Understands your codebase, writes code, and executes commands for you.
 - **Bring Your Own AI:** Plug in API keys for OpenAI, Anthropic, Gemini, and more, or use December credits.
+
+## Installation
+
+#### Standalone Installer (macOS & Linux)
+
+```bash
+curl -fsSL https://cli.trydecember.com | bash
+```
+
+#### Standalone Installer (Windows PowerShell)
+
+```powershell
+irm https://cli.trydecember.com/ps1 | iex
+```
+
+#### NPM Package
+
+```bash
+npm install -g @trydecember/cli
+```
 
 ## Contributing & Setup
 

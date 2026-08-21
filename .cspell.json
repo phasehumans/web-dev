@@ -52,6 +52,9 @@
         "ebtables",
         "prisma",
         "hono",
-        "evals"
+        "evals",
+        "trydecember",
+        "autonumber",
+        "ollama"
     ]
 }
