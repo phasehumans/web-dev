@@ -1,16 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 196 32" width="196" height="32" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
   <style>
     .december-icon { stroke: #EDEDED; }
-    .december-text { fill: #EDEDED; }
-    .agent-text { fill: #87B2F4; }
     @media (prefers-color-scheme: light) {
       .december-icon { stroke: #18181b; }
-      .december-text { fill: #18181b; }
     }
   </style>
 
   <!-- December Logo Icon -->
-  <g class="december-icon" transform="translate(14, 16) scale(1.4) translate(-12, -12)" stroke="#EDEDED" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <g class="december-icon" transform="translate(16, 16) scale(1.4) translate(-12, -12)" stroke="#EDEDED" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
     <!-- arm up -->
     <line x1="12" y1="12" x2="12" y2="5.3" />
     <line x1="12" y1="7.5" x2="13.9" y2="6.4" />
@@ -36,10 +33,4 @@
     <line x1="8.1" y1="9.75" x2="8.1" y2="7.55" />
     <line x1="8.1" y1="9.75" x2="6.2" y2="10.85" />
   </g>
-
-  <!-- December Agent Text -->
-  <text x="32" y="22" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="20" font-weight="400" letter-spacing="-0.3px">
-    <tspan class="december-text" fill="#EDEDED" font-weight="400">December</tspan>
-    <tspan dx="5" class="agent-text" fill="#87B2F4" font-weight="400">Agent</tspan>
-  </text>
 </svg>

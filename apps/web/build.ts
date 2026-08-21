@@ -136,8 +136,14 @@ const result = await Bun.build({
     target: 'browser',
     sourcemap: 'linked',
     define: {
-        'process.env.ENV': JSON.stringify('PROD'),
-        'process.env.NODE_ENV': JSON.stringify('production'),
+        'process.env.ENV': JSON.stringify(process.env.ENV || 'PROD'),
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+        'process.env.SERVER_URL': JSON.stringify(
+            process.env.SERVER_URL || process.env.BASE_URL || 'https://api.trydecember.com'
+        ),
+        'process.env.BASE_URL': JSON.stringify(
+            process.env.SERVER_URL || process.env.BASE_URL || 'https://api.trydecember.com'
+        ),
     },
     ...cliConfig,
 })

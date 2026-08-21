@@ -85,9 +85,17 @@ export const SidebarFooter: React.FC<
         }, 300)
     }
 
+    const CLI_INSTALL_COMMANDS: Record<'npm' | 'curl' | 'powershell', string> = {
+        npm: 'npm install -g @trydecember/cli',
+        curl: 'curl -fsSL https://cli.trydecember.com | bash',
+        powershell: 'irm https://cli.trydecember.com/ps1 | iex',
+    }
+
+    const [cliMethod, setCliMethod] = useState<'npm' | 'curl' | 'powershell'>('npm')
+
     const handleCopy = (e: React.MouseEvent) => {
         e.stopPropagation()
-        navigator.clipboard.writeText('npm install -g @trydecember/cli')
+        navigator.clipboard.writeText(CLI_INSTALL_COMMANDS[cliMethod])
         setIsCopied(true)
         setTimeout(() => setIsCopied(false), 2000)
     }
@@ -136,14 +144,14 @@ export const SidebarFooter: React.FC<
                 {showCliCard && (
                     <div
                         id="cli-popover-card"
-                        className="absolute bottom-11 left-3 w-[300px] z-[100] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl shadow-lg shadow-black/40 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
+                        className="absolute bottom-11 left-3 w-[324px] z-[100] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl shadow-lg shadow-black/40 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200"
                     >
                         <div className="w-full h-[200px] bg-[#1E1E1E] relative overflow-hidden flex items-center justify-center p-1.5 pb-0">
                             <a
                                 href="https://www.npmjs.com/package/@trydecember/cli"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="w-full h-full relative overflow-hidden rounded-xl border border-[#2A2928] block cursor-pointer"
+                                className="w-full h-full relative overflow-hidden rounded-lg border border-[#2A2928] block cursor-pointer"
                             >
                                 <img
                                     src={sidebarPng}
@@ -152,14 +160,49 @@ export const SidebarFooter: React.FC<
                                 />
                             </a>
                         </div>
-                        <div className="flex flex-col px-2 pt-2 pb-2.5 bg-[#1E1E1E] gap-2.5">
-                            <div className="flex items-center justify-between mx-1 px-3 py-1.5 bg-[#1E1E1E] border border-[#2A2928] rounded-xl group/cmd">
+                        <div className="flex flex-col px-2.5 pt-2 pb-2.5 bg-[#1E1E1E] gap-2">
+                            {/* CLI title and method pills */}
+                            <div className="flex items-center justify-between px-0.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="text-[14px] text-[#CBCACA] select-none leading-none">
+                                        ✱
+                                    </span>
+                                    <span className="text-[12.5px] font-medium text-[#EDEDED] truncate">
+                                        December CLI
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center gap-2.5 shrink-0">
+                                    {(['npm', 'curl', 'powershell'] as const).map((method) => (
+                                        <button
+                                            key={method}
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setCliMethod(method)
+                                                setIsCopied(false)
+                                            }}
+                                            className={cn(
+                                                'text-[11.5px] transition-colors cursor-pointer outline-none',
+                                                cliMethod === method
+                                                    ? 'text-white font-medium'
+                                                    : 'text-[#7B7A79] hover:text-[#D6D5D4]'
+                                            )}
+                                        >
+                                            {method}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Command box with copy button */}
+                            <div className="flex items-center justify-between mx-0.5 px-3 py-1.5 bg-[#1E1E1E] border border-[#2A2928] rounded-lg group/cmd">
                                 <div className="flex items-center truncate mr-2">
                                     <span className="text-[#7B7A79] mr-2 text-[11px] font-mono select-none">
                                         $
                                     </span>
                                     <span className="text-[#D6D5C9] text-[11px] font-mono truncate tracking-tight">
-                                        npm install -g @trydecember/cli
+                                        {CLI_INSTALL_COMMANDS[cliMethod]}
                                     </span>
                                 </div>
                                 <button

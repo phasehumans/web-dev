@@ -374,9 +374,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                             <span className="text-[13px] font-semibold text-[#E8E8E8]">
                                                 Introducing Context Canvas
                                             </span>
-                                            <span className="px-1.5 py-[1.5px] rounded-full bg-transparent border border-[#3A3938] text-[#A3A3A3] text-[8px] font-bold tracking-widest uppercase leading-none">
-                                                Beta
-                                            </span>
                                         </div>
                                         <span className="text-[12px] text-[#8F8E8D] mt-1 leading-relaxed">
                                             A freeform visual workspace to express your ideas far
@@ -396,7 +393,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                                 window.open('/canvas', '_blank')
                                             }}
                                         >
-                                            Try now
+                                            Join waitlist
                                         </button>
                                     </div>
                                 </div>

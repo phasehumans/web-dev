@@ -739,8 +739,17 @@ export const MobileSidebar: React.FC<
                                     </div>
                                 )
                             ) : (
-                                <div className="px-3 py-1.5 text-[12px] font-medium text-[#616161] tracking-tight">
-                                    No recent sessions
+                                <div className="px-2.5 py-2 flex flex-col gap-2 text-left">
+                                    <p className="text-[11.5px] text-[#7A7A7A] leading-normal font-sans">
+                                        Sign in to view your recent sessions and chat history.
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={onOpenAuth}
+                                        className="w-full py-1 px-2.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#313131] hover:border-[#3E3E3E] text-[#EDEDED] hover:text-white text-[12px] font-medium transition-all text-center cursor-pointer"
+                                    >
+                                        Sign in
+                                    </button>
                                 </div>
                             )}
                         </div>

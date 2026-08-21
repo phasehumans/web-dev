@@ -20,7 +20,7 @@ jobs:
                       archive_type: tar.gz
                       bin_name: december
 
-                    - runner: macos-13
+                    - runner: ubuntu-latest
                       target: bun-darwin-x64
                       artifact: december-x86_64-apple-darwin
                       archive_type: tar.gz

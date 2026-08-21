@@ -33,32 +33,61 @@ test-results/
 **/generated/prisma/
 packages/database/src/generated/
 
-# Environments & configs
+# Environments & secrets
 .env
-.env.local
-.env.development
-.env.production
-.env.test
+.env.*
+.env*.local
+!.env.example
+!.env.production.example
+
+# SSH & SSL Keys / Certificates
+*.pem
+*.key
+*.crt
+*.cert
+*.pfx
+*.p12
+
+# Database Dumps & Backups
+*.sql
+*.sql.gz
+*.dump
+*.tar.gz
+*.tar
+*.zip
 
 # Logs
 logs/
 *.log
+*.log.*
 log.txt
 .december/logs/
 **/.december/logs/
 
 # Local infrastructure & runtimes
 docker-compose.override.yml
+Caddyfile
+!Caddyfile.example
+caddy_data/
+caddy_config/
+caddy_autosave.json
 infra/minio/data/
 infra/postgres/data/
 
 # Tool generated files
+**/.december/
 **/.december-imports/
 /deployments/
 .turbo
 
-# IDE & OS files
+# IDE, Editors & OS files
 .idea/
 .vscode/
+.cursor/
+.claude/
+.windsurf/
+*.swp
+*.swo
+*~
 Thumbs.db
 .DS_Store

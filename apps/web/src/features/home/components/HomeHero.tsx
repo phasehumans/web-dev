@@ -56,6 +56,11 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
     const [showOnboarding, setShowOnboarding] = useState(false)
     const [showFeedbackModal, setShowFeedbackModal] = useState(false)
+    const [unauthDismissedCards, setUnauthDismissedCards] = useState<{
+        welcome?: boolean
+        github?: boolean
+        feedback?: boolean
+    }>({})
 
     const dismissCardMutation = useMutation({
         mutationFn: profileAPI.dismissOnboardingCard,
@@ -65,8 +70,22 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     })
 
     const handleDismissCard = (card: 'welcome' | 'github' | 'feedback') => {
-        dismissCardMutation.mutate(card)
+        if (isAuthenticated) {
+            dismissCardMutation.mutate(card)
+        } else {
+            setUnauthDismissedCards((prev) => ({ ...prev, [card]: true }))
+        }
     }
+
+    const isWelcomeDone = isAuthenticated
+        ? Boolean(profile?.welcomeCardDone)
+        : Boolean(unauthDismissedCards.welcome)
+    const isGithubDone = isAuthenticated
+        ? Boolean(profile?.githubAppInstall || profile?.githubCardDone)
+        : Boolean(unauthDismissedCards.github)
+    const isFeedbackDone = isAuthenticated
+        ? Boolean(profile?.feedbackCardDone)
+        : Boolean(unauthDismissedCards.feedback)
 
     const handleConnectGithub = () => {
         window.location.href = 'https://github.com/apps/trydecember'
@@ -235,119 +254,124 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                         mode={chatMode}
                     />
 
-                    {/* Get Started Section */}
-                    {isAuthenticated &&
-                        profile &&
-                        (!profile.welcomeCardDone ||
-                            (!profile.githubAppInstall && !profile.githubCardDone) ||
-                            !profile.feedbackCardDone) && (
-                            <div className="mt-8 w-full hidden md:flex flex-col gap-3.5 select-none animate-in fade-in duration-300">
-                                <div className="flex flex-col gap-0.5 text-left px-1.5">
-                                    <h3 className="text-[13px] md:text-[14px] font-sans font-semibold text-[#D6D5D4] tracking-tight">
-                                        Get Started
-                                    </h3>
-                                    <p className="text-[11px] md:text-[11.5px] font-sans text-[#8F8E8D] leading-tight">
-                                        Start your journey with December by completing your
-                                        onboarding
-                                    </p>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
-                                    {/* Card 1: Welcome */}
-                                    {!profile.welcomeCardDone && (
-                                        <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#1F1F1F] border border-[#313131] min-h-[148px] text-left transition-all duration-300 hover:border-white/10">
-                                            <button
-                                                onClick={() => handleDismissCard('welcome')}
-                                                className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
-                                            >
-                                                <Icons.X className="w-3.5 h-3.5" />
-                                            </button>
-                                            <div className="flex flex-col gap-2.5">
-                                                <span className="text-[19px] leading-none">👋</span>
-                                                <div className="flex flex-col gap-1">
-                                                    <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
-                                                        Welcome {profile.name}!
-                                                    </h4>
-                                                    <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                        Explore the platform by discovering how its
-                                                        capabilities will be valuable to your team
-                                                        and codebase.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <a
-                                                href="/docs"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="mt-3.5 w-full py-1.5 rounded-[8px] bg-[#2A2928] hover:bg-[#3E3D3C] border border-[#3E3D3C]/50 hover:border-[#4E4D4C]/70 text-[#E8E8E8] text-[12px] font-sans font-semibold text-center transition-all cursor-pointer"
-                                            >
-                                                Read Docs
-                                            </a>
-                                        </div>
-                                    )}
-
-                                    {/* Card 2: Connect GitHub */}
-                                    {!profile.githubAppInstall && !profile.githubCardDone && (
-                                        <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#1F1F1F] border border-[#313131] min-h-[148px] text-left transition-all duration-300 hover:border-white/10">
-                                            <button
-                                                onClick={() => handleDismissCard('github')}
-                                                className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
-                                            >
-                                                <Icons.X className="w-3.5 h-3.5" />
-                                            </button>
-                                            <div className="flex flex-col gap-2.5">
-                                                <Icons.Github className="w-5 h-5 text-white" />
-                                                <div className="flex flex-col gap-1">
-                                                    <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
-                                                        Connect GitHub
-                                                    </h4>
-                                                    <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                        Connect your repositories so that December
-                                                        can open Pull Requests for issues that it
-                                                        finds.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={handleConnectGithub}
-                                                className="mt-3.5 w-full py-1.5 rounded-[8px] bg-[#2A2928] hover:bg-[#3E3D3C] border border-[#3E3D3C]/50 hover:border-[#4E4D4C]/70 text-[#E8E8E8] text-[12px] font-sans font-semibold text-center transition-all cursor-pointer"
-                                            >
-                                                Install Integration
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Card 3: Feedback */}
-                                    {!profile.feedbackCardDone && (
-                                        <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#1F1F1F] border border-[#313131] min-h-[148px] text-left transition-all duration-300 hover:border-white/10">
-                                            <button
-                                                onClick={() => handleDismissCard('feedback')}
-                                                className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
-                                            >
-                                                <Icons.X className="w-3.5 h-3.5" />
-                                            </button>
-                                            <div className="flex flex-col gap-2.5">
-                                                <MessageSquare className="w-5 h-5 text-white" />
-                                                <div className="flex flex-col gap-1">
-                                                    <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
-                                                        Give feedback
-                                                    </h4>
-                                                    <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                        Help us improve December by sharing your
-                                                        thoughts and feature requests.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => setShowFeedbackModal(true)}
-                                                className="mt-3.5 w-full py-1.5 rounded-[8px] bg-[#2A2928] hover:bg-[#3E3D3C] border border-[#3E3D3C]/50 hover:border-[#4E4D4C]/70 text-[#E8E8E8] text-[12px] font-sans font-semibold text-center transition-all cursor-pointer"
-                                            >
-                                                Share feedback
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
+                    {/* Get Started Section - Desktop View */}
+                    {(!isWelcomeDone || !isGithubDone || !isFeedbackDone) && (
+                        <div className="mt-8 w-full hidden md:flex flex-col gap-3.5 select-none animate-in fade-in duration-300">
+                            <div className="flex flex-col gap-0.5 text-left px-1.5">
+                                <h3 className="text-[13px] md:text-[14px] font-sans font-semibold text-[#D6D5D4] tracking-tight">
+                                    Get Started
+                                </h3>
+                                <p className="text-[11px] md:text-[11.5px] font-sans text-[#8F8E8D] leading-tight">
+                                    Start your journey with December by completing your onboarding
+                                </p>
                             </div>
-                        )}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                                {/* Card 1: Welcome */}
+                                {!isWelcomeDone && (
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[160px] text-left">
+                                        <button
+                                            onClick={() => handleDismissCard('welcome')}
+                                            className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <Icons.X className="w-3.5 h-3.5" />
+                                        </button>
+                                        <div className="flex flex-col gap-2.5">
+                                            <span className="text-[19px] leading-none">👋</span>
+                                            <div className="flex flex-col gap-1">
+                                                <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
+                                                    {isAuthenticated && profile?.name
+                                                        ? `Welcome ${profile.name}!`
+                                                        : 'Welcome to December!'}
+                                                </h4>
+                                                <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
+                                                    Explore the platform by discovering how its
+                                                    capabilities will be valuable to your team and
+                                                    codebase.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <a
+                                            href="/docs"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-3.5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                        >
+                                            Read Docs
+                                        </a>
+                                    </div>
+                                )}
+
+                                {/* Card 2: Connect GitHub */}
+                                {!isGithubDone && (
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[160px] text-left">
+                                        <button
+                                            onClick={() => handleDismissCard('github')}
+                                            className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <Icons.X className="w-3.5 h-3.5" />
+                                        </button>
+                                        <div className="flex flex-col gap-2.5">
+                                            <Icons.Github className="w-5 h-5 text-white" />
+                                            <div className="flex flex-col gap-1">
+                                                <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
+                                                    Connect GitHub
+                                                </h4>
+                                                <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
+                                                    Connect your repositories so that December can
+                                                    open Pull Requests for issues that it finds.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={
+                                                isAuthenticated ? handleConnectGithub : onOpenAuth
+                                            }
+                                            className="mt-3.5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                        >
+                                            {isAuthenticated
+                                                ? 'Install Integration'
+                                                : 'Sign In to Connect'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Card 3: Feedback */}
+                                {!isFeedbackDone && (
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[160px] text-left">
+                                        <button
+                                            onClick={() => handleDismissCard('feedback')}
+                                            className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
+                                        >
+                                            <Icons.X className="w-3.5 h-3.5" />
+                                        </button>
+                                        <div className="flex flex-col gap-2.5">
+                                            <MessageSquare className="w-5 h-5 text-white" />
+                                            <div className="flex flex-col gap-1">
+                                                <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
+                                                    Give feedback
+                                                </h4>
+                                                <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
+                                                    {isAuthenticated
+                                                        ? 'Help us improve December by sharing your thoughts and feature requests.'
+                                                        : 'Have questions or feature requests? Share your thoughts with our team.'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={
+                                                isAuthenticated
+                                                    ? () => setShowFeedbackModal(true)
+                                                    : onOpenAuth
+                                            }
+                                            className="mt-3.5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                        >
+                                            Share feedback
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 

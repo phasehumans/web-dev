@@ -114,11 +114,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
                     }}
                     className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 h-7 text-[13px] text-[#E8E8E6] transition-all duration-200 cursor-pointer hover:bg-white/5 group whitespace-nowrap flex-shrink-0 opacity-[0.85] hover:opacity-100"
                 >
-                    <span className="bg-[#87B2F4]/15 text-[#87B2F4] rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none flex items-center justify-center flex-shrink-0">
-                        New
+                    <span className="bg-[#87B2F4]/15 text-[#87B2F4] rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold tracking-wider uppercase leading-none flex items-center justify-center flex-shrink-0">
+                        NEW
                     </span>
                     <span className="font-medium text-[#D4D4D8] group-hover:text-white transition-colors whitespace-nowrap">
-                        December CLI is now available
+                        December Terminal Agent Is Now Live
                     </span>
                     <span className="text-[#3F3F46] font-light flex-shrink-0">|</span>
                     <div className="text-[#D4D4D8] font-medium flex items-center gap-1 group-hover:text-white transition-colors whitespace-nowrap flex-shrink-0">

@@ -24,6 +24,9 @@ const resolveBaseUrl = () => {
     const runtime = globalThis as typeof globalThis & RuntimeEnv
 
     return (
+        runtime.Bun?.env?.SERVER_URL ??
+        runtime.process?.env?.SERVER_URL ??
+        runtime.__ENV__?.SERVER_URL ??
         runtime.Bun?.env?.BASE_URL ??
         runtime.process?.env?.BASE_URL ??
         runtime.__ENV__?.BASE_URL ??

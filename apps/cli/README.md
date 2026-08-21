@@ -14,19 +14,7 @@ December is an AI coding assistant that lives in your terminal. It understands y
 
 ### Get Started
 
-#### Standalone Installer (macOS & Linux)
-
-```bash
-curl -fsSL https://cli.trydecember.com | bash
-```
-
-#### Standalone Installer (Windows PowerShell)
-
-```powershell
-irm https://cli.trydecember.com/ps1 | iex
-```
-
-#### NPM Package
+1. Install December:
 
 ```bash
 npm install -g @trydecember/cli
