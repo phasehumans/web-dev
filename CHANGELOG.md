@@ -2,6 +2,16 @@
 
 ### Features
 
+- Unify environment constants and url resolvers
+
+### Miscellaneous Tasks
+
+- _(web)_ Configure vercel spa routing and server url
+
+## [0.3.10] - 2026-08-21
+
+### Features
+
 - _(mcp)_ Support dynamic mcp tools across terminal cli and cloud e2b sandboxes (#413)
 - _(cli,worker,server)_ Complete end-to-end cli-to-cloud handoff session migration
 - _(agent,tui)_ Add request logger core and granular context token inspector
@@ -24,6 +34,7 @@
 ### Miscellaneous Tasks
 
 - Ignore .december/logs in git, prettier, eslint and handoff archive
+- _(release)_ V0.3.10
 
 ## [0.3.9] - 2026-08-18
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./apps/web/assets/logo.svg" alt="december" height="80" />
+  <img src="./apps/web/assets/logo.svg" alt="december" width="120" height="120" />
 </p>
 
 December is an open-source AI coding assistant that helps you build faster by writing code, fixing bugs, and running commands across your entire workflow.
