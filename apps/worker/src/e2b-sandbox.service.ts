@@ -551,6 +551,7 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         sandboxId?.startsWith('mock-') ||
         sessionId?.startsWith('mock-') ||
         !hasLlmKey ||
+        process.env.ENV === 'TEST' ||
         process.env.NODE_ENV === 'test'
 
     if (isMock) {

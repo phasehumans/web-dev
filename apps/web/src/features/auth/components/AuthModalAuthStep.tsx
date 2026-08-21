@@ -36,7 +36,9 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                     <Icons.DecemberLogo className="w-[42px] h-[42px] relative z-10" />
                 </div>
                 <h2 className="text-[22px] font-normal text-white tracking-tight mb-1">
-                    {authMode === 'login' ? 'Sign in to continue building' : 'Create an account'}
+                    {authMode === 'login'
+                        ? 'Sign in to December Agent'
+                        : 'Create your December Agent account'}
                 </h2>
                 <p className="text-[13px] text-gray-400 tracking-wider">turn ideas into reality.</p>
             </div>
@@ -138,7 +140,7 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                 </button>
             </form>
 
-            <div className="mt-6 flex flex-col items-center gap-6">
+            <div className="mt-5 flex flex-col items-center gap-4 text-center">
                 <button
                     type="button"
                     onClick={onToggleAuthMode}
@@ -160,6 +162,28 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                         </span>
                     )}
                 </button>
+
+                <p className="text-[11.5px] text-[#707070] leading-tight max-w-[320px]">
+                    By continuing, you agree to December Agent&apos;s{' '}
+                    <a
+                        href="/docs/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#9E9E9E] hover:text-white underline underline-offset-2"
+                    >
+                        Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a
+                        href="/docs/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#9E9E9E] hover:text-white underline underline-offset-2"
+                    >
+                        Privacy Policy
+                    </a>
+                    .
+                </p>
             </div>
         </div>
     )

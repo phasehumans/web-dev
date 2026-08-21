@@ -53,7 +53,7 @@ describe('WikiReader Component', () => {
         ],
     }
 
-    test('renders sidebar page index and active page content', () => {
+    test('renders header navigation, back button, and active page content', () => {
         const queryClient = createTestQueryClient()
         const onBackMock = mock()
 
@@ -68,24 +68,16 @@ describe('WikiReader Component', () => {
             </QueryClientProvider>
         )
 
-        expect(screen.getByText('testowner / testrepo')).toBeDefined()
-        expect(screen.getByText('Pages (2)')).toBeDefined()
-        expect(screen.getByRole('button', { name: /Architecture/i })).toBeDefined()
+        expect(screen.getByText(/testrepo — Overview/i)).toBeDefined()
+        expect(screen.getByText('main (default)')).toBeDefined()
 
-        // Default active page is Overview
-        expect(screen.getAllByRole('heading', { name: 'Overview' }).length).toBeGreaterThan(0)
-        expect(screen.getByText('Welcome to documentation.')).toBeDefined()
-
-        // Switch to Architecture page
-        const archButton = screen.getByRole('button', { name: /Architecture/i })
-        fireEvent.click(archButton)
-
-        const archHeadings = screen.getAllByRole('heading', { name: 'Architecture' })
-        expect(archHeadings.length).toBeGreaterThan(0)
-        expect(screen.getByText('System breakdown.')).toBeDefined()
+        const backButton = screen.getByRole('button', { name: /Back/i })
+        expect(backButton).toBeDefined()
+        fireEvent.click(backButton)
+        expect(onBackMock).toHaveBeenCalledTimes(1)
     })
 
-    test('opens Add Page modal when Add Page button is clicked', () => {
+    test('opens options menu and opens Edit Wiki modal when Edit wiki is clicked', () => {
         const queryClient = createTestQueryClient()
         const onBackMock = mock()
 
@@ -100,37 +92,19 @@ describe('WikiReader Component', () => {
             </QueryClientProvider>
         )
 
-        const addButtons = screen.getAllByRole('button', { name: /Add Page/i })
-        fireEvent.click(addButtons[0])
+        const optionsButton = screen.getByRole('button', { name: /Options/i })
+        fireEvent.click(optionsButton)
 
-        expect(screen.getAllByText(/Add Wiki Page/i).length).toBeGreaterThan(0)
-        expect(screen.getByPlaceholderText('Page title (e.g. API Guidelines)')).toBeDefined()
-    })
+        expect(screen.getByText('Edit wiki')).toBeDefined()
+        expect(screen.getByText('DeepWiki settings')).toBeDefined()
 
-    test('opens Edit Page modal when Edit Page button is clicked', () => {
-        const queryClient = createTestQueryClient()
-        const onBackMock = mock()
-
-        render(
-            <QueryClientProvider client={queryClient}>
-                <WikiReader
-                    repoOwner="testowner"
-                    repoName="testrepo"
-                    onBack={onBackMock}
-                    initialWiki={mockWiki}
-                />
-            </QueryClientProvider>
-        )
-
-        const editButton = screen.getByRole('button', { name: /Edit Page/i })
+        const editButton = screen.getByText('Edit wiki')
         fireEvent.click(editButton)
 
         expect(screen.getByText('Edit Wiki Page')).toBeDefined()
-        const titleInput = screen.getByDisplayValue('Overview')
-        expect(titleInput).toBeDefined()
     })
 
-    test('opens Delete Page confirmation dialog when Delete button is clicked', () => {
+    test('opens settings modal when DeepWiki settings is clicked', () => {
         const queryClient = createTestQueryClient()
         const onBackMock = mock()
 
@@ -145,10 +119,12 @@ describe('WikiReader Component', () => {
             </QueryClientProvider>
         )
 
-        const deleteButton = screen.getByRole('button', { name: /Delete/i })
-        fireEvent.click(deleteButton)
+        const optionsButton = screen.getByRole('button', { name: /Options/i })
+        fireEvent.click(optionsButton)
 
-        expect(screen.getByText('Delete Page')).toBeDefined()
-        expect(screen.getByText(/Are you sure you want to delete/i)).toBeDefined()
+        const settingsButton = screen.getByText('DeepWiki settings')
+        fireEvent.click(settingsButton)
+
+        expect(screen.getByText('DeepWiki Settings')).toBeDefined()
     })
 })

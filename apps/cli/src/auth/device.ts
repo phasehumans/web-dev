@@ -1,13 +1,11 @@
 import { openUrl } from '../utils/open'
 
 export async function loginViaDeviceCode(
-    baseUrl: string = process.env.SERVER_URL ||
-        process.env.WEB_URL ||
-        'https://api.trydecember.com',
+    serverUrl: string = process.env.SERVER_URL || 'https://api.trydecember.com',
     onCodeGenerated: (userCode: string, verificationUri: string) => void
 ): Promise<{ token: string; email: string | null }> {
     try {
-        const genRes = await fetch(`${baseUrl}/api/v1/auth/device/code`, {
+        const genRes = await fetch(`${serverUrl}/api/v1/auth/device/code`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         })
@@ -48,7 +46,7 @@ export async function loginViaDeviceCode(
                 }
 
                 try {
-                    const tokenRes = await fetch(`${baseUrl}/api/v1/auth/device/token`, {
+                    const tokenRes = await fetch(`${serverUrl}/api/v1/auth/device/token`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ deviceCode }),

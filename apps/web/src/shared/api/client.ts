@@ -30,7 +30,10 @@ const resolveBaseUrl = () => {
         runtime.Bun?.env?.BASE_URL ??
         runtime.process?.env?.BASE_URL ??
         runtime.__ENV__?.BASE_URL ??
-        'http://localhost:4000'
+        (typeof process !== 'undefined' &&
+        (process.env.NODE_ENV === 'production' || process.env.ENV === 'PROD')
+            ? 'https://api.trydecember.com'
+            : 'http://localhost:4000')
     )
 }
 

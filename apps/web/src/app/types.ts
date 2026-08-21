@@ -126,6 +126,16 @@ export const getViewForPath = (pathname: string): ViewState => {
     )
         return 'review'
 
+    // /docs or /docs/* → docs
+    if (pathname === '/docs' || pathname.startsWith('/docs/')) {
+        return 'docs'
+    }
+
+    // /privacy or /terms → docs (public legal views)
+    if (pathname === '/privacy' || pathname === '/terms') {
+        return 'docs'
+    }
+
     // /session/* or /project/* → project (workspace screen)
     if (pathname.startsWith('/session/') || pathname.startsWith('/project/')) return 'project'
 

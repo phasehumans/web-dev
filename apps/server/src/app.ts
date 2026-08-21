@@ -46,9 +46,29 @@ app.use(
 )
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true, limit: '25mb' }))
+const allowedOrigins = [
+    env.WEB_URL?.replace(/\/+$/, ''),
+    'https://trydecember.com',
+    'https://www.trydecember.com',
+    ...(env.ENV !== 'PROD'
+        ? ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000']
+        : []),
+].filter(Boolean) as string[]
+
 app.use(
     cors({
-        origin: env.WEB_URL,
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true)
+            if (
+                allowedOrigins.includes(origin) ||
+                origin.endsWith('.vercel.app') ||
+                (env.ENV !== 'PROD' &&
+                    (origin.includes('localhost') || origin.includes('127.0.0.1')))
+            ) {
+                return callback(null, true)
+            }
+            return callback(new Error(`CORS origin not allowed: ${origin}`), false)
+        },
         credentials: true,
     })
 )

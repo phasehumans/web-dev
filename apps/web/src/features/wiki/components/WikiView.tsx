@@ -70,6 +70,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
             return json.data || json
         },
         initialData,
+        staleTime: initialData ? Infinity : 0,
     })
 
     const [localRepos, setLocalRepos] = useState<UserGitHubRepo[]>([])

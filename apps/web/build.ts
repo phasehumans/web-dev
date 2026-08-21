@@ -138,6 +138,7 @@ const result = await Bun.build({
     define: {
         'process.env.ENV': JSON.stringify(process.env.ENV || 'PROD'),
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+        'process.env.WEB_URL': JSON.stringify(process.env.WEB_URL || 'https://trydecember.com'),
         'process.env.SERVER_URL': JSON.stringify(
             process.env.SERVER_URL || process.env.BASE_URL || 'https://api.trydecember.com'
         ),

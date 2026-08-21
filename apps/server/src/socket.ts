@@ -27,9 +27,29 @@ redisSubClient.on('error', (err) => {
 let io: Server
 
 export function initSocket(httpServer: any) {
+    const allowedOrigins = [
+        env.WEB_URL?.replace(/\/+$/, ''),
+        'https://trydecember.com',
+        'https://www.trydecember.com',
+        ...(env.ENV !== 'PROD'
+            ? ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000']
+            : []),
+    ].filter(Boolean) as string[]
+
     io = new Server(httpServer, {
         cors: {
-            origin: env.WEB_URL,
+            origin: (origin, callback) => {
+                if (!origin) return callback(null, true)
+                if (
+                    allowedOrigins.includes(origin) ||
+                    origin.endsWith('.vercel.app') ||
+                    (env.ENV !== 'PROD' &&
+                        (origin.includes('localhost') || origin.includes('127.0.0.1')))
+                ) {
+                    return callback(null, true)
+                }
+                return callback(new Error(`Socket CORS origin not allowed: ${origin}`), false)
+            },
             credentials: true,
         },
         perMessageDeflate: {

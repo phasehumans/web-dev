@@ -1,5 +1,5 @@
 import { type BackendProject } from '@/features/sessions/api/project'
-import { apiRequest } from '@/shared/api/client'
+import { apiRequest, API_BASE_URL } from '@/shared/api/client'
 
 export type Profile = {
     id: string
@@ -123,7 +123,7 @@ const getSupabaseRedirectUri = () =>
     (typeof process !== 'undefined' ? process.env.PUBLIC_SUPABASE_REDIRECT_URI : undefined) ??
     getClientEnv('SUPABASE_REDIRECT_URI') ??
     getClientEnv('PUBLIC_SUPABASE_REDIRECT_URI') ??
-    'http://localhost:4000/api/v1/integrations/supabase/connect'
+    `${API_BASE_URL}/integrations/supabase/connect`
 
 const getNotionClientId = () =>
     (typeof process !== 'undefined' ? process.env.NOTION_CLIENT_ID : undefined) ??
@@ -137,7 +137,7 @@ const getNotionRedirectUri = () =>
     (typeof process !== 'undefined' ? process.env.PUBLIC_NOTION_REDIRECT_URI : undefined) ??
     getClientEnv('NOTION_REDIRECT_URI') ??
     getClientEnv('PUBLIC_NOTION_REDIRECT_URI') ??
-    'http://localhost:4000/api/v1/integrations/notion/connect'
+    `${API_BASE_URL}/integrations/notion/connect`
 
 const buildUrl = (baseUrl: string, params: Record<string, string>) => {
     const url = new URL(baseUrl)

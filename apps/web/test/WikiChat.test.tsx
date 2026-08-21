@@ -30,14 +30,12 @@ describe('WikiChat Component', () => {
 
         render(
             <QueryClientProvider client={queryClient}>
-                <WikiChat wikiId="wiki-123" repoFullName="testowner/testrepo" />
+                <WikiChat wikiId="wiki-123" repoFullName="testowner/testrepo" repoName="testrepo" />
             </QueryClientProvider>
         )
 
-        expect(screen.getByText('WikiChat Assistant')).toBeDefined()
-        expect(screen.getByText(/Hello! I am your Repository AI Assistant/i)).toBeDefined()
-        expect(screen.getByPlaceholderText('Ask a question about this repository...')).toBeDefined()
-        expect(screen.getByRole('button', { name: /Send/i })).toBeDefined()
+        expect(screen.getByText('testowner/testrepo')).toBeDefined()
+        expect(screen.getByPlaceholderText('Ask about testrepo...')).toBeDefined()
     })
 
     test('updates prompt input and sends message', () => {
@@ -45,16 +43,15 @@ describe('WikiChat Component', () => {
 
         render(
             <QueryClientProvider client={queryClient}>
-                <WikiChat wikiId="wiki-123" repoFullName="testowner/testrepo" />
+                <WikiChat wikiId="wiki-123" repoFullName="testowner/testrepo" repoName="testrepo" />
             </QueryClientProvider>
         )
 
-        const input = screen.getByPlaceholderText('Ask a question about this repository...')
+        const input = screen.getByPlaceholderText('Ask about testrepo...')
         fireEvent.change(input, { target: { value: 'How is authentication structured?' } })
         expect((input as HTMLInputElement).value).toBe('How is authentication structured?')
 
-        const sendButton = screen.getByRole('button', { name: /Send/i })
-        fireEvent.click(sendButton)
+        fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
 
         // User message should appear in chat history
         expect(screen.getByText('How is authentication structured?')).toBeDefined()

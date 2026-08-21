@@ -1,6 +1,6 @@
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { expect, test, describe, mock } from 'bun:test'
+import { expect, test, describe, mock, afterEach } from 'bun:test'
 import React from 'react'
 
 import { WikiView } from '../src/features/wiki/components/WikiView'
@@ -9,7 +9,11 @@ if (!globalThis.document) {
     GlobalRegistrator.register()
 }
 
-const { render, screen, fireEvent } = await import('@testing-library/react')
+const { render, screen, fireEvent, cleanup } = await import('@testing-library/react')
+
+afterEach(() => {
+    cleanup()
+})
 
 const createTestQueryClient = () =>
     new QueryClient({
@@ -37,7 +41,7 @@ describe('WikiView Component', () => {
             </QueryClientProvider>
         )
 
-        expect(screen.getByRole('heading', { name: /Connect GitHub/i })).toBeDefined()
+        expect(screen.getByText(/Connect GitHub to view all repositories/i)).toBeDefined()
         const button = screen.getByRole('button', { name: /Connect GitHub/i })
         expect(button).toBeDefined()
 
@@ -80,7 +84,7 @@ describe('WikiView Component', () => {
             </QueryClientProvider>
         )
 
-        expect(screen.getByText('Repository Wikis')).toBeDefined()
+        expect(screen.getByText('Repositories')).toBeDefined()
         const searchInput = screen.getByPlaceholderText('Search repositories...')
         expect(searchInput).toBeDefined()
 
@@ -122,9 +126,9 @@ describe('WikiView Component', () => {
             </QueryClientProvider>
         )
 
-        const viewButton = screen.getByRole('button', { name: /View Wiki/i })
-        expect(viewButton).toBeDefined()
-        fireEvent.click(viewButton)
+        const repoTitle = screen.getByText('docs-site')
+        expect(repoTitle).toBeDefined()
+        fireEvent.click(repoTitle)
         expect(onOpenWikiMock).toHaveBeenCalledWith('wiki-123')
     })
 

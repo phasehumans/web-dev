@@ -117,7 +117,9 @@ export const worker = new Worker(
                 `[WORKER ENGINE] E2B Sandbox container '${provisionResult.sandboxId}' is RUNNING (isMock: ${provisionResult.isMock}). Initializing agent session...`
             )
 
-            const apiHostUrl = process.env.API_URL || 'http://localhost:4000/api/v1'
+            const apiHostUrl = process.env.SERVER_URL
+                ? `${process.env.SERVER_URL}/api/v1`
+                : process.env.API_URL || 'http://localhost:4000/api/v1'
             const stream = await E2BSandboxService.runAgentSession({
                 sessionId,
                 sandboxId: provisionResult.sandboxId,

@@ -29,3 +29,13 @@ export const getGithubClientId = (): string => {
         'Ov23liFGkTAwCW7E8gtk'
     )
 }
+
+export const getGoogleClientId = (): string => {
+    return (
+        (typeof process !== 'undefined' ? process.env.GOOGLE_CLIENT_ID : undefined) ??
+        (typeof process !== 'undefined' ? process.env.PUBLIC_GOOGLE_CLIENT_ID : undefined) ??
+        getClientEnv('GOOGLE_CLIENT_ID') ??
+        getClientEnv('PUBLIC_GOOGLE_CLIENT_ID') ??
+        '762203307362-qg77ln4ci9eldv3i0q1smv804epsbhk0.apps.googleusercontent.com'
+    )
+}

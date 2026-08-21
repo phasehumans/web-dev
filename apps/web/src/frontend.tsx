@@ -14,12 +14,13 @@ import { CliLogin } from './features/auth/components/CliLogin'
 import { DeviceActivate } from './features/auth/components/DeviceActivate'
 import { GithubCallback } from './features/auth/components/GithubCallback'
 import { QueryProvider } from './shared/providers/query-provider'
+import { getGoogleClientId } from './shared/utils/env'
 
 const elem = document.getElementById('root')!
 const app = (
     <BrowserRouter>
         <QueryProvider>
-            <GoogleOAuthProvider clientId="762203307362-qg77ln4ci9eldv3i0q1smv804epsbhk0.apps.googleusercontent.com">
+            <GoogleOAuthProvider clientId={getGoogleClientId()}>
                 <Routes>
                     <Route path="/cli/login" element={<CliLogin />} />
                     <Route path="/activate" element={<DeviceActivate />} />

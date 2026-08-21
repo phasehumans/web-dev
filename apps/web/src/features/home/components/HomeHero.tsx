@@ -168,7 +168,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                             strokeWidth={1}
                         />
                         <h1 className="text-[24px] md:text-[32px] font-sohne font-medium tracking-tight text-[#D6D5D4]">
-                            December
+                            December Agent
                         </h1>
                     </div>
                 </div>
@@ -262,7 +262,8 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                     Get Started
                                 </h3>
                                 <p className="text-[11px] md:text-[11.5px] font-sans text-[#8F8E8D] leading-tight">
-                                    Start your journey with December by completing your onboarding
+                                    Start your journey with December Agent by completing your
+                                    onboarding
                                 </p>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
@@ -281,19 +282,16 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                 <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
                                                     {isAuthenticated && profile?.name
                                                         ? `Welcome ${profile.name}!`
-                                                        : 'Welcome to December!'}
+                                                        : 'Welcome to December Agent!'}
                                                 </h4>
                                                 <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                    Explore the platform by discovering how its
-                                                    capabilities will be valuable to your team and
-                                                    codebase.
+                                                    Explore how December Agent autonomously plans,
+                                                    codes, runs, and tests full-stack software.
                                                 </p>
                                             </div>
                                         </div>
                                         <a
                                             href="/docs"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
                                             className="mt-3.5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
                                         >
                                             Read Docs
@@ -317,8 +315,8 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                     Connect GitHub
                                                 </h4>
                                                 <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                    Connect your repositories so that December can
-                                                    open Pull Requests for issues that it finds.
+                                                    Connect your repositories so that December Agent
+                                                    can open Pull Requests and review code.
                                                 </p>
                                             </div>
                                         </div>
@@ -352,7 +350,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                 </h4>
                                                 <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
                                                     {isAuthenticated
-                                                        ? 'Help us improve December by sharing your thoughts and feature requests.'
+                                                        ? 'Help us improve December Agent by sharing your thoughts and feature requests.'
                                                         : 'Have questions or feature requests? Share your thoughts with our team.'}
                                                 </p>
                                             </div>
@@ -373,6 +371,108 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                         </div>
                     )}
                 </div>
+
+                {/* About & Purpose of December Agent Section */}
+                <div className="w-full max-w-[638px] px-2 md:px-0 mt-12 mb-8 flex flex-col gap-6 text-left border-t border-[#222222] pt-8">
+                    <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#87B2F4]/10 text-[#87B2F4] border border-[#87B2F4]/20">
+                                About Application
+                            </span>
+                        </div>
+                        <h3 className="text-[17px] font-semibold text-white tracking-tight">
+                            December Agent — Autonomous AI Software Engineering Platform
+                        </h3>
+                        <p className="text-[13px] text-[#A3A29E] leading-relaxed">
+                            December Agent is an autonomous AI coding assistant and developer
+                            workspace designed to plan, build, test, and deploy modern applications
+                            in isolated cloud micro-VM sandboxes.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
+                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#87B2F4]" />
+                                Autonomous Full-Stack Coding
+                            </div>
+                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
+                                Converts natural language prompts into complete, runnable codebases
+                                with automated file creation, refactoring, and bug fixes.
+                            </p>
+                        </div>
+                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
+                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#7FD6B0]" />
+                                Isolated Cloud Sandboxes
+                            </div>
+                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
+                                Executes code inside hardware-isolated containers with hot module
+                                reloading and instant live preview URLs.
+                            </p>
+                        </div>
+                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
+                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#FF85A1]" />
+                                Terminal Agent & GitHub
+                            </div>
+                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
+                                Seamlessly opens GitHub Pull Requests or runs locally inside your
+                                terminal via{' '}
+                                <code className="text-white bg-[#222222] px-1 py-0.5 rounded text-[11px]">
+                                    @trydecember/cli
+                                </code>
+                                .
+                            </p>
+                        </div>
+                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
+                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#E5B869]" />
+                                Secure Google Sign-In
+                            </div>
+                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
+                                Authenticate securely with Google OAuth or GitHub. Your private
+                                repositories and code are never used to train generalized AI models.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Homepage Footer with legal and navigation links */}
+                <footer className="w-full max-w-[638px] px-2 md:px-0 py-8 border-t border-[#1F1F1F] flex flex-col gap-4 text-left text-[12px] text-[#777777]">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-[#9A9998]">
+                            <Icons.DecemberLogo className="w-4 h-4 text-white" strokeWidth={1} />
+                            <span className="font-medium text-white">December Agent</span>
+                            <span>&bull;</span>
+                            <span>https://trydecember.com</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-[#8F8E8D]">
+                            <a href="/docs" className="hover:text-white transition-colors">
+                                Documentation
+                            </a>
+                            <a href="/docs/privacy" className="hover:text-white transition-colors">
+                                Privacy Policy
+                            </a>
+                            <a href="/docs/terms" className="hover:text-white transition-colors">
+                                Terms of Service
+                            </a>
+                            <a
+                                href="https://github.com/phasehumans/december"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-white transition-colors"
+                            >
+                                GitHub
+                            </a>
+                        </div>
+                    </div>
+                    <div className="text-[11px] text-[#666666] leading-relaxed">
+                        &copy; {new Date().getFullYear()} December Agent (Phase Humans Inc.). All
+                        rights reserved. Secure user authentication powered by Google OAuth adhering
+                        to Google API Services User Data Policy.
+                    </div>
+                </footer>
             </div>
 
             <OnboardingModal
