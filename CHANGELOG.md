@@ -2,6 +2,33 @@
 
 ### Features
 
+- _(mcp)_ Support dynamic mcp tools across terminal cli and cloud e2b sandboxes (#413)
+- _(cli,worker,server)_ Complete end-to-end cli-to-cloud handoff session migration
+- _(agent,tui)_ Add request logger core and granular context token inspector
+- _(security)_ Smart permissions, monorepo scoping, commands & guardrails
+- _(cli,tui)_ Refine terminal experience, session handling, and prompt history resolution
+- _(cli,tui)_ Terminal experience refinements, session handling, and prompt history resolution (#431)
+- _(cli)_ Add multi-platform standalone installers and npm onboarding
+- _(web)_ Add installer redirect routes for install.sh and install.ps1
+- _(web)_ Add landing page with terminal simulator and cloud showcase
+
+### Bug Fixes
+
+- _(agent)_ Disable test logs when workspacedir unset and update clean script
+- _(cli)_ Resolve init execution ordering and tui slash command routing
+
+### Testing
+
+- Add e2e, load and smoke tests
+
+### Miscellaneous Tasks
+
+- Ignore .december/logs in git, prettier, eslint and handoff archive
+
+## [0.3.9] - 2026-08-18
+
+### Features
+
 - Real-time thought streaming and chat output discipline guardrails
 - Automated task.md lifecycle and interactive tasks tab tracking
 - Workspace file synchronization and changes tab git diff generation
@@ -33,6 +60,7 @@
 ### Miscellaneous Tasks
 
 - _(env)_ Add .env.example with multi-provider llm configuration
+- _(release)_ V0.3.9
 
 ## [0.3.8] - 2026-08-15
 
