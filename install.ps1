@@ -46,7 +46,7 @@ try {
     Move-Item -Path (Join-Path $TempDir $BinaryName) -Destination (Join-Path $InstallDir $BinaryName) -Force
 
     Log-Space
-    Log-Step "${Green}december successfully installed$Reset to $White$InstallDir\$BinaryName$Reset"
+    Log-Step "${Blue}december successfully installed$Reset to $White$InstallDir\$BinaryName$Reset"
 
     # Add to User PATH if missing
     $UserPath = [Environment]::GetEnvironmentVariable("PATH", "User")

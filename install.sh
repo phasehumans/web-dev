@@ -108,7 +108,7 @@ if [ "$(uname -s)" = "Darwin" ]; then
 fi
 
 log_space
-log_step "${GREEN}december successfully installed${RESET} to ${WHITE}${INSTALL_DIR}/${BINARY_NAME}${RESET}"
+log_step "${BLUE}december successfully installed${RESET} to ${WHITE}${INSTALL_DIR}/${BINARY_NAME}${RESET}"
 
 if ! echo "$PATH" | tr ':' '\n' | grep -qx "$INSTALL_DIR"; then
     PROFILE="~/.bashrc"
