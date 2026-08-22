@@ -34,11 +34,20 @@ export function startDirectCommand(command: string, options: DirectShellOptions 
         detached: !isWindows,
     })
 
+    // Immediately close stdin so direct commands don't stall waiting on stdin EOF
+    try {
+        child.stdin?.end?.()
+    } catch {
+        // Intentionally swallowed: stdin might already be closed or unavailable
+    }
+
     let timeoutTimer: ReturnType<typeof setTimeout> | null = null
 
     const promise = new Promise<DirectShellResult>((resolve) => {
-        child.stdout?.on('data', (data: Buffer) => {
-            const str = data.toString('utf8')
+        let closed = false
+
+        child.stdout?.on('data', (data: Buffer | string) => {
+            const str = typeof data === 'string' ? data : data.toString('utf8')
             output += str
             if (isBackground && bgTaskId) {
                 taskManager.appendOutput(bgTaskId, str)
@@ -47,8 +56,8 @@ export function startDirectCommand(command: string, options: DirectShellOptions 
             }
         })
 
-        child.stderr?.on('data', (data: Buffer) => {
-            const str = data.toString('utf8')
+        child.stderr?.on('data', (data: Buffer | string) => {
+            const str = typeof data === 'string' ? data : data.toString('utf8')
             output += str
             if (isBackground && bgTaskId) {
                 taskManager.appendOutput(bgTaskId, str)
@@ -57,6 +66,8 @@ export function startDirectCommand(command: string, options: DirectShellOptions 
             }
         })
         ;(child as any).on('error', (err: any) => {
+            if (closed) return
+            closed = true
             const errStr = `\nFailed to start process: ${err?.message || err}\n`
             output += errStr
             if (onData) onData(errStr)
@@ -68,7 +79,10 @@ export function startDirectCommand(command: string, options: DirectShellOptions 
                 taskId: bgTaskId,
             })
         })
-        ;(child as any).on('close', (code: any) => {
+
+        const finish = (code: any) => {
+            if (closed) return
+            closed = true
             if (timeoutTimer) clearTimeout(timeoutTimer)
             const finalCode = isAborted ? 130 : (code ?? 0)
             if (isBackground && bgTaskId) {
@@ -80,6 +94,12 @@ export function startDirectCommand(command: string, options: DirectShellOptions 
                     isBackground: false,
                 })
             }
+        }
+
+        ;(child as any).on('close', finish)
+        ;(child as any).on('exit', (code: any) => {
+            // Fallback in case streams remain open after process exit
+            setTimeout(() => finish(code), 50)
         })
 
         if (timeoutMs > 0 && timeoutMs < Infinity) {

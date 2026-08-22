@@ -64,7 +64,15 @@ if [ "$TARGET" = "windows" ]; then
     exit 0
 fi
 
-log_step "installing december for ${TARGET}..."
+case "$TARGET" in
+    aarch64-apple-darwin)       DISPLAY_TARGET="macOS (Apple Silicon)" ;;
+    x86_64-apple-darwin)        DISPLAY_TARGET="macOS (Intel)" ;;
+    x86_64-unknown-linux-gnu)   DISPLAY_TARGET="Linux (x64)" ;;
+    aarch64-unknown-linux-gnu)  DISPLAY_TARGET="Linux (arm64)" ;;
+    *)                          DISPLAY_TARGET="$TARGET" ;;
+esac
+
+log_step "installing december for ${DISPLAY_TARGET}..."
 
 VERSION="${DECEMBER_VERSION:-latest}"
 ARCHIVE="december-${TARGET}.tar.gz"

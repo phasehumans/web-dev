@@ -22,7 +22,7 @@ function Log-Error($msg) { Write-Host "$Blue✱$Reset  $ESC[38;2;252;165;165m$ms
 $Target = "x86_64-pc-windows-msvc"
 $Version = if ($env:DECEMBER_VERSION) { $env:DECEMBER_VERSION } else { "latest" }
 
-Log-Step "installing december for windows-x64..."
+Log-Step "installing december for Windows (x64)..."
 
 $Archive = "december-$Target.zip"
 $DownloadUrl = if ($Version -eq "latest") {
@@ -46,12 +46,13 @@ try {
     Move-Item -Path (Join-Path $TempDir $BinaryName) -Destination (Join-Path $InstallDir $BinaryName) -Force
 
     Log-Space
-    Log-Step "$Green`december successfully installed$Reset to $White$InstallDir\$BinaryName$Reset"
+    Log-Step "${Green}december successfully installed$Reset to $White$InstallDir\$BinaryName$Reset"
 
     # Add to User PATH if missing
     $UserPath = [Environment]::GetEnvironmentVariable("PATH", "User")
     if ($UserPath -notlike "*$InstallDir*") {
-        [Environment]::SetEnvironmentVariable("PATH", "$UserPath;$InstallDir", "User")
+        $NewUserPath = if ([string]::IsNullOrWhiteSpace($UserPath)) { $InstallDir } else { "$UserPath;$InstallDir" }
+        [Environment]::SetEnvironmentVariable("PATH", $NewUserPath, "User")
         $env:PATH = "$env:PATH;$InstallDir"
         Log-Space
         Log-Tree "Note: added $InstallDir to User PATH."
@@ -59,7 +60,7 @@ try {
     }
 
     Log-Space
-    Log-Step "run $White`december$Reset to start your session"
+    Log-Step "run ${White}december$Reset to start your session"
 }
 catch {
     Log-Space

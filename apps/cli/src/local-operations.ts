@@ -36,14 +36,22 @@ export const localOperations: PlatformAdapter = {
                     detached: process.platform !== 'win32',
                     env: options.env ?? process.env,
                     shell: true,
+                    stdio: ['pipe', 'pipe', 'pipe'],
                 })
+
+                // Immediately close stdin so child doesn't hang waiting for terminal input
+                try {
+                    child.stdin?.end?.()
+                } catch {
+                    // Intentionally swallowed: stdin might already be closed or unavailable
+                }
 
                 const task = taskManager.addTask(command, child)
                 let output = ''
                 let resolved = false
 
-                const handleData = (data: Buffer) => {
-                    const chunk = data.toString()
+                const handleData = (data: Buffer | string) => {
+                    const chunk = typeof data === 'string' ? data : data.toString()
                     output += chunk
                     taskManager.appendOutput(task.id, chunk)
                     if (!resolved && options.onData) {
@@ -70,13 +78,30 @@ export const localOperations: PlatformAdapter = {
                       }, options.waitMsBeforeAsync)
                     : undefined
 
-                ;(child as any).on('close', (code: number | null) => {
+                const finish = (code: number | null) => {
                     if (bgTimeout) clearTimeout(bgTimeout)
                     if (timeoutHandle) clearTimeout(timeoutHandle)
                     taskManager.markCompleted(task.id, code)
                     if (!resolved) {
                         resolved = true
                         resolve({ exitCode: code, output })
+                    }
+                }
+
+                ;(child as any).on('close', finish)
+                ;(child as any).on('exit', (code: number | null) => {
+                    // Fallback in case streams remain open after process exit
+                    setTimeout(() => finish(code), 50)
+                })
+                ;(child as any).on('error', (err: any) => {
+                    if (bgTimeout) clearTimeout(bgTimeout)
+                    if (timeoutHandle) clearTimeout(timeoutHandle)
+                    taskManager.markCompleted(task.id, 1)
+                    if (!resolved) {
+                        resolved = true
+                        const errMsg = `\nFailed to start process: ${err?.message || err}\n`
+                        output += errMsg
+                        resolve({ exitCode: 1, output })
                     }
                 })
             })

@@ -1,5 +1,39 @@
 {
     "outputDirectory": "dist",
+    "redirects": [
+        {
+            "source": "/install.sh",
+            "destination": "https://raw.githubusercontent.com/phasehumans/december/main/install.sh",
+            "permanent": false
+        },
+        {
+            "source": "/install.ps1",
+            "destination": "https://raw.githubusercontent.com/phasehumans/december/main/install.ps1",
+            "permanent": false
+        },
+        {
+            "source": "/ps1",
+            "destination": "https://raw.githubusercontent.com/phasehumans/december/main/install.ps1",
+            "permanent": false
+        },
+        {
+            "source": "/install",
+            "has": [
+                {
+                    "type": "header",
+                    "key": "user-agent",
+                    "value": "(?i).*powershell.*"
+                }
+            ],
+            "destination": "https://raw.githubusercontent.com/phasehumans/december/main/install.ps1",
+            "permanent": false
+        },
+        {
+            "source": "/install",
+            "destination": "https://raw.githubusercontent.com/phasehumans/december/main/install.sh",
+            "permanent": false
+        }
+    ],
     "rewrites": [
         {
             "source": "/(.*)",

@@ -87,8 +87,8 @@ export const SidebarFooter: React.FC<
 
     const CLI_INSTALL_COMMANDS: Record<'npm' | 'curl' | 'powershell', string> = {
         npm: 'npm install -g @trydecember/cli',
-        curl: 'curl -fsSL https://cli.trydecember.com | bash',
-        powershell: 'irm https://cli.trydecember.com/ps1 | iex',
+        curl: 'curl -fsSL https://trydecember.com/install.sh | bash',
+        powershell: 'irm https://trydecember.com/install.ps1 | iex',
     }
 
     const [cliMethod, setCliMethod] = useState<'npm' | 'curl' | 'powershell'>('npm')
