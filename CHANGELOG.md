@@ -2,11 +2,33 @@
 
 ### Features
 
+- _(seo)_ Add robots.txt and sitemap.xml for trydecember and docs
+- _(seo)_ Add robots.txt and sitemap.xml for trydecember and docs
+- _(seo)_ Update metadata and rich schema for terminal and cloud agent
+
+### Bug Fixes
+
+- Hero section and get started section
+- Preflie billing api call
+- _(web)_ Unify client environment config and api url resolution
+- _(server)_ Resolve session collaborator service typing and repository calls
+- _(seo)_ Copy assets to dist and tune meta description lengths
+
+### Refactor
+
+- _(web)_ Use server_url directly for proxy target
+- Remove unused docs_url across server, web, and env configs
+
+## [0.3.11] - 2026-08-21
+
+### Features
+
 - Unify environment constants and url resolvers
 
 ### Miscellaneous Tasks
 
 - _(web)_ Configure vercel spa routing and server url
+- _(release)_ V0.3.11
 
 ## [0.3.10] - 2026-08-21
 

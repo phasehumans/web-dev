@@ -8,12 +8,14 @@ interface UseAuthModalControllerArgs {
     isOpen: boolean
     initialMode: AuthMode
     onAuthSuccess: () => void
+    onClose?: () => void
 }
 
 export const useAuthModalController = ({
     isOpen,
     initialMode,
     onAuthSuccess,
+    onClose,
 }: UseAuthModalControllerArgs) => {
     const [authMode, setAuthMode] = React.useState<AuthMode>(initialMode)
     const [step, setStep] = React.useState<AuthStep>('auth')
@@ -24,6 +26,51 @@ export const useAuthModalController = ({
     const [confirmPassword, setConfirmPassword] = React.useState('')
     const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
     const inputRefs = React.useRef<(HTMLInputElement | null)[]>([])
+    const pushedHistoryRef = React.useRef(false)
+    const isClosingFromPopstateRef = React.useRef(false)
+
+    // Synchronize browser history so mobile back button dismisses modal to December home
+    React.useEffect(() => {
+        if (typeof window === 'undefined' || !window.history) return
+
+        if (!isOpen) {
+            pushedHistoryRef.current = false
+            isClosingFromPopstateRef.current = false
+            return
+        }
+
+        try {
+            window.history.pushState({ modal: 'auth' }, '')
+            pushedHistoryRef.current = true
+            isClosingFromPopstateRef.current = false
+        } catch {
+            // Intentionally swallowed: fallback when history pushState is unavailable in sandboxed environments
+        }
+
+        const handlePopState = () => {
+            isClosingFromPopstateRef.current = true
+            pushedHistoryRef.current = false
+            onClose?.()
+        }
+
+        window.addEventListener('popstate', handlePopState)
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState)
+            if (
+                pushedHistoryRef.current &&
+                !isClosingFromPopstateRef.current &&
+                window.history.state?.modal === 'auth'
+            ) {
+                pushedHistoryRef.current = false
+                try {
+                    window.history.back()
+                } catch {
+                    // Intentionally swallowed: fallback when history back is unavailable
+                }
+            }
+        }
+    }, [isOpen, onClose])
 
     React.useEffect(() => {
         if (isOpen) {

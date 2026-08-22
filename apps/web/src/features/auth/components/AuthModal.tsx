@@ -60,6 +60,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         isOpen,
         initialMode: initialMode as any,
         onAuthSuccess,
+        onClose,
     })
 
     return (

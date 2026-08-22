@@ -71,16 +71,16 @@ export const DocsView: React.FC<DocsViewProps> = ({ onBack }) => {
 
     useEffect(() => {
         const titleMap: Record<DocTab, string> = {
-            Introduction: 'Documentation — December',
-            'Quick Start': 'Quick Start — December Docs',
-            'Privacy Policy': 'Privacy Policy — December',
-            'Terms of Service': 'Terms of Service — December',
-            Architecture: 'Architecture & System Design — December Docs',
-            'CLI Reference': 'CLI Reference & Commands — December Docs',
+            Introduction: 'Documentation | December',
+            'Quick Start': 'Quick Start | December Docs',
+            'Privacy Policy': 'Privacy Policy | December',
+            'Terms of Service': 'Terms of Service | December',
+            Architecture: 'Architecture & System Design | December Docs',
+            'CLI Reference': 'CLI Reference & Commands | December Docs',
         }
-        document.title = titleMap[activeTab] || 'Documentation — December'
+        document.title = titleMap[activeTab] || 'Documentation | December'
         return () => {
-            document.title = 'December — AI Coding Agent for Terminal and Cloud'
+            document.title = 'December | AI Coding Agent for Terminal and Cloud'
         }
     }, [activeTab])
 
