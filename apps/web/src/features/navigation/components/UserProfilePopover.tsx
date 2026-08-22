@@ -41,7 +41,7 @@ export const UserProfilePopover: React.FC<UserProfilePopoverProps> = ({
 }) => {
     const popoverRef = React.useRef<HTMLDivElement | null>(null)
     const navigate = useNavigate()
-    const { data: overview, isLoading: isOverviewLoading } = useBillingOverview()
+    const { data: overview, isLoading: isOverviewLoading } = useBillingOverview(isOpen)
 
     const [position, setPosition] = React.useState<{
         bottom: number

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, Laptop } from 'lucide-react'
 import React, { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -179,7 +179,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                 className={`w-[22px] h-[22px] md:w-[26px] md:h-[26px] text-white transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isLogoAnimating ? '-rotate-12 scale-95' : 'rotate-0 scale-100'}`}
                                 strokeWidth={1}
                             />
-                            <h2 className="text-[20px] md:text-[23px] font-sohne font-medium tracking-tight text-white flex items-center gap-1.5 leading-none">
+                            <h2 className="text-[20px] md:text-[23px] font-sohne font-normal tracking-tight text-white flex items-center gap-1.5 leading-none">
                                 December
                                 <span className="text-[#87B2F4] font-normal relative inline-grid overflow-hidden py-1">
                                     <span
@@ -254,9 +254,9 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                         mode={chatMode}
                     />
 
-                    {/* Get Started Section - Desktop & Mobile */}
+                    {/* Get Started Section - Desktop View */}
                     {(!isWelcomeDone || !isGithubDone || !isFeedbackDone) && (
-                        <div className="mt-6 md:mt-8 w-full flex flex-col gap-3 md:gap-3.5 select-none animate-in fade-in duration-300">
+                        <div className="mt-8 w-full hidden md:flex flex-col gap-3.5 select-none animate-in fade-in duration-300">
                             <div className="flex flex-col gap-0.5 text-left px-1.5">
                                 <h3 className="text-[13px] md:text-[14px] font-sans font-semibold text-[#D6D5D4] tracking-tight">
                                     Get Started
@@ -265,100 +265,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                     Start your journey with December by completing your onboarding
                                 </p>
                             </div>
-
-                            {/* Mobile View: Compact Action Rows (Option B) */}
-                            <div className="flex md:hidden flex-col gap-2 w-full">
-                                {/* Row 1: Welcome & Docs */}
-                                {!isWelcomeDone && (
-                                    <div className="flex items-center justify-between p-2.5 px-3 rounded-[12px] bg-[#141414] border border-dashed border-[#333333] hover:border-[#444444] transition-colors">
-                                        <div className="flex items-center gap-2.5 min-w-0 pr-3.5">
-                                            <span className="text-[16px] leading-none shrink-0">
-                                                👋
-                                            </span>
-                                            <div className="flex flex-col min-w-0 text-left">
-                                                <h4 className="text-[12.5px] font-sans font-semibold text-[#E8E8E8] truncate leading-snug">
-                                                    {isAuthenticated && profile?.name
-                                                        ? `Welcome ${profile.name}!`
-                                                        : 'Welcome to December'}
-                                                </h4>
-                                                <p className="text-[11px] font-sans text-[#8F8E8D] truncate leading-tight">
-                                                    Explore planning, coding, and testing full-stack
-                                                    apps
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center shrink-0">
-                                            <a
-                                                href="/docs"
-                                                className="px-2.5 py-1 rounded-[6px] bg-[#191919] hover:bg-[#222222] border border-[#262626] text-[#CBCACA] hover:text-white text-[11.5px] font-sans font-medium transition-colors cursor-pointer"
-                                            >
-                                                Docs
-                                            </a>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Row 2: Connect GitHub */}
-                                {!isGithubDone && (
-                                    <div className="flex items-center justify-between p-2.5 px-3 rounded-[12px] bg-[#141414] border border-dashed border-[#333333] hover:border-[#444444] transition-colors">
-                                        <div className="flex items-center gap-2.5 min-w-0 pr-3.5">
-                                            <Icons.Github className="w-4 h-4 text-white shrink-0" />
-                                            <div className="flex flex-col min-w-0 text-left">
-                                                <h4 className="text-[12.5px] font-sans font-semibold text-[#E8E8E8] truncate leading-snug">
-                                                    Connect GitHub
-                                                </h4>
-                                                <p className="text-[11px] font-sans text-[#8F8E8D] truncate leading-tight">
-                                                    Connect repos for PRs and automated code review
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center shrink-0">
-                                            <button
-                                                onClick={
-                                                    isAuthenticated
-                                                        ? handleConnectGithub
-                                                        : onOpenAuth
-                                                }
-                                                className="px-2.5 py-1 rounded-[6px] bg-[#191919] hover:bg-[#222222] border border-[#262626] text-[#CBCACA] hover:text-white text-[11.5px] font-sans font-medium transition-colors cursor-pointer"
-                                            >
-                                                {isAuthenticated ? 'Install' : 'Connect'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Row 3: Feedback */}
-                                {!isFeedbackDone && (
-                                    <div className="flex items-center justify-between p-2.5 px-3 rounded-[12px] bg-[#141414] border border-dashed border-[#333333] hover:border-[#444444] transition-colors">
-                                        <div className="flex items-center gap-2.5 min-w-0 pr-3.5">
-                                            <MessageSquare className="w-4 h-4 text-white shrink-0" />
-                                            <div className="flex flex-col min-w-0 text-left">
-                                                <h4 className="text-[12.5px] font-sans font-semibold text-[#E8E8E8] truncate leading-snug">
-                                                    Give feedback
-                                                </h4>
-                                                <p className="text-[11px] font-sans text-[#8F8E8D] truncate leading-tight">
-                                                    Share your thoughts and feature requests
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center shrink-0">
-                                            <button
-                                                onClick={
-                                                    isAuthenticated
-                                                        ? () => setShowFeedbackModal(true)
-                                                        : onOpenAuth
-                                                }
-                                                className="px-2.5 py-1 rounded-[6px] bg-[#191919] hover:bg-[#222222] border border-[#262626] text-[#CBCACA] hover:text-white text-[11.5px] font-sans font-medium transition-colors cursor-pointer"
-                                            >
-                                                Feedback
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Desktop View: 3-Card Grid */}
-                            <div className="hidden md:grid md:grid-cols-3 gap-3 w-full">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
                                 {/* Card 1: Welcome */}
                                 {!isWelcomeDone && (
                                     <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[172px] text-left">
@@ -384,7 +291,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                         </div>
                                         <a
                                             href="/docs"
-                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] text-[11.5px] font-sans font-medium text-center cursor-pointer block select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
                                         >
                                             Read Docs
                                         </a>
@@ -416,7 +323,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                             onClick={
                                                 isAuthenticated ? handleConnectGithub : onOpenAuth
                                             }
-                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] text-[11.5px] font-sans font-medium text-center cursor-pointer select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
                                         >
                                             {isAuthenticated
                                                 ? 'Install Integration'
@@ -453,7 +360,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                     ? () => setShowFeedbackModal(true)
                                                     : onOpenAuth
                                             }
-                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] text-[11.5px] font-sans font-medium text-center cursor-pointer select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
                                         >
                                             Share feedback
                                         </button>
@@ -463,6 +370,12 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Minimal Mobile Notice: Best experience on desktop (Option B) */}
+            <div className="md:hidden fixed bottom-4 left-0 right-0 z-10 flex items-center justify-center gap-1.5 text-[11px] font-sans font-medium text-[#666666] pointer-events-none select-none tracking-tight">
+                <Laptop className="w-3 h-3 text-[#666666]" />
+                <span>Best experience on desktop</span>
             </div>
 
             <OnboardingModal

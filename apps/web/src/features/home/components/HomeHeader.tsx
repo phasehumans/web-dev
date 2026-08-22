@@ -73,7 +73,9 @@ const MagneticIconWithTooltip = ({ icon: Icon, tooltip, onClick, href }: any) =>
 export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenAuth }) => {
     const navigate = useNavigate()
 
-    const { data: overview, isLoading: isOverviewLoading } = useBillingOverview()
+    const { data: overview, isLoading: isOverviewLoading } = useBillingOverview(
+        Boolean(isAuthenticated)
+    )
     const remaining = overview?.creditBalance ?? 0
 
     return (
@@ -112,16 +114,16 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
                     onClick={() => {
                         window.open('https://www.npmjs.com/package/@trydecember/cli', '_blank')
                     }}
-                    className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 h-7 text-[13px] text-[#E8E8E6] transition-all duration-200 cursor-pointer hover:bg-white/5 group whitespace-nowrap flex-shrink-0 opacity-[0.85] hover:opacity-100"
+                    className="home-header-badge hidden md:flex items-center gap-2 bg-transparent border border-white/5 rounded-full pl-1.5 pr-2.5 h-7 text-[13px] text-[#E8E8E6] cursor-pointer whitespace-nowrap flex-shrink-0 transition-transform duration-200 ease-out hover:scale-[1.008] active:scale-[0.99] select-none"
                 >
                     <span className="bg-[#87B2F4]/15 text-[#87B2F4] rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold tracking-wider uppercase leading-none flex items-center justify-center flex-shrink-0">
                         NEW
                     </span>
-                    <span className="font-medium text-[#D4D4D8] group-hover:text-white transition-colors whitespace-nowrap">
+                    <span className="font-medium text-[#D4D4D8] whitespace-nowrap">
                         December Terminal Agent Is Now Live
                     </span>
                     <span className="text-[#3F3F46] font-light flex-shrink-0">|</span>
-                    <div className="text-[#D4D4D8] font-medium flex items-center gap-1 group-hover:text-white transition-colors whitespace-nowrap flex-shrink-0">
+                    <div className="text-[#D4D4D8] font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0">
                         Try December CLI <ArrowUpRight className="w-3.5 h-3.5" />
                     </div>
                 </div>

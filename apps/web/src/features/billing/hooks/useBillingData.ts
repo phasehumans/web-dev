@@ -8,11 +8,12 @@ export const billingQueryKeys = {
         ['credits-history', { limit, offset, periodStart, periodEnd }] as const,
 }
 
-export const useBillingOverview = () => {
+export const useBillingOverview = (enabled: boolean = true) => {
     return useQuery({
         queryKey: billingQueryKeys.overview,
         queryFn: billingAPI.getOverview,
         staleTime: 10 * 1000, // 10 seconds stale time
+        enabled,
     })
 }
 

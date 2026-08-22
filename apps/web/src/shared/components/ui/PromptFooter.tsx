@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { Paperclip, KeyRound, Code2, Puzzle, Folder } from 'lucide-react'
 import React, { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -7,7 +6,7 @@ import sidebarPng from '../../../../assets/sidebar.png'
 
 import { Icons } from './Icons'
 
-import { billingAPI } from '@/features/billing/api/billing'
+import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
 import { useVoiceToText } from '@/shared/lib/useVoiceToText'
 import { cn } from '@/shared/lib/utils'
 
@@ -166,12 +165,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
-    const { data: overview } = useQuery({
-        queryKey: ['billing-overview'],
-        queryFn: billingAPI.getOverview,
-        staleTime: 10 * 1000,
-        enabled: isAuthenticated,
-    })
+    const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
 
     const fileInputRef = useRef<HTMLInputElement>(null)
 

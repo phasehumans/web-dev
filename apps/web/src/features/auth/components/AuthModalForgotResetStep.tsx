@@ -16,8 +16,8 @@ export const AuthModalForgotResetStep: React.FC<AuthModalForgotResetStepProps> =
 }) => (
     <div className="flex flex-col">
         <div className="flex flex-col items-center text-center mb-6">
-            <div className="mb-5 opacity-90 hover:opacity-100 transition-opacity text-[#D6D5D4]">
-                <Icons.DecemberLogo className="w-[42px] h-[42px]" />
+            <div className="mb-5 text-white">
+                <Icons.DecemberLogo className="w-[42px] h-[42px] text-white" />
             </div>
             <h2 className="text-[22px] font-normal text-white tracking-tight mb-1">
                 Set new password

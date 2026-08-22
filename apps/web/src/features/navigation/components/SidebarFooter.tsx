@@ -8,7 +8,7 @@ import { NotificationsPopover } from './NotificationsPopover'
 
 import type { SidebarFooterProps } from '@/features/navigation/types'
 
-import { billingAPI } from '@/features/billing/api/billing'
+import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
 import { notificationAPI } from '@/features/notification/api/notification'
 import { profileAPI } from '@/features/profile/api/profile'
 import { Icons } from '@/shared/components/ui/Icons'
@@ -61,12 +61,7 @@ export const SidebarFooter: React.FC<
         refetchInterval: 30 * 1000,
     })
 
-    const { data: overview } = useQuery({
-        queryKey: ['billing-overview'],
-        queryFn: billingAPI.getOverview,
-        staleTime: 10 * 1000,
-        enabled: isAuthenticated,
-    })
+    const { data: overview } = useBillingOverview(isAuthenticated)
     const isPro = (overview as any)?.plan === 'PRO'
     const hasUnread = notifications.some((n: any) => !n.isRead)
 

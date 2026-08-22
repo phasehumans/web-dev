@@ -131,6 +131,7 @@ console.log(
 const result = await Bun.build({
     entrypoints,
     outdir,
+    publicPath: (cliConfig.publicPath as string) || '/',
     plugins: [plugin],
     minify: true,
     target: 'browser',

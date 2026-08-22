@@ -11,7 +11,7 @@ import { WorkspaceHeader } from './WorkspaceHeader'
 import type { WorkspaceScreenProps } from '@/features/preview/types'
 
 import { useAppStore } from '@/app/store'
-import { billingAPI } from '@/features/billing/api/billing'
+import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
 import { ChatThread as ChatSidebar } from '@/features/chat/components/ChatThread'
 import { useOutputScreenController } from '@/features/preview/hooks/useOutputScreenController'
 import { sessionAPI } from '@/features/sessions/api/session'
@@ -46,6 +46,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         previewSessionError,
         importState,
         projectType = 'generated',
+        isAuthenticated,
     } = useAppStore()
 
     const activeFilesToDisplay = React.useMemo(() => {
@@ -93,11 +94,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         return 'main'
     }, [currentSession, projectId, queryClient, activeVersionId])
 
-    const { data: overview } = useQuery({
-        queryKey: ['billing-overview'],
-        queryFn: billingAPI.getOverview,
-        staleTime: 10 * 1000,
-    })
+    const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
 
     const remainingInCents = (overview as any)?.credits?.remainingInCents ?? 100
     const unlimited = (overview as any)?.credits?.unlimited ?? false
