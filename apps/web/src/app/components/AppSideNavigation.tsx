@@ -79,10 +79,11 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
                 onExpand={() => setIsSidebarCollapsed(false)}
             />
 
-            <div className="md:hidden fixed top-4 left-4 z-50">
+            <div className="md:hidden fixed top-0 left-0 h-11 px-4 z-50 flex items-center pointer-events-none">
                 <button
                     onClick={() => setIsMobileSidebarOpen(true)}
-                    className="p-1.5 text-[#8F8E8D] hover:text-[#D4D4D8] transition-colors"
+                    className="pointer-events-auto w-7 h-7 text-[#8F8E8D] hover:text-[#D4D4D8] hover:bg-[#252525] rounded-full transition-colors flex items-center justify-center cursor-pointer outline-none"
+                    aria-label="Open sidebar"
                 >
                     <Icons.SidebarToggle className="w-[18px] h-[18px]" />
                 </button>

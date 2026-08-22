@@ -168,7 +168,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                             strokeWidth={1}
                         />
                         <h1 className="text-[24px] md:text-[32px] font-sohne font-medium tracking-tight text-[#D6D5D4]">
-                            December Agent
+                            December
                         </h1>
                     </div>
                 </div>
@@ -254,22 +254,114 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                         mode={chatMode}
                     />
 
-                    {/* Get Started Section - Desktop View */}
+                    {/* Get Started Section - Desktop & Mobile */}
                     {(!isWelcomeDone || !isGithubDone || !isFeedbackDone) && (
-                        <div className="mt-8 w-full hidden md:flex flex-col gap-3.5 select-none animate-in fade-in duration-300">
+                        <div className="mt-6 md:mt-8 w-full flex flex-col gap-3 md:gap-3.5 select-none animate-in fade-in duration-300">
                             <div className="flex flex-col gap-0.5 text-left px-1.5">
                                 <h3 className="text-[13px] md:text-[14px] font-sans font-semibold text-[#D6D5D4] tracking-tight">
                                     Get Started
                                 </h3>
                                 <p className="text-[11px] md:text-[11.5px] font-sans text-[#8F8E8D] leading-tight">
-                                    Start your journey with December Agent by completing your
-                                    onboarding
+                                    Start your journey with December by completing your onboarding
                                 </p>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+
+                            {/* Mobile View: Compact Action Rows (Option B) */}
+                            <div className="flex md:hidden flex-col gap-2 w-full">
+                                {/* Row 1: Welcome & Docs */}
+                                {!isWelcomeDone && (
+                                    <div className="flex items-center justify-between p-2.5 px-3 rounded-[12px] bg-[#141414] border border-dashed border-[#333333] hover:border-[#444444] transition-colors">
+                                        <div className="flex items-center gap-2.5 min-w-0 pr-3.5">
+                                            <span className="text-[16px] leading-none shrink-0">
+                                                👋
+                                            </span>
+                                            <div className="flex flex-col min-w-0 text-left">
+                                                <h4 className="text-[12.5px] font-sans font-semibold text-[#E8E8E8] truncate leading-snug">
+                                                    {isAuthenticated && profile?.name
+                                                        ? `Welcome ${profile.name}!`
+                                                        : 'Welcome to December'}
+                                                </h4>
+                                                <p className="text-[11px] font-sans text-[#8F8E8D] truncate leading-tight">
+                                                    Explore planning, coding, and testing full-stack
+                                                    apps
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center shrink-0">
+                                            <a
+                                                href="/docs"
+                                                className="px-2.5 py-1 rounded-[6px] bg-[#191919] hover:bg-[#222222] border border-[#262626] text-[#CBCACA] hover:text-white text-[11.5px] font-sans font-medium transition-colors cursor-pointer"
+                                            >
+                                                Docs
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Row 2: Connect GitHub */}
+                                {!isGithubDone && (
+                                    <div className="flex items-center justify-between p-2.5 px-3 rounded-[12px] bg-[#141414] border border-dashed border-[#333333] hover:border-[#444444] transition-colors">
+                                        <div className="flex items-center gap-2.5 min-w-0 pr-3.5">
+                                            <Icons.Github className="w-4 h-4 text-white shrink-0" />
+                                            <div className="flex flex-col min-w-0 text-left">
+                                                <h4 className="text-[12.5px] font-sans font-semibold text-[#E8E8E8] truncate leading-snug">
+                                                    Connect GitHub
+                                                </h4>
+                                                <p className="text-[11px] font-sans text-[#8F8E8D] truncate leading-tight">
+                                                    Connect repos for PRs and automated code review
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center shrink-0">
+                                            <button
+                                                onClick={
+                                                    isAuthenticated
+                                                        ? handleConnectGithub
+                                                        : onOpenAuth
+                                                }
+                                                className="px-2.5 py-1 rounded-[6px] bg-[#191919] hover:bg-[#222222] border border-[#262626] text-[#CBCACA] hover:text-white text-[11.5px] font-sans font-medium transition-colors cursor-pointer"
+                                            >
+                                                {isAuthenticated ? 'Install' : 'Connect'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Row 3: Feedback */}
+                                {!isFeedbackDone && (
+                                    <div className="flex items-center justify-between p-2.5 px-3 rounded-[12px] bg-[#141414] border border-dashed border-[#333333] hover:border-[#444444] transition-colors">
+                                        <div className="flex items-center gap-2.5 min-w-0 pr-3.5">
+                                            <MessageSquare className="w-4 h-4 text-white shrink-0" />
+                                            <div className="flex flex-col min-w-0 text-left">
+                                                <h4 className="text-[12.5px] font-sans font-semibold text-[#E8E8E8] truncate leading-snug">
+                                                    Give feedback
+                                                </h4>
+                                                <p className="text-[11px] font-sans text-[#8F8E8D] truncate leading-tight">
+                                                    Share your thoughts and feature requests
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center shrink-0">
+                                            <button
+                                                onClick={
+                                                    isAuthenticated
+                                                        ? () => setShowFeedbackModal(true)
+                                                        : onOpenAuth
+                                                }
+                                                className="px-2.5 py-1 rounded-[6px] bg-[#191919] hover:bg-[#222222] border border-[#262626] text-[#CBCACA] hover:text-white text-[11.5px] font-sans font-medium transition-colors cursor-pointer"
+                                            >
+                                                Feedback
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Desktop View: 3-Card Grid */}
+                            <div className="hidden md:grid md:grid-cols-3 gap-3 w-full">
                                 {/* Card 1: Welcome */}
                                 {!isWelcomeDone && (
-                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[160px] text-left">
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[172px] text-left">
                                         <button
                                             onClick={() => handleDismissCard('welcome')}
                                             className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
@@ -282,17 +374,17 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                 <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
                                                     {isAuthenticated && profile?.name
                                                         ? `Welcome ${profile.name}!`
-                                                        : 'Welcome to December Agent!'}
+                                                        : 'Welcome to December!'}
                                                 </h4>
                                                 <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                    Explore how December Agent autonomously plans,
-                                                    codes, runs, and tests full-stack software.
+                                                    Explore how December autonomously plans, codes,
+                                                    runs, and tests full-stack software.
                                                 </p>
                                             </div>
                                         </div>
                                         <a
                                             href="/docs"
-                                            className="mt-3.5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
                                         >
                                             Read Docs
                                         </a>
@@ -301,7 +393,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
                                 {/* Card 2: Connect GitHub */}
                                 {!isGithubDone && (
-                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[160px] text-left">
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[172px] text-left">
                                         <button
                                             onClick={() => handleDismissCard('github')}
                                             className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
@@ -315,8 +407,8 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                     Connect GitHub
                                                 </h4>
                                                 <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                    Connect your repositories so that December Agent
-                                                    can open Pull Requests and review code.
+                                                    Connect your repositories so that December can
+                                                    open Pull Requests and review code.
                                                 </p>
                                             </div>
                                         </div>
@@ -324,7 +416,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                             onClick={
                                                 isAuthenticated ? handleConnectGithub : onOpenAuth
                                             }
-                                            className="mt-3.5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
                                         >
                                             {isAuthenticated
                                                 ? 'Install Integration'
@@ -335,7 +427,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
                                 {/* Card 3: Feedback */}
                                 {!isFeedbackDone && (
-                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[160px] text-left">
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[172px] text-left">
                                         <button
                                             onClick={() => handleDismissCard('feedback')}
                                             className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
@@ -350,7 +442,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                 </h4>
                                                 <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
                                                     {isAuthenticated
-                                                        ? 'Help us improve December Agent by sharing your thoughts and feature requests.'
+                                                        ? 'Help us improve December by sharing your thoughts and feature requests.'
                                                         : 'Have questions or feature requests? Share your thoughts with our team.'}
                                                 </p>
                                             </div>
@@ -361,7 +453,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                     ? () => setShowFeedbackModal(true)
                                                     : onOpenAuth
                                             }
-                                            className="mt-3.5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
+                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] hover:bg-[#222222] border border-[#262626] hover:border-[#333333] text-[#9A9998] hover:text-[#D6D5D4] text-[11.5px] font-sans font-medium text-center transition-all duration-150 cursor-pointer"
                                         >
                                             Share feedback
                                         </button>
@@ -371,108 +463,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                         </div>
                     )}
                 </div>
-
-                {/* About & Purpose of December Agent Section */}
-                <div className="w-full max-w-[638px] px-2 md:px-0 mt-12 mb-8 flex flex-col gap-6 text-left border-t border-[#222222] pt-8">
-                    <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#87B2F4]/10 text-[#87B2F4] border border-[#87B2F4]/20">
-                                About Application
-                            </span>
-                        </div>
-                        <h3 className="text-[17px] font-semibold text-white tracking-tight">
-                            December Agent — Autonomous AI Software Engineering Platform
-                        </h3>
-                        <p className="text-[13px] text-[#A3A29E] leading-relaxed">
-                            December Agent is an autonomous AI coding assistant and developer
-                            workspace designed to plan, build, test, and deploy modern applications
-                            in isolated cloud micro-VM sandboxes.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
-                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#87B2F4]" />
-                                Autonomous Full-Stack Coding
-                            </div>
-                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
-                                Converts natural language prompts into complete, runnable codebases
-                                with automated file creation, refactoring, and bug fixes.
-                            </p>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
-                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#7FD6B0]" />
-                                Isolated Cloud Sandboxes
-                            </div>
-                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
-                                Executes code inside hardware-isolated containers with hot module
-                                reloading and instant live preview URLs.
-                            </p>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
-                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#FF85A1]" />
-                                Terminal Agent & GitHub
-                            </div>
-                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
-                                Seamlessly opens GitHub Pull Requests or runs locally inside your
-                                terminal via{' '}
-                                <code className="text-white bg-[#222222] px-1 py-0.5 rounded text-[11px]">
-                                    @trydecember/cli
-                                </code>
-                                .
-                            </p>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#141414] border border-[#242323] flex flex-col gap-1.5">
-                            <div className="text-[13px] font-medium text-white flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#E5B869]" />
-                                Secure Google Sign-In
-                            </div>
-                            <p className="text-[11.5px] text-[#8F8E8D] leading-normal">
-                                Authenticate securely with Google OAuth or GitHub. Your private
-                                repositories and code are never used to train generalized AI models.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Homepage Footer with legal and navigation links */}
-                <footer className="w-full max-w-[638px] px-2 md:px-0 py-8 border-t border-[#1F1F1F] flex flex-col gap-4 text-left text-[12px] text-[#777777]">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 text-[#9A9998]">
-                            <Icons.DecemberLogo className="w-4 h-4 text-white" strokeWidth={1} />
-                            <span className="font-medium text-white">December Agent</span>
-                            <span>&bull;</span>
-                            <span>https://trydecember.com</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-[#8F8E8D]">
-                            <a href="/docs" className="hover:text-white transition-colors">
-                                Documentation
-                            </a>
-                            <a href="/docs/privacy" className="hover:text-white transition-colors">
-                                Privacy Policy
-                            </a>
-                            <a href="/docs/terms" className="hover:text-white transition-colors">
-                                Terms of Service
-                            </a>
-                            <a
-                                href="https://github.com/phasehumans/december"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="hover:text-white transition-colors"
-                            >
-                                GitHub
-                            </a>
-                        </div>
-                    </div>
-                    <div className="text-[11px] text-[#666666] leading-relaxed">
-                        &copy; {new Date().getFullYear()} December Agent (Phase Humans Inc.). All
-                        rights reserved. Secure user authentication powered by Google OAuth adhering
-                        to Google API Services User Data Policy.
-                    </div>
-                </footer>
             </div>
 
             <OnboardingModal

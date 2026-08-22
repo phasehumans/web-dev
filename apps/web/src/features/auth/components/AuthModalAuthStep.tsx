@@ -31,14 +31,11 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
     return (
         <div className="flex flex-col">
             <div className="flex flex-col items-center text-center mb-6">
-                <div className="mb-5 opacity-90 hover:opacity-100 transition-opacity text-[#D6D5D4] relative">
-                    <div className="absolute inset-0 bg-white/20 blur-[24px] rounded-full scale-[1.8]"></div>
-                    <Icons.DecemberLogo className="w-[42px] h-[42px] relative z-10" />
+                <div className="mb-5 opacity-90 hover:opacity-100 transition-opacity text-[#D6D5D4]">
+                    <Icons.DecemberLogo className="w-[42px] h-[42px]" />
                 </div>
                 <h2 className="text-[22px] font-normal text-white tracking-tight mb-1">
-                    {authMode === 'login'
-                        ? 'Sign in to December Agent'
-                        : 'Create your December Agent account'}
+                    {authMode === 'login' ? 'Sign in to continue building' : 'Create an account'}
                 </h2>
                 <p className="text-[13px] text-gray-400 tracking-wider">turn ideas into reality.</p>
             </div>
@@ -164,7 +161,7 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                 </button>
 
                 <p className="text-[11.5px] text-[#707070] leading-tight max-w-[320px]">
-                    By continuing, you agree to December Agent&apos;s{' '}
+                    By continuing, you agree to December&apos;s{' '}
                     <a
                         href="/docs/terms"
                         target="_blank"
