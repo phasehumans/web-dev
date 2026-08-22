@@ -20,7 +20,7 @@ const createPullRequestReview = async (dataInput: CreatePullRequestReview) => {
     const match = prUrl.match(
         /(?:github\.com|gitlab\.com)\/([^/]+\/[^/]+)\/(?:pull|merge_requests)\/(\d+)/i
     )
-    const repository = match && match[1] ? match[1] : 'december-ai/app'
+    const repository = match && match[1] ? match[1] : 'repository'
     const prNumberStr = match && match[2] ? match[2] : ''
     const prNumber = prNumberStr ? parseInt(prNumberStr, 10) : Math.floor(Math.random() * 800) + 100
     const provider = prUrl.includes('gitlab.com') ? 'GITLAB' : 'GITHUB'

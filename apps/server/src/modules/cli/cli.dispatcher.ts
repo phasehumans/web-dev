@@ -40,9 +40,9 @@ export function resolveServerProvider(modelInput?: string): ServerProviderResolu
 
     // 1. Direct Google Gemini Native Provider (@google/genai)
     const isGeminiModel = lowerModel.startsWith('gemini') || lowerModel.startsWith('google/')
-    if (isGeminiModel && env.GEMINI_API_KEY) {
+    if (isGeminiModel && (env.GEMINI_API_KEY || env.NODE_ENV === 'test')) {
         return {
-            provider: geminiProvider(env.GEMINI_API_KEY),
+            provider: geminiProvider(env.GEMINI_API_KEY || 'test-gemini-key'),
             providerName: 'gemini',
             model: strippedModel,
         }
@@ -83,11 +83,11 @@ export function resolveServerProvider(modelInput?: string): ServerProviderResolu
     }
 
     // 5. OpenRouter Gateway Fallback
-    if (env.OPENROUTER_API_KEY) {
+    if (env.OPENROUTER_API_KEY || env.NODE_ENV === 'test') {
         const mappedModel =
             OPENROUTER_MODEL_MAP[model] || OPENROUTER_MODEL_MAP[strippedModel] || model
         return {
-            provider: openrouterProvider(env.OPENROUTER_API_KEY),
+            provider: openrouterProvider(env.OPENROUTER_API_KEY || 'test-openrouter-key'),
             providerName: 'openrouter',
             model: mappedModel,
         }

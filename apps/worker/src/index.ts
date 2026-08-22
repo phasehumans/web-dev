@@ -7,6 +7,10 @@ import jwt from 'jsonwebtoken'
 import { E2BSandboxService } from './e2b-sandbox.service'
 import { processGrpcStream } from './listener'
 
+if (process.env.NODE_ENV === 'production' && !process.env.REDIS_URL) {
+    throw new Error('REDIS_URL must be configured in production for Worker.')
+}
+
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
 
 const redisConnection: any = new Redis(REDIS_URL, {
@@ -102,11 +106,14 @@ export const worker = new Worker(
             })
 
             // generate short-lived jwt
-            const token = jwt.sign(
-                { userId, sessionId },
-                process.env.AGENT_TOKEN_SECRET || 'secret',
-                { expiresIn: '15m' }
-            )
+            const agentTokenSecret = process.env.AGENT_TOKEN_SECRET
+            if (process.env.NODE_ENV === 'production' && !agentTokenSecret) {
+                throw new Error('AGENT_TOKEN_SECRET must be configured in production for Worker.')
+            }
+
+            const token = jwt.sign({ userId, sessionId }, agentTokenSecret || 'secret', {
+                expiresIn: '15m',
+            })
 
             // Provision E2B microVM sandbox with 3x retry backoff and user LRU limit
             console.log(
@@ -117,9 +124,14 @@ export const worker = new Worker(
                 `[WORKER ENGINE] E2B Sandbox container '${provisionResult.sandboxId}' is RUNNING (isMock: ${provisionResult.isMock}). Initializing agent session...`
             )
 
+            const isProd = process.env.NODE_ENV === 'production'
+            const defaultApiUrl = isProd
+                ? 'https://api.trydecember.com/api/v1'
+                : 'http://localhost:4000/api/v1'
+
             const apiHostUrl = process.env.SERVER_URL
-                ? `${process.env.SERVER_URL}/api/v1`
-                : process.env.API_URL || 'http://localhost:4000/api/v1'
+                ? `${process.env.SERVER_URL.replace(/\/+$/, '')}/api/v1`
+                : process.env.API_URL || defaultApiUrl
             const stream = await E2BSandboxService.runAgentSession({
                 sessionId,
                 sandboxId: provisionResult.sandboxId,

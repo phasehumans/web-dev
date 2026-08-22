@@ -3,7 +3,7 @@ import path from 'path'
 import dotenv from 'dotenv'
 import { z } from 'zod'
 
-const envFile = process.env.ENV === 'TEST' ? '.env.test' : '.env'
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env'
 
 if (!process.env.ENV_LOADED) {
     dotenv.config({
@@ -12,14 +12,22 @@ if (!process.env.ENV_LOADED) {
     process.env.ENV_LOADED = 'true'
 }
 
+const emptyAsUndefined = z.preprocess(
+    (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+    z.string().min(1).optional()
+)
+
 const envSchema = z
     .object({
         PORT: z.coerce.number().default(4000),
-        ENV: z.enum(['DEV', 'PROD', 'TEST']).default('DEV'),
+        NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
         WEB_URL: z.string().url(),
         SERVER_URL: z.string().url(),
-        RESEND_API_KEY: z.string().min(1).optional(),
-        SENDER_EMAIL: z.string().email().optional(),
+        RESEND_API_KEY: emptyAsUndefined,
+        SENDER_EMAIL: z.preprocess(
+            (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+            z.string().email().optional()
+        ),
 
         DATABASE_URL: z.string().min(1),
         S3_ENDPOINT: z.string().url(),
@@ -36,55 +44,85 @@ const envSchema = z
         REFRESH_TOKEN_SECRET: z.string().min(1),
         REFRESH_TOKEN_EXPIRES_IN: z.string().default('30d'),
 
-        GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-        GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
-        GITHUB_CLIENT_ID: z.string().min(1).optional(),
-        GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
-        VERCEL_CLIENT_ID: z.string().min(1).optional(),
-        VERCEL_CLIENT_SECRET: z.string().min(1).optional(),
-        VERCEL_REDIRECT_URI: z.string().url().optional(),
-        VERCEL_WEBHOOK_SECRET: z.string().optional(),
-        SUPABASE_CLIENT_ID: z.string().min(1).optional(),
-        SUPABASE_CLIENT_SECRET: z.string().min(1).optional(),
-        SUPABASE_REDIRECT_URI: z.string().url().optional(),
-        NOTION_CLIENT_ID: z.string().min(1).optional(),
-        NOTION_CLIENT_SECRET: z.string().min(1).optional(),
-        NOTION_REDIRECT_URI: z.string().url().optional(),
+        GOOGLE_CLIENT_ID: emptyAsUndefined,
+        GOOGLE_CLIENT_SECRET: emptyAsUndefined,
+        GITHUB_CLIENT_ID: emptyAsUndefined,
+        GITHUB_CLIENT_SECRET: emptyAsUndefined,
+        VERCEL_CLIENT_ID: emptyAsUndefined,
+        VERCEL_CLIENT_SECRET: emptyAsUndefined,
+        VERCEL_REDIRECT_URI: z.preprocess(
+            (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+            z.string().url().optional()
+        ),
+        VERCEL_WEBHOOK_SECRET: emptyAsUndefined,
+        SUPABASE_CLIENT_ID: emptyAsUndefined,
+        SUPABASE_CLIENT_SECRET: emptyAsUndefined,
+        SUPABASE_REDIRECT_URI: z.preprocess(
+            (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+            z.string().url().optional()
+        ),
+        NOTION_CLIENT_ID: emptyAsUndefined,
+        NOTION_CLIENT_SECRET: emptyAsUndefined,
+        NOTION_REDIRECT_URI: z.preprocess(
+            (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+            z.string().url().optional()
+        ),
 
-        RAZORPAY_KEY_ID: z.string().min(1).optional(),
-        RAZORPAY_KEY_SECRET: z.string().min(1).optional(),
-        RAZORPAY_PRO_PLAN_ID: z.string().min(1).optional(),
-        RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+        RAZORPAY_KEY_ID: emptyAsUndefined,
+        RAZORPAY_KEY_SECRET: emptyAsUndefined,
+        RAZORPAY_PRO_PLAN_ID: emptyAsUndefined,
+        RAZORPAY_WEBHOOK_SECRET: emptyAsUndefined,
 
-        COINBASE_API_KEY: z.string().min(1).optional(),
-        COINBASE_WEBHOOK_SECRET: z.string().min(1).optional(),
+        COINBASE_API_KEY: emptyAsUndefined,
+        COINBASE_WEBHOOK_SECRET: emptyAsUndefined,
 
-        GEMINI_API_KEY: z.string().min(1).optional(),
-        OPENAI_API_KEY: z.string().min(1).optional(),
-        ANTHROPIC_API_KEY: z.string().min(1).optional(),
-        DEEPSEEK_API_KEY: z.string().min(1).optional(),
-        OPENROUTER_API_KEY: z.string().min(1).optional(),
-        AUTO_MODEL: z.string().optional(),
-        DEFAULT_MODEL: z.string().optional(),
+        GEMINI_API_KEY: emptyAsUndefined,
+        OPENAI_API_KEY: emptyAsUndefined,
+        ANTHROPIC_API_KEY: emptyAsUndefined,
+        DEEPSEEK_API_KEY: emptyAsUndefined,
+        OPENROUTER_API_KEY: emptyAsUndefined,
+        AUTO_MODEL: emptyAsUndefined,
+        DEFAULT_MODEL: emptyAsUndefined,
         BCRYPT_SALT_ROUNDS: z.coerce.number().default(10),
         SECRETS_ENC_KEY: z
             .string()
             .min(64)
             .default('0000000000000000000000000000000000000000000000000000000000000000'),
-        REDIS_URL: z.string().optional(),
+        REDIS_URL: emptyAsUndefined,
+        AGENT_TOKEN_SECRET: emptyAsUndefined,
+        GITHUB_APP_NAME: emptyAsUndefined,
+        GITHUB_APP_WEBHOOK_SECRET: emptyAsUndefined,
+        USD_TO_INR_RATE: z.coerce.number().default(84),
     })
     .superRefine((data, ctx) => {
-        if (
-            data.ENV === 'PROD' &&
-            data.SECRETS_ENC_KEY ===
+        if (data.NODE_ENV === 'production') {
+            if (
+                data.SECRETS_ENC_KEY ===
                 '0000000000000000000000000000000000000000000000000000000000000000'
-        ) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message:
-                    'SECRETS_ENC_KEY must be configured with a unique 64-character secret key in production.',
-                path: ['SECRETS_ENC_KEY'],
-            })
+            ) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message:
+                        'SECRETS_ENC_KEY must be configured with a unique 64-character secret key in production.',
+                    path: ['SECRETS_ENC_KEY'],
+                })
+            }
+
+            if (!data.REDIS_URL) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'REDIS_URL must be configured in production.',
+                    path: ['REDIS_URL'],
+                })
+            }
+
+            if (!data.AGENT_TOKEN_SECRET) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'AGENT_TOKEN_SECRET must be configured in production.',
+                    path: ['AGENT_TOKEN_SECRET'],
+                })
+            }
         }
     })
 

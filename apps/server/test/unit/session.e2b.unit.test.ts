@@ -78,10 +78,10 @@ describe('Session E2B & Rehydration Service Suite', () => {
         })
 
         expect(result.port).toBe(5173)
-        expect(result.targetHost).toBe(`session-${testSessionId}-5173.preview.december.ai`)
+        expect(result.targetHost).toBe(`session-${testSessionId}-5173.preview.trydecember.com`)
         expect(result.previewUrl).toContain('5173')
         expect(result.headers['X-Forwarded-Host']).toBe(
-            `session-${testSessionId}-5173.preview.december.ai`
+            `session-${testSessionId}-5173.preview.trydecember.com`
         )
         expect(result.headers['Access-Control-Allow-Origin']).toBe('*')
     })

@@ -52,7 +52,7 @@ export const sendOTP = async (email: string, otp: string, type: OtpType = 'verif
         })
     } catch (error) {
         console.error(`[Email Service] Failed to send OTP email to ${email}:`, error)
-        if (env.ENV === 'DEV') {
+        if (env.NODE_ENV === 'development') {
             console.log(`[DEV OTP Code] Verification code for ${email} is: ${otp}`)
         }
     }

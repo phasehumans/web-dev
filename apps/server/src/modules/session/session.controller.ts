@@ -221,7 +221,7 @@ export const proxyPreview = asyncHandler(async (req: Request, res: Response) => 
 
     if (
         result.previewUrl.startsWith('http') &&
-        (result.targetHost.endsWith('.e2b.dev') || process.env.ENV === 'PROD')
+        (result.targetHost.endsWith('.e2b.dev') || process.env.NODE_ENV === 'production')
     ) {
         return res.redirect(302, result.previewUrl)
     }

@@ -2,6 +2,7 @@ import { prisma } from '@december/database'
 import { Worker, Queue } from 'bullmq'
 import Redis from 'ioredis'
 
+import { env } from './env'
 import { authService } from './modules/auth/auth.service'
 import { fetchLiveModelRates } from './modules/usage/usage.rates'
 import { deletePrefix } from './shared/project-storage'
@@ -15,7 +16,7 @@ fetchLiveModelRates().catch((err) => {
     )
 })
 
-const redisConnection = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+const redisConnection = new Redis(env.REDIS_URL || 'redis://localhost:6379', {
     maxRetriesPerRequest: null,
 })
 redisConnection.on('error', (err) => {

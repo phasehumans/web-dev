@@ -25,6 +25,11 @@ export const SidebarFooter: React.FC<
     const hideTimeoutRef = useRef<any>(null)
 
     React.useEffect(() => {
+        const img = new Image()
+        img.src = sidebarPng
+    }, [])
+
+    React.useEffect(() => {
         const handler = () => setShowCliCard((prev) => !prev)
         window.addEventListener('open-cli-card', handler)
         return () => window.removeEventListener('open-cli-card', handler)
@@ -151,6 +156,7 @@ export const SidebarFooter: React.FC<
                                 <img
                                     src={sidebarPng}
                                     alt="December CLI preview"
+                                    decoding="async"
                                     className="w-full h-full object-cover object-center absolute inset-0"
                                 />
                             </a>

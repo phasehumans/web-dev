@@ -68,8 +68,7 @@ export const getApiBaseUrl = (): string => {
     const explicitServerUrl =
         getClientEnv('SERVER_URL') ??
         getClientEnv('BASE_URL') ??
-        (typeof process !== 'undefined' &&
-        (process.env.NODE_ENV === 'production' || process.env.ENV === 'PROD')
+        (typeof process !== 'undefined' && process.env.NODE_ENV === 'production'
             ? 'https://api.trydecember.com'
             : 'http://localhost:4000')
 

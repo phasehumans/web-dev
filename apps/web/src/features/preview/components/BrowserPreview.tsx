@@ -87,7 +87,7 @@ export const BrowserPreview: React.FC<BrowserPreviewProps> = ({ sessionUrl }) =>
                             />
                         </svg>
                         <span className="text-gray-500 select-none text-sm">
-                            {sessionUrl ? sessionUrl : 'http://localhost:3000'}
+                            {sessionUrl ? sessionUrl : 'https://preview.trydecember.com'}
                         </span>
                         <input
                             type="text"

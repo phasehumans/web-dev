@@ -4,7 +4,9 @@ import { serve } from 'bun'
 
 import index from './index.html'
 
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:4000'
+const isProd = process.env.NODE_ENV === 'production'
+const SERVER_URL =
+    process.env.SERVER_URL || (isProd ? 'https://api.trydecember.com' : 'http://localhost:4000')
 
 const proxyBackendApi = (req: Request) => {
     const url = new URL(req.url)
@@ -14,7 +16,7 @@ const proxyBackendApi = (req: Request) => {
     try {
         headers.set('host', new URL(normalizedTarget).host)
     } catch {
-        headers.set('host', 'localhost:4000')
+        headers.set('host', isProd ? 'api.trydecember.com' : 'localhost:4000')
     }
 
     const options: RequestInit & { duplex?: string } = {
@@ -88,7 +90,7 @@ const server = serve({
         return undefined as any
     },
 
-    development: process.env.ENV !== 'PROD' && {
+    development: process.env.NODE_ENV !== 'production' && {
         // enable browser hot reloading in development
         hmr: true,
 

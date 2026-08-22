@@ -48,7 +48,12 @@ let redisPub: Redis | null = null
 
 const getRedisPub = (): Redis => {
     if (!redisPub) {
-        redisPub = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+        const isProd = process.env.NODE_ENV === 'production'
+        if (isProd && !process.env.REDIS_URL) {
+            throw new Error('REDIS_URL must be configured in production for Worker.')
+        }
+        const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379'
+        redisPub = new Redis(redisUrl, {
             lazyConnect: true,
             maxRetriesPerRequest: 1,
             enableOfflineQueue: false,
@@ -551,7 +556,6 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         sandboxId?.startsWith('mock-') ||
         sessionId?.startsWith('mock-') ||
         !hasLlmKey ||
-        process.env.ENV === 'TEST' ||
         process.env.NODE_ENV === 'test'
 
     if (isMock) {

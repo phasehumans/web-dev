@@ -60,7 +60,7 @@ const App: React.FC = () => {
                     </div>
                 </div>
             )}
-            <div className="flex w-full h-screen bg-background text-textMain overflow-hidden font-sans">
+            <div className="flex w-full h-dvh h-screen bg-background text-textMain overflow-hidden font-sans">
                 <AppSideNavigation
                     showSidebar={showSidebar}
                     isMobileSidebarOpen={isMobileSidebarOpen}

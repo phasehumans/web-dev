@@ -152,14 +152,14 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     return (
         <main
             id="main-scroll-container"
-            className="h-full min-h-0 overflow-y-auto no-scrollbar scroll-smooth relative flex flex-col"
+            className="h-full min-h-0 overflow-hidden md:overflow-y-auto no-scrollbar scroll-smooth relative flex flex-col"
         >
             <HomeHeader isAuthenticated={isAuthenticated} onOpenAuth={onOpenAuth} />
 
-            <div className="flex flex-col items-center justify-start pt-[19vh] md:pt-[26vh] h-full flex-1 gap-6 animate-in fade-in duration-500 max-w-4xl mx-auto px-4 w-full shrink-0 relative">
+            <div className="flex flex-col items-center justify-center md:justify-start md:pt-[26vh] h-full flex-1 gap-6 animate-in fade-in duration-500 max-w-4xl mx-auto px-4 w-full md:shrink-0 relative">
                 {/* hidden original logo to preserve exact vertical layout flow */}
                 <div
-                    className="flex flex-col items-center gap-3 text-center relative -left-[8px] opacity-0 pointer-events-none select-none"
+                    className="hidden md:flex flex-col items-center gap-3 text-center relative -left-[8px] opacity-0 pointer-events-none select-none"
                     aria-hidden="true"
                 >
                     <div className="flex items-center gap-2.5">

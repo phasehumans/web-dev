@@ -6,7 +6,7 @@ import { Server, Socket } from 'socket.io'
 
 import { env } from './env'
 
-const pubClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+const pubClient = new Redis(env.REDIS_URL || 'redis://localhost:6379', {
     maxRetriesPerRequest: null,
 })
 pubClient.on('error', (err) => {
@@ -31,7 +31,7 @@ export function initSocket(httpServer: any) {
         env.WEB_URL?.replace(/\/+$/, ''),
         'https://trydecember.com',
         'https://www.trydecember.com',
-        ...(env.ENV !== 'PROD'
+        ...(env.NODE_ENV !== 'production'
             ? ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000']
             : []),
     ].filter(Boolean) as string[]
@@ -43,7 +43,7 @@ export function initSocket(httpServer: any) {
                 if (
                     allowedOrigins.includes(origin) ||
                     origin.endsWith('.vercel.app') ||
-                    (env.ENV !== 'PROD' &&
+                    (env.NODE_ENV !== 'production' &&
                         (origin.includes('localhost') || origin.includes('127.0.0.1')))
                 ) {
                     return callback(null, true)

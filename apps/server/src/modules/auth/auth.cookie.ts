@@ -2,7 +2,7 @@ import { env } from '../../env'
 
 import type { Response } from 'express'
 
-const isProduction = env.ENV === 'PROD'
+const isProduction = env.NODE_ENV === 'production'
 
 const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
     res.cookie('accessToken', accessToken, {

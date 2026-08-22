@@ -3,6 +3,7 @@ import { publishEvent } from '@december/shared'
 import { Queue } from 'bullmq'
 import Redis from 'ioredis'
 
+import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 import {
     sessionPrefix,
@@ -127,10 +128,8 @@ const getUserSessions = async (data: GetUserSessions) => {
             prNumber,
             prState: prNumber ? 'open' : null,
             prTitle,
-            prUrl:
-                prUrl ||
-                (prNumber ? `https://github.com/december-ai/december/pull/${prNumber}` : null),
-            branchName: branchName || (prNumber ? `devin-ai-integration/restyle-tui` : null),
+            prUrl: prUrl || null,
+            branchName: branchName || null,
             additions,
             deletions,
             repoName,
@@ -323,13 +322,22 @@ const deleteSession = async (data: DeleteSession) => {
         console.warn('Socket not connected or io not available', e)
     }
 
-    const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379')
-    const minioWipeQueue = new Queue('minio_wipe', { connection: redis as any })
-    await minioWipeQueue.add(
-        'wipe',
-        { prefix: sessionPrefix(sessionId) },
-        { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
-    )
+    const redisUrl =
+        env.REDIS_URL || (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)
+    if (redisUrl) {
+        try {
+            const redis = new Redis(redisUrl)
+            const minioWipeQueue = new Queue('minio_wipe', { connection: redis as any })
+            await minioWipeQueue.add(
+                'wipe',
+                { prefix: sessionPrefix(sessionId) },
+                { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
+            )
+            redis.disconnect()
+        } catch (e) {
+            console.warn('[Session] Failed to enqueue minio_wipe job:', e)
+        }
+    }
 
     await sessionRepository.deleteSession(sessionId)
 
@@ -342,61 +350,43 @@ const getCollaborators = async (data: GetCollaborators) => {
     if (!session) {
         throw new AppError('Session not found', 404)
     }
-    return sessionRepository.findCollaboratorsBySessionId(sessionId)
+
+    const collaborators = await sessionRepository.findCollaboratorsBySessionId(sessionId)
+    return { collaborators }
 }
 
 const addCollaborator = async (data: AddCollaborator) => {
-    const { userId, sessionId, email } = data
-
-    const owner = await sessionRepository.findSessionOwner(sessionId)
-    if (!owner || owner.userId !== userId) {
-        throw new AppError('Only the session creator can add collaborators', 403)
+    const { userId, sessionId, email, role } = data
+    const session = await sessionRepository.findSessionById(sessionId, userId)
+    if (!session) {
+        throw new AppError('Session not found', 404)
     }
 
-    const targetUser = await sessionRepository.findUserByEmailOrUsername(email)
-    if (!targetUser || targetUser.isDeleted) {
-        throw new AppError('User not found', 404)
+    const collaboratorUser = await sessionRepository.findUserByEmail(email)
+    if (!collaboratorUser) {
+        throw new AppError('User not found with provided email', 404)
     }
 
-    if (targetUser.id === userId) {
-        throw new AppError('You cannot add yourself as a collaborator', 400)
+    if (collaboratorUser.id === userId) {
+        throw new AppError('Cannot add yourself as collaborator', 400)
     }
 
-    const existingCollaborator = await sessionRepository.findCollaborator(
+    const collaborator = await sessionRepository.createCollaborator(
         sessionId,
-        targetUser.email
+        collaboratorUser.id,
+        role
     )
-    if (existingCollaborator) {
-        throw new AppError('User is already a collaborator on this session', 400)
-    }
-
-    const count = await sessionRepository.countCollaborators(sessionId)
-    if (count >= 3) {
-        throw new AppError('Maximum limit of 3 collaborators reached', 400)
-    }
-
-    const result = await sessionRepository.addCollaborator(
-        sessionId,
-        targetUser.id,
-        targetUser.email
-    )
-    return result
+    return { collaborator }
 }
 
 const removeCollaborator = async (data: RemoveCollaborator) => {
-    const { userId, sessionId, email } = data
-
-    const owner = await sessionRepository.findSessionOwner(sessionId)
-    if (!owner || owner.userId !== userId) {
-        throw new AppError('Only the session creator can remove collaborators', 403)
+    const { userId, sessionId, collaboratorId } = data
+    const session = await sessionRepository.findSessionById(sessionId, userId)
+    if (!session) {
+        throw new AppError('Session not found', 404)
     }
 
-    const existingCollaborator = await sessionRepository.findCollaborator(sessionId, email)
-    if (!existingCollaborator) {
-        throw new AppError('Collaborator not found', 404)
-    }
-
-    await sessionRepository.removeCollaborator(sessionId, email)
+    await sessionRepository.deleteCollaborator(sessionId, collaboratorId)
     return { message: 'Collaborator removed successfully' }
 }
 
@@ -434,32 +424,39 @@ const disconnectSession = async (data: DisconnectSession) => {
         throw new AppError('Session not found', 404)
     }
 
-    try {
-        const redisPub = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-            lazyConnect: true,
-            maxRetriesPerRequest: 1,
-            enableOfflineQueue: false,
-        })
-        redisPub.on('error', () => {
-            // Intentionally swallowed: Suppress Redis offline error noise during tests/fallback
-        })
-        if (redisPub.status === 'ready') {
-            await redisPub
-                .publish(
-                    `session_events:${sessionId}`,
-                    JSON.stringify({
-                        type: 'ClientDisconnect',
-                        sessionId,
-                        timestamp: Date.now(),
+    const redisUrl =
+        env.REDIS_URL || (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)
+    if (redisUrl) {
+        try {
+            const redisPub = new Redis(redisUrl, {
+                lazyConnect: true,
+                maxRetriesPerRequest: 1,
+                enableOfflineQueue: false,
+            })
+            redisPub.on('error', () => {
+                // Intentionally swallowed: Suppress Redis offline error noise during tests/fallback
+            })
+            await redisPub.connect().catch(() => {
+                // Intentionally swallowed: fallback if Redis server is offline
+            })
+            if (redisPub.status === 'ready') {
+                await redisPub
+                    .publish(
+                        `session_events:${sessionId}`,
+                        JSON.stringify({
+                            type: 'ClientDisconnect',
+                            sessionId,
+                            timestamp: Date.now(),
+                        })
+                    )
+                    .catch(() => {
+                        // Intentionally swallowed: Fallback during offline Redis test runs
                     })
-                )
-                .catch(() => {
-                    // Intentionally swallowed: Fallback during offline Redis test runs
-                })
+            }
+            redisPub.disconnect()
+        } catch {
+            // Intentionally swallowed: Redis pub connection fallback in test environment
         }
-        redisPub.disconnect()
-    } catch {
-        // Intentionally swallowed: Redis pub connection fallback in test environment
     }
 
     return { message: 'Disconnect signal received and grace period started' }
@@ -472,7 +469,7 @@ const proxyPreview = async (data: ProxyPreview) => {
         throw new AppError('Session not found', 404)
     }
 
-    let targetHost = `session-${sessionId}-${port}.preview.december.ai`
+    let targetHost = `session-${sessionId}-${port}.preview.trydecember.com`
     if (session.vmId && !session.vmId.startsWith('mock-')) {
         targetHost = `${port}-${session.vmId}.e2b.dev`
     }

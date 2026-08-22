@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 
 import { razorpay } from '../../config/razorpay'
+import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 import { notificationService } from '../notification/notification.service'
 
@@ -63,8 +64,8 @@ const createRazorpayOrder = async (data: CreateRazorpayOrder) => {
     const { userId, amountInCents } = data
 
     // razorpay requires inr to enable upi and domestic payment options.
-    // convert usd cents to inr paise using a rate of 84 (1 usd = 84 inr).
-    const USD_TO_INR_RATE = 84 //store in env
+    // convert usd cents to inr paise using configurable USD_TO_INR_RATE.
+    const USD_TO_INR_RATE = env.USD_TO_INR_RATE ?? 84
     const amountInPaise = amountInCents * USD_TO_INR_RATE
 
     const order = await razorpay.orders.create({

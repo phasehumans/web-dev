@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 export const env = createEnv({
     server: {
-        ENV: z.enum(['DEV', 'TEST', 'PROD']).default('DEV'),
+        NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
         PORT: z.coerce.number().default(3000),
         LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
@@ -25,4 +25,12 @@ export const env = createEnv({
     client: {},
     runtimeEnv: process.env,
     emptyStringAsUndefined: true,
+    onValidationError: (error) => {
+        console.error('Shared environment validation error:', error)
+        throw new Error('Invalid shared environment variables')
+    },
 })
+
+if (env.NODE_ENV === 'production' && env.JWT_SECRET === 'default-dev-jwt-secret') {
+    throw new Error('JWT_SECRET must be configured with a secure secret in production.')
+}

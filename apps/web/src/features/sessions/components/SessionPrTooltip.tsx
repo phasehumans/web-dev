@@ -55,20 +55,20 @@ export const SessionPrTooltip: React.FC<SessionPrTooltipProps> = ({ session }) =
         e.stopPropagation()
         e.preventDefault()
         const url =
-            session.prUrl || `https://github.com/december-ai/december/pull/${session.prNumber}`
+            session.prUrl || `https://github.com/phasehumans/december/pull/${session.prNumber}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
 
     const prTitle = session.prTitle || session.title || `feat: PR #${session.prNumber}`
     const repoName = session.repoName || 'december'
     const shortRepo = repoName.length > 6 ? `...${repoName.slice(-3)}` : repoName
-    const additions = session.additions ?? 220
-    const deletions = session.deletions ?? 82
+    const additions = session.additions ?? 0
+    const deletions = session.deletions ?? 0
     const branchName =
         session.branchName ||
         (session.title
             ? session.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-            : 'devin-ai-integration/restyle-tui')
+            : `feature/pr-${session.prNumber}`)
 
     return (
         <div

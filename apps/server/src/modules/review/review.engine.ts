@@ -1,6 +1,8 @@
 import { Queue } from 'bullmq'
 import Redis from 'ioredis'
 
+import { env } from '../../env'
+
 import * as reviewRepository from './review.repository'
 
 export interface IGithubBotDispatcher {
@@ -14,32 +16,48 @@ export class E2BGithubBotDispatcher implements IGithubBotDispatcher {
         try {
             await reviewRepository.updateReview(reviewId, { status: 'IN_PROGRESS' })
 
-            const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-                lazyConnect: true,
-                maxRetriesPerRequest: 1,
-                enableOfflineQueue: false,
-            })
-            redis.on('error', () => {})
-
-            if (redis.status === 'ready') {
-                const agentJobsQueue = new Queue('agent_jobs', { connection: redis as any })
-                await agentJobsQueue.add('pr_review', {
-                    reviewId,
-                    prUrl,
-                    taskType: 'pr_review',
+            const redisUrl =
+                env.REDIS_URL ||
+                (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)
+            if (redisUrl) {
+                const redis = new Redis(redisUrl, {
+                    lazyConnect: true,
+                    maxRetriesPerRequest: 1,
+                    enableOfflineQueue: false,
                 })
+                redis.on('error', () => {})
+
+                await redis.connect().catch(() => {})
+
+                if (redis.status === 'ready') {
+                    const agentJobsQueue = new Queue('agent_jobs', { connection: redis as any })
+                    await agentJobsQueue.add('pr_review', {
+                        reviewId,
+                        prUrl,
+                        taskType: 'pr_review',
+                    })
+                    redis.disconnect()
+                    return
+                }
+
                 redis.disconnect()
-                return
             }
 
-            redis.disconnect()
-            await this.simulated.dispatchReview(reviewId, prUrl)
+            if (env.NODE_ENV !== 'production') {
+                await this.simulated.dispatchReview(reviewId, prUrl)
+            } else {
+                await reviewRepository.updateReview(reviewId, { status: 'FAILED' })
+            }
         } catch (e: any) {
             console.warn(
                 `[E2BGithubBotDispatcher] Queue dispatch fallback for ${reviewId}:`,
                 e?.message || e
             )
-            await this.simulated.dispatchReview(reviewId, prUrl)
+            if (env.NODE_ENV !== 'production') {
+                await this.simulated.dispatchReview(reviewId, prUrl)
+            } else {
+                await reviewRepository.updateReview(reviewId, { status: 'FAILED' })
+            }
         }
     }
 }
@@ -59,7 +77,7 @@ export class SimulatedGithubBotDispatcher implements IGithubBotDispatcher {
                 const repoMatch =
                     prUrl.match(/github\.com\/([^/]+\/[^/]+)/i) ||
                     prUrl.match(/gitlab\.com\/([^/]+\/[^/]+)/i)
-                const repository = repoMatch ? repoMatch[1] : 'december-ai/app'
+                const repository = repoMatch ? repoMatch[1] : 'repository'
 
                 // Realistic review payload generator
                 const summary =

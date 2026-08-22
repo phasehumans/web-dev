@@ -155,16 +155,17 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
     }
 
     const navigate = useNavigate()
-    const prNumberDisplay = activeVersionId ? `#${activeVersionId.slice(0, 4)}` : '#97'
-    const prTitle = projectName
-        ? `feat(workspace): ${projectName}`
-        : 'feat(tui): restyle TUI in Devin CLI style with D...'
+    const prNumberDisplay = activeVersionId ? `#${activeVersionId.slice(0, 4)}` : '#1'
+    const prTitle = projectName ? `feat(workspace): ${projectName}` : 'Workspace Project'
+    const branchName = projectName
+        ? `feature/${projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+        : 'main'
 
     const handleOpenReview = (e: React.MouseEvent) => {
         e.stopPropagation()
         e.preventDefault()
         setIsPrTooltipOpen(false)
-        const prNum = activeVersionId ? activeVersionId.slice(0, 4) : '97'
+        const prNum = activeVersionId ? activeVersionId.slice(0, 4) : '1'
         const params = new URLSearchParams()
         params.set('pr', prNum)
         if (projectId) params.set('session', projectId)
@@ -174,8 +175,7 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
     const handleCopyBranch = (e: React.MouseEvent) => {
         e.stopPropagation()
         e.preventDefault()
-        const branch = 'devin-ai-integration/restyle-tui'
-        navigator.clipboard.writeText(branch)
+        navigator.clipboard.writeText(branchName)
         setIsCopiedBranch(true)
         setTimeout(() => setIsCopiedBranch(false), 2000)
     }
@@ -183,8 +183,8 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
     const handleOpenGithub = (e: React.MouseEvent) => {
         e.stopPropagation()
         e.preventDefault()
-        const prNum = activeVersionId ? activeVersionId.slice(0, 4) : '97'
-        const url = `https://github.com/december-ai/december/pull/${prNum}`
+        const prNum = activeVersionId ? activeVersionId.slice(0, 4) : '1'
+        const url = `https://github.com/phasehumans/december/pull/${prNum}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
 

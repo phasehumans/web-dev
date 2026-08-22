@@ -66,6 +66,11 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
     })
 
     useEffect(() => {
+        const img = new Image()
+        img.src = sidebarPng
+    }, [])
+
+    useEffect(() => {
         onVoiceStateChange?.(isListening)
     }, [isListening, onVoiceStateChange])
 
@@ -358,6 +363,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                         <img
                                             src={sidebarPng}
                                             alt="Context Canvas"
+                                            decoding="async"
                                             className="w-full h-full object-cover object-center absolute inset-0 opacity-80"
                                         />
                                     </div>

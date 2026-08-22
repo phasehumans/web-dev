@@ -48,14 +48,14 @@ export const errorHandler = (err: any, req: Request, res: Response, _next: NextF
         })
     }
 
-    if (env.ENV !== 'TEST') {
+    if (env.NODE_ENV !== 'test') {
         logger.error(
             { err, reqId: req.id, url: req.url, method: req.method },
             'Unhandled Server Error'
         )
     }
 
-    const isDev = env.ENV === 'DEV'
+    const isDev = env.NODE_ENV === 'development'
     const errorMsg = isDev ? (err instanceof Error ? err.message : String(err)) : undefined
 
     return res.status(500).json({
