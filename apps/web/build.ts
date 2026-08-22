@@ -174,6 +174,16 @@ const result = await Bun.build({
     ...cliConfig,
 })
 
+const robotsPath = path.resolve('assets', 'robots.txt')
+if (existsSync(robotsPath)) {
+    await Bun.write(path.join(outdir, 'robots.txt'), Bun.file(robotsPath))
+}
+
+const sitemapPath = path.resolve('assets', 'sitemap.xml')
+if (existsSync(sitemapPath)) {
+    await Bun.write(path.join(outdir, 'sitemap.xml'), Bun.file(sitemapPath))
+}
+
 const end = performance.now()
 
 const outputTable = result.outputs.map((output) => ({

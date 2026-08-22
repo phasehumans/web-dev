@@ -46,6 +46,18 @@ const server = serve({
             }
             return Response.redirect(`${GITHUB_RAW_BASE}/install.sh`, 302)
         },
+        '/robots.txt': () => {
+            const file = Bun.file(path.join(import.meta.dir, '../assets/robots.txt'))
+            return new Response(file, {
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+        },
+        '/sitemap.xml': () => {
+            const file = Bun.file(path.join(import.meta.dir, '../assets/sitemap.xml'))
+            return new Response(file, {
+                headers: { 'Content-Type': 'application/xml; charset=utf-8' },
+            })
+        },
         '/api/v1/*': proxyBackendApi,
         '/api/wiki/*': proxyBackendApi,
         '/api/wiki': proxyBackendApi,
