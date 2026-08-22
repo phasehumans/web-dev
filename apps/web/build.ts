@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { existsSync } from 'fs'
-import { rm } from 'fs/promises'
+import { rm, cp } from 'fs/promises'
 import path from 'path'
 
 import plugin from 'bun-plugin-tailwind'
@@ -173,6 +173,11 @@ const result = await Bun.build({
     },
     ...cliConfig,
 })
+
+const assetsDir = path.resolve('assets')
+if (existsSync(assetsDir)) {
+    await cp(assetsDir, path.join(outdir, 'assets'), { recursive: true })
+}
 
 const robotsPath = path.resolve('assets', 'robots.txt')
 if (existsSync(robotsPath)) {
