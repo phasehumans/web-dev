@@ -124,11 +124,6 @@ export const UserProfilePopover: React.FC<UserProfilePopoverProps> = ({
             </span>
         )
     }
-
-    const docsUrl =
-        (typeof process !== 'undefined' ? process.env.DOCS_URL : undefined) ||
-        'http://localhost:3005'
-
     const menuItems: Array<{
         icon: React.ComponentType<any>
         label: string

@@ -4,11 +4,24 @@ import { serve } from 'bun'
 
 import index from './index.html'
 
+const BACKEND_INTERNAL_URL =
+    process.env.BACKEND_INTERNAL_URL ||
+    process.env.SERVER_URL ||
+    process.env.BASE_URL ||
+    'http://localhost:4000'
+
 const proxyBackendApi = (req: Request) => {
     const url = new URL(req.url)
-    const targetUrl = `http://localhost:4000${url.pathname}${url.search}`
+    const normalizedTarget = BACKEND_INTERNAL_URL.endsWith('/')
+        ? BACKEND_INTERNAL_URL.slice(0, -1)
+        : BACKEND_INTERNAL_URL
+    const targetUrl = `${normalizedTarget}${url.pathname}${url.search}`
     const headers = new Headers(req.headers)
-    headers.set('host', 'localhost:4000')
+    try {
+        headers.set('host', new URL(normalizedTarget).host)
+    } catch {
+        headers.set('host', 'localhost:4000')
+    }
 
     const options: RequestInit & { duplex?: string } = {
         method: req.method,

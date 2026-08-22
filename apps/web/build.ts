@@ -146,6 +146,32 @@ const result = await Bun.build({
         'process.env.BASE_URL': JSON.stringify(
             process.env.SERVER_URL || process.env.BASE_URL || 'https://api.trydecember.com'
         ),
+        'process.env.GITHUB_CLIENT_ID': JSON.stringify(
+            process.env.PUBLIC_GITHUB_CLIENT_ID ||
+                process.env.GITHUB_CLIENT_ID ||
+                'Ov23liFGkTAwCW7E8gtk'
+        ),
+        'process.env.GOOGLE_CLIENT_ID': JSON.stringify(
+            process.env.PUBLIC_GOOGLE_CLIENT_ID ||
+                process.env.GOOGLE_CLIENT_ID ||
+                '762203307362-qg77ln4ci9eldv3i0q1smv804epsbhk0.apps.googleusercontent.com'
+        ),
+        'process.env.VERCEL_INTEGRATION_SLUG': JSON.stringify(
+            process.env.PUBLIC_VERCEL_INTEGRATION_SLUG ||
+                process.env.VERCEL_INTEGRATION_SLUG ||
+                'december'
+        ),
+        'process.env.SUPABASE_CLIENT_ID': JSON.stringify(
+            process.env.PUBLIC_SUPABASE_CLIENT_ID ||
+                process.env.SUPABASE_CLIENT_ID ||
+                '4a0473bb-3c69-4d28-8896-d1d8b6e18347'
+        ),
+        'process.env.NOTION_CLIENT_ID': JSON.stringify(
+            process.env.PUBLIC_NOTION_CLIENT_ID ||
+                process.env.NOTION_CLIENT_ID ||
+                '36ad872b-594c-8101-9e7c-00378ba2e5f6'
+        ),
+        'process.env.DOCS_URL': JSON.stringify(process.env.DOCS_URL || ''),
     },
     ...cliConfig,
 })

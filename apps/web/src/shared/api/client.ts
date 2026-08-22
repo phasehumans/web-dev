@@ -10,40 +10,9 @@ type RequestOptions = Omit<RequestInit, 'headers'> & {
     includeAuth?: boolean
 }
 
-type RuntimeEnv = {
-    process?: {
-        env?: Record<string, string | undefined>
-    }
-    Bun?: {
-        env?: Record<string, string | undefined>
-    }
-    __ENV__?: Record<string, string | undefined>
-}
+import { getApiBaseUrl } from '../config/env'
 
-const resolveBaseUrl = () => {
-    const runtime = globalThis as typeof globalThis & RuntimeEnv
-
-    return (
-        runtime.Bun?.env?.SERVER_URL ??
-        runtime.process?.env?.SERVER_URL ??
-        runtime.__ENV__?.SERVER_URL ??
-        runtime.Bun?.env?.BASE_URL ??
-        runtime.process?.env?.BASE_URL ??
-        runtime.__ENV__?.BASE_URL ??
-        (typeof process !== 'undefined' &&
-        (process.env.NODE_ENV === 'production' || process.env.ENV === 'PROD')
-            ? 'https://api.trydecember.com'
-            : 'http://localhost:4000')
-    )
-}
-
-const rawBaseUrl = resolveBaseUrl()
-
-const normalizedBaseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl
-
-export const API_BASE_URL = normalizedBaseUrl.endsWith('/api/v1')
-    ? normalizedBaseUrl
-    : `${normalizedBaseUrl}/api/v1`
+export const API_BASE_URL = getApiBaseUrl()
 
 export class ApiError extends Error {
     status: number

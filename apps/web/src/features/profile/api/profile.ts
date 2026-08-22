@@ -1,5 +1,5 @@
 import { type BackendProject } from '@/features/sessions/api/project'
-import { apiRequest, API_BASE_URL } from '@/shared/api/client'
+import { apiRequest } from '@/shared/api/client'
 
 export type Profile = {
     id: string
@@ -81,63 +81,14 @@ type UpdateGenerationSoundInput = {
     generationSound: 'FIRST_GENERATION' | 'ALWAYS' | 'NEVER'
 }
 
-type ClientRuntimeEnv = {
-    process?: {
-        env?: Record<string, string | undefined>
-    }
-    Bun?: {
-        env?: Record<string, string | undefined>
-    }
-    __ENV__?: Record<string, string | undefined>
-}
-
-const getClientEnv = (key: string) => {
-    const runtime = globalThis as typeof globalThis & ClientRuntimeEnv
-
-    return runtime.Bun?.env?.[key] ?? runtime.process?.env?.[key] ?? runtime.__ENV__?.[key]
-}
-
-const getGithubClientId = () =>
-    (typeof process !== 'undefined' ? process.env.GITHUB_CLIENT_ID : undefined) ??
-    (typeof process !== 'undefined' ? process.env.PUBLIC_GITHUB_CLIENT_ID : undefined) ??
-    getClientEnv('GITHUB_CLIENT_ID') ??
-    getClientEnv('PUBLIC_GITHUB_CLIENT_ID') ??
-    'Ov23liFGkTAwCW7E8gtk'
-
-const getVercelIntegrationSlug = () =>
-    (typeof process !== 'undefined' ? process.env.VERCEL_INTEGRATION_SLUG : undefined) ??
-    (typeof process !== 'undefined' ? process.env.PUBLIC_VERCEL_INTEGRATION_SLUG : undefined) ??
-    getClientEnv('VERCEL_INTEGRATION_SLUG') ??
-    getClientEnv('PUBLIC_VERCEL_INTEGRATION_SLUG') ??
-    'december'
-
-const getSupabaseClientId = () =>
-    (typeof process !== 'undefined' ? process.env.SUPABASE_CLIENT_ID : undefined) ??
-    (typeof process !== 'undefined' ? process.env.PUBLIC_SUPABASE_CLIENT_ID : undefined) ??
-    getClientEnv('SUPABASE_CLIENT_ID') ??
-    getClientEnv('PUBLIC_SUPABASE_CLIENT_ID') ??
-    '4a0473bb-3c69-4d28-8896-d1d8b6e18347'
-
-const getSupabaseRedirectUri = () =>
-    (typeof process !== 'undefined' ? process.env.SUPABASE_REDIRECT_URI : undefined) ??
-    (typeof process !== 'undefined' ? process.env.PUBLIC_SUPABASE_REDIRECT_URI : undefined) ??
-    getClientEnv('SUPABASE_REDIRECT_URI') ??
-    getClientEnv('PUBLIC_SUPABASE_REDIRECT_URI') ??
-    `${API_BASE_URL}/integrations/supabase/connect`
-
-const getNotionClientId = () =>
-    (typeof process !== 'undefined' ? process.env.NOTION_CLIENT_ID : undefined) ??
-    (typeof process !== 'undefined' ? process.env.PUBLIC_NOTION_CLIENT_ID : undefined) ??
-    getClientEnv('NOTION_CLIENT_ID') ??
-    getClientEnv('PUBLIC_NOTION_CLIENT_ID') ??
-    '36ad872b-594c-8101-9e7c-00378ba2e5f6'
-
-const getNotionRedirectUri = () =>
-    (typeof process !== 'undefined' ? process.env.NOTION_REDIRECT_URI : undefined) ??
-    (typeof process !== 'undefined' ? process.env.PUBLIC_NOTION_REDIRECT_URI : undefined) ??
-    getClientEnv('NOTION_REDIRECT_URI') ??
-    getClientEnv('PUBLIC_NOTION_REDIRECT_URI') ??
-    `${API_BASE_URL}/integrations/notion/connect`
+import {
+    getGithubClientId,
+    getVercelIntegrationSlug,
+    getSupabaseClientId,
+    getSupabaseRedirectUri,
+    getNotionClientId,
+    getNotionRedirectUri,
+} from '@/shared/config/env'
 
 const buildUrl = (baseUrl: string, params: Record<string, string>) => {
     const url = new URL(baseUrl)
