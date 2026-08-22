@@ -356,13 +356,13 @@ const getCollaborators = async (data: GetCollaborators) => {
 }
 
 const addCollaborator = async (data: AddCollaborator) => {
-    const { userId, sessionId, email, role } = data
+    const { userId, sessionId, email } = data
     const session = await sessionRepository.findSessionById(sessionId, userId)
     if (!session) {
         throw new AppError('Session not found', 404)
     }
 
-    const collaboratorUser = await sessionRepository.findUserByEmail(email)
+    const collaboratorUser = await sessionRepository.findUserByEmailOrUsername(email)
     if (!collaboratorUser) {
         throw new AppError('User not found with provided email', 404)
     }
@@ -371,23 +371,33 @@ const addCollaborator = async (data: AddCollaborator) => {
         throw new AppError('Cannot add yourself as collaborator', 400)
     }
 
-    const collaborator = await sessionRepository.createCollaborator(
+    const existingCollaborator = await sessionRepository.findCollaborator(sessionId, email)
+    if (existingCollaborator) {
+        throw new AppError('User is already a collaborator', 400)
+    }
+
+    const collaborator = await sessionRepository.addCollaborator(
         sessionId,
         collaboratorUser.id,
-        role
+        email
     )
     return { collaborator }
 }
 
 const removeCollaborator = async (data: RemoveCollaborator) => {
-    const { userId, sessionId, collaboratorId } = data
+    const { userId, sessionId, email } = data
     const session = await sessionRepository.findSessionById(sessionId, userId)
     if (!session) {
         throw new AppError('Session not found', 404)
     }
 
-    await sessionRepository.deleteCollaborator(sessionId, collaboratorId)
-    return { message: 'Collaborator removed successfully' }
+    const existingCollaborator = await sessionRepository.findCollaborator(sessionId, email)
+    if (!existingCollaborator) {
+        throw new AppError('Collaborator not found', 404)
+    }
+
+    await sessionRepository.removeCollaborator(sessionId, email)
+    return { message: 'collaborator removed successfully' }
 }
 
 const rehydrateSession = async (data: RehydrateSession) => {
