@@ -6,7 +6,6 @@ export interface RenderWelcomeEmailOptions {
     name?: string
     supportEmail: string
     webUrl: string
-    docsUrl?: string
     npmUrl?: string
 }
 

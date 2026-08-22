@@ -68,7 +68,6 @@ describe('Auth Email Templates - Unit Tests', () => {
                 name: 'Alex Developer',
                 supportEmail: 'support@december.com',
                 webUrl: 'https://trydecember.com',
-                docsUrl: 'https://docs.trydecember.com',
             })
 
             expect(subject).toBe('Welcome to December')

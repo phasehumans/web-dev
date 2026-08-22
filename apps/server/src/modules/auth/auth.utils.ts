@@ -61,13 +61,11 @@ export const sendOTP = async (email: string, otp: string, type: OtpType = 'verif
 export const sendWelcomeEmail = async (email: string, name: string) => {
     const fromEmail = env.SENDER_EMAIL || 'onboarding@resend.dev'
     const webUrl = env.WEB_URL || 'https://trydecember.com'
-    const docsUrl = env.DOCS_URL || `${webUrl}/docs`
 
     const { subject, html, text } = renderWelcomeEmail({
         name,
         supportEmail: fromEmail,
         webUrl,
-        docsUrl,
     })
 
     try {

@@ -18,7 +18,6 @@ const envSchema = z
         ENV: z.enum(['DEV', 'PROD', 'TEST']).default('DEV'),
         WEB_URL: z.string().url(),
         SERVER_URL: z.string().url(),
-        DOCS_URL: z.string().url().optional(),
         RESEND_API_KEY: z.string().min(1).optional(),
         SENDER_EMAIL: z.string().email().optional(),
 

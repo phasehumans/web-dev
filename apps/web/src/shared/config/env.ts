@@ -137,10 +137,8 @@ export const getNotionRedirectUri = (apiBaseUrl: string = getApiBaseUrl()): stri
 }
 
 export const getDocsUrl = (): string => {
-    return (
-        getClientEnv('DOCS_URL') ??
-        (typeof window !== 'undefined'
-            ? `${window.location.origin}/docs`
-            : 'https://trydecember.com/docs')
-    )
+    if (typeof window !== 'undefined') {
+        return `${window.location.origin}/docs`
+    }
+    return 'https://trydecember.com/docs'
 }

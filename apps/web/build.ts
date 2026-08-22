@@ -171,7 +171,6 @@ const result = await Bun.build({
                 process.env.NOTION_CLIENT_ID ||
                 '36ad872b-594c-8101-9e7c-00378ba2e5f6'
         ),
-        'process.env.DOCS_URL': JSON.stringify(process.env.DOCS_URL || ''),
     },
     ...cliConfig,
 })
