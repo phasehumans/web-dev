@@ -15,16 +15,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy root monorepo manifests
 COPY package.json bun.lock turbo.json ./
 
-# Copy backend workspace package manifests (omitting cli, tui, web, evals)
+# Copy all workspace package manifests to match bun.lock
 COPY apps/server/package.json ./apps/server/
 COPY apps/worker/package.json ./apps/worker/
+COPY apps/cli/package.json ./apps/cli/
+COPY apps/web/package.json ./apps/web/
 COPY packages/agent/package.json ./packages/agent/
 COPY packages/database/package.json ./packages/database/
+COPY packages/evals/package.json ./packages/evals/
 COPY packages/providers/package.json ./packages/providers/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/tools/package.json ./packages/tools/
+COPY packages/tui/package.json ./packages/tui/
 
-# Install backend workspace dependencies
+# Install workspace dependencies matching bun.lock
 RUN bun install --frozen-lockfile
 
 # Copy backend workspaces source code
