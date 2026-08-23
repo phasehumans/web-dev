@@ -73,6 +73,20 @@ app.use(
     })
 )
 
+// Unauthenticated Health Check Endpoints for ALB / CloudWatch / Docker / Monitoring
+const healthCheckHandler = (_req: express.Request, res: express.Response) => {
+    res.status(200).json({
+        status: 'ok',
+        service: 'december-server',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+    })
+}
+
+app.get('/health', healthCheckHandler)
+app.get('/api/health', healthCheckHandler)
+app.get('/api/v1/health', healthCheckHandler)
+
 // Pre-parse token context for user-aware rate limiting and auth routing
 app.use(parseAuthToken)
 
