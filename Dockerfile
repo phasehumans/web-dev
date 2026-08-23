@@ -29,7 +29,7 @@ COPY packages/tools/package.json ./packages/tools/
 COPY packages/tui/package.json ./packages/tui/
 
 # Install workspace dependencies matching bun.lock
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Copy backend workspaces source code
 COPY apps/server ./apps/server
