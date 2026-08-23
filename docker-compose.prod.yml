@@ -44,7 +44,7 @@ services:
                 condition: service_healthy
         env_file:
             - .env.production
-        command: bun --cwd packages/database prisma migrate deploy
+        command: bun --cwd packages/database run db:deploy
 
     server:
         build:

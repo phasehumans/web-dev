@@ -7,6 +7,8 @@
     "private": true,
     "scripts": {
         "db:generate": "prisma generate",
+        "db:deploy": "prisma migrate deploy",
+        "db:migrate:prod": "prisma migrate deploy",
         "db:migrate": "bunx dotenv-cli -e ../../.env -- prisma migrate dev",
         "db:migrate:dev": "bunx dotenv-cli -e ../../.env -- prisma migrate dev",
         "db:migrate:test": "bunx --bun dotenv-cli -e ../../.env.test -- bunx --bun prisma migrate deploy",
