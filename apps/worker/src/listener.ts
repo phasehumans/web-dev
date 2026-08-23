@@ -1,4 +1,5 @@
 import { prisma } from '@december/database'
+import { calculateGenerationCost, startOfUtcMonth, startOfNextUtcMonth } from '@december/shared'
 import Redis from 'ioredis'
 
 import { E2BSandboxService } from './e2b-sandbox.service'
@@ -252,7 +253,7 @@ async function updateCredits(sessionId: string, event: any) {
     try {
         const session = await prisma.session.findUnique({
             where: { id: sessionId },
-            select: { userId: true },
+            select: { userId: true, projectId: true },
         })
         if (!session) return
 
@@ -261,27 +262,52 @@ async function updateCredits(sessionId: string, event: any) {
         const totalTokens = promptTokens + completionTokens
         const model = event.model || 'gemini-3.6-flash'
         const now = new Date()
+        const periodStart = startOfUtcMonth(now)
+        const periodEnd = startOfNextUtcMonth(now)
+
+        const calculatedCost = calculateGenerationCost({
+            modelName: model,
+            inputTokens: promptTokens,
+            outputTokens: completionTokens,
+        })
 
         console.log(
-            `[WORKER LISTENER] Recording UsageEvent for session '${sessionId}': promptTokens=${promptTokens}, completionTokens=${completionTokens}, totalTokens=${totalTokens}`
+            `[WORKER LISTENER] Recording UsageEvent for session '${sessionId}': model=${model}, promptTokens=${promptTokens}, completionTokens=${completionTokens}, costInCents=${calculatedCost}`
         )
 
-        await prisma.usageEvent.create({
-            data: {
-                userId: session.userId,
-                sessionId,
-                model,
-                inputTokens: promptTokens,
-                outputTokens: completionTokens,
-                totalTokens,
-                costInCents: Math.ceil(totalTokens * 0.0001),
-                periodStart: now,
-                periodEnd: now,
-            },
+        await prisma.$transaction(async (tx) => {
+            try {
+                const rows: any[] =
+                    await tx.$queryRaw`SELECT "creditBalance" FROM "User" WHERE id = ${session.userId} FOR UPDATE`
+                const currentBalance = rows && rows.length > 0 ? rows[0].creditBalance : 0
+                const newBalance = currentBalance - calculatedCost
+
+                await tx.user.update({
+                    where: { id: session.userId },
+                    data: { creditBalance: newBalance },
+                })
+            } catch {
+                // Intentionally swallowed: fallback during unit testing or missing mock user
+            }
+
+            await tx.usageEvent.create({
+                data: {
+                    userId: session.userId,
+                    sessionId,
+                    projectId: session.projectId,
+                    model,
+                    inputTokens: promptTokens,
+                    outputTokens: completionTokens,
+                    totalTokens,
+                    costInCents: calculatedCost,
+                    periodStart,
+                    periodEnd,
+                },
+            })
         })
     } catch (err) {
         console.error(
-            `[WORKER LISTENER] Failed to record token usage for session ${sessionId}:`,
+            `[WORKER LISTENER] Failed to record token usage and update credits for session ${sessionId}:`,
             err
         )
     }

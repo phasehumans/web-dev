@@ -37,8 +37,12 @@ const calculateGenerationCost = (data: CalculateGenerationCost): number => {
 
     const rawCost = inputTokens * inputCentsPerToken + outputTokens * outputCentsPerToken
 
-    // ceiling rounding, minimum 1 cent
-    return Math.max(Math.ceil(rawCost), 1)
+    if (rawCost === 0) {
+        return 0
+    }
+
+    // ceiling rounding to integer cents
+    return Math.max(Math.ceil(rawCost), 0)
 }
 
 const startOfUtcMonth = (date: Date) => {
@@ -107,9 +111,9 @@ const checkEnoughCredits = async (data: CheckEnoughCredits) => {
 }
 
 const hasMinimumBalance = async (data: HasMinimumBalance): Promise<boolean> => {
-    const { userId } = data
+    const { userId, minBalanceInCents = 1 } = data
     const user = await getUsageUser(userId)
-    return user.creditBalance >= 1
+    return user.creditBalance >= minBalanceInCents
 }
 
 const assertProjectOwnership = async (userId: string, projectId?: string) => {
@@ -136,6 +140,7 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
         outputTokens,
         totalTokens,
         projectId,
+        sessionId,
         chatId,
         externalRequestId,
         metadata,
@@ -175,8 +180,8 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
                 throw new AppError('user not found', 404)
             }
 
-            let newCreditBalance = dbUser.creditBalance
-            newCreditBalance = Math.max(newCreditBalance - calculatedCost, 0)
+            // allow soft overdraft / negative balance
+            const newCreditBalance = dbUser.creditBalance - calculatedCost
 
             // update user balance
             await usageRepository.updateUserCredits(
@@ -197,6 +202,7 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
                     totalTokens,
                     costInCents: costLogged,
                     projectId,
+                    sessionId,
                     chatId,
                     externalRequestId,
                     periodStart,

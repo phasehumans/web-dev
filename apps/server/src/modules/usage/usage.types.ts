@@ -9,6 +9,7 @@ export type CheckEnoughCredits = {
 
 export type HasMinimumBalance = {
     userId: string
+    minBalanceInCents?: number
 }
 
 export type RecordUsageEvent = {
@@ -19,6 +20,7 @@ export type RecordUsageEvent = {
     totalTokens: number
     costInCents?: number
     projectId?: string
+    sessionId?: string
     chatId?: string
     externalRequestId?: string
     metadata?: Record<string, unknown>

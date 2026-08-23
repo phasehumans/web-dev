@@ -13,8 +13,9 @@ import {
 } from '../../shared/project-storage'
 import { getIO } from '../../socket'
 import { hydrateCanvasDocument } from '../canvas/canvas.utils'
+import { usageService } from '../usage/usage.service'
 
-import * as sessionRepository from './session.repository'
+import { sessionRepository } from './session.repository'
 
 import type {
     GetUserSessions,
@@ -107,7 +108,7 @@ const getUserSessions = async (data: GetUserSessions) => {
             id: session.id,
             title:
                 session.title ||
-                (session.messages[0]
+                (session.messages?.[0]?.content
                     ? session.messages[0].content.substring(0, 50) + '...'
                     : 'New Chat'),
             type: session.type,
@@ -117,7 +118,7 @@ const getUserSessions = async (data: GetUserSessions) => {
             updatedAt: session.updatedAt,
             projectId: session.projectId,
             projectName: session.project?.name,
-            lastMessage: session.messages[0] ? session.messages[0].content : null,
+            lastMessage: session.messages?.[0]?.content || null,
             createdBy: session.user?.username
                 ? `@${session.user.username.toLowerCase()}`
                 : session.user?.email
@@ -145,6 +146,19 @@ const getUserSessions = async (data: GetUserSessions) => {
 const createSession = async (data: CreateSession) => {
     const { userId, title, projectId, type, prompt } = data
 
+    const minBalance = parseInt(process.env.MIN_SESSION_START_BALANCE_IN_CENTS || '50', 10)
+    const hasBalance = await usageService.hasMinimumBalance({
+        userId,
+        minBalanceInCents: minBalance,
+    })
+
+    if (!hasBalance) {
+        throw new AppError(
+            `Insufficient balance. A minimum balance of $${(minBalance / 100).toFixed(2)} is required to start a session.`,
+            402
+        )
+    }
+
     const activeSessions = await prisma.session.count({
         where: {
             userId,
@@ -154,6 +168,15 @@ const createSession = async (data: CreateSession) => {
 
     if (activeSessions > 0) {
         throw new AppError('An active session is already running', 409)
+    }
+
+    if (projectId) {
+        const project = await prisma.project.findFirst({
+            where: { id: projectId, userId },
+        })
+        if (!project) {
+            throw new AppError('Project not found', 404)
+        }
     }
 
     const session = await sessionRepository.createSession({
@@ -218,6 +241,8 @@ const getSession = async (data: GetSession) => {
 
 const renameSession = async (data: RenameSession) => {
     const { userId, sessionId, title } = data
+    const existing = await sessionRepository.findSessionById(sessionId, userId)
+    if (!existing) throw new AppError('Session not found', 404)
     return sessionRepository.updateSession(sessionId, userId, { title })
 }
 
@@ -243,6 +268,8 @@ const unarchiveSession = async (data: UnarchiveSession) => {
 
 const updateSessionTags = async (data: UpdateSessionTags) => {
     const { userId, sessionId, tags } = data
+    const existing = await sessionRepository.findSessionById(sessionId, userId)
+    if (!existing) throw new AppError('Session not found', 404)
     const singleTag = tags ? tags.slice(0, 1) : []
     return sessionRepository.updateSession(sessionId, userId, { tags: singleTag })
 }
@@ -310,11 +337,18 @@ const deleteSession = async (data: DeleteSession) => {
     const { userId, sessionId } = data
 
     const owner = await sessionRepository.findSessionOwner(sessionId)
-    if (!owner || owner.userId !== userId) {
+    if (!owner) {
+        throw new AppError('Session not found', 404)
+    }
+    if (owner.userId !== userId) {
         throw new AppError('Only the session creator can delete this session', 403)
     }
 
-    await publishEvent(`session_events:${sessionId}`, { type: 'SIGKILL', data: {} })
+    try {
+        await publishEvent(`session_events:${sessionId}`, { type: 'SIGKILL', data: {} })
+    } catch {
+        // Intentionally swallowed: Redis pubsub event publishing fallback in test or offline environment
+    }
 
     try {
         getIO().in(`session:${sessionId}`).disconnectSockets()
@@ -325,17 +359,27 @@ const deleteSession = async (data: DeleteSession) => {
     const redisUrl =
         env.REDIS_URL || (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)
     if (redisUrl) {
+        let redis: Redis | null = null
+        let minioWipeQueue: Queue | null = null
         try {
-            const redis = new Redis(redisUrl)
-            const minioWipeQueue = new Queue('minio_wipe', { connection: redis as any })
+            redis = new Redis(redisUrl)
+            minioWipeQueue = new Queue('minio_wipe', { connection: redis as any })
             await minioWipeQueue.add(
                 'wipe',
                 { prefix: sessionPrefix(sessionId) },
                 { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
             )
-            redis.disconnect()
         } catch (e) {
             console.warn('[Session] Failed to enqueue minio_wipe job:', e)
+        } finally {
+            if (minioWipeQueue) {
+                await minioWipeQueue.close().catch(() => {
+                    // Intentionally swallowed: queue close error during deletion cleanup
+                })
+            }
+            if (redis) {
+                redis.disconnect()
+            }
         }
     }
 
@@ -362,16 +406,23 @@ const addCollaborator = async (data: AddCollaborator) => {
         throw new AppError('Session not found', 404)
     }
 
+    if (session.userId !== userId) {
+        throw new AppError('Only the session creator can add collaborators', 403)
+    }
+
     const collaboratorUser = await sessionRepository.findUserByEmailOrUsername(email)
     if (!collaboratorUser) {
         throw new AppError('User not found with provided email', 404)
     }
 
-    if (collaboratorUser.id === userId) {
-        throw new AppError('Cannot add yourself as collaborator', 400)
+    if (collaboratorUser.id === userId || collaboratorUser.id === session.userId) {
+        throw new AppError('Cannot add yourself or session owner as collaborator', 400)
     }
 
-    const existingCollaborator = await sessionRepository.findCollaborator(sessionId, email)
+    const existingCollaborator = await sessionRepository.findCollaborator(
+        sessionId,
+        collaboratorUser.email
+    )
     if (existingCollaborator) {
         throw new AppError('User is already a collaborator', 400)
     }
@@ -379,7 +430,7 @@ const addCollaborator = async (data: AddCollaborator) => {
     const collaborator = await sessionRepository.addCollaborator(
         sessionId,
         collaboratorUser.id,
-        email
+        collaboratorUser.email
     )
     return { collaborator }
 }
@@ -394,6 +445,10 @@ const removeCollaborator = async (data: RemoveCollaborator) => {
     const existingCollaborator = await sessionRepository.findCollaborator(sessionId, email)
     if (!existingCollaborator) {
         throw new AppError('Collaborator not found', 404)
+    }
+
+    if (session.userId !== userId && existingCollaborator.userId !== userId) {
+        throw new AppError('Only the session creator can remove other collaborators', 403)
     }
 
     await sessionRepository.removeCollaborator(sessionId, email)
@@ -437,8 +492,9 @@ const disconnectSession = async (data: DisconnectSession) => {
     const redisUrl =
         env.REDIS_URL || (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)
     if (redisUrl) {
+        let redisPub: Redis | null = null
         try {
-            const redisPub = new Redis(redisUrl, {
+            redisPub = new Redis(redisUrl, {
                 lazyConnect: true,
                 maxRetriesPerRequest: 1,
                 enableOfflineQueue: false,
@@ -463,9 +519,12 @@ const disconnectSession = async (data: DisconnectSession) => {
                         // Intentionally swallowed: Fallback during offline Redis test runs
                     })
             }
-            redisPub.disconnect()
         } catch {
             // Intentionally swallowed: Redis pub connection fallback in test environment
+        } finally {
+            if (redisPub) {
+                redisPub.disconnect()
+            }
         }
     }
 
@@ -484,7 +543,8 @@ const proxyPreview = async (data: ProxyPreview) => {
         targetHost = `${port}-${session.vmId}.e2b.dev`
     }
 
-    const previewUrl = `https://${targetHost}${reqPath || '/'}`
+    const normalizedPath = reqPath ? (reqPath.startsWith('/') ? reqPath : `/${reqPath}`) : '/'
+    const previewUrl = `https://${targetHost}${normalizedPath}`
 
     return {
         previewUrl,

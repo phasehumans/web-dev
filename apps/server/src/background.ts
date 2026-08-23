@@ -40,8 +40,9 @@ minioWipeWorker.on('failed', (job, err) => {
 
 // setup sweep_cron worker
 const sweepQueue = new Queue('sweep_jobs', { connection: redisConnection as any })
-// add repeatable job running daily
+// add repeatable jobs
 sweepQueue.add('daily_sweep', {}, { repeat: { pattern: '0 0 * * *' } })
+sweepQueue.add('refresh_model_rates', {}, { repeat: { pattern: '0 */6 * * *' } })
 
 const sweepWorker = new Worker(
     'sweep_jobs',
@@ -58,6 +59,15 @@ const sweepWorker = new Worker(
                         lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
                     },
                 },
+            })
+        } else if (job.name === 'refresh_model_rates') {
+            console.log(`[Background] Refreshing live OpenRouter model rates catalog`)
+            await fetchLiveModelRates(true).catch((err) => {
+                // Intentionally swallowed: fallback to embedded official catalog if offline
+                console.warn(
+                    '[Background] Failed to refresh live model rates:',
+                    err?.message || err
+                )
             })
         }
     },

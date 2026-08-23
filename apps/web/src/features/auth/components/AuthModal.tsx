@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, X } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import React from 'react'
 
 import { useAuthModalController } from '../hooks/useAuthModalController'
@@ -67,26 +67,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 15 }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
                     className="fixed inset-0 z-[100] bg-[#141414] flex flex-col items-center justify-center font-roboto overflow-y-auto"
                 >
                     <button
                         type="button"
                         onClick={onClose}
-                        className="absolute top-4 left-4 md:top-8 md:left-8 text-[#888888] hover:text-white transition-colors z-50 outline-none"
+                        className="hidden md:flex items-center gap-1 absolute top-8 left-8 text-[#888888] hover:text-white transition-colors z-50 outline-none text-[14px] font-medium"
                     >
-                        <span className="hidden md:flex items-center gap-1 text-[14px] font-medium">
-                            <ChevronLeft size={16} strokeWidth={2.5} /> Back
-                        </span>
-                        <span className="md:hidden flex items-center justify-center w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 transition-colors">
-                            <X size={18} strokeWidth={2} />
-                        </span>
+                        <ChevronLeft size={16} strokeWidth={2.5} /> Back
                     </button>
                     <div className="w-full flex items-center justify-center p-6 md:p-10 lg:p-12 relative bg-[#141414]">
-                        <div className="w-full max-w-[380px] relative z-10">
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                            className="w-full max-w-[380px] relative z-10"
+                        >
                             {step === 'auth' ? (
                                 <AuthModalAuthStep
                                     authMode={authMode}
@@ -160,7 +160,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                                     onBack={handleBackToForgotOtp}
                                 />
                             )}
-                        </div>
+                        </motion.div>
                     </div>
                 </motion.div>
             )}

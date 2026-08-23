@@ -492,6 +492,7 @@ export const MobileSidebar: React.FC<
                                             e.stopPropagation()
                                             if (!isAuthenticated) {
                                                 onOpenAuth?.()
+                                                onClose()
                                             } else {
                                                 if (!isRecentMenuOpen) {
                                                     const rect =
@@ -745,7 +746,10 @@ export const MobileSidebar: React.FC<
                                     </p>
                                     <button
                                         type="button"
-                                        onClick={onOpenAuth}
+                                        onClick={() => {
+                                            onOpenAuth?.()
+                                            onClose()
+                                        }}
                                         className="w-full py-1 px-2.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#313131] hover:border-[#3E3E3E] text-[#EDEDED] hover:text-white text-[12px] font-medium transition-all text-center cursor-pointer"
                                     >
                                         Sign in

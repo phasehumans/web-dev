@@ -55,9 +55,15 @@ describe('Worker Listener Unit Tests', () => {
 
     it('should record UsageEvent in Prisma when AgentUsage event is processed', async () => {
         const createUsageMock = mock(async () => ({}) as any)
+        const updateUserMock = mock(async () => ({}) as any)
         prisma.usageEvent.create = createUsageMock as any
-        prisma.session.findUnique = mock(async () => ({ userId: 'usr-usage-1' }) as any) as any
+        prisma.user.update = updateUserMock as any
+        prisma.session.findUnique = mock(
+            async () => ({ userId: 'usr-usage-1', projectId: 'prj-1' }) as any
+        ) as any
         prisma.session.update = mock(async () => ({}) as any) as any
+        prisma.$queryRaw = mock(async () => [{ creditBalance: 500 }] as any) as any
+        prisma.$transaction = mock(async (cb: any) => cb(prisma)) as any
 
         const fakeEvents = [
             {
@@ -79,5 +85,6 @@ describe('Worker Listener Unit Tests', () => {
         await processGrpcStream('sess-usage-1', streamGenerator)
 
         expect(createUsageMock).toHaveBeenCalled()
+        expect(updateUserMock).toHaveBeenCalled()
     })
 })

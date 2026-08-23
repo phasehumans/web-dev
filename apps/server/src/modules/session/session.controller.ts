@@ -1,3 +1,4 @@
+import { AppError } from '../../shared/appError'
 import { asyncHandler } from '../../shared/asyncHandler'
 import { sendSuccess } from '../../shared/response'
 
@@ -26,7 +27,8 @@ import { sessionService } from './session.service'
 import type { Request, Response } from 'express'
 
 export const getSessions = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const parsedQuery = getSessionsSchema.parse(req.query)
 
     const filters: import('./session.types').SessionFilters = {}
@@ -52,7 +54,8 @@ export const getSessions = asyncHandler(async (req: Request, res: Response) => {
 })
 
 export const createSession = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const parsedBody = createSessionSchema.parse(req.body)
     const { title, projectId, type, prompt } = parsedBody
 
@@ -67,7 +70,8 @@ export const createSession = asyncHandler(async (req: Request, res: Response) =>
 })
 
 export const getSessionById = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = getSessionByIdSchema.parse(req.params)
 
     const result = await sessionService.getSession({ userId, sessionId: id })
@@ -75,7 +79,8 @@ export const getSessionById = asyncHandler(async (req: Request, res: Response) =
 })
 
 export const renameSession = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = renameSessionParamsSchema.parse(req.params)
     const { title } = renameSessionBodySchema.parse(req.body)
 
@@ -88,7 +93,8 @@ export const renameSession = asyncHandler(async (req: Request, res: Response) =>
 })
 
 export const archiveSession = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = archiveSessionParamsSchema.parse(req.params)
 
     const session = await sessionService.archiveSession({
@@ -99,7 +105,8 @@ export const archiveSession = asyncHandler(async (req: Request, res: Response) =
 })
 
 export const unarchiveSession = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = unarchiveSessionParamsSchema.parse(req.params)
 
     const session = await sessionService.unarchiveSession({
@@ -110,7 +117,8 @@ export const unarchiveSession = asyncHandler(async (req: Request, res: Response)
 })
 
 export const updateSessionTags = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = updateSessionTagsParamsSchema.parse(req.params)
     const { tags } = updateSessionTagsBodySchema.parse(req.body)
 
@@ -123,7 +131,8 @@ export const updateSessionTags = asyncHandler(async (req: Request, res: Response
 })
 
 export const getSessionInsights = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = getSessionInsightsParamsSchema.parse(req.params)
 
     const result = await sessionService.getSessionInsights({
@@ -134,7 +143,8 @@ export const getSessionInsights = asyncHandler(async (req: Request, res: Respons
 })
 
 export const deleteSession = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = deleteSessionParamsSchema.parse(req.params)
 
     const result = await sessionService.deleteSession({
@@ -145,7 +155,8 @@ export const deleteSession = asyncHandler(async (req: Request, res: Response) =>
 })
 
 export const getCollaborators = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = getCollaboratorsParamsSchema.parse(req.params)
 
     const collaborators = await sessionService.getCollaborators({
@@ -156,7 +167,8 @@ export const getCollaborators = asyncHandler(async (req: Request, res: Response)
 })
 
 export const addCollaborator = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = addCollaboratorParamsSchema.parse(req.params)
     const { email } = addCollaboratorBodySchema.parse(req.body)
 
@@ -169,7 +181,8 @@ export const addCollaborator = asyncHandler(async (req: Request, res: Response) 
 })
 
 export const removeCollaborator = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id, email } = removeCollaboratorParamsSchema.parse(req.params)
 
     const result = await sessionService.removeCollaborator({
@@ -181,7 +194,8 @@ export const removeCollaborator = asyncHandler(async (req: Request, res: Respons
 })
 
 export const rehydrateSession = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = rehydrateSessionParamsSchema.parse(req.params)
 
     const result = await sessionService.rehydrateSession({
@@ -192,7 +206,8 @@ export const rehydrateSession = asyncHandler(async (req: Request, res: Response)
 })
 
 export const disconnectSession = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id } = disconnectSessionParamsSchema.parse(req.params)
 
     const result = await sessionService.disconnectSession({
@@ -203,14 +218,16 @@ export const disconnectSession = asyncHandler(async (req: Request, res: Response
 })
 
 export const proxyPreview = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user!.userId
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
     const { id, port } = proxyPreviewParamsSchema.parse(req.params)
+    const subPath = typeof req.query.path === 'string' ? req.query.path : '/'
 
     const result = await sessionService.proxyPreview({
         userId,
         sessionId: id,
         port,
-        reqPath: req.path,
+        reqPath: subPath,
     })
 
     res.set(result.headers)
@@ -252,3 +269,21 @@ export const proxyPreview = asyncHandler(async (req: Request, res: Response) => 
         </html>
     `)
 })
+
+export const sessionController = {
+    getSessions,
+    createSession,
+    getSessionById,
+    renameSession,
+    archiveSession,
+    unarchiveSession,
+    updateSessionTags,
+    getSessionInsights,
+    deleteSession,
+    getCollaborators,
+    addCollaborator,
+    removeCollaborator,
+    rehydrateSession,
+    disconnectSession,
+    proxyPreview,
+}

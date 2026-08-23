@@ -12,10 +12,13 @@ export const getSessionsSchema = z.object({
     sortBy: z.enum(['updatedAt', 'createdAt']).optional(),
     sortOrder: z.enum(['asc', 'desc']).optional(),
     search: z.string().optional(),
-    page: z.preprocess((val) => (val ? Number(val) : undefined), z.number().min(1).optional()),
+    page: z.preprocess(
+        (val) => (val !== undefined && val !== '' ? Number(val) : undefined),
+        z.number().int().min(1).optional()
+    ),
     limit: z.preprocess(
-        (val) => (val ? Number(val) : undefined),
-        z.number().min(1).max(100).optional()
+        (val) => (val !== undefined && val !== '' ? Number(val) : undefined),
+        z.number().int().min(1).max(100).optional()
     ),
 })
 
@@ -86,5 +89,5 @@ export const rehydrateSessionParamsSchema = z.object({
 
 export const proxyPreviewParamsSchema = z.object({
     id: z.string().uuid('Invalid session ID'),
-    port: z.preprocess((val) => Number(val), z.number().min(1).max(65535)),
+    port: z.preprocess((val) => Number(val), z.number().int().min(1).max(65535)),
 })

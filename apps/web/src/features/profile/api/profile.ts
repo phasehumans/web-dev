@@ -1,5 +1,12 @@
-import { type BackendProject } from '@/features/sessions/api/project'
 import { apiRequest } from '@/shared/api/client'
+import {
+    getGithubClientId,
+    getVercelIntegrationSlug,
+    getSupabaseClientId,
+    getSupabaseRedirectUri,
+    getNotionClientId,
+    getNotionRedirectUri,
+} from '@/shared/config/env'
 
 export type Profile = {
     id: string
@@ -39,6 +46,7 @@ export type Profile = {
 }
 
 type BackendProfile = Profile
+type BackendProject = { id: string; name: string; [key: string]: any }
 
 export type QuickInfo = {
     fullName: string
@@ -80,15 +88,6 @@ type UpdateChatSuggestionsInput = {
 type UpdateGenerationSoundInput = {
     generationSound: 'FIRST_GENERATION' | 'ALWAYS' | 'NEVER'
 }
-
-import {
-    getGithubClientId,
-    getVercelIntegrationSlug,
-    getSupabaseClientId,
-    getSupabaseRedirectUri,
-    getNotionClientId,
-    getNotionRedirectUri,
-} from '@/shared/config/env'
 
 const buildUrl = (baseUrl: string, params: Record<string, string>) => {
     const url = new URL(baseUrl)
