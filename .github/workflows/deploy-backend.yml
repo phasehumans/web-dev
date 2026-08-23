@@ -1,0 +1,54 @@
+name: Deploy Backend to EC2
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'apps/server/**'
+            - 'apps/worker/**'
+            - 'packages/**'
+            - 'Dockerfile'
+            - 'docker-compose.prod.yml'
+            - '.github/workflows/deploy-backend.yml'
+    workflow_dispatch:
+
+concurrency:
+    group: deploy-backend-production
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        name: Deploy Backend to EC2
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Deploy to EC2 over SSH
+              uses: appleboy/ssh-action@v1.2.0
+              with:
+                  host: ${{ secrets.EC2_HOST }}
+                  username: ${{ secrets.EC2_USER || 'ubuntu' }}
+                  key: ${{ secrets.EC2_SSH_KEY }}
+                  port: 22
+                  script_stop: true
+                  script: |
+                      echo "==> Pulling latest changes from main branch..."
+                      cd /var/www/december
+                      git pull origin main
+
+                      echo "==> Rebuilding and restarting Docker containers..."
+                      sudo docker compose -f docker-compose.prod.yml up -d --build
+
+                      echo "==> Verifying local health check..."
+                      sleep 5
+                      curl -f http://127.0.0.1:4000/health || exit 1
+                      echo "==> Backend containers deployed successfully!"
+
+            - name: Verify Public HTTPS Healthcheck
+              run: |
+                  echo "==> Verifying public HTTPS API health..."
+                  curl -f --retry 5 --retry-delay 3 https://api.trydecember.com/health
+                  echo "==> Production API is live and healthy!"
