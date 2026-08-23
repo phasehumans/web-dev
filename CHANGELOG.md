@@ -2,6 +2,43 @@
 
 ### Features
 
+- _(infra)_ Add production ec2 deployment configs, health checks, and docker setup
+- _(infra)_ Add ec2 deployment configs, health checks, and docker setup (#432)
+- _(web,docs)_ Improve mobile responsive ui and add research docs
+- _(web,docs)_ Improve mobile responsive ui and add research docs (#433)
+
+### Bug Fixes
+
+- _(cli)_ Harden subprocess streams and improve installer display labels
+- _(docker)_ Include all workspace package manifests to match frozen lockfile
+- _(docker)_ Ignore lifecycle postinstall scripts during docker build
+- _(db)_ Add db:deploy script and update docker compose migration command
+- _(shared)_ Allow ACCESS_TOKEN_SECRET as fallback for JWT_SECRET in production
+- _(infra)_ Bind redis and postgres passwords dynamically from env file
+- _(db)_ Set working directory for migration container
+
+### Other
+
+- _(docker)_ Streamline dockerfile for backend server and worker only
+
+### Styling
+
+- _(installer)_ Unify success message color to brand blue
+
+### Testing
+
+- _(server)_ Add extensive unit and integration tests across all server modules
+
+### Miscellaneous Tasks
+
+- Update gitignore for local deploy notes
+- _(infra)_ Organize nginx reverse proxy config and remove unused bare-metal files
+- _(deploy)_ Add automated ec2 deployment workflow on push to main
+
+## [0.3.12] - 2026-08-22
+
+### Features
+
 - _(seo)_ Add robots.txt and sitemap.xml for trydecember and docs
 - _(seo)_ Add robots.txt and sitemap.xml for trydecember and docs
 - _(seo)_ Update metadata and rich schema for terminal and cloud agent
@@ -18,6 +55,10 @@
 
 - _(web)_ Use server_url directly for proxy target
 - Remove unused docs_url across server, web, and env configs
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.12
 
 ## [0.3.11] - 2026-08-21
 
