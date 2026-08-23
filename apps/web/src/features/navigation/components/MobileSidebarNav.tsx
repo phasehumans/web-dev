@@ -11,7 +11,6 @@ interface MobileSidebarNavProps {
     onSessions?: () => void
     onReview?: () => void
     onTemplates: () => void
-    onDocs: () => void
     onWiki?: () => void
     onProfile?: () => void
     isAuthenticated?: boolean
@@ -25,7 +24,6 @@ export const MobileSidebarNav: React.FC<MobileSidebarNavProps> = ({
     onSessions,
     onReview,
     onTemplates,
-    onDocs,
     onProfile,
     isAuthenticated,
     onOpenAuth,

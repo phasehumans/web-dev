@@ -250,7 +250,7 @@ export const SessionList: React.FC<{
     const shareModal = { isOpen: false, project: null }
 
     return (
-        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16">
+        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16">
             <div className="relative z-10 mx-auto max-w-6xl">
                 <SessionListView
                     projects={filteredAndSortedSessions}

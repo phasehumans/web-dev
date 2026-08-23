@@ -193,7 +193,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
 
     if (isLoading && !data) {
         return (
-            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
+            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16 text-gray-100">
                 <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
                     {/* Top Header */}
                     <div className="mb-2 flex flex-col">
@@ -205,8 +205,8 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
                     </div>
 
                     {/* Top Control Bar Skeleton */}
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                        <div className="relative w-full max-w-[320px] sm:max-w-[380px]">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-2">
+                        <div className="relative w-full max-w-full sm:max-w-[380px]">
                             <Icons.Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
                             <div className="w-full h-9 bg-[#202020] border border-[#282828] rounded-lg" />
                         </div>
@@ -280,7 +280,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
 
     if (data && !data.githubConnected) {
         return (
-            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
+            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16 text-gray-100">
                 <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
                     {/* Top Header */}
                     <div className="mb-2 flex flex-col">
@@ -318,7 +318,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
     }
 
     return (
-        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-8 pb-8 pt-20 font-sans no-scrollbar md:p-16 text-gray-100">
+        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16 text-gray-100">
             <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
                 {/* Top Header (Matches Sessions & Review Page structure) */}
                 <div className="mb-2 flex flex-col">
@@ -329,9 +329,9 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
                 </div>
 
                 {/* Top Control Bar */}
-                <div className="flex items-center justify-between gap-3 mb-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-2">
                     {/* Left: Search Input Bar (Spacious like Sessions/Review Page) */}
-                    <div className="relative w-full max-w-[320px] sm:max-w-[380px]">
+                    <div className="relative w-full max-w-full sm:max-w-[380px]">
                         <Icons.Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
                         <input
                             type="text"

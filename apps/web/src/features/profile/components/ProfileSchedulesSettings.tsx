@@ -94,9 +94,9 @@ export const ProfileSchedulesSettings: React.FC = () => {
                     </p>
 
                     {/* Toolbar Row: Search + Scope Dropdown + Create Button */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 mt-1">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-1">
                         {/* Search bar */}
-                        <div className="relative flex-1 max-w-[280px]">
+                        <div className="relative flex-1 max-w-full sm:max-w-[280px]">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
                             <input
                                 type="text"
@@ -109,7 +109,7 @@ export const ProfileSchedulesSettings: React.FC = () => {
 
                         {/* Dropdown & Create Schedule Action */}
                         <div className="flex items-center gap-2">
-                            <div className="relative shrink-0">
+                            <div className="relative flex-1 sm:flex-initial shrink-0">
                                 <select
                                     value={scopeFilter}
                                     onChange={(e) =>
@@ -117,7 +117,7 @@ export const ProfileSchedulesSettings: React.FC = () => {
                                             e.target.value as 'Your schedules' | 'All schedules'
                                         )
                                     }
-                                    className="appearance-none bg-[#202020] border border-[#282828] rounded-lg px-3 py-1.5 pr-8 text-[12.5px] font-medium text-[#D6D5C9] focus:outline-none focus:border-[#5A5A5A] cursor-pointer"
+                                    className="w-full sm:w-auto appearance-none bg-[#202020] border border-[#282828] rounded-lg px-3 py-1.5 pr-8 text-[12.5px] font-medium text-[#D6D5C9] focus:outline-none focus:border-[#5A5A5A] cursor-pointer"
                                 >
                                     <option value="Your schedules">Your schedules</option>
                                     <option value="All schedules">All schedules</option>
@@ -127,7 +127,7 @@ export const ProfileSchedulesSettings: React.FC = () => {
 
                             <button
                                 onClick={() => setIsCreateOpen(true)}
-                                className="px-4 py-1.5 rounded-lg border border-[#383736] text-[13px] font-medium text-[#D6D5C9] hover:bg-[#242323] transition-colors flex items-center gap-1.5 cursor-pointer"
+                                className="flex-1 sm:flex-initial px-4 py-1.5 rounded-lg border border-[#383736] text-[13px] font-medium text-[#D6D5C9] hover:bg-[#242323] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                                 <Plus className="w-3.5 h-3.5" />
                                 <span>Create schedule</span>
@@ -137,7 +137,7 @@ export const ProfileSchedulesSettings: React.FC = () => {
 
                     {/* Schedules List or Empty State */}
                     {filteredSchedules.length === 0 ? (
-                        <div className="bg-[#191919] border border-[#242323] rounded-xl p-16 flex flex-col items-center justify-center gap-2 text-center mt-1">
+                        <div className="bg-[#191919] border border-[#242323] rounded-xl p-6 md:p-16 flex flex-col items-center justify-center gap-2 text-center mt-1">
                             <h3 className="text-[14px] font-medium text-white">
                                 No schedules found
                             </h3>
@@ -159,22 +159,22 @@ export const ProfileSchedulesSettings: React.FC = () => {
                                 return (
                                     <div
                                         key={sch.id}
-                                        className="p-4 flex items-center justify-between hover:bg-[#202020] transition-colors"
+                                        className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 hover:bg-[#202020] transition-colors"
                                     >
-                                        <div className="flex items-start gap-3.5 max-w-[70%]">
+                                        <div className="flex items-start gap-3.5 w-full sm:max-w-[70%]">
                                             <div className="p-2 rounded-lg bg-[#202020] border border-[#282828] shrink-0 text-[#87B2F4] mt-0.5">
                                                 <Clock className="w-4 h-4" />
                                             </div>
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[14px] font-medium text-white">
+                                            <div className="flex flex-col gap-1 min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="text-[14px] font-medium text-white truncate">
                                                         {sch.title}
                                                     </span>
                                                     <span className="px-2 py-0.5 text-[11px] font-mono text-[#D6D5C9] bg-[#202020] rounded border border-[#282828]">
                                                         {sch.cron}
                                                     </span>
                                                 </div>
-                                                <p className="text-[13px] text-[#7B7A79] leading-relaxed">
+                                                <p className="text-[12.5px] text-[#7B7A79] leading-relaxed">
                                                     {sch.description}
                                                 </p>
                                                 <span className="text-[11.5px] text-[#8F8E8D]">
@@ -183,7 +183,7 @@ export const ProfileSchedulesSettings: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-[#242323]/50">
                                             <button
                                                 onClick={() => handleRunNow(sch.id)}
                                                 disabled={isRunning}
@@ -200,34 +200,38 @@ export const ProfileSchedulesSettings: React.FC = () => {
                                                 <span>{isRunning ? 'Running...' : 'Run now'}</span>
                                             </button>
 
-                                            <button
-                                                role="switch"
-                                                onClick={() => toggleScheduleStatus(sch.id)}
-                                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                    isActive
-                                                        ? 'bg-[#87B2F4]'
-                                                        : 'bg-[#100E12] border-[#383736]'
-                                                }`}
-                                                title={
-                                                    isActive ? 'Pause Schedule' : 'Resume Schedule'
-                                                }
-                                            >
-                                                <span
-                                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    role="switch"
+                                                    onClick={() => toggleScheduleStatus(sch.id)}
+                                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                                                         isActive
-                                                            ? 'translate-x-4 bg-[#100E12]'
-                                                            : 'translate-x-0 bg-[#383736]'
+                                                            ? 'bg-[#87B2F4]'
+                                                            : 'bg-[#100E12] border-[#383736]'
                                                     }`}
-                                                />
-                                            </button>
+                                                    title={
+                                                        isActive
+                                                            ? 'Pause Schedule'
+                                                            : 'Resume Schedule'
+                                                    }
+                                                >
+                                                    <span
+                                                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${
+                                                            isActive
+                                                                ? 'translate-x-4 bg-[#100E12]'
+                                                                : 'translate-x-0 bg-[#383736]'
+                                                        }`}
+                                                    />
+                                                </button>
 
-                                            <button
-                                                onClick={() => handleDelete(sch.id)}
-                                                className="p-1.5 rounded-lg text-[#7B7A79] hover:text-red-400 hover:bg-[#242323] transition-colors"
-                                                title="Delete Schedule"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                                <button
+                                                    onClick={() => handleDelete(sch.id)}
+                                                    className="p-1.5 rounded-lg text-[#7B7A79] hover:text-red-400 hover:bg-[#242323] transition-colors"
+                                                    title="Delete Schedule"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 )

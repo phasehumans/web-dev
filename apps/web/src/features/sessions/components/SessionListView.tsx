@@ -43,34 +43,47 @@ interface SessionListViewProps {
 
 const SessionListAreaSkeleton: React.FC = () => {
     return (
-        <div className="min-h-[420px] flex flex-col gap-1 pb-4">
+        <div className="min-h-[420px] flex flex-col gap-2 pb-4">
             {Array.from({ length: 6 }).map((_, index) => (
-                <div
-                    key={`session-list-skeleton-${index}`}
-                    className="grid grid-cols-[minmax(0,2fr)_minmax(100px,auto)_minmax(100px,auto)_minmax(150px,1fr)_minmax(100px,auto)_2.5rem] items-center gap-2 rounded-lg border border-transparent bg-[#191919]/40 pl-1 pr-5 py-2 md:gap-3"
-                >
-                    <div className="flex flex-1 items-center gap-3 min-w-0 pr-4">
-                        <div className="flex flex-1 flex-col gap-1.5 min-w-0">
-                            <Skeleton className="h-4 w-[65%] bg-white/[0.06]" />
-                            <Skeleton className="h-3 w-[85%] bg-white/[0.04]" />
+                <React.Fragment key={`session-list-skeleton-${index}`}>
+                    {/* Mobile skeleton card (< md) */}
+                    <div className="md:hidden flex flex-col p-3.5 bg-[#191919]/60 rounded-xl border border-[#242323] gap-2.5">
+                        <div className="flex items-center justify-between">
+                            <Skeleton className="h-4 w-[60%] bg-white/[0.06] rounded" />
+                            <Skeleton className="h-4 w-12 bg-white/[0.04] rounded" />
+                        </div>
+                        <Skeleton className="h-3 w-[80%] bg-white/[0.04] rounded" />
+                        <div className="flex items-center justify-between pt-1 border-t border-[#242323]/50">
+                            <Skeleton className="h-3 w-20 bg-white/[0.04] rounded" />
+                            <Skeleton className="h-3 w-16 bg-white/[0.04] rounded" />
                         </div>
                     </div>
-                    <div className="truncate pr-2">
-                        <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
+
+                    {/* Desktop skeleton grid (>= md) */}
+                    <div className="hidden md:grid grid-cols-[minmax(0,2fr)_minmax(100px,auto)_minmax(100px,auto)_minmax(150px,1fr)_minmax(100px,auto)_2.5rem] items-center gap-2 rounded-lg border border-transparent bg-[#191919]/40 pl-1 pr-5 py-2 md:gap-3">
+                        <div className="flex flex-1 items-center gap-3 min-w-0 pr-4">
+                            <div className="flex flex-1 flex-col gap-1.5 min-w-0">
+                                <Skeleton className="h-4 w-[65%] bg-white/[0.06]" />
+                                <Skeleton className="h-3 w-[85%] bg-white/[0.04]" />
+                            </div>
+                        </div>
+                        <div className="truncate pr-2">
+                            <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
+                        </div>
+                        <div className="truncate pr-2">
+                            <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
+                        </div>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <Skeleton className="h-5 w-16 rounded-md bg-white/[0.04]" />
+                        </div>
+                        <div className="truncate">
+                            <Skeleton className="h-3.5 w-12 bg-white/[0.04]" />
+                        </div>
+                        <div className="flex justify-center">
+                            <Skeleton className="h-7 w-7 rounded-lg bg-white/[0.04]" />
+                        </div>
                     </div>
-                    <div className="truncate pr-2">
-                        <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
-                    </div>
-                    <div className="flex items-center gap-1.5 min-w-0">
-                        <Skeleton className="h-5 w-16 rounded-md bg-white/[0.04]" />
-                    </div>
-                    <div className="truncate">
-                        <Skeleton className="h-3.5 w-12 bg-white/[0.04]" />
-                    </div>
-                    <div className="flex justify-center">
-                        <Skeleton className="h-7 w-7 rounded-lg bg-white/[0.04]" />
-                    </div>
-                </div>
+                </React.Fragment>
             ))}
         </div>
     )
@@ -238,8 +251,8 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
                 </div>
             </div>
 
-            <div className="relative z-10 mb-4 flex w-full items-center">
-                <div className="relative w-full max-w-[320px]">
+            <div className="relative z-10 mb-4 flex w-full items-center gap-2">
+                <div className="relative flex-1 max-w-full md:max-w-[320px]">
                     <Icons.Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7B7A79]" />
                     <input
                         type="text"
@@ -250,16 +263,17 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
                     />
                 </div>
 
-                <div className="flex-1" />
+                <div className="hidden md:flex flex-1" />
 
-                <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                     {/* sort dropdown */}
                     <div className="relative" ref={sortDropdownRef}>
                         <button
                             onClick={(e) => toggleDropdown('sort', e)}
-                            className="flex items-center gap-2 rounded-lg border border-[#282828] bg-[#202020] px-4 py-1.5 text-[13px] text-[#949494] transition-colors hover:bg-[#282828]"
+                            className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-[#282828] bg-[#202020] px-2.5 sm:px-4 py-1.5 text-[12px] sm:text-[13px] text-[#949494] transition-colors hover:bg-[#282828]"
                         >
-                            Sort: {SORT_LABELS[sortOption]}{' '}
+                            <span className="hidden sm:inline">Sort:</span>{' '}
+                            {SORT_LABELS[sortOption]}{' '}
                             <Icons.ChevronDown className="h-3.5 w-3.5 text-[#7B7A79]" />
                         </button>
                         {activeDropdown === 'sort' && (

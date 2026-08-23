@@ -67,7 +67,6 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
                 onSessions={() => onNavigate('sessions')}
                 onReview={() => onNavigate('review')}
                 onTemplates={() => onNavigate('templates')}
-                onDocs={() => onNavigate('docs')}
                 onProfile={() => onNavigate('profile')}
                 onOpenProject={onOpenProject}
                 isAuthenticated={isAuthenticated}
@@ -97,7 +96,6 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
                 onReview={() => onNavigate('review')}
                 onAllProjects={() => onNavigate('all-projects')}
                 onTemplates={() => onNavigate('templates')}
-                onDocs={() => onNavigate('docs')}
                 onProfile={() => onNavigate('profile')}
                 onOpenProject={onOpenProject}
                 isAuthenticated={isAuthenticated}

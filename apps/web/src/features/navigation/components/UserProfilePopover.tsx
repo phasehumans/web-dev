@@ -23,7 +23,6 @@ interface UserProfilePopoverProps {
     onSettings?: () => void
     onProfileModal?: () => void
     onFeedbackModal?: () => void
-    onDocs?: () => void
     onSignOut?: () => void
 }
 
@@ -36,7 +35,6 @@ export const UserProfilePopover: React.FC<UserProfilePopoverProps> = ({
     onSettings,
     onProfileModal,
     onFeedbackModal,
-    onDocs,
     onSignOut,
 }) => {
     const popoverRef = React.useRef<HTMLDivElement | null>(null)
@@ -134,11 +132,6 @@ export const UserProfilePopover: React.FC<UserProfilePopoverProps> = ({
     }> = [
         { icon: SettingsIcon, label: 'Settings', action: onSettings },
         { icon: MessageSquare, label: 'Feedback', action: onFeedbackModal },
-        {
-            icon: Icons.DocsBook,
-            label: 'Documentation',
-            action: onDocs,
-        },
         {
             icon: FileClock,
             label: 'Changelog',

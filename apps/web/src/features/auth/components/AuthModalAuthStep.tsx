@@ -163,7 +163,7 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                 <p className="text-[11.5px] text-[#707070] leading-tight max-w-[320px]">
                     By continuing, you agree to December&apos;s{' '}
                     <a
-                        href="/docs/terms"
+                        href="/settings/terms"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#9E9E9E] hover:text-white underline underline-offset-2"
@@ -172,7 +172,7 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                     </a>{' '}
                     and{' '}
                     <a
-                        href="/docs/privacy"
+                        href="/settings/privacy"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[#9E9E9E] hover:text-white underline underline-offset-2"

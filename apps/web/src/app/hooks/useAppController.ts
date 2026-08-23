@@ -82,7 +82,7 @@ export const useAppController = () => {
     })
 
     const isHome = view === 'chat' && !activeProjectId && messages.length === 0
-    const showSidebar = view !== 'profile' && view !== 'docs' && view !== 'canvas'
+    const showSidebar = view !== 'profile' && view !== 'canvas'
     const { handleNewThread, handleHomeClick, handleNavigate, handleSignOut } =
         useNavigationController()
 

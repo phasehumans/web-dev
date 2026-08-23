@@ -290,10 +290,12 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                             </div>
                                         </div>
                                         <a
-                                            href="/docs"
-                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] text-[11.5px] font-sans font-medium text-center cursor-pointer block select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
+                                            href="https://github.com/phasehumans/december"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] hover:text-[#E8E8E8] text-[11.5px] font-sans font-medium text-center cursor-pointer block select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
                                         >
-                                            Read Docs
+                                            View GitHub Repo
                                         </a>
                                     </div>
                                 )}

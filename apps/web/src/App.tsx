@@ -102,7 +102,6 @@ const App: React.FC = () => {
                         onSelectVersion={handleSelectVersion}
                         onDownloadProject={handleDownloadProject}
                         onSignOut={handleSignOut}
-                        onDocs={() => handleNavigate('docs')}
                         onOpenFile={handleOpenFile}
                         onResetImportState={resetImportState}
                     />

@@ -39,7 +39,6 @@ export interface UpdateNotificationInput {
 export interface ProfileSettingsProps {
     onSignOut: () => void
     onBack?: () => void
-    onDocs?: () => void
 }
 
 export interface ProfileNameModalProps {

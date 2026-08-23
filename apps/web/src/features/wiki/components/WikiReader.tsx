@@ -366,7 +366,7 @@ export const WikiReader: React.FC<WikiReaderProps> = ({
                 </div>
 
                 {/* Right Controls */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-3">
                     <span className="text-[11.5px] text-[#7B7A79] hidden sm:block select-none">
                         Last updated 3 days ago
                     </span>
@@ -535,7 +535,7 @@ export const WikiReader: React.FC<WikiReaderProps> = ({
             </header>
 
             {/* Main Content Body */}
-            <main className="flex-1 max-w-[680px] w-full mx-auto px-6 pt-4 pb-40 flex flex-col gap-6">
+            <main className="flex-1 max-w-[680px] w-full mx-auto px-4 sm:px-6 pt-4 pb-40 flex flex-col gap-6">
                 {activePage ? (
                     <>
                         {/* Page Header Title */}
@@ -668,7 +668,7 @@ export const WikiReader: React.FC<WikiReaderProps> = ({
                                     </p>
 
                                     {/* Domain Table Matching Screenshot 2 */}
-                                    <div className="bg-[#1B1B1B] border border-[#282828] rounded-xl overflow-hidden my-2 shadow-sm font-sans">
+                                    <div className="bg-[#1B1B1B] border border-[#282828] rounded-xl overflow-x-auto my-2 shadow-sm font-sans">
                                         <table className="w-full text-left text-[12.5px] border-collapse">
                                             <thead>
                                                 <tr className="bg-[#202020] border-b border-[#282828] text-[#8F8F8F] font-semibold">

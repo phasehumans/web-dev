@@ -7,7 +7,6 @@ import { ReviewPage } from '../../features/sessions/components/ReviewPage'
 import type { ViewState } from '@/app/types'
 import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/preview/types'
 
-import { DocsView } from '@/features/docs/components/DocsView'
 import { HomeHero } from '@/features/home/components/HomeHero'
 import { WorkspaceScreen } from '@/features/preview/components/WorkspaceScreen'
 import { ProfileSettings } from '@/features/profile/components/ProfileSettings'
@@ -33,7 +32,6 @@ interface AppContentViewProps {
     onSelectVersion: (versionId: string) => void
     onDownloadProject: () => void
     onSignOut: () => void
-    onDocs?: () => void
     onOpenFile?: (path: string) => void
     onResetImportState?: () => void
 }
@@ -83,7 +81,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
     onSelectVersion,
     onDownloadProject,
     onSignOut,
-    onDocs,
     onOpenFile,
     onResetImportState,
 }) => {
@@ -103,19 +100,13 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
 
             {view === 'profile' && (
                 <AnimatedPage pageKey="profile">
-                    <ProfileSettings onSignOut={onSignOut} onBack={onNewProject} onDocs={onDocs} />
+                    <ProfileSettings onSignOut={onSignOut} onBack={onNewProject} />
                 </AnimatedPage>
             )}
 
             {(view === 'templates' || view === 'wiki') && (
                 <AnimatedPage pageKey="wiki">
                     <WikiView />
-                </AnimatedPage>
-            )}
-
-            {view === 'docs' && (
-                <AnimatedPage pageKey="docs">
-                    <DocsView onBack={onNewProject} />
                 </AnimatedPage>
             )}
 

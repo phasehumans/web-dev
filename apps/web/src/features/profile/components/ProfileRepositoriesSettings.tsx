@@ -79,8 +79,8 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
 
                 <div className="flex flex-col border-t border-[#242323] pt-6">
                     {/* Top Control Bar matching Wiki Page */}
-                    <div className="flex items-center justify-between gap-3 mb-6">
-                        <div className="relative w-full max-w-[340px]">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+                        <div className="relative w-full max-w-full sm:max-w-[340px]">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
                             <input
                                 type="text"
@@ -104,7 +104,7 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
                             </Tooltip>
                             <button
                                 onClick={onConnectGithub}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer"
+                                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer"
                             >
                                 <Plus className="w-3.5 h-3.5" />
                                 <span>Connect GitHub</span>

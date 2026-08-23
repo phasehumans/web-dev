@@ -216,9 +216,10 @@ export const ProfileSecretsSettings: React.FC = () => {
                     )}
 
                     {/* Controls Row: Search Input + Action Buttons */}
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    {/* Controls Row: Search Input + Action Buttons */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                         {/* Search bar */}
-                        <div className="relative flex-1 max-w-[280px]">
+                        <div className="relative flex-1 max-w-full sm:max-w-[280px]">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
                             <input
                                 type="text"
@@ -233,14 +234,14 @@ export const ProfileSecretsSettings: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setIsBulkAddOpen(true)}
-                                className="px-3.5 py-1.5 rounded-lg border border-[#282828] bg-[#202020] hover:bg-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer"
+                                className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg border border-[#282828] bg-[#202020] hover:bg-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer text-center"
                             >
-                                Bulk add secrets
+                                Bulk add
                             </button>
 
                             <button
                                 onClick={() => setIsAddOpen(true)}
-                                className="px-4 py-1.5 rounded-lg bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] text-[13px] font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+                                className="flex-1 sm:flex-initial px-4 py-1.5 rounded-lg bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                             >
                                 <Plus className="w-3.5 h-3.5" />
                                 <span>Add secret</span>
@@ -250,8 +251,8 @@ export const ProfileSecretsSettings: React.FC = () => {
 
                     {/* Secrets Table Container */}
                     <div className="bg-[#191919] border border-[#242323] rounded-xl overflow-hidden mt-1">
-                        {/* Table Header */}
-                        <div className="grid grid-cols-12 bg-[#202020] border-b border-[#242323] px-4 py-2.5 text-[12px] font-medium text-[#7B7A79]">
+                        {/* Table Header (Desktop only) */}
+                        <div className="hidden md:grid grid-cols-12 bg-[#202020] border-b border-[#242323] px-4 py-2.5 text-[12px] font-medium text-[#7B7A79]">
                             <div className="col-span-4">Name</div>
                             <div className="col-span-4">Note</div>
                             <div className="col-span-4 text-right">Updated at</div>
@@ -259,12 +260,12 @@ export const ProfileSecretsSettings: React.FC = () => {
 
                         {/* Table Rows or Loading/Empty State */}
                         {isLoading ? (
-                            <div className="p-12 flex flex-col items-center justify-center gap-2 text-center text-[#7B7A79]">
+                            <div className="p-6 md:p-12 flex flex-col items-center justify-center gap-2 text-center text-[#7B7A79]">
                                 <Loader2 className="w-5 h-5 animate-spin" />
                                 <span className="text-[13px]">Loading secrets...</span>
                             </div>
                         ) : filteredSecrets.length === 0 ? (
-                            <div className="p-12 flex flex-col items-center justify-center gap-2 text-center">
+                            <div className="p-6 md:p-12 flex flex-col items-center justify-center gap-2 text-center">
                                 <h3 className="text-[14px] font-medium text-white">
                                     No secrets found
                                 </h3>
@@ -279,66 +280,128 @@ export const ProfileSecretsSettings: React.FC = () => {
                                     const decryptedVal = decryptedValues[sec.name]
 
                                     return (
-                                        <div
-                                            key={sec.id}
-                                            className="grid grid-cols-12 items-center px-4 py-3 hover:bg-[#202020] transition-colors text-[13px]"
-                                        >
-                                            {/* Name */}
-                                            <div className="col-span-4 font-mono font-medium text-white truncate pr-2 flex flex-col gap-0.5">
-                                                <span>${sec.name}</span>
-                                                {isRevealed && decryptedVal && (
-                                                    <span className="text-[11px] text-[#87B2F4] font-mono select-all truncate">
-                                                        {decryptedVal}
+                                        <React.Fragment key={sec.id}>
+                                            {/* Mobile card (< md) */}
+                                            <div className="md:hidden p-3.5 flex flex-col gap-2.5 text-[13px]">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                                        <span className="font-mono font-medium text-white truncate">
+                                                            ${sec.name}
+                                                        </span>
+                                                        {isRevealed && decryptedVal && (
+                                                            <span className="text-[11.5px] text-[#87B2F4] font-mono select-all break-all">
+                                                                {decryptedVal}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Actions */}
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <button
+                                                            onClick={() => toggleReveal(sec.name)}
+                                                            className="p-1.5 rounded-lg text-[#7B7A79] hover:text-[#D6D5C9] bg-[#202020] border border-[#2B2A29]"
+                                                            title={
+                                                                isRevealed
+                                                                    ? 'Hide Secret'
+                                                                    : 'Reveal Secret'
+                                                            }
+                                                        >
+                                                            {isRevealed ? (
+                                                                <EyeOff className="w-3.5 h-3.5" />
+                                                            ) : (
+                                                                <Eye className="w-3.5 h-3.5" />
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCopy(sec.name)}
+                                                            className="p-1.5 rounded-lg text-[#7B7A79] hover:text-[#D6D5C9] bg-[#202020] border border-[#2B2A29]"
+                                                            title="Copy Secret"
+                                                        >
+                                                            {copiedName === sec.name ? (
+                                                                <Check className="w-3.5 h-3.5 text-[#34D399]" />
+                                                            ) : (
+                                                                <Copy className="w-3.5 h-3.5" />
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(sec.name)}
+                                                            className="p-1.5 rounded-lg text-[#7B7A79] hover:text-red-400 bg-[#202020] border border-[#2B2A29]"
+                                                            title="Delete Secret"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between text-[11.5px] text-[#7B7A79] pt-1 border-t border-[#242323]/50">
+                                                    <span className="truncate max-w-[60%]">
+                                                        {sec.note || 'No note'}
                                                     </span>
-                                                )}
+                                                    <span>{formatDate(sec.updatedAt)}</span>
+                                                </div>
                                             </div>
 
-                                            {/* Note */}
-                                            <div className="col-span-4 text-[#7B7A79] truncate pr-2">
-                                                {sec.note || '—'}
-                                            </div>
-
-                                            {/* Updated at & Actions */}
-                                            <div className="col-span-4 flex items-center justify-end gap-1.5">
-                                                <span className="text-[12px] text-[#7B7A79] mr-1">
-                                                    {formatDate(sec.updatedAt)}
-                                                </span>
-
-                                                <button
-                                                    onClick={() => toggleReveal(sec.name)}
-                                                    className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
-                                                    title={
-                                                        isRevealed ? 'Hide Secret' : 'Reveal Secret'
-                                                    }
-                                                >
-                                                    {isRevealed ? (
-                                                        <EyeOff className="w-3.5 h-3.5" />
-                                                    ) : (
-                                                        <Eye className="w-3.5 h-3.5" />
+                                            {/* Desktop row (>= md) */}
+                                            <div className="hidden md:grid grid-cols-12 items-center px-4 py-3 hover:bg-[#202020] transition-colors text-[13px]">
+                                                {/* Name */}
+                                                <div className="col-span-4 font-mono font-medium text-white truncate pr-2 flex flex-col gap-0.5">
+                                                    <span>${sec.name}</span>
+                                                    {isRevealed && decryptedVal && (
+                                                        <span className="text-[11px] text-[#87B2F4] font-mono select-all truncate">
+                                                            {decryptedVal}
+                                                        </span>
                                                     )}
-                                                </button>
+                                                </div>
 
-                                                <button
-                                                    onClick={() => handleCopy(sec.name)}
-                                                    className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
-                                                    title="Copy Secret Value"
-                                                >
-                                                    {copiedName === sec.name ? (
-                                                        <Check className="w-3.5 h-3.5 text-[#34D399]" />
-                                                    ) : (
-                                                        <Copy className="w-3.5 h-3.5" />
-                                                    )}
-                                                </button>
+                                                {/* Note */}
+                                                <div className="col-span-4 text-[#7B7A79] truncate pr-2">
+                                                    {sec.note || '—'}
+                                                </div>
 
-                                                <button
-                                                    onClick={() => handleDelete(sec.name)}
-                                                    className="p-1 rounded text-[#7B7A79] hover:text-red-400 hover:bg-[#242323] transition-colors"
-                                                    title="Delete Secret"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
+                                                {/* Updated at & Actions */}
+                                                <div className="col-span-4 flex items-center justify-end gap-1.5">
+                                                    <span className="text-[12px] text-[#7B7A79] mr-1">
+                                                        {formatDate(sec.updatedAt)}
+                                                    </span>
+
+                                                    <button
+                                                        onClick={() => toggleReveal(sec.name)}
+                                                        className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
+                                                        title={
+                                                            isRevealed
+                                                                ? 'Hide Secret'
+                                                                : 'Reveal Secret'
+                                                        }
+                                                    >
+                                                        {isRevealed ? (
+                                                            <EyeOff className="w-3.5 h-3.5" />
+                                                        ) : (
+                                                            <Eye className="w-3.5 h-3.5" />
+                                                        )}
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => handleCopy(sec.name)}
+                                                        className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
+                                                        title="Copy Secret Value"
+                                                    >
+                                                        {copiedName === sec.name ? (
+                                                            <Check className="w-3.5 h-3.5 text-[#34D399]" />
+                                                        ) : (
+                                                            <Copy className="w-3.5 h-3.5" />
+                                                        )}
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => handleDelete(sec.name)}
+                                                        className="p-1 rounded text-[#7B7A79] hover:text-red-400 hover:bg-[#242323] transition-colors"
+                                                        title="Delete Secret"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </React.Fragment>
                                     )
                                 })}
                             </div>
