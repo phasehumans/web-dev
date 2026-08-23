@@ -19,7 +19,7 @@ export const env = createEnv({
         FIRECRACKER_KERNEL_PATH: z.string().default('./vmlinux.bin'),
         FIRECRACKER_ROOTFS_PATH: z.string().default('./ubuntu-rootfs.ext4'),
 
-        JWT_SECRET: z.string().default('default-dev-jwt-secret'),
+        JWT_SECRET: z.string().default(process.env.ACCESS_TOKEN_SECRET || 'default-dev-jwt-secret'),
     },
     clientPrefix: '',
     client: {},
@@ -31,6 +31,12 @@ export const env = createEnv({
     },
 })
 
-if (env.NODE_ENV === 'production' && env.JWT_SECRET === 'default-dev-jwt-secret') {
-    throw new Error('JWT_SECRET must be configured with a secure secret in production.')
+const effectiveJwtSecret = env.JWT_SECRET || process.env.ACCESS_TOKEN_SECRET
+if (
+    env.NODE_ENV === 'production' &&
+    (!effectiveJwtSecret || effectiveJwtSecret === 'default-dev-jwt-secret')
+) {
+    throw new Error(
+        'JWT_SECRET or ACCESS_TOKEN_SECRET must be configured with a secure secret in production.'
+    )
 }
