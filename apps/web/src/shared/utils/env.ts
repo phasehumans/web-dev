@@ -8,5 +8,4 @@ export {
     getSupabaseRedirectUri,
     getNotionClientId,
     getNotionRedirectUri,
-    getDocsUrl,
 } from '../config/env'

@@ -178,9 +178,24 @@ export const ProfileUsageSettings: React.FC = () => {
                     {/* table / loader / error */}
                     {isLoading ? (
                         <div className="flex flex-col gap-6">
-                            {/* table skeleton */}
-                            <div className="flex flex-col border border-[#242323] rounded-xl overflow-hidden bg-[#100E12] shadow-sm">
-                                {/* table header skeleton */}
+                            {/* Mobile skeleton */}
+                            <div className="flex md:hidden flex-col gap-3">
+                                {Array.from({ length: 4 }).map((_, i) => (
+                                    <div
+                                        key={i}
+                                        className="p-4 bg-[#191919] border border-[#242323] rounded-xl flex flex-col gap-2.5"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <Skeleton className="h-4 w-28 bg-white/[0.06] rounded" />
+                                            <Skeleton className="h-4 w-14 bg-white/[0.06] rounded" />
+                                        </div>
+                                        <Skeleton className="h-3 w-40 bg-white/[0.04] rounded" />
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Desktop table skeleton */}
+                            <div className="hidden md:flex flex-col border border-[#242323] rounded-xl overflow-hidden bg-[#100E12] shadow-sm">
                                 <div className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-3.5 px-5 border-b border-[#242323] bg-[#141414] text-[12px] text-[#7B7A79] font-medium">
                                     <div>Date</div>
                                     <div>Project</div>
@@ -188,7 +203,6 @@ export const ProfileUsageSettings: React.FC = () => {
                                     <div>Token Usage</div>
                                     <div className="text-right">Cost</div>
                                 </div>
-                                {/* table rows skeleton */}
                                 {Array.from({ length: 8 }).map((_, i) => (
                                     <div
                                         key={i}
@@ -218,31 +232,21 @@ export const ProfileUsageSettings: React.FC = () => {
                             {(error as any)?.message || 'Failed to load usage events'}
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-6">
-                            {/* table */}
-                            <div className="flex flex-col border border-[#242323] rounded-xl overflow-hidden bg-[#100E12] shadow-sm">
-                                {/* header */}
-                                <div className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-3.5 px-5 border-b border-[#242323] bg-[#141414] text-[12px] text-[#7B7A79] font-medium">
-                                    <div>Date</div>
-                                    <div>Project</div>
-                                    <div>Model</div>
-                                    <div>Token Usage</div>
-                                    <div className="text-right">Cost</div>
+                        <div className="flex flex-col gap-4">
+                            {paginatedEvents.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center p-12 bg-[#191919] border border-[#242323] rounded-xl text-[#7B7A79] text-[13px]">
+                                    No usage events found for this period.
                                 </div>
-
-                                {/* rows */}
-                                <div className="flex flex-col min-h-[420px]">
-                                    {paginatedEvents.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center flex-1 h-[420px] text-[#7B7A79] text-[13px]">
-                                            No usage events found for this period.
-                                        </div>
-                                    ) : (
-                                        paginatedEvents.map((row) => {
+                            ) : (
+                                <>
+                                    {/* Mobile Cards View (< md) */}
+                                    <div className="flex md:hidden flex-col gap-2.5">
+                                        {paginatedEvents.map((row) => {
                                             const isExpanded = expandedRowId === row.id
                                             return (
                                                 <div
                                                     key={row.id}
-                                                    className="flex flex-col border-b border-[#242323]/50 last:border-b-0"
+                                                    className="bg-[#191919] border border-[#242323] rounded-xl overflow-hidden text-[13px]"
                                                 >
                                                     <div
                                                         onClick={() =>
@@ -250,41 +254,46 @@ export const ProfileUsageSettings: React.FC = () => {
                                                                 isExpanded ? null : row.id
                                                             )
                                                         }
-                                                        className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-5 px-5 text-[13px] hover:bg-[#1A1918] transition-colors cursor-pointer select-none"
+                                                        className="p-3.5 flex flex-col gap-2 cursor-pointer hover:bg-[#202020] active:bg-[#252525] transition-colors"
                                                     >
-                                                        {/* date */}
-                                                        <div className="text-[#D6D5C9]">
-                                                            {formatRowDate(row.createdAt)}
-                                                        </div>
-
-                                                        {/* project */}
-                                                        <div className="text-[#D6D5C9] truncate pr-2 font-medium">
-                                                            {row.project?.name || '-'}
-                                                        </div>
-
-                                                        {/* model */}
-                                                        <div className="text-[#7B7A79] truncate pr-2">
-                                                            {formatModelName(row.model)}
-                                                        </div>
-
-                                                        {/* token usage */}
-                                                        <div className="text-[#D6D5C9] font-mono text-[12px]">
-                                                            {row.totalTokens.toLocaleString()}
-                                                        </div>
-
-                                                        {/* cost */}
-                                                        <div className="text-right">
-                                                            <span className="text-[#D6D5C9]">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-medium text-white truncate max-w-[65%]">
+                                                                {row.project?.name ||
+                                                                    'Workspace Event'}
+                                                            </span>
+                                                            <span className="font-mono text-emerald-400 font-semibold">
                                                                 $
                                                                 {(row.costInCents / 100).toFixed(2)}
                                                             </span>
                                                         </div>
+
+                                                        <div className="flex items-center justify-between text-[11.5px] text-[#7B7A79]">
+                                                            <span>
+                                                                {formatModelName(row.model)}
+                                                            </span>
+                                                            <span className="font-mono text-[#D6D5C9]">
+                                                                {row.totalTokens.toLocaleString()}{' '}
+                                                                tokens
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-1 border-t border-[#242323]/50 text-[11px] text-[#7B7A79]">
+                                                            <span>
+                                                                {formatRowDate(row.createdAt)}
+                                                            </span>
+                                                            <span className="text-[#87B2F4]">
+                                                                {isExpanded
+                                                                    ? 'Hide details'
+                                                                    : 'View details'}
+                                                            </span>
+                                                        </div>
                                                     </div>
+
                                                     {isExpanded && (
-                                                        <div className="bg-[#100E12] px-5 py-4 border-t border-[#242323] flex flex-col gap-3 text-[12.5px] text-[#7B7A79] animate-in slide-in-from-top-1 duration-150">
-                                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                        <div className="bg-[#100E12] p-3.5 border-t border-[#242323] flex flex-col gap-2.5 text-[12px] text-[#7B7A79]">
+                                                            <div className="grid grid-cols-2 gap-2">
                                                                 <div>
-                                                                    <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
+                                                                    <span className="text-[10px] uppercase font-semibold text-[#8F8E8D] block">
                                                                         Input Tokens
                                                                     </span>
                                                                     <span className="font-mono text-white">
@@ -292,27 +301,18 @@ export const ProfileUsageSettings: React.FC = () => {
                                                                     </span>
                                                                 </div>
                                                                 <div>
-                                                                    <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
+                                                                    <span className="text-[10px] uppercase font-semibold text-[#8F8E8D] block">
                                                                         Output Tokens
                                                                     </span>
                                                                     <span className="font-mono text-white">
                                                                         {row.outputTokens.toLocaleString()}
                                                                     </span>
                                                                 </div>
-                                                                <div>
-                                                                    <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
-                                                                        Request ID
-                                                                    </span>
-                                                                    <span className="font-mono text-white select-all">
-                                                                        {row.externalRequestId ||
-                                                                            'N/A'}
-                                                                    </span>
-                                                                </div>
-                                                                <div>
-                                                                    <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
+                                                                <div className="col-span-2">
+                                                                    <span className="text-[10px] uppercase font-semibold text-[#8F8E8D] block">
                                                                         Cost Breakdown
                                                                     </span>
-                                                                    <span className="text-white font-mono">
+                                                                    <span className="font-mono text-white">
                                                                         $
                                                                         {(
                                                                             row.costInCents / 100
@@ -320,30 +320,110 @@ export const ProfileUsageSettings: React.FC = () => {
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            {row.metadata &&
-                                                                Object.keys(row.metadata).length >
-                                                                    0 && (
-                                                                    <div className="pt-2 border-t border-[#242323]/50">
-                                                                        <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
-                                                                            Metadata
-                                                                        </span>
-                                                                        <pre className="text-[11px] font-mono text-white/70 overflow-x-auto bg-black/20 p-2 rounded border border-[#242323]">
-                                                                            {JSON.stringify(
-                                                                                row.metadata,
-                                                                                null,
-                                                                                2
-                                                                            )}
-                                                                        </pre>
-                                                                    </div>
-                                                                )}
                                                         </div>
                                                     )}
                                                 </div>
                                             )
-                                        })
-                                    )}
-                                </div>
-                            </div>
+                                        })}
+                                    </div>
+
+                                    {/* Desktop Table View (>= md) */}
+                                    <div className="hidden md:flex flex-col border border-[#242323] rounded-xl overflow-hidden bg-[#100E12] shadow-sm">
+                                        <div className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-3.5 px-5 border-b border-[#242323] bg-[#141414] text-[12px] text-[#7B7A79] font-medium">
+                                            <div>Date</div>
+                                            <div>Project</div>
+                                            <div>Model</div>
+                                            <div>Token Usage</div>
+                                            <div className="text-right">Cost</div>
+                                        </div>
+
+                                        <div className="flex flex-col min-h-[420px]">
+                                            {paginatedEvents.map((row) => {
+                                                const isExpanded = expandedRowId === row.id
+                                                return (
+                                                    <div
+                                                        key={row.id}
+                                                        className="flex flex-col border-b border-[#242323]/50 last:border-b-0"
+                                                    >
+                                                        <div
+                                                            onClick={() =>
+                                                                setExpandedRowId(
+                                                                    isExpanded ? null : row.id
+                                                                )
+                                                            }
+                                                            className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-5 px-5 text-[13px] hover:bg-[#1A1918] transition-colors cursor-pointer select-none"
+                                                        >
+                                                            <div className="text-[#D6D5C9]">
+                                                                {formatRowDate(row.createdAt)}
+                                                            </div>
+                                                            <div className="text-[#D6D5C9] truncate pr-2 font-medium">
+                                                                {row.project?.name || '-'}
+                                                            </div>
+                                                            <div className="text-[#7B7A79] truncate pr-2">
+                                                                {formatModelName(row.model)}
+                                                            </div>
+                                                            <div className="text-[#D6D5C9] font-mono text-[12px]">
+                                                                {row.totalTokens.toLocaleString()}
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="text-[#D6D5C9]">
+                                                                    $
+                                                                    {(
+                                                                        row.costInCents / 100
+                                                                    ).toFixed(2)}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        {isExpanded && (
+                                                            <div className="bg-[#100E12] px-5 py-4 border-t border-[#242323] flex flex-col gap-3 text-[12.5px] text-[#7B7A79] animate-in slide-in-from-top-1 duration-150">
+                                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                                    <div>
+                                                                        <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
+                                                                            Input Tokens
+                                                                        </span>
+                                                                        <span className="font-mono text-white">
+                                                                            {row.inputTokens.toLocaleString()}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
+                                                                            Output Tokens
+                                                                        </span>
+                                                                        <span className="font-mono text-white">
+                                                                            {row.outputTokens.toLocaleString()}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
+                                                                            Request ID
+                                                                        </span>
+                                                                        <span className="font-mono text-white select-all">
+                                                                            {row.externalRequestId ||
+                                                                                'N/A'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="block text-[10px] text-[#8F8E8D] uppercase font-semibold tracking-wider mb-1">
+                                                                            Cost Breakdown
+                                                                        </span>
+                                                                        <span className="text-white font-mono">
+                                                                            $
+                                                                            {(
+                                                                                row.costInCents /
+                                                                                100
+                                                                            ).toFixed(4)}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
 

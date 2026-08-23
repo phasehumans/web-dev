@@ -103,10 +103,6 @@ export const useNavigationController = () => {
 
     const handleNavigate = React.useCallback(
         (target: ViewState) => {
-            if (target === 'docs') {
-                navigate(getPathForView(target))
-                return
-            }
             requireAuthOr(() => {
                 navigate(getPathForView(target))
             })

@@ -105,10 +105,10 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
                 <h1 className="text-[16px] font-medium text-[#D6D5C9] mb-3">Credits</h1>
                 <div className="flex flex-col gap-4 border-t border-[#242323] pt-4">
                     {/* compact credits balance box */}
-                    <div className="flex items-end justify-between border border-[#242323] rounded-2xl p-6 w-full max-w-[520px]">
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border border-[#242323] rounded-2xl p-5 sm:p-6 w-full max-w-[520px] bg-[#191919]/50">
                         <div className="flex flex-col gap-2">
                             <span className="text-[13px] text-[#7B7A79]">Credit remaining</span>
-                            <span className="text-[36px] font-semibold text-[#D6D5C9] font-mono leading-none">
+                            <span className="text-[32px] sm:text-[36px] font-semibold text-[#D6D5C9] font-mono leading-none">
                                 {formatCents(remainingInCents)}
                             </span>
                         </div>
@@ -116,7 +116,7 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
                             <button
                                 type="button"
                                 onClick={() => setShowAddCreditsModal(true)}
-                                className="px-4 py-1.5 rounded-lg bg-white text-black hover:bg-neutral-200 text-[13px] font-semibold transition-colors active:scale-[0.98] cursor-pointer"
+                                className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-lg bg-white text-black hover:bg-neutral-200 text-[13px] font-semibold transition-colors active:scale-[0.98] cursor-pointer text-center"
                             >
                                 Add Credits
                             </button>
@@ -135,15 +135,16 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
                         </div>
                     ) : (
                         <div className="flex flex-col gap-4">
-                            {/* header row */}
-                            <div className="grid grid-cols-5 gap-4 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 pb-1">
+                            {/* Desktop header row */}
+                            <div className="hidden md:grid grid-cols-5 gap-4 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 pb-1">
                                 <div className="col-span-1">Date</div>
                                 <div className="col-span-2">Details</div>
                                 <div className="col-span-1">Status</div>
                                 <div className="col-span-1 text-right">Amount</div>
                             </div>
-                            {/* data rows */}
-                            <div className="flex flex-col gap-3.5">
+
+                            {/* Data rows (responsive on mobile, grid on desktop) */}
+                            <div className="flex flex-col gap-2.5 md:gap-3.5">
                                 {mergedHistory.map((tx) => {
                                     const formattedDate = new Date(tx.date).toLocaleDateString(
                                         undefined,
@@ -166,36 +167,64 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
                                     }[tx.status] || { label: tx.status, color: 'text-neutral-500' }
 
                                     return (
-                                        <div
-                                            key={tx.id}
-                                            className="grid grid-cols-5 gap-4 items-center text-[13px] text-neutral-300"
-                                        >
-                                            <div className="col-span-1 text-[#7B7A79]">
-                                                {formattedDate}
+                                        <React.Fragment key={tx.id}>
+                                            {/* Mobile card view (< md) */}
+                                            <div className="md:hidden flex flex-col p-3.5 bg-[#191919] border border-[#242323] rounded-xl gap-2 text-[13px]">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[12px] text-[#7B7A79] font-mono">
+                                                        {formattedDate}
+                                                    </span>
+                                                    <span className="text-[14px] font-semibold text-emerald-400 font-mono">
+                                                        +{formatCents(tx.amountInCents)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[#D6D5C9] font-medium truncate">
+                                                        {tx.methodOrCode}
+                                                    </span>
+                                                    <span className="text-[10.5px] text-[#7B7A79] font-mono mt-0.5 truncate">
+                                                        {txId}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between pt-1 border-t border-[#242323]/50 text-[11.5px]">
+                                                    <span className="text-[#7B7A79]">Status</span>
+                                                    <span
+                                                        className={`font-medium ${statusConfig.color}`}
+                                                    >
+                                                        {statusConfig.label}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="col-span-2 flex flex-col min-w-0">
-                                                <span
-                                                    className="text-neutral-300 truncate"
-                                                    title={tx.methodOrCode}
+
+                                            {/* Desktop grid row (>= md) */}
+                                            <div className="hidden md:grid grid-cols-5 gap-4 items-center text-[13px] text-neutral-300">
+                                                <div className="col-span-1 text-[#7B7A79]">
+                                                    {formattedDate}
+                                                </div>
+                                                <div className="col-span-2 flex flex-col min-w-0">
+                                                    <span
+                                                        className="text-neutral-300 truncate"
+                                                        title={tx.methodOrCode}
+                                                    >
+                                                        {tx.methodOrCode}
+                                                    </span>
+                                                    <span
+                                                        className="text-[10px] text-[#7B7A79] font-mono mt-0.5 truncate"
+                                                        title={txId}
+                                                    >
+                                                        {txId}
+                                                    </span>
+                                                </div>
+                                                <div
+                                                    className={`col-span-1 font-medium ${statusConfig.color}`}
                                                 >
-                                                    {tx.methodOrCode}
-                                                </span>
-                                                <span
-                                                    className="text-[10px] text-[#7B7A79] font-mono mt-0.5 truncate"
-                                                    title={txId}
-                                                >
-                                                    {txId}
-                                                </span>
+                                                    {statusConfig.label}
+                                                </div>
+                                                <div className="col-span-1 text-right text-[#D6D5C9] font-medium font-mono">
+                                                    +{formatCents(tx.amountInCents)}
+                                                </div>
                                             </div>
-                                            <div
-                                                className={`col-span-1 font-medium ${statusConfig.color}`}
-                                            >
-                                                {statusConfig.label}
-                                            </div>
-                                            <div className="col-span-1 text-right text-[#D6D5C9] font-medium font-mono">
-                                                +{formatCents(tx.amountInCents)}
-                                            </div>
-                                        </div>
+                                        </React.Fragment>
                                     )
                                 })}
                             </div>

@@ -10,6 +10,8 @@ import {
     KeyRound,
     FileText,
     Puzzle,
+    Clock,
+    Activity,
 } from 'lucide-react'
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -42,14 +44,133 @@ import type { ProfileSettingsProps } from '@/features/profile/types'
 import { getProfileTabFromSlug, getSlugForProfileTab } from '@/app/types'
 import { ErrorAlert } from '@/shared/components/ui/ErrorAlert'
 import { Icons } from '@/shared/components/ui/Icons'
+import { cn } from '@/shared/lib/utils'
 
-export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onBack, onDocs }) => {
+const SETTINGS_NAV_GROUPS = [
+    {
+        title: 'Settings',
+        items: [
+            {
+                tab: 'Account',
+                slug: 'account',
+                label: 'Account',
+                icon: UserCircle,
+            },
+            {
+                tab: 'Preferences',
+                slug: 'preferences',
+                label: 'Preferences',
+                icon: Sliders,
+            },
+            {
+                tab: 'Integrations',
+                slug: 'integrations',
+                label: 'Integrations',
+                icon: Link2,
+            },
+            {
+                tab: 'Repositories',
+                slug: 'repositories',
+                label: 'Repositories',
+                icon: Icons.Github,
+            },
+            {
+                tab: 'Skills',
+                slug: 'skills',
+                label: 'Skills',
+                icon: Puzzle,
+            },
+            {
+                tab: 'Secrets',
+                slug: 'secrets',
+                label: 'Secrets',
+                icon: KeyRound,
+            },
+            {
+                tab: 'Review',
+                slug: 'review',
+                label: 'Code Review',
+                icon: Icons.GitPullRequest,
+            },
+            {
+                tab: 'Wiki',
+                slug: 'wiki',
+                label: 'DeepWiki',
+                icon: BookOpen,
+            },
+            {
+                tab: 'Schedules',
+                slug: 'schedules',
+                label: 'Schedules',
+                icon: Clock,
+            },
+            {
+                tab: 'Billing',
+                slug: 'billing',
+                label: 'Billing & Credits',
+                icon: CreditCard,
+            },
+            {
+                tab: 'Usage',
+                slug: 'analytics',
+                label: 'Usage & Costs',
+                icon: Activity,
+            },
+        ],
+    },
+    {
+        title: 'Resources',
+        items: [
+            {
+                tab: 'Privacy',
+                slug: 'privacy',
+                label: 'Privacy Policy',
+                icon: FileText,
+            },
+            {
+                tab: 'Terms',
+                slug: 'terms',
+                label: 'Terms of Service',
+                icon: FileText,
+            },
+            {
+                slug: 'changelog',
+                label: 'Changelog',
+                icon: FileClock,
+                isExternal: true,
+                href: 'https://github.com/phasehumans/december/blob/main/CHANGELOG.md',
+            },
+        ],
+    },
+]
+
+const TAB_LABEL_MAP: Record<string, string> = {
+    Account: 'Account',
+    Preferences: 'Preferences',
+    Integrations: 'Integrations',
+    Connections: 'Integrations',
+    Repositories: 'Repositories',
+    Skills: 'Skills',
+    Secrets: 'Secrets',
+    Review: 'Code Review',
+    Wiki: 'DeepWiki',
+    Schedules: 'Schedules',
+    Billing: 'Billing & Credits',
+    Usage: 'Usage & Costs',
+    Analytics: 'Usage & Costs',
+    Privacy: 'Privacy Policy',
+    Terms: 'Terms of Service',
+}
+
+export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onBack }) => {
     const location = useLocation()
     const navigate = useNavigate()
 
     const activeTabMatch = location.pathname.match(/^\/(?:profile|settings)\/([^/]+)/)
     const activeTabSlug = activeTabMatch ? activeTabMatch[1] : undefined
     const activeTab = getProfileTabFromSlug(activeTabSlug)
+    const isMobileRoot = !activeTabSlug
+    const activeTabLabel = TAB_LABEL_MAP[activeTab] || activeTab
 
     // fallback for hash backward compatibility
     React.useEffect(() => {
@@ -122,29 +243,315 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
               ? 'Failed to load profile'
               : null)
 
+    const renderTabContent = () => {
+        if (isProfileLoading && !profile) {
+            return <ProfileSettingsSkeleton activeTab={activeTab} />
+        }
+
+        switch (activeTab) {
+            case 'Account':
+                return (
+                    <ProfileSettingsContent
+                        profile={profile}
+                        resolvedName={resolvedName}
+                        hasProfile={Boolean(profile)}
+                        isGithubConnected={isGithubConnected}
+                        emailNotifications={emailNotifications}
+                        productUpdates={productUpdates}
+                        securityAlerts={securityAlerts}
+                        isNotificationPending={updateNotificationMutation.isPending}
+                        onOpenNameModal={openNameModal}
+                        onOpenUsernameModal={() => {
+                            setTempUsername(profile?.username || '')
+                            setUsernameModalOpen(true)
+                        }}
+                        onOpenPasswordModal={openPasswordModal}
+                        onNotificationToggle={handleNotificationToggle}
+                        onConnectGithub={connectGithub}
+                        onSignOut={onSignOut}
+                        onOpenDeleteAccountModal={() => setDeleteAccountModalOpen(true)}
+                        onOpenSignOutAllSessionsModal={() => setSignOutAllSessionsModalOpen(true)}
+                    />
+                )
+            case 'Preferences':
+                return (
+                    <ProfileGeneralSettings
+                        chatSuggestions={chatSuggestions}
+                        generationSound={generationSound}
+                        onChatSuggestionsToggle={handleChatSuggestionsToggle}
+                        onGenerationSoundChange={handleGenerationSoundChange}
+                    />
+                )
+            case 'Billing':
+                return <ProfileBillingSettings profile={profile} />
+            case 'Usage':
+            case 'Analytics':
+                return <ProfileUsageSettings />
+            case 'API Keys':
+                return <ProfileApiKeysSettings />
+            case 'Integrations':
+            case 'Connections':
+                return (
+                    <ProfileIntegrationsSettings
+                        isGithubConnected={isGithubConnected}
+                        isVercelConnected={isVercelConnected}
+                        isSupabaseConnected={isSupabaseConnected}
+                        isNotionConnected={isNotionConnected}
+                        onConnectGithub={connectGithub}
+                        onConnectVercel={connectVercel}
+                        onConnectSupabase={connectSupabase}
+                        onConnectNotion={connectNotion}
+                    />
+                )
+            case 'Repositories':
+                return (
+                    <ProfileRepositoriesSettings
+                        isGithubConnected={isGithubConnected}
+                        onConnectGithub={connectGithub}
+                    />
+                )
+            case 'Skills':
+                return <ProfileSkillsSettings />
+            case 'Secrets':
+                return <ProfileSecretsSettings />
+            case 'Review':
+                return <ProfileReviewSettings />
+            case 'Wiki':
+                return <ProfileWikiSettings />
+            case 'Schedules':
+                return <ProfileSchedulesSettings />
+            case 'Terms':
+                return <ProfileTermsSettings />
+            case 'Privacy':
+                return <ProfilePrivacySettings />
+            default:
+                return (
+                    <div className="flex flex-col gap-6">
+                        <h1 className="text-[20px] font-medium text-[#D6D5C9]">{activeTab}</h1>
+                    </div>
+                )
+        }
+    }
+
+    const [isMobileDrawerOpen, setIsMobileDrawerOpen] = React.useState(isMobileRoot)
+
+    React.useEffect(() => {
+        if (isMobileRoot) {
+            setIsMobileDrawerOpen(true)
+        }
+    }, [isMobileRoot])
+
     return (
-        <div className="flex w-full h-full bg-[#100E12] overflow-hidden p-1.5 md:p-[8px]">
-            <div className="flex flex-col md:flex-row w-full h-full bg-[#141414] rounded-lg border border-[#242323] overflow-hidden">
-                {/* settings sidebar */}
-                <div className="w-full md:w-[220px] shrink-0 border-b md:border-b-0 md:border-r border-[#242323] flex flex-col pt-3 pb-1 md:py-4">
-                    <div className="px-3 md:px-4 mb-2 md:mb-6">
+        <div className="flex w-full h-full bg-[#141414] md:bg-[#100E12] overflow-hidden p-0 md:p-[8px] no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+            {/* Mobile Drawer Backdrop */}
+            <div
+                className={cn(
+                    'fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]',
+                    isMobileDrawerOpen
+                        ? 'opacity-100 pointer-events-auto'
+                        : 'opacity-0 pointer-events-none'
+                )}
+                onClick={() => setIsMobileDrawerOpen(false)}
+            />
+
+            {/* Mobile Drawer: Exact Main Sidebar look, width, and color */}
+            <div
+                className={cn(
+                    'fixed inset-y-0 left-0 w-[240px] bg-sidebar border-r border-white/5 z-[60] md:hidden flex flex-col pt-2 pb-0 transition-transform duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] will-change-transform font-sans',
+                    isMobileDrawerOpen
+                        ? 'translate-x-0 pointer-events-auto'
+                        : '-translate-x-full pointer-events-none'
+                )}
+            >
+                {/* Drawer Header */}
+                <div className="px-3 mb-2 mt-0 z-30 relative">
+                    <div className="flex items-center justify-between px-2 mb-4 mt-3">
+                        <button
+                            onClick={() => {
+                                if (onBack) onBack()
+                                else navigate('/')
+                            }}
+                            className="flex items-center text-[#8F8E8D] hover:text-[#D6D5D4] text-[13px] font-medium transition-colors cursor-pointer"
+                        >
+                            <ChevronLeft className="w-4 h-4 mr-1" />
+                            Home
+                        </button>
+                        <div
+                            className="flex items-center justify-center text-[#919191] hover:text-[#D4D4D8] group/collapse p-1 rounded-md hover:bg-[#252525] transition-colors cursor-pointer relative"
+                            onClick={() => setIsMobileDrawerOpen(false)}
+                            aria-label="Close sidebar"
+                        >
+                            <Icons.SidebarToggle className="w-4 h-4" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Drawer Nav Items */}
+                <div className="flex-1 flex flex-col gap-[2px] px-3 overflow-y-auto no-scrollbar pb-6">
+                    <div className="px-2.5 py-1 text-[11.5px] font-semibold text-[#666666] uppercase tracking-wider mb-0.5">
+                        Settings
+                    </div>
+                    {SETTINGS_NAV_GROUPS[0].items.map((item) => {
+                        const IconComponent = item.icon
+                        const isActive = activeTab === item.tab
+                        return (
+                            <button
+                                key={item.slug}
+                                onClick={() => {
+                                    navigate(`/settings/${item.slug}`)
+                                    setIsMobileDrawerOpen(false)
+                                }}
+                                className={cn(
+                                    'relative flex items-center justify-between w-full px-2.5 h-[32px] rounded-[10px] transition-all group outline-none cursor-pointer',
+                                    isActive ? 'bg-[#1F1F1F]' : 'hover:bg-[#1C1C1C]'
+                                )}
+                            >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                    <div
+                                        className={cn(
+                                            'transition-colors flex items-center justify-center shrink-0',
+                                            isActive
+                                                ? 'text-[#D6D5D4]'
+                                                : 'text-[#919191] group-hover:text-[#D6D5D4]'
+                                        )}
+                                    >
+                                        <IconComponent
+                                            className="w-[18px] h-[18px]"
+                                            strokeWidth={1.5}
+                                        />
+                                    </div>
+                                    <span
+                                        className={cn(
+                                            'text-[13px] font-normal truncate tracking-[-0.01em]',
+                                            isActive
+                                                ? 'text-[#D6D5D4] font-medium'
+                                                : 'text-[#919191] group-hover:text-[#D6D5D4]'
+                                        )}
+                                    >
+                                        {item.label}
+                                    </span>
+                                </div>
+                            </button>
+                        )
+                    })}
+
+                    <div className="px-2.5 py-1 text-[11.5px] font-semibold text-[#666666] uppercase tracking-wider mt-4 mb-0.5">
+                        Resources
+                    </div>
+                    {/* Privacy Policy */}
+                    <button
+                        onClick={() => {
+                            navigate(`/settings/${getSlugForProfileTab('Privacy')}`)
+                            setIsMobileDrawerOpen(false)
+                        }}
+                        className={cn(
+                            'relative flex items-center justify-between w-full px-2.5 h-[32px] rounded-[10px] transition-all group outline-none cursor-pointer',
+                            activeTab === 'Privacy' ? 'bg-[#1F1F1F]' : 'hover:bg-[#1C1C1C]'
+                        )}
+                    >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                                className={cn(
+                                    'transition-colors flex items-center justify-center shrink-0',
+                                    activeTab === 'Privacy'
+                                        ? 'text-[#D6D5D4]'
+                                        : 'text-[#919191] group-hover:text-[#D6D5D4]'
+                                )}
+                            >
+                                <FileText className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                            </div>
+                            <span
+                                className={cn(
+                                    'text-[13px] font-normal truncate tracking-[-0.01em]',
+                                    activeTab === 'Privacy'
+                                        ? 'text-[#D6D5D4] font-medium'
+                                        : 'text-[#919191] group-hover:text-[#D6D5D4]'
+                                )}
+                            >
+                                Privacy Policy
+                            </span>
+                        </div>
+                    </button>
+
+                    {/* Terms of Service */}
+                    <button
+                        onClick={() => {
+                            navigate(`/settings/${getSlugForProfileTab('Terms')}`)
+                            setIsMobileDrawerOpen(false)
+                        }}
+                        className={cn(
+                            'relative flex items-center justify-between w-full px-2.5 h-[32px] rounded-[10px] transition-all group outline-none cursor-pointer',
+                            activeTab === 'Terms' ? 'bg-[#1F1F1F]' : 'hover:bg-[#1C1C1C]'
+                        )}
+                    >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                                className={cn(
+                                    'transition-colors flex items-center justify-center shrink-0',
+                                    activeTab === 'Terms'
+                                        ? 'text-[#D6D5D4]'
+                                        : 'text-[#919191] group-hover:text-[#D6D5D4]'
+                                )}
+                            >
+                                <FileText className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                            </div>
+                            <span
+                                className={cn(
+                                    'text-[13px] font-normal truncate tracking-[-0.01em]',
+                                    activeTab === 'Terms'
+                                        ? 'text-[#D6D5D4] font-medium'
+                                        : 'text-[#919191] group-hover:text-[#D6D5D4]'
+                                )}
+                            >
+                                Terms of Service
+                            </span>
+                        </div>
+                    </button>
+
+                    {/* Changelog */}
+                    <a
+                        href="https://github.com/phasehumans/december/blob/main/CHANGELOG.md"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative flex items-center justify-between w-full px-2.5 h-[32px] rounded-[10px] transition-all group outline-none hover:bg-[#1C1C1C] cursor-pointer"
+                    >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="text-[#919191] group-hover:text-[#D6D5D4] transition-colors flex items-center justify-center shrink-0">
+                                <FileClock className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                            </div>
+                            <span className="text-[13px] font-normal text-[#919191] group-hover:text-[#D6D5D4] truncate tracking-[-0.01em]">
+                                Changelog
+                            </span>
+                        </div>
+                        <ArrowUpRight
+                            className="w-[14px] h-[14px] text-[#7B7A79]"
+                            strokeWidth={1.5}
+                        />
+                    </a>
+                </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row w-full h-full bg-[#141414] rounded-none md:rounded-lg border-0 md:border md:border-[#242323] overflow-hidden no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                {/* Desktop sidebar: visible only on md: and up */}
+                <div className="hidden md:flex w-[220px] shrink-0 border-r border-[#242323] flex-col py-4 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                    <div className="px-4 mb-6">
                         <button
                             onClick={onBack}
-                            className="flex items-center text-[#7B7A79] hover:text-[#D6D5D4] hover:bg-[#191919] px-2 py-1 -ml-2 rounded-lg text-[13px] font-medium transition-colors"
+                            className="flex items-center text-[#7B7A79] hover:text-[#D6D5D4] hover:bg-[#191919] px-2 py-1 -ml-2 rounded-lg text-[13px] font-medium transition-colors cursor-pointer"
                         >
                             <ChevronLeft className="w-4 h-4 mr-2" />
                             Home
                         </button>
                     </div>
 
-                    <div className="flex overflow-x-auto md:overflow-y-auto px-3 flex-row md:flex-col gap-2 md:gap-[2px] pb-2 md:pb-0 no-scrollbar items-center md:items-stretch">
-                        <div className="hidden md:block px-3 py-2 text-[12px] font-medium text-[#7B7A79] mb-1">
+                    <div className="flex flex-col gap-[2px] px-3 overflow-y-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                        <div className="px-3 py-2 text-[12px] font-medium text-[#7B7A79] mb-1">
                             Settings
                         </div>
 
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Account')}`)}
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Account'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -157,7 +564,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             onClick={() =>
                                 navigate(`/settings/${getSlugForProfileTab('Preferences')}`)
                             }
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Preferences'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -170,7 +577,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             onClick={() =>
                                 navigate(`/settings/${getSlugForProfileTab('Integrations')}`)
                             }
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Connections' || activeTab === 'Integrations'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -183,7 +590,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             onClick={() =>
                                 navigate(`/settings/${getSlugForProfileTab('Repositories')}`)
                             }
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Repositories'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -194,7 +601,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         </button>
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Skills')}`)}
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Skills'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -205,7 +612,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         </button>
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Secrets')}`)}
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Secrets'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -214,10 +621,9 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             <KeyRound className="w-[18px] h-[18px]" strokeWidth={1.5} />
                             Secrets
                         </button>
-
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Review')}`)}
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Review'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -228,7 +634,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         </button>
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Wiki')}`)}
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Wiki'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -241,32 +647,18 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             onClick={() =>
                                 navigate(`/settings/${getSlugForProfileTab('Schedules')}`)
                             }
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Schedules'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
                             }`}
                         >
-                            <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.75"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="w-[18px] h-[18px]"
-                            >
-                                <path d="M12 3a9 9 0 1 0 9 9" />
-                                <path d="M15.5 4.2a9 9 0 0 1 4.3 4.3" strokeDasharray="1.5 2.5" />
-                                <polyline points="12 7 12 12 15 12" />
-                            </svg>
+                            <Clock className="w-[18px] h-[18px]" strokeWidth={1.75} />
                             Schedules
                         </button>
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Billing')}`)}
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Billing'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -277,37 +669,22 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         </button>
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Usage')}`)}
-                            className={`flex items-center gap-2 md:gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Usage' || activeTab === 'Analytics'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
                             }`}
                         >
-                            <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="w-[18px] h-[18px]"
-                            >
-                                <line x1="4" y1="20" x2="4" y2="14" />
-                                <line x1="9" y1="20" x2="9" y2="6" />
-                                <line x1="14" y1="20" x2="14" y2="12" />
-                                <line x1="19" y1="20" x2="19" y2="8" />
-                            </svg>
+                            <Activity className="w-[18px] h-[18px]" strokeWidth={1.75} />
                             Usage
                         </button>
 
-                        <div className="hidden md:block px-3 py-2 text-[12px] font-medium text-[#7B7A79] mt-4 mb-1">
+                        <div className="px-3 py-2 text-[12px] font-medium text-[#7B7A79] mt-4 mb-1">
                             Resources
                         </div>
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Privacy')}`)}
-                            className={`flex items-center justify-between px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                            className={`flex items-center justify-between px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Privacy'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
@@ -318,28 +695,79 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                                 Privacy Policy
                             </div>
                         </button>
+                        <button
+                            onClick={() => navigate(`/settings/${getSlugForProfileTab('Terms')}`)}
+                            className={`flex items-center justify-between px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                                activeTab === 'Terms'
+                                    ? 'bg-[#242323] text-[#D6D5C9]'
+                                    : 'text-[#D6D5C9] hover:bg-[#191919]'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <FileText className="w-[18px] h-[18px]" strokeWidth={1.5} />
+                                Terms of Service
+                            </div>
+                        </button>
                         <a
                             href="https://github.com/phasehumans/december/blob/main/CHANGELOG.md"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hidden md:flex items-center justify-between px-3 py-1.5 rounded-[10px] text-[#D6D5C9] hover:bg-[#191919] text-[13px] font-medium transition-colors group whitespace-nowrap shrink-0"
+                            className="flex items-center justify-between px-3 py-1.5 rounded-[10px] text-[#D6D5C9] hover:bg-[#191919] text-[13px] font-medium transition-colors group whitespace-nowrap shrink-0"
                         >
                             <div className="flex items-center gap-3">
                                 <FileClock className="w-[18px] h-[18px]" strokeWidth={1.5} />
                                 Changelog
                             </div>
                             <ArrowUpRight
-                                className="w-[14px] h-[14px] text-[#D6D5C9]"
+                                className="w-[14px] h-[14px] text-[#7B7A79]"
                                 strokeWidth={1.5}
                             />
                         </a>
                     </div>
                 </div>
 
-                {/* main content */}
-                <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-[12px] [&::-webkit-scrollbar-track]:bg-[#141414] [&::-webkit-scrollbar-thumb]:bg-[#383736] [&::-webkit-scrollbar-thumb]:bg-clip-padding [&::-webkit-scrollbar-thumb]:border-[4px] [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:border-transparent [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#4A4948]">
-                    <div className="w-full flex justify-center px-4 md:px-16 py-6 md:py-12 relative z-10">
-                        <div className="flex flex-col items-end gap-2 absolute top-12 right-4 md:right-16">
+                {/* Mobile View with top bar and direct subpage content */}
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                    {/* Mobile Top Bar */}
+                    <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-3.5 py-3 bg-[#141414]/95 backdrop-blur-md shrink-0">
+                        <div className="flex items-center gap-2.5 text-[13px] font-medium min-w-0">
+                            <button
+                                onClick={() => setIsMobileDrawerOpen(true)}
+                                className="p-1 -ml-1 text-[#8F8E8D] hover:text-[#D6D5D4] hover:bg-[#252525] rounded-lg transition-colors flex items-center justify-center shrink-0 cursor-pointer"
+                                aria-label="Open settings sidebar"
+                            >
+                                <Icons.SidebarToggle className="w-4 h-4" />
+                            </button>
+
+                            <button
+                                onClick={() => setIsMobileDrawerOpen(true)}
+                                className="text-[#7B7A79] hover:text-[#D6D5D4] transition-colors cursor-pointer"
+                            >
+                                Settings
+                            </button>
+                            <span className="text-[#4A4948] select-none">/</span>
+                            <span className="text-white font-medium truncate">
+                                {activeTabLabel}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Mobile Content: Active Tab Content directly rendered */}
+                    <div className="md:hidden flex-1 flex flex-col p-4 pb-12 w-full no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                        {profileErrorMessage && (
+                            <div className="mb-4">
+                                <ErrorAlert
+                                    message={profileErrorMessage}
+                                    onClear={() => setProfileActionError(null)}
+                                />
+                            </div>
+                        )}
+                        {renderTabContent()}
+                    </div>
+
+                    {/* Desktop Content Render: always visible on md: and up */}
+                    <div className="hidden md:flex flex-1 justify-center px-6 md:px-16 py-8 md:py-12 relative z-10 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                        <div className="flex flex-col items-end gap-2 absolute top-12 right-6 md:right-16">
                             {profileErrorMessage && (
                                 <ErrorAlert
                                     message={profileErrorMessage}
@@ -347,83 +775,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                                 />
                             )}
                         </div>
-
-                        {isProfileLoading && !profile ? (
-                            <ProfileSettingsSkeleton activeTab={activeTab} />
-                        ) : activeTab === 'Account' ? (
-                            <ProfileSettingsContent
-                                profile={profile}
-                                resolvedName={resolvedName}
-                                hasProfile={Boolean(profile)}
-                                isGithubConnected={isGithubConnected}
-                                emailNotifications={emailNotifications}
-                                productUpdates={productUpdates}
-                                securityAlerts={securityAlerts}
-                                isNotificationPending={updateNotificationMutation.isPending}
-                                onOpenNameModal={openNameModal}
-                                onOpenUsernameModal={() => {
-                                    setTempUsername(profile?.username || '')
-                                    setUsernameModalOpen(true)
-                                }}
-                                onOpenPasswordModal={openPasswordModal}
-                                onNotificationToggle={handleNotificationToggle}
-                                onConnectGithub={connectGithub}
-                                onSignOut={onSignOut}
-                                onOpenDeleteAccountModal={() => setDeleteAccountModalOpen(true)}
-                                onOpenSignOutAllSessionsModal={() =>
-                                    setSignOutAllSessionsModalOpen(true)
-                                }
-                            />
-                        ) : activeTab === 'Preferences' ? (
-                            <ProfileGeneralSettings
-                                chatSuggestions={chatSuggestions}
-                                generationSound={generationSound}
-                                onChatSuggestionsToggle={handleChatSuggestionsToggle}
-                                onGenerationSoundChange={handleGenerationSoundChange}
-                            />
-                        ) : activeTab === 'Billing' ? (
-                            <ProfileBillingSettings profile={profile} />
-                        ) : activeTab === 'Usage' || activeTab === 'Analytics' ? (
-                            <ProfileUsageSettings />
-                        ) : activeTab === 'API Keys' ? (
-                            <ProfileApiKeysSettings />
-                        ) : activeTab === 'Integrations' || activeTab === 'Connections' ? (
-                            <ProfileIntegrationsSettings
-                                isGithubConnected={isGithubConnected}
-                                isVercelConnected={isVercelConnected}
-                                isSupabaseConnected={isSupabaseConnected}
-                                isNotionConnected={isNotionConnected}
-                                onConnectGithub={connectGithub}
-                                onConnectVercel={connectVercel}
-                                onConnectSupabase={connectSupabase}
-                                onConnectNotion={connectNotion}
-                            />
-                        ) : activeTab === 'Repositories' ? (
-                            <ProfileRepositoriesSettings
-                                isGithubConnected={isGithubConnected}
-                                onConnectGithub={connectGithub}
-                            />
-                        ) : activeTab === 'Skills' ? (
-                            <ProfileSkillsSettings />
-                        ) : activeTab === 'Secrets' ? (
-                            <ProfileSecretsSettings />
-                        ) : activeTab === 'Review' ? (
-                            <ProfileReviewSettings />
-                        ) : activeTab === 'Wiki' ? (
-                            <ProfileWikiSettings />
-                        ) : activeTab === 'Schedules' ? (
-                            <ProfileSchedulesSettings />
-                        ) : activeTab === 'Terms' ? (
-                            <ProfileTermsSettings />
-                        ) : activeTab === 'Privacy' ? (
-                            <ProfilePrivacySettings />
-                        ) : (
-                            <div className="flex flex-col gap-6">
-                                <h1 className="text-[20px] font-medium text-[#D6D5C9]">
-                                    {activeTab}
-                                </h1>
-                            </div>
-                        )}
+                        {renderTabContent()}
                     </div>
                 </div>
             </div>

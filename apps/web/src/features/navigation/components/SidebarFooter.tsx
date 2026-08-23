@@ -16,7 +16,7 @@ import { cn } from '@/shared/lib/utils'
 
 export const SidebarFooter: React.FC<
     SidebarFooterProps & { user?: { name?: string }; onSignOut?: () => void }
-> = ({ isAuthenticated, isCollapsed, onProfile, onDocs, onOpenAuth, user, onSignOut }) => {
+> = ({ isAuthenticated, isCollapsed, onProfile, onOpenAuth, user, onSignOut }) => {
     const [isNotifPopoverOpen, setIsNotifPopoverOpen] = useState(false)
     const [showCliCard, setShowCliCard] = useState(false)
     const [isCopied, setIsCopied] = useState(false)

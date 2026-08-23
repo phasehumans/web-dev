@@ -10,7 +10,6 @@ import {
     getSupabaseRedirectUri,
     getNotionClientId,
     getNotionRedirectUri,
-    getDocsUrl,
 } from '../src/shared/config/env'
 
 describe('API Client Base URL and Environment Configuration', () => {
@@ -95,6 +94,5 @@ describe('API Client Base URL and Environment Configuration', () => {
         expect(getNotionRedirectUri('https://api.trydecember.com/api/v1')).toBe(
             'https://api.trydecember.com/api/v1/integrations/notion/connect'
         )
-        expect(getDocsUrl()).toBe('http://localhost:3000/docs')
     })
 })

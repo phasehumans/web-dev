@@ -1,6 +1,6 @@
 # December
 
-December is an AI coding assistant that lives in your terminal. It understands your codebase and helps you build faster by writing code, fixing bugs, and running commands. Use it directly in your terminal or alongside your favorite IDE.
+December is an AI coding agent that lives in your terminal. It understands your codebase and helps you build faster by writing code, fixing bugs, and running commands. Use it directly in your terminal or alongside your favorite IDE.
 
 **Also available on the web at <a href="https://trydecember.com" target="_blank">trydecember.com</a>**
 
@@ -14,10 +14,18 @@ December is an AI coding assistant that lives in your terminal. It understands y
 
 ### Get Started
 
-1. Install December:
+1. Install December (via npm, curl, or powershell):
 
 ```bash
 npm install -g @trydecember/cli
+```
+
+```bash
+curl -fsSL https://trydecember.com/install.sh | bash
+```
+
+```powershell
+irm https://trydecember.com/install.ps1 | iex
 ```
 
 2. Navigate to your project directory and run `december`.

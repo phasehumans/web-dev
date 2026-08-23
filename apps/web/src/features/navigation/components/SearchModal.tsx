@@ -92,25 +92,13 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             {
                 id: 'go-templates',
                 label: 'Wiki & Templates',
-                subtitle: 'Explore repository wikis & codebase docs',
+                subtitle: 'Explore repository wikis & templates',
                 category: 'Navigation',
                 icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
-                keywords: ['wiki', 'templates', 'codebase', 'repos', 'architecture', 'docs'],
+                keywords: ['wiki', 'templates', 'codebase', 'repos', 'architecture'],
                 action: () => {
                     onClose()
                     navigate('/templates')
-                },
-            },
-            {
-                id: 'go-docs',
-                label: 'Documentation',
-                subtitle: 'Guides, API documentation & tutorials',
-                category: 'Navigation',
-                icon: <Icons.DocsBook className="w-4 h-4 text-neutral-400" />,
-                keywords: ['docs', 'help', 'guide', 'manual', 'reference', 'tutorials'],
-                action: () => {
-                    onClose()
-                    navigate('/docs')
                 },
             },
             {

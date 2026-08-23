@@ -81,7 +81,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
     return (
         <div className="absolute top-0 left-0 w-full h-11 px-4 md:px-6 z-50 flex justify-between items-center pointer-events-none">
             <div className="flex-1 pointer-events-auto flex items-center justify-start pl-2 md:pl-0">
-                {isAuthenticated ? (
+                {isAuthenticated && (
                     <button
                         onClick={() => navigate('/settings/billing')}
                         className="hidden md:flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#1F1F1F] hover:bg-[#252525] text-[12px] transition-all font-medium text-[#999999] hover:text-[#E8E8E8]"
@@ -95,16 +95,6 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenA
                             )}
                         </span>
                     </button>
-                ) : (
-                    <a
-                        href="/docs"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hidden md:flex items-center gap-1 h-7 px-2.5 rounded-full bg-[#1F1F1F] hover:bg-[#252525] text-[12px] transition-all font-medium text-[#999999] hover:text-[#E8E8E8]"
-                    >
-                        <span>Docs</span>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                    </a>
                 )}
             </div>
 

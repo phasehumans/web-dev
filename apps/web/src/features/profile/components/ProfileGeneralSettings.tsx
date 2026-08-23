@@ -148,8 +148,8 @@ Use this template file to specify coding styles, design tokens, architecture pat
                     </div>
 
                     {/* generation complete sound */}
-                    <div className="flex items-start justify-between">
-                        <div className="flex flex-col gap-0.5 max-w-[60%]">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                        <div className="flex flex-col gap-0.5 max-w-full sm:max-w-[60%]">
                             <span className="text-[14px] text-[#D6D5C9]">
                                 Generation complete sound
                             </span>
@@ -157,26 +157,26 @@ Use this template file to specify coding styles, design tokens, architecture pat
                                 Plays a satisfying sound notification when a generation is finished.
                             </span>
                         </div>
-                        <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-2.5 sm:gap-3 shrink-0 pt-1 sm:pt-0">
                             <button
                                 onClick={() => {
                                     onGenerationSoundChange('FIRST_GENERATION')
                                     playGenerationSoundPreview()
                                 }}
-                                className="flex items-center gap-3 text-[13px] font-medium group focus:outline-none"
+                                className="flex items-center gap-3 text-[13px] font-medium group focus:outline-none cursor-pointer"
                             >
                                 <div
-                                    className={`flex items-center justify-center w-[18px] h-[18px] rounded-full border-[1.5px] transition-all duration-200 ${generationSound === 'FIRST_GENERATION' ? 'border-[#87B2F4]' : 'border-[#383736] group-hover:border-[#7B7A79]'}`}
+                                    className={`flex items-center justify-center w-[18px] h-[18px] rounded-full border-[1.5px] transition-all duration-200 shrink-0 ${generationSound === 'FIRST_GENERATION' ? 'border-[#87B2F4]' : 'border-[#383736] group-hover:border-[#7B7A79]'}`}
                                 >
                                     {generationSound === 'FIRST_GENERATION' && (
                                         <div className="w-2.5 h-2.5 rounded-full bg-[#87B2F4] animate-in zoom-in duration-200" />
                                     )}
                                 </div>
                                 <Volume1
-                                    className={`w-4 h-4 transition-colors duration-200 ${generationSound === 'FIRST_GENERATION' ? 'text-[#87B2F4]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
+                                    className={`w-4 h-4 shrink-0 transition-colors duration-200 ${generationSound === 'FIRST_GENERATION' ? 'text-[#87B2F4]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
                                 />
                                 <span
-                                    className={`transition-colors duration-200 ${generationSound === 'FIRST_GENERATION' ? 'text-[#D6D5C9]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
+                                    className={`transition-colors duration-200 whitespace-nowrap ${generationSound === 'FIRST_GENERATION' ? 'text-[#D6D5C9]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
                                 >
                                     First generation
                                 </span>
@@ -186,40 +186,40 @@ Use this template file to specify coding styles, design tokens, architecture pat
                                     onGenerationSoundChange('ALWAYS')
                                     playGenerationSoundPreview()
                                 }}
-                                className="flex items-center gap-3 text-[13px] font-medium group focus:outline-none"
+                                className="flex items-center gap-3 text-[13px] font-medium group focus:outline-none cursor-pointer"
                             >
                                 <div
-                                    className={`flex items-center justify-center w-[18px] h-[18px] rounded-full border-[1.5px] transition-all duration-200 ${generationSound === 'ALWAYS' ? 'border-[#87B2F4]' : 'border-[#383736] group-hover:border-[#7B7A79]'}`}
+                                    className={`flex items-center justify-center w-[18px] h-[18px] rounded-full border-[1.5px] transition-all duration-200 shrink-0 ${generationSound === 'ALWAYS' ? 'border-[#87B2F4]' : 'border-[#383736] group-hover:border-[#7B7A79]'}`}
                                 >
                                     {generationSound === 'ALWAYS' && (
                                         <div className="w-2.5 h-2.5 rounded-full bg-[#87B2F4] animate-in zoom-in duration-200" />
                                     )}
                                 </div>
                                 <Volume2
-                                    className={`w-4 h-4 transition-colors duration-200 ${generationSound === 'ALWAYS' ? 'text-[#87B2F4]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
+                                    className={`w-4 h-4 shrink-0 transition-colors duration-200 ${generationSound === 'ALWAYS' ? 'text-[#87B2F4]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
                                 />
                                 <span
-                                    className={`transition-colors duration-200 ${generationSound === 'ALWAYS' ? 'text-[#D6D5C9]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
+                                    className={`transition-colors duration-200 whitespace-nowrap ${generationSound === 'ALWAYS' ? 'text-[#D6D5C9]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
                                 >
                                     Always
                                 </span>
                             </button>
                             <button
                                 onClick={() => onGenerationSoundChange('NEVER')}
-                                className="flex items-center gap-3 text-[13px] font-medium group focus:outline-none"
+                                className="flex items-center gap-3 text-[13px] font-medium group focus:outline-none cursor-pointer"
                             >
                                 <div
-                                    className={`flex items-center justify-center w-[18px] h-[18px] rounded-full border-[1.5px] transition-all duration-200 ${generationSound === 'NEVER' ? 'border-[#87B2F4]' : 'border-[#383736] group-hover:border-[#7B7A79]'}`}
+                                    className={`flex items-center justify-center w-[18px] h-[18px] rounded-full border-[1.5px] transition-all duration-200 shrink-0 ${generationSound === 'NEVER' ? 'border-[#87B2F4]' : 'border-[#383736] group-hover:border-[#7B7A79]'}`}
                                 >
                                     {generationSound === 'NEVER' && (
                                         <div className="w-2.5 h-2.5 rounded-full bg-[#87B2F4] animate-in zoom-in duration-200" />
                                     )}
                                 </div>
                                 <VolumeX
-                                    className={`w-4 h-4 transition-colors duration-200 ${generationSound === 'NEVER' ? 'text-[#87B2F4]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
+                                    className={`w-4 h-4 shrink-0 transition-colors duration-200 ${generationSound === 'NEVER' ? 'text-[#87B2F4]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
                                 />
                                 <span
-                                    className={`transition-colors duration-200 ${generationSound === 'NEVER' ? 'text-[#D6D5C9]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
+                                    className={`transition-colors duration-200 whitespace-nowrap ${generationSound === 'NEVER' ? 'text-[#D6D5C9]' : 'text-[#7B7A79] group-hover:text-[#D6D5C9]'}`}
                                 >
                                     Never
                                 </span>
@@ -249,30 +249,30 @@ Use this template file to specify coding styles, design tokens, architecture pat
                                         setRulesDirty(true)
                                     }
                                 }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer w-fit"
+                                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[#191919] hover:bg-[#242323] border border-[#383736] text-[13px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer w-fit"
                             >
-                                <FilePlus className="w-3.5 h-3.5" />
+                                <FilePlus className="w-4 h-4 text-[#87B2F4]" />
                                 <span>Create rules.md</span>
                             </button>
                         </div>
                     ) : (
-                        <div className="flex flex-col border border-[#282828] rounded-xl overflow-hidden bg-[#202020] transition-all">
+                        <div className="flex flex-col border-0 sm:border sm:border-[#242323] rounded-none sm:rounded-xl bg-transparent sm:bg-[#141414] overflow-visible sm:overflow-hidden transition-all">
                             {/* Editor Header Bar */}
-                            <div className="flex items-center justify-between px-4 py-2.5 bg-[#202020] border-b border-[#282828]">
+                            <div className="flex items-center justify-between px-0 sm:px-4 py-0 sm:py-2.5 mb-2.5 sm:mb-0 bg-transparent sm:bg-[#191919] border-0 sm:border-b sm:border-[#242323]">
                                 <div className="flex items-center gap-2">
                                     <FileText className="w-4 h-4 text-[#87B2F4]" />
                                     <span className="text-[13px] font-medium text-[#D6D5C9]">
                                         rules.md
                                     </span>
                                 </div>
-                                <span className="text-[11px] font-mono text-[#7B7A79] bg-[#181818] px-2 py-0.5 rounded border border-[#282828]">
+                                <span className="text-[11px] font-mono text-[#7B7A79] bg-[#191919] sm:bg-[#100E12] px-2 py-0.5 rounded border border-[#242323]">
                                     {rulesText.length} chars
                                 </span>
                             </div>
 
                             {/* Editor Code Area */}
                             <textarea
-                                className="w-full h-[450px] bg-[#181818] p-4 text-[13px] text-[#D6D5C9] placeholder:text-[#7B7A79] font-mono leading-[1.7] resize-none focus:outline-none transition-colors caret-[#87B2F4] selection:bg-[#2B2B2B] no-scrollbar border-none"
+                                className="w-full h-[280px] sm:h-[380px] bg-[#191919] sm:bg-transparent border border-[#242323] sm:border-0 rounded-xl sm:rounded-none p-3.5 sm:p-4 text-[13px] text-[#D6D5C9] placeholder:text-[#7B7A79] font-mono leading-relaxed resize-none focus:outline-none focus:border-[#383736] sm:focus:border-transparent transition-colors caret-[#87B2F4] selection:bg-[#2B2B2B] no-scrollbar"
                                 spellCheck={false}
                                 value={rulesText}
                                 onChange={(e) => {
@@ -283,11 +283,11 @@ Use this template file to specify coding styles, design tokens, architecture pat
                             ></textarea>
 
                             {/* Editor Footer Bar */}
-                            <div className="flex items-center justify-between px-4 py-2.5 bg-[#202020] border-t border-[#282828]">
-                                <span className="text-[12px] text-[#7B7A79]">
+                            <div className="flex items-center justify-between px-0 sm:px-4 py-0 sm:py-2.5 mt-2.5 sm:mt-0 bg-transparent sm:bg-[#191919] border-0 sm:border-t sm:border-[#242323]">
+                                <span className="text-[12px] text-[#7B7A79] hidden sm:inline">
                                     Persistent rules for december
                                 </span>
-                                <div className="flex items-center gap-2.5">
+                                <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto">
                                     <button
                                         onClick={() => deleteRulesMutation.mutate()}
                                         disabled={deleteRulesMutation.isPending}
@@ -309,12 +309,16 @@ Use this template file to specify coding styles, design tokens, architecture pat
                                             }
                                         }}
                                         disabled={!rulesDirty || updateRulesMutation.isPending}
-                                        className="px-4 py-1.5 rounded-lg bg-[#181818] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+                                        className={`px-3.5 py-1.5 rounded-lg border text-[12.5px] font-medium transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                                            rulesDirty
+                                                ? 'border-[#87B2F4] bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF]'
+                                                : 'border-[#383736] bg-[#191919] text-[#D6D5C9] hover:bg-[#242323]'
+                                        }`}
                                     >
                                         {updateRulesMutation.isPending ? (
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#87B2F4]" />
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-current" />
                                         ) : (
-                                            <Save className="w-3.5 h-3.5 text-[#87B2F4]" />
+                                            <Save className="w-3.5 h-3.5 text-current" />
                                         )}
                                         <span>Save</span>
                                     </button>

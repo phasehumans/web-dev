@@ -6,7 +6,6 @@ export type ViewState =
     | 'review'
     | 'profile'
     | 'templates'
-    | 'docs'
     | 'project'
     | 'canvas'
     | 'wiki'
@@ -75,7 +74,6 @@ const simpleViewToPath: Record<string, string> = {
     sessions: '/sessions',
     review: '/review',
     templates: '/wiki',
-    docs: '/docs',
     canvas: '/canvas',
     wiki: '/wiki',
     automations: '/automations',
@@ -93,8 +91,8 @@ export const getPathForView = (
         return `/sessions/${context.projectSlug}`
     }
     if (view === 'profile') {
-        const tabSlug = context?.profileTab ? getSlugForProfileTab(context.profileTab) : 'account'
-        return `/settings/${tabSlug}`
+        const tabSlug = context?.profileTab ? getSlugForProfileTab(context.profileTab) : ''
+        return tabSlug ? `/settings/${tabSlug}` : '/settings'
     }
     return simpleViewToPath[view] ?? '/'
 }
@@ -108,12 +106,14 @@ export const getViewForPath = (pathname: string): ViewState => {
     const simple = simplePathToView[pathname]
     if (simple) return simple
 
-    // /settings or /settings/* → profile
+    // /settings or /settings/*, /profile, /privacy, /terms → profile
     if (
         pathname === '/settings' ||
         pathname.startsWith('/settings/') ||
         pathname === '/profile' ||
-        pathname.startsWith('/profile/')
+        pathname.startsWith('/profile/') ||
+        pathname === '/privacy' ||
+        pathname === '/terms'
     )
         return 'profile'
 
@@ -125,16 +125,6 @@ export const getViewForPath = (pathname: string): ViewState => {
         pathname.startsWith('/reviews/')
     )
         return 'review'
-
-    // /docs or /docs/* → docs
-    if (pathname === '/docs' || pathname.startsWith('/docs/')) {
-        return 'docs'
-    }
-
-    // /privacy or /terms → docs (public legal views)
-    if (pathname === '/privacy' || pathname === '/terms') {
-        return 'docs'
-    }
 
     // /session/* or /project/* → project (workspace screen)
     if (pathname.startsWith('/session/') || pathname.startsWith('/project/')) return 'project'

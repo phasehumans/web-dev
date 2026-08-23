@@ -27,7 +27,6 @@ export const MobileSidebar: React.FC<
     onSessions,
     onReview,
     onTemplates,
-    onDocs,
     onProfile,
     onOpenProject,
     isAuthenticated,
@@ -47,7 +46,6 @@ export const MobileSidebar: React.FC<
     const isProjectsActive = path.startsWith('/projects')
     const isReviewActive = path.startsWith('/review')
     const isWikiActive = path.startsWith('/wiki') || path.startsWith('/templates')
-    const isDocsActive = path.startsWith('/docs')
     const isSettingsActive = path.startsWith('/settings') || path.startsWith('/profile')
 
     const [isSearchOpen, setIsSearchOpen] = React.useState(false)
@@ -764,7 +762,6 @@ export const MobileSidebar: React.FC<
                     isAuthenticated={isAuthenticated}
                     isCollapsed={false}
                     onProfile={onProfile}
-                    onDocs={onDocs}
                     onOpenAuth={onOpenAuth}
                     user={user}
                     onSignOut={onSignOut}

@@ -31,7 +31,6 @@ const Sidebar: React.FC<
     onSessions,
     onReview,
     onTemplates,
-    onDocs,
     onProfile,
     onOpenProject,
     isAuthenticated,
@@ -275,7 +274,6 @@ const Sidebar: React.FC<
         path.startsWith('/sessions')
     const isReviewActive = path.startsWith('/review')
     const isWikiActive = path.startsWith('/wiki') || path.startsWith('/templates')
-    const isDocsActive = path.startsWith('/docs')
     const isSettingsActive = path.startsWith('/settings') || path.startsWith('/profile')
 
     let activeIndex = 0
@@ -840,7 +838,6 @@ const Sidebar: React.FC<
                 isAuthenticated={isAuthenticated}
                 isCollapsed={isCollapsed || false}
                 onProfile={onProfile}
-                onDocs={onDocs}
                 onOpenAuth={onOpenAuth}
                 user={user}
                 onSignOut={onSignOut}

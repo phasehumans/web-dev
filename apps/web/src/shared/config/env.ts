@@ -134,10 +134,3 @@ export const getNotionRedirectUri = (apiBaseUrl: string = getApiBaseUrl()): stri
         `${apiBaseUrl}/integrations/notion/connect`
     )
 }
-
-export const getDocsUrl = (): string => {
-    if (typeof window !== 'undefined') {
-        return `${window.location.origin}/docs`
-    }
-    return 'https://trydecember.com/docs'
-}

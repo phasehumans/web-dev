@@ -392,7 +392,7 @@ export const ProfileReviewSettings: React.FC = () => {
                     </div>
 
                     {/* Empty Repositories Box */}
-                    <div className="bg-[#191919] border border-[#242323] rounded-xl p-12 flex flex-col items-center justify-center gap-1.5 text-center">
+                    <div className="bg-[#191919] border border-[#242323] rounded-xl p-6 md:p-12 flex flex-col items-center justify-center gap-1.5 text-center">
                         <h3 className="text-[14px] font-medium text-white">
                             No repositories configured
                         </h3>

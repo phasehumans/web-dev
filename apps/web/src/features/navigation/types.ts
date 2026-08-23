@@ -10,7 +10,6 @@ export interface SidebarProps {
     onSessions?: () => void
     onReview?: () => void
     onTemplates: () => void
-    onDocs: () => void
     onProfile: () => void
     onOpenProject: (projectId: string) => void
     isAuthenticated: boolean
@@ -27,7 +26,6 @@ export interface MobileSidebarProps {
     onSessions?: () => void
     onReview?: () => void
     onTemplates: () => void
-    onDocs: () => void
     onProfile: () => void
     onOpenProject: (projectId: string) => void
     isAuthenticated: boolean
@@ -45,7 +43,6 @@ export interface SidebarFooterProps {
     isAuthenticated: boolean
     isCollapsed: boolean
     onProfile: () => void
-    onDocs?: () => void
     onOpenAuth: () => void
 }
 
