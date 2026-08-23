@@ -1,7 +1,7 @@
 import { prisma } from '@december/database'
 import { describe, it, expect, mock, spyOn } from 'bun:test'
 
-import * as sessionRepository from '../../src/modules/session/session.repository'
+import { sessionRepository } from '../../src/modules/session/session.repository'
 import { sessionService } from '../../src/modules/session/session.service'
 
 describe('Session E2B & Rehydration Service Suite', () => {

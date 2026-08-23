@@ -1,0 +1,18 @@
+[Unit]
+Description=December BullMQ Agent Worker
+After=network.target redis.service december-server.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/var/www/december/apps/worker
+EnvironmentFile=/var/www/december/.env.production
+ExecStart=/usr/local/bin/bun src/index.ts
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

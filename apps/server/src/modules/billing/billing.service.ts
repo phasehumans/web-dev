@@ -182,10 +182,12 @@ const getCreditsHistory = async (data: CreditsHistory) => {
     const periods = new Map<string, { periodStart: Date; periodEnd: Date; costInCents: number }>()
 
     for (const event of events) {
-        const key = event.periodStart.toISOString()
+        const start = event.periodStart ? new Date(event.periodStart) : new Date()
+        const end = event.periodEnd ? new Date(event.periodEnd) : new Date()
+        const key = start.toISOString()
         const period = periods.get(key) ?? {
-            periodStart: event.periodStart,
-            periodEnd: event.periodEnd,
+            periodStart: start,
+            periodEnd: end,
             costInCents: 0,
         }
 

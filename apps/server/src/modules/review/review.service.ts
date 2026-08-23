@@ -1,4 +1,5 @@
 import { AppError } from '../../shared/appError'
+import { usageService } from '../usage/usage.service'
 
 import { triggerAsyncReview } from './review.engine'
 import { reviewRepository } from './review.repository'
@@ -15,6 +16,17 @@ import type {
 const createPullRequestReview = async (dataInput: CreatePullRequestReview) => {
     const { userId, data } = dataInput
     const { prUrl, sessionId, preferences } = data
+
+    const hasBalance = await usageService.hasMinimumBalance({
+        userId,
+        minBalanceInCents: 50,
+    })
+    if (!hasBalance) {
+        throw new AppError(
+            'Insufficient balance. A minimum balance of $0.50 is required to initiate a PR review.',
+            402
+        )
+    }
 
     // Extract repo & PR number from URL
     const match = prUrl.match(

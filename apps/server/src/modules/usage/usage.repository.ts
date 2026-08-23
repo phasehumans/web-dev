@@ -102,6 +102,7 @@ export const usageRepository = {
             totalTokens: number
             costInCents: number
             projectId?: string
+            sessionId?: string
             chatId?: string
             externalRequestId?: string
             periodStart: Date

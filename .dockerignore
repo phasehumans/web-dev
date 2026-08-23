@@ -1,0 +1,16 @@
+node_modules
+.turbo
+.git
+.github
+.husky
+log.txt
+dist
+build
+target
+coverage
+tests
+*.log
+.env
+.env.test
+.env.local
+.december

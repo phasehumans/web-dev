@@ -52,4 +52,23 @@ describe('AuthModal Mobile History & Back Navigation', () => {
         unmount()
         window.history.pushState = originalPushState
     })
+
+    test('renders immediately with solid backdrop container to prevent background flash', () => {
+        const queryClient = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        })
+
+        const { container, unmount } = render(
+            <GoogleOAuthProvider clientId="test-client-id">
+                <QueryClientProvider client={queryClient}>
+                    <AuthModal isOpen={true} onClose={() => {}} onAuthSuccess={() => {}} />
+                </QueryClientProvider>
+            </GoogleOAuthProvider>
+        )
+
+        const backdrop = container.querySelector('.fixed.inset-0.z-\\[100\\].bg-\\[\\#141414\\]')
+        expect(backdrop).not.toBeNull()
+
+        unmount()
+    })
 })

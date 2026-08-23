@@ -104,6 +104,7 @@ export interface AgentUsageEvent {
     type: 'AgentUsage'
     promptTokens: number
     completionTokens: number
+    model?: string
 }
 
 export interface AgentEndEvent {

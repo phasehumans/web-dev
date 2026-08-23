@@ -40,6 +40,24 @@ export const worker = new Worker(
         ].includes(effectiveTaskType)
 
         if (isEphemeralTask) {
+            if (userId) {
+                const user = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { creditBalance: true },
+                })
+                if (user && user.creditBalance < 50) {
+                    console.warn(
+                        `[WORKER ENGINE] Insufficient credits for user '${userId}' to run ephemeral task '${effectiveTaskType}'`
+                    )
+                    return {
+                        reviewId,
+                        status: 'FAILED',
+                        taskType: effectiveTaskType,
+                        output: 'Insufficient balance: A minimum balance of $0.50 is required.',
+                    }
+                }
+            }
+
             const result = await E2BSandboxService.runEphemeralTask({
                 sessionId: sessionId || reviewId,
                 taskType: effectiveTaskType as any,
@@ -97,6 +115,36 @@ export const worker = new Worker(
             console.log(
                 `[WORKER ENGINE] Picked up job #${job.id} (type: ${effectiveTaskType}) for session '${sessionId}'`
             )
+
+            if (userId) {
+                const user = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { creditBalance: true },
+                })
+                if (user && user.creditBalance < 1) {
+                    console.warn(
+                        `[WORKER ENGINE] Insufficient credits for user '${userId}' on session '${sessionId}'`
+                    )
+                    await prisma.session
+                        .update({
+                            where: { id: sessionId },
+                            data: { vmStatus: 'FAILED' },
+                        })
+                        .catch(() => {})
+                    await E2BSandboxService.emitSessionEvent({
+                        sessionId,
+                        event: {
+                            type: 'AgentError',
+                            code: 'INSUFFICIENT_CREDITS',
+                            error: 'Insufficient wallet credits',
+                            message:
+                                'Insufficient wallet credits. Please add credits at https://trydecember.com/settings/billing to continue.',
+                        },
+                    })
+                    return { status: 'FAILED', error: 'Insufficient credits' }
+                }
+            }
+
             console.log(
                 `[WORKER ENGINE] Setting Prisma session '${sessionId}' status -> PROVISIONING`
             )

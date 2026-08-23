@@ -19,13 +19,32 @@ export async function ensureStorageBucket() {
         await s3.send(new HeadBucketCommand({ Bucket: S3_BUCKET }))
         console.log(`[s3] bucket "${S3_BUCKET}" exists`)
     } catch (err: any) {
-        if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
+        const statusCode = err.$metadata?.httpStatusCode
+        if (err.name === 'NotFound' || statusCode === 404) {
             console.log(`[s3] bucket "${S3_BUCKET}" not found, creating...`)
-            await s3.send(new CreateBucketCommand({ Bucket: S3_BUCKET }))
-            console.log(`[s3] bucket "${S3_BUCKET}" created`)
+            try {
+                await s3.send(new CreateBucketCommand({ Bucket: S3_BUCKET }))
+                console.log(`[s3] bucket "${S3_BUCKET}" created`)
+            } catch (createErr: any) {
+                if (
+                    createErr.name === 'BucketAlreadyOwnedByYou' ||
+                    createErr.name === 'BucketAlreadyExists'
+                ) {
+                    console.log(`[s3] bucket "${S3_BUCKET}" already exists`)
+                } else {
+                    console.warn(
+                        `[s3] warning: failed to create bucket "${S3_BUCKET}": ${createErr?.message || createErr}`
+                    )
+                }
+            }
+        } else if (err.name === 'Forbidden' || statusCode === 403) {
+            console.warn(
+                `[s3] warning: head bucket returned 403 Forbidden for "${S3_BUCKET}". Proceeding assuming bucket exists.`
+            )
         } else {
-            console.error(`[s3] failed to check bucket "${S3_BUCKET}":`, err)
-            throw err
+            console.warn(
+                `[s3] warning: failed to verify bucket "${S3_BUCKET}": ${err?.message || err}. Proceeding with startup.`
+            )
         }
     }
 }

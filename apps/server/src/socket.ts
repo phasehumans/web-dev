@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import { Server, Socket } from 'socket.io'
 
 import { env } from './env'
+import { usageService } from './modules/usage/usage.service'
 
 const pubClient = new Redis(env.REDIS_URL || 'redis://localhost:6379', {
     maxRetriesPerRequest: null,
@@ -23,6 +24,8 @@ const redisSubClient = pubClient.duplicate({ enableReadyCheck: false })
 redisSubClient.on('error', (err) => {
     console.error('[Socket Redis EventSubClient Error]', err?.message || err)
 })
+
+const agentJobsQueue = new Queue('agent_jobs', { connection: pubClient as any })
 
 let io: Server
 
@@ -174,6 +177,26 @@ export function initSocket(httpServer: any) {
                         `[SERVER CORE] Prompt received for session '${data.sessionId}' (user: ${socket.data.userId || 'anonymous'}): "${data.prompt?.slice(0, 80)}..."`
                     )
 
+                    const userId = socket.data.userId
+                    if (userId) {
+                        const hasBalance = await usageService.hasMinimumBalance({
+                            userId,
+                            minBalanceInCents: 1,
+                        })
+                        if (!hasBalance) {
+                            socket.emit('agent_event', {
+                                type: 'AgentError',
+                                message:
+                                    'Insufficient wallet credits. Please add credits at https://trydecember.com/settings/billing to continue.',
+                            })
+                            socket.emit('error', {
+                                message:
+                                    'Insufficient wallet credits. Please add credits at https://trydecember.com/settings/billing to continue.',
+                            })
+                            return
+                        }
+                    }
+
                     // fetch user secrets (phase 3.6 secrets management)
                     const secrets: any[] = []
                     const decryptedSecrets = secrets.map((s: any) => ({
@@ -185,7 +208,6 @@ export function initSocket(httpServer: any) {
                     console.log(
                         `[SERVER CORE] Enqueuing job 'run_agent' to BullMQ queue 'agent_jobs'...`
                     )
-                    const agentJobsQueue = new Queue('agent_jobs', { connection: pubClient as any })
                     const job = await agentJobsQueue.add('run_agent', {
                         sessionId: data.sessionId,
                         projectId: data.projectId,

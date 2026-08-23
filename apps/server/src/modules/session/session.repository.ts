@@ -1,11 +1,11 @@
 import { prisma } from '@december/database'
 
+import { AppError } from '../../shared/appError'
+
+import type { SessionFilters } from './session.types'
 import type { Prisma } from '@december/database'
 
-export async function findManySessions(
-    userId: string,
-    filters?: import('./session.types').SessionFilters
-) {
+export async function findManySessions(userId: string, filters?: SessionFilters) {
     const where: Prisma.SessionWhereInput = {
         OR: [{ userId }, { collaborators: { some: { userId } } }],
     }
@@ -137,7 +137,7 @@ export async function updateSession(
             OR: [{ userId }, { collaborators: { some: { userId } } }],
         },
     })
-    if (!session) throw new Error('Session not found or access denied')
+    if (!session) throw new AppError('Session not found', 404)
 
     return prisma.session.update({
         where: { id: sessionId },
@@ -189,12 +189,10 @@ export async function countCollaborators(sessionId: string) {
 }
 
 export async function findCollaborator(sessionId: string, email: string) {
-    return prisma.sessionCollaborator.findUnique({
+    return prisma.sessionCollaborator.findFirst({
         where: {
-            sessionId_email: {
-                sessionId,
-                email,
-            },
+            sessionId,
+            email: { equals: email, mode: 'insensitive' },
         },
     })
 }
@@ -202,7 +200,10 @@ export async function findCollaborator(sessionId: string, email: string) {
 export async function findUserByEmailOrUsername(input: string) {
     return prisma.user.findFirst({
         where: {
-            OR: [{ email: input }, { username: input }],
+            OR: [
+                { email: { equals: input, mode: 'insensitive' } },
+                { username: { equals: input, mode: 'insensitive' } },
+            ],
             isDeleted: false,
         },
         select: {
@@ -240,12 +241,27 @@ export async function addCollaborator(sessionId: string, userId: string, email: 
 }
 
 export async function removeCollaborator(sessionId: string, email: string) {
+    const existing = await findCollaborator(sessionId, email)
+    if (!existing) return null
+
     return prisma.sessionCollaborator.delete({
         where: {
-            sessionId_email: {
-                sessionId,
-                email,
-            },
+            id: existing.id,
         },
     })
+}
+
+export const sessionRepository = {
+    findManySessions,
+    createSession,
+    findSessionById,
+    updateSession,
+    findSessionOwner,
+    deleteSession,
+    findCollaboratorsBySessionId,
+    countCollaborators,
+    findCollaborator,
+    findUserByEmailOrUsername,
+    addCollaborator,
+    removeCollaborator,
 }

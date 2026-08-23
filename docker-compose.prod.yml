@@ -1,0 +1,83 @@
+services:
+    postgres:
+        image: postgres:17-alpine
+        container_name: december-postgres
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:-december}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-december_secure_password}
+            POSTGRES_DB: ${POSTGRES_DB:-december}
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        ports:
+            - '127.0.0.1:5432:5432'
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-december}']
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    redis:
+        image: redis:7-alpine
+        container_name: december-redis
+        restart: unless-stopped
+        command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_secure_password}
+        volumes:
+            - redisdata:/data
+        ports:
+            - '127.0.0.1:6379:6379'
+        healthcheck:
+            test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-redis_secure_password}', 'ping']
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    db-migrate:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: base
+        container_name: december-db-migrate
+        restart: 'no'
+        depends_on:
+            postgres:
+                condition: service_healthy
+        env_file:
+            - .env.production
+        command: bun --cwd packages/database prisma migrate deploy
+
+    server:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: server
+        container_name: december-server
+        restart: unless-stopped
+        depends_on:
+            db-migrate:
+                condition: service_completed_successfully
+            redis:
+                condition: service_healthy
+        env_file:
+            - .env.production
+        ports:
+            - '4000:4000'
+
+    worker:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: worker
+        container_name: december-worker
+        restart: unless-stopped
+        depends_on:
+            db-migrate:
+                condition: service_completed_successfully
+            redis:
+                condition: service_healthy
+        env_file:
+            - .env.production
+
+volumes:
+    pgdata:
+    redisdata:

@@ -3,7 +3,7 @@ import Redis from 'ioredis'
 
 import { env } from '../../env'
 
-import * as reviewRepository from './review.repository'
+import { reviewRepository } from './review.repository'
 
 export interface IGithubBotDispatcher {
     dispatchReview(reviewId: string, prUrl: string): Promise<void>

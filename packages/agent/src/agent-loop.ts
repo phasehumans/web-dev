@@ -421,6 +421,7 @@ async function streamAssistantResponse(
                             type: 'AgentUsage',
                             promptTokens: chunk.promptTokens,
                             completionTokens: chunk.completionTokens,
+                            model: loggedModel,
                         })
                     }
                 }

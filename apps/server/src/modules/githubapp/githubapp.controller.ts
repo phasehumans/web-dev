@@ -17,12 +17,18 @@ const handleWebhook = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError('Missing signature', 401)
     }
 
-    const rawBody = req.body.toString('utf8')
+    const rawBody = Buffer.isBuffer(req.body)
+        ? req.body.toString('utf8')
+        : typeof req.body === 'string'
+          ? req.body
+          : JSON.stringify(req.body)
+
     if (!githubAppService.verifySignature({ payload: rawBody, signature })) {
         throw new AppError('Invalid signature', 401)
     }
 
-    const payload = JSON.parse(rawBody)
+    const payload =
+        typeof req.body === 'object' && !Buffer.isBuffer(req.body) ? req.body : JSON.parse(rawBody)
     const event = req.headers['x-github-event']
 
     if (event === 'installation' && payload.action === 'created') {

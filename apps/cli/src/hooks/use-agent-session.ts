@@ -365,7 +365,6 @@ export function useAgentSession({
         [
             agent,
             isAuthenticated,
-            addToast,
             setActiveMessages,
             setAuthMode,
             setCurrentGrillIndex,
