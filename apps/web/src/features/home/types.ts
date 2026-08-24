@@ -9,6 +9,7 @@ export interface PromptSuggestion {
 export interface HomeHeroProps {
     onPromptSubmit: (prompt: string) => void
     onOpenAuth: () => void
+    onOpenProject?: (projectId: string) => void
     onImportGithub?: (repoUrl: string) => Promise<void> | void
     onImportZip?: (file: File) => Promise<void> | void
     onResetImportState?: () => void

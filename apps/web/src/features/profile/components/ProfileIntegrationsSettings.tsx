@@ -1,4 +1,4 @@
-import { Check, Plus } from 'lucide-react'
+import { Check, Plus, Search, X } from 'lucide-react'
 import React, { useState } from 'react'
 
 type IntegrationId = 'github' | 'vercel' | 'supabase' | 'notion' | 'figma'
@@ -74,7 +74,7 @@ interface McpServerItem {
     category: string
 }
 
-const RECOMMENDED_MCP_SERVERS: McpServerItem[] = [
+const ALL_MCP_SERVERS: McpServerItem[] = [
     {
         id: 'github-mcp',
         name: 'GitHub',
@@ -224,9 +224,6 @@ const RECOMMENDED_MCP_SERVERS: McpServerItem[] = [
         ),
         category: 'Documentation',
     },
-]
-
-const ALL_MCP_SERVERS: McpServerItem[] = [
     {
         id: 'cloudflare-mcp',
         name: 'Cloudflare',
@@ -483,6 +480,8 @@ export const ProfileIntegrationsSettings: React.FC<ProfileIntegrationsSettingsPr
     onConnectSupabase,
     onConnectNotion,
 }) => {
+    const [searchQuery, setSearchQuery] = useState('')
+    const [visibleCount, setVisibleCount] = useState(12)
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [customMcpName, setCustomMcpName] = useState('')
     const [customMcpCommand, setCustomMcpCommand] = useState('')
@@ -550,6 +549,18 @@ export const ProfileIntegrationsSettings: React.FC<ProfileIntegrationsSettingsPr
         setCustomMcpCommand('')
     }
 
+    const filteredServers = ALL_MCP_SERVERS.filter((server) => {
+        if (!searchQuery.trim()) return true
+        const q = searchQuery.toLowerCase()
+        return (
+            server.name.toLowerCase().includes(q) ||
+            server.description.toLowerCase().includes(q) ||
+            server.category.toLowerCase().includes(q)
+        )
+    })
+
+    const visibleServers = filteredServers.slice(0, visibleCount)
+
     return (
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
             {/* Integrations Section */}
@@ -606,116 +617,120 @@ export const ProfileIntegrationsSettings: React.FC<ProfileIntegrationsSettingsPr
 
             {/* MCP Servers Section */}
             <div className="flex flex-col mb-10">
-                <div className="flex items-center justify-between mb-4">
-                    <h1 className="text-[16px] font-medium text-white">MCP Servers</h1>
-                    <button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#383736] text-[12.5px] font-medium text-[#D6D5C9] hover:bg-[#242323] transition-colors cursor-pointer"
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Add server</span>
-                    </button>
-                </div>
-                <div className="flex flex-col border-t border-[#242323] pt-6">
-                    {/* Recommended Subsection */}
-                    <div className="flex flex-col mb-8">
-                        <span className="text-[13px] font-medium text-[#8F8E8D] mb-3">
-                            Recommended
-                        </span>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {RECOMMENDED_MCP_SERVERS.map((server) => {
-                                const isInstalled = Boolean(installedServers[server.id])
-                                return (
-                                    <div
-                                        key={server.id}
-                                        className="p-4 bg-[#191919] border border-[#242323] rounded-xl flex flex-col gap-2.5 hover:border-[#313131] transition-colors group cursor-pointer"
-                                        onClick={() => toggleInstallMcp(server.id)}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <div
-                                                    className={`w-6 h-6 rounded-md ${server.iconBg} flex items-center justify-center shrink-0`}
-                                                >
-                                                    {server.iconContent}
-                                                </div>
-                                                <span className="text-[14px] font-medium text-[#D6D5C9] truncate">
-                                                    {server.name}
-                                                </span>
-                                                <span
-                                                    className="w-3.5 h-3.5 rounded-full bg-[#87B2F4] flex items-center justify-center text-[#100E12] shrink-0"
-                                                    title="Verified Server"
-                                                >
-                                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                                </span>
-                                            </div>
-                                            <span
-                                                className={`px-2 py-0.5 rounded text-[11px] font-medium border shrink-0 transition-colors ${
-                                                    isInstalled
-                                                        ? 'bg-[#87B2F4]/10 text-[#87B2F4] border-[#87B2F4]/30'
-                                                        : 'bg-[#242323] text-[#7B7A79] border-[#313131] group-hover:text-[#D6D5C9]'
-                                                }`}
-                                            >
-                                                {isInstalled ? 'Installed' : 'Not installed'}
-                                            </span>
-                                        </div>
-                                        <p className="text-[13px] text-[#7B7A79] leading-relaxed line-clamp-2">
-                                            {server.description}
-                                        </p>
-                                    </div>
-                                )
-                            })}
+                <h1 className="text-[16px] font-medium text-white mb-3">MCP Servers</h1>
+                <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
+                    <p className="text-[13px] text-[#7B7A79] leading-relaxed">
+                        Model Context Protocol (MCP) servers extend agent capabilities with external
+                        data sources, APIs, and tools.
+                    </p>
+
+                    {/* Controls Row: Search Input + Action Button */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-2">
+                        {/* Search bar */}
+                        <div className="relative flex-1 max-w-full sm:max-w-[280px]">
+                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
+                            <input
+                                type="text"
+                                placeholder="Search MCP servers..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value)
+                                    setVisibleCount(12)
+                                }}
+                                className="w-full pl-9 pr-8 py-1.5 bg-[#191919] border border-[#242323] focus:border-[#383736] rounded-lg text-[13px] text-[#D6D5C9] placeholder-[#7B7A79] focus:outline-none transition-colors"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => {
+                                        setSearchQuery('')
+                                        setVisibleCount(12)
+                                    }}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7B7A79] hover:text-[#D6D5C9] p-0.5 cursor-pointer"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                         </div>
+
+                        {/* Action Button */}
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[#383736] bg-[#191919] hover:bg-[#242323] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer shrink-0"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add server</span>
+                        </button>
                     </div>
 
-                    {/* All Servers Subsection */}
-                    <div className="flex flex-col">
-                        <span className="text-[13px] font-medium text-[#8F8E8D] mb-3">
-                            All servers
-                        </span>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {ALL_MCP_SERVERS.map((server) => {
-                                const isInstalled = Boolean(installedServers[server.id])
-                                return (
-                                    <div
-                                        key={server.id}
-                                        className="p-4 bg-[#191919] border border-[#242323] rounded-xl flex flex-col gap-2.5 hover:border-[#313131] transition-colors group cursor-pointer"
-                                        onClick={() => toggleInstallMcp(server.id)}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <div
-                                                    className={`w-6 h-6 rounded-md ${server.iconBg} flex items-center justify-center shrink-0`}
-                                                >
-                                                    {server.iconContent}
+                    {visibleServers.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <span className="text-[14px] text-[#D6D5C9] mb-1">
+                                No MCP servers found
+                            </span>
+                            <span className="text-[12.5px] text-[#7B7A79]">
+                                No servers match "{searchQuery}". Try a different search term.
+                            </span>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {visibleServers.map((server) => {
+                                    const isInstalled = Boolean(installedServers[server.id])
+                                    return (
+                                        <div
+                                            key={server.id}
+                                            className="p-4 bg-[#191919] border border-[#242323] rounded-xl flex flex-col gap-2.5 hover:border-[#313131] transition-colors group cursor-pointer"
+                                            onClick={() => toggleInstallMcp(server.id)}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div
+                                                        className={`w-6 h-6 rounded-md ${server.iconBg} flex items-center justify-center shrink-0`}
+                                                    >
+                                                        {server.iconContent}
+                                                    </div>
+                                                    <span className="text-[14px] font-medium text-[#D6D5C9] truncate">
+                                                        {server.name}
+                                                    </span>
+                                                    <span
+                                                        className="w-3.5 h-3.5 rounded-full bg-[#87B2F4] flex items-center justify-center text-[#100E12] shrink-0"
+                                                        title="Verified Server"
+                                                    >
+                                                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                                    </span>
                                                 </div>
-                                                <span className="text-[14px] font-medium text-[#D6D5C9] truncate">
-                                                    {server.name}
-                                                </span>
                                                 <span
-                                                    className="w-3.5 h-3.5 rounded-full bg-[#87B2F4] flex items-center justify-center text-[#100E12] shrink-0"
-                                                    title="Verified Server"
+                                                    className={`px-2 py-0.5 rounded text-[11px] font-medium border shrink-0 transition-colors ${
+                                                        isInstalled
+                                                            ? 'bg-[#87B2F4]/10 text-[#87B2F4] border-[#87B2F4]/30'
+                                                            : 'bg-[#242323] text-[#7B7A79] border-[#313131] group-hover:text-[#D6D5C9]'
+                                                    }`}
                                                 >
-                                                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                                    {isInstalled ? 'Installed' : 'Not installed'}
                                                 </span>
                                             </div>
-                                            <span
-                                                className={`px-2 py-0.5 rounded text-[11px] font-medium border shrink-0 transition-colors ${
-                                                    isInstalled
-                                                        ? 'bg-[#87B2F4]/10 text-[#87B2F4] border-[#87B2F4]/30'
-                                                        : 'bg-[#242323] text-[#7B7A79] border-[#313131] group-hover:text-[#D6D5C9]'
-                                                }`}
-                                            >
-                                                {isInstalled ? 'Installed' : 'Not installed'}
-                                            </span>
+                                            <p className="text-[13px] text-[#7B7A79] leading-relaxed line-clamp-2">
+                                                {server.description}
+                                            </p>
                                         </div>
-                                        <p className="text-[13px] text-[#7B7A79] leading-relaxed line-clamp-2">
-                                            {server.description}
-                                        </p>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </div>
+                                    )
+                                })}
+                            </div>
+
+                            {/* Load More Button */}
+                            {filteredServers.length > visibleCount && (
+                                <div className="flex justify-center mt-6">
+                                    <button
+                                        onClick={() => setVisibleCount((prev) => prev + 12)}
+                                        className="px-5 py-2 rounded-lg border border-[#383736] bg-[#191919] hover:bg-[#242323] text-[13px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer"
+                                    >
+                                        Load more ({filteredServers.length - visibleCount}{' '}
+                                        remaining)
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             </div>
 

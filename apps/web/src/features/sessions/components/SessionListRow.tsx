@@ -40,13 +40,17 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
 }) => {
     const [menuDirection, setMenuDirection] = useState<'down' | 'up'>('down')
     const session = project // alias for clarity
-    const menuRef = useRef<HTMLDivElement>(null)
+    const mobileMenuRef = useRef<HTMLDivElement>(null)
+    const desktopMenuRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (!isMenuOpen) return
 
         const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+            const target = event.target as Node
+            const isInsideMobile = mobileMenuRef.current?.contains(target)
+            const isInsideDesktop = desktopMenuRef.current?.contains(target)
+            if (!isInsideMobile && !isInsideDesktop) {
                 onToggleMenu(session.id, event as any)
             }
         }
@@ -124,10 +128,11 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                         </button>
                         {isMenuOpen && (
                             <div
-                                ref={menuRef}
+                                ref={mobileMenuRef}
                                 className={`absolute right-0 ${
                                     menuDirection === 'up' ? 'bottom-8' : 'top-8'
                                 } z-50 flex w-44 flex-col rounded-xl border border-[#272727] bg-[#1E1E1E] p-1 shadow-xl`}
+                                onClick={(e) => e.stopPropagation()}
                             >
                                 <button
                                     onClick={(e) => onOpenProjectFromMenu(session.id, e)}
@@ -309,7 +314,7 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                     </Tooltip>
                     {isMenuOpen && (
                         <div
-                            ref={menuRef}
+                            ref={desktopMenuRef}
                             className={`absolute right-0 ${menuDirection === 'up' ? 'bottom-9' : 'top-9'} z-50 flex w-44 flex-col rounded-xl border border-[#272727] bg-[#1E1E1E] p-1 shadow-xl`}
                             onClick={(e) => e.stopPropagation()}
                         >

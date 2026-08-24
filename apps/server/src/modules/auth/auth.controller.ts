@@ -5,7 +5,6 @@ import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 import { asyncHandler } from '../../shared/asyncHandler'
 import { sendSuccess } from '../../shared/response'
-import { integrationsService } from '../integration/integration.service'
 
 import { authCookie } from './auth.cookie'
 import {
@@ -227,18 +226,15 @@ const github = asyncHandler(async (req: Request, res: Response) => {
         req.socket.remoteAddress ||
         'unknown'
 
-    const result = await authService.github({ email, name, sub, userAgent, ipAddress })
+    const result = await authService.github({
+        email,
+        name,
+        sub,
+        username,
+        userAgent,
+        ipAddress,
+    })
     authCookie.setAuthCookies(res, result.accessToken, result.refreshToken)
-
-    try {
-        await integrationsService.connectGithub({
-            userId: result.user.id,
-            accessToken: access_token,
-            username: username,
-        })
-    } catch (err) {
-        console.error('Failed to automatically connect GitHub integration during login', err)
-    }
 
     return sendSuccess(res, 'login successful')
 })

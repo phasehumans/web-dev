@@ -12,6 +12,7 @@ import {
     sessionWorkspaceKey,
     sessionWorkspacePrefix,
 } from '../../../shared/project-storage'
+import { githubAppService } from '../../githubapp/githubapp.service'
 import { runtimeService } from '../../runtime/runtime.service'
 
 import { downloadGitHubRepoArchive } from './downloadzip'
@@ -399,8 +400,12 @@ const importFromGithub = async (data: ImportFromGithub) => {
         throw new AppError('user not found', 404)
     }
 
-    if (!user.githubToken) {
-        throw new AppError('github access token not found', 404)
+    let token: string | undefined = undefined
+    try {
+        token = await githubAppService.getUserInstallationToken({ userId })
+    } catch {
+        // Intentionally swallowed: fallback to legacy user token or public repo
+        token = user.githubToken || undefined
     }
 
     const sessionId = randomUUID()
@@ -426,7 +431,7 @@ const importFromGithub = async (data: ImportFromGithub) => {
         sessionId,
         owner: parseData.owner,
         repo: parseData.repo,
-        token: user.githubToken,
+        token,
     })
 
     return importRecord

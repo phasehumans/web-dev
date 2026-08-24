@@ -6,6 +6,7 @@ import { useSessions } from '../hooks/useSessions'
 
 import { SessionPrTooltip } from './SessionPrTooltip'
 
+import { MobileBreadcrumbsHeader } from '@/features/navigation/components/MobileBreadcrumbsHeader'
 import { Icons } from '@/shared/components/ui/Icons'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { Tooltip } from '@/shared/components/ui/Tooltip'
@@ -14,7 +15,7 @@ interface ReviewPageProps {
     onNewProject?: () => void
 }
 
-export const ReviewPage: React.FC<ReviewPageProps> = () => {
+export const ReviewPage: React.FC<ReviewPageProps> = ({ onNewProject }) => {
     const [prUrl, setPrUrl] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState<string | null>(null)
@@ -158,22 +159,25 @@ export const ReviewPage: React.FC<ReviewPageProps> = () => {
     }
 
     return (
-        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 font-sans no-scrollbar md:p-16">
-            <div className="relative z-10 mx-auto max-w-6xl">
+        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar">
+            <MobileBreadcrumbsHeader currentPage="Review" onHomeClick={onNewProject} />
+            <div className="relative z-10 mx-auto max-w-6xl px-3.5 sm:px-6 pb-6 pt-2 md:p-16">
                 {/* Top Header */}
-                <div className="mb-6 flex flex-col">
-                    <h1 className="text-[24px] font-medium text-[#D6D5C9] mb-1">Review</h1>
-                    <p className="text-[13px] text-[#7B7A79]">
+                <div className="mb-4 sm:mb-6 flex flex-col">
+                    <h1 className="text-[20px] sm:text-[24px] font-medium text-[#D6D5C9] mb-0.5 sm:mb-1">
+                        Review
+                    </h1>
+                    <p className="text-[12.5px] sm:text-[13px] text-[#7B7A79]">
                         Review GitHub pull requests with automated AI code quality summaries,
                         security checks, and diff analysis.
                     </p>
                 </div>
 
                 {/* Main PR Submission Input Section */}
-                <div className="mb-8 flex flex-col gap-2.5">
+                <div className="mb-4 sm:mb-8 flex flex-col gap-2.5">
                     <form
                         onSubmit={handleSubmit}
-                        className="relative w-full max-w-xl flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                        className="relative w-full max-w-xl flex flex-row items-center gap-2 sm:gap-3"
                     >
                         <div className="relative flex-1">
                             <Icons.GitPullRequest className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7B7A79]" />
@@ -182,19 +186,19 @@ export const ReviewPage: React.FC<ReviewPageProps> = () => {
                                 value={prUrl}
                                 onChange={(e) => setPrUrl(e.target.value)}
                                 placeholder="https://github.com/owner/repo/pull/123"
-                                className="w-full rounded-lg border border-[#2D2D2D] bg-transparent py-2 pl-9 pr-4 text-[13px] text-[#D6D5C9] transition-colors placeholder:text-[#6E6E6E] hover:border-[#3D3D3D] focus:border-[#5A5A5A] focus:outline-none"
+                                className="w-full rounded-lg border border-[#2D2D2D] bg-transparent py-1.5 sm:py-2 pl-9 pr-3 sm:pr-4 text-[12.5px] sm:text-[13px] text-[#D6D5C9] transition-colors placeholder:text-[#6E6E6E] hover:border-[#3D3D3D] focus:border-[#5A5A5A] focus:outline-none"
                                 disabled={isSubmitting}
                             />
                         </div>
                         <button
                             type="submit"
                             disabled={!prUrl.trim() || isSubmitting}
-                            className="w-full sm:w-auto rounded-lg border border-[#383736] bg-[#242323] hover:bg-[#2C2B2B] hover:text-white text-[#D6D5C9] text-[13px] font-medium px-4 py-2 transition-colors disabled:opacity-40 disabled:pointer-events-none flex items-center shrink-0 justify-center min-w-[100px] cursor-pointer"
+                            className="rounded-lg border border-[#383736] bg-[#242323] hover:bg-[#2C2B2B] hover:text-white text-[#D6D5C9] text-[12.5px] sm:text-[13px] font-medium px-3 sm:px-4 py-1.5 sm:py-2 transition-colors disabled:opacity-40 disabled:pointer-events-none flex items-center shrink-0 justify-center cursor-pointer"
                         >
                             {isSubmitting ? (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5 sm:gap-2">
                                     <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                    <span>Analyzing...</span>
+                                    <span className="hidden sm:inline">Analyzing...</span>
                                 </div>
                             ) : (
                                 <span>Submit PR</span>
@@ -209,103 +213,116 @@ export const ReviewPage: React.FC<ReviewPageProps> = () => {
                     )}
                 </div>
 
-                {/* Subheading: Recent Reviews */}
-                <div className="mb-3">
-                    <h2 className="text-[18px] font-semibold text-[#D6D5C9]">Recent Reviews</h2>
-                </div>
+                {/* Subheading + Search & Sort Controls (only show when reviews exist) */}
+                {reviews.length > 0 && (
+                    <>
+                        <div className="mb-2 sm:mb-3">
+                            <h2 className="text-[16px] sm:text-[18px] font-semibold text-[#D6D5C9]">
+                                Recent Reviews
+                            </h2>
+                        </div>
 
-                {/* Search Bar & Sort Dropdown Row */}
-                <div className="relative z-10 mb-4 flex w-full items-center justify-between gap-2 sm:gap-4">
-                    <div className="relative flex-1 max-w-full md:max-w-[320px]">
-                        <Icons.Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7B7A79]" />
-                        <input
-                            type="text"
-                            placeholder="Search reviews..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full rounded-lg border border-[#282828] bg-[#202020] py-1.5 pl-9 pr-4 text-[13px] text-[#949494] transition-colors placeholder:text-[#949494] hover:bg-[#282828] focus:border-[#7B7A79] focus:bg-[#202020] focus:outline-none"
-                        />
-                    </div>
-
-                    <div className="relative shrink-0" ref={sortDropdownRef}>
-                        <button
-                            onClick={() => setIsSortOpen(!isSortOpen)}
-                            className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-[#282828] bg-[#202020] px-2.5 sm:px-4 py-1.5 text-[12px] sm:text-[13px] text-[#949494] transition-colors hover:bg-[#282828] cursor-pointer"
-                        >
-                            <span className="hidden sm:inline">Sort:</span>{' '}
-                            {sortOption === 'newest' ? 'Newest' : 'Oldest'}
-                            <Icons.ChevronDown className="h-3.5 w-3.5 text-[#7B7A79]" />
-                        </button>
-                        {isSortOpen && (
-                            <div className="absolute right-0 top-full mt-2 z-50 w-48 rounded-xl border border-[#383736] bg-[#1E1E1E] py-2 shadow-xl">
-                                <div className="mb-1 border-b border-[#383736] px-3 pb-2 text-[12px] font-medium text-[#7B7A79]">
-                                    Sort by
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        setSortOption('newest')
-                                        setIsSortOpen(false)
-                                    }}
-                                    className="flex w-full items-center justify-between px-3 py-1.5 text-[13px] text-[#D6D5C9] hover:bg-[#242323] cursor-pointer"
-                                >
-                                    Newest first
-                                    {sortOption === 'newest' && <Icons.Check className="h-4 w-4" />}
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setSortOption('oldest')
-                                        setIsSortOpen(false)
-                                    }}
-                                    className="flex w-full items-center justify-between px-3 py-1.5 text-[13px] text-[#D6D5C9] hover:bg-[#242323] cursor-pointer"
-                                >
-                                    Oldest first
-                                    {sortOption === 'oldest' && <Icons.Check className="h-4 w-4" />}
-                                </button>
+                        {/* Search Bar & Sort Dropdown Row */}
+                        <div className="relative z-10 mb-4 flex w-full items-center justify-between gap-2 sm:gap-4">
+                            <div className="relative flex-1 max-w-full md:max-w-[320px]">
+                                <Icons.Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7B7A79]" />
+                                <input
+                                    type="text"
+                                    placeholder="Search reviews..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full rounded-lg border border-[#282828] bg-[#202020] py-1.5 pl-9 pr-4 text-[13px] text-[#949494] transition-colors placeholder:text-[#949494] hover:bg-[#282828] focus:border-[#7B7A79] focus:bg-[#202020] focus:outline-none"
+                                />
                             </div>
-                        )}
-                    </div>
-                </div>
+
+                            <div className="relative shrink-0" ref={sortDropdownRef}>
+                                <button
+                                    onClick={() => setIsSortOpen(!isSortOpen)}
+                                    className="flex items-center gap-1.5 sm:gap-2 rounded-lg border border-[#282828] bg-[#202020] px-2.5 sm:px-4 py-1.5 text-[12px] sm:text-[13px] text-[#949494] transition-colors hover:bg-[#282828] cursor-pointer"
+                                >
+                                    <span className="hidden sm:inline">Sort:</span>{' '}
+                                    {sortOption === 'newest' ? 'Newest' : 'Oldest'}
+                                    <Icons.ChevronDown className="h-3.5 w-3.5 text-[#7B7A79]" />
+                                </button>
+                                {isSortOpen && (
+                                    <div className="absolute right-0 top-full mt-2 z-50 w-48 rounded-xl border border-[#383736] bg-[#1E1E1E] py-2 shadow-xl">
+                                        <div className="mb-1 border-b border-[#383736] px-3 pb-2 text-[12px] font-medium text-[#7B7A79]">
+                                            Sort by
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setSortOption('newest')
+                                                setIsSortOpen(false)
+                                            }}
+                                            className="flex w-full items-center justify-between px-3 py-1.5 text-[13px] text-[#D6D5C9] hover:bg-[#242323] cursor-pointer"
+                                        >
+                                            Newest first
+                                            {sortOption === 'newest' && (
+                                                <Icons.Check className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setSortOption('oldest')
+                                                setIsSortOpen(false)
+                                            }}
+                                            className="flex w-full items-center justify-between px-3 py-1.5 text-[13px] text-[#D6D5C9] hover:bg-[#242323] cursor-pointer"
+                                        >
+                                            Oldest first
+                                            {sortOption === 'oldest' && (
+                                                <Icons.Check className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )}
 
                 {/* Review List View */}
                 {isLoading ? (
-                    <div className="min-h-[300px] flex flex-col gap-2 pb-4">
+                    <div className="min-h-[160px] md:min-h-[300px] flex flex-col gap-2 pb-4">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                            <div
+                                key={`review-skeleton-mob-${index}`}
+                                className="md:hidden flex flex-col p-3 bg-[#191919]/60 rounded-xl border border-[#242323] gap-2"
+                            >
+                                <Skeleton className="h-4 w-[60%] bg-white/[0.06] rounded" />
+                                <Skeleton className="h-3 w-[85%] bg-white/[0.04] rounded" />
+                                <div className="flex items-center justify-between pt-1 border-t border-[#242323]/50">
+                                    <Skeleton className="h-3.5 w-16 bg-white/[0.04] rounded" />
+                                    <Skeleton className="h-4 w-16 rounded-md bg-white/[0.04]" />
+                                </div>
+                            </div>
+                        ))}
                         {Array.from({ length: 6 }).map((_, index) => (
-                            <React.Fragment key={`review-skeleton-${index}`}>
-                                {/* Mobile review skeleton (< md) */}
-                                <div className="md:hidden flex flex-col p-3.5 bg-[#191919]/60 rounded-xl border border-[#242323] gap-2.5">
-                                    <Skeleton className="h-4 w-[60%] bg-white/[0.06] rounded" />
-                                    <Skeleton className="h-3 w-[85%] bg-white/[0.04] rounded" />
-                                    <div className="flex items-center justify-between pt-1 border-t border-[#242323]/50">
-                                        <Skeleton className="h-3.5 w-16 bg-white/[0.04] rounded" />
-                                        <Skeleton className="h-4 w-16 rounded-md bg-white/[0.04]" />
-                                    </div>
+                            <div
+                                key={`review-skeleton-desk-${index}`}
+                                className="hidden md:grid grid-cols-[minmax(0,1fr)_minmax(85px,auto)_minmax(100px,auto)_minmax(100px,auto)_minmax(100px,auto)] items-center gap-3 md:gap-5 rounded-lg border border-transparent bg-[#191919]/40 px-3 py-2.5"
+                            >
+                                <div className="flex flex-col gap-1.5 w-full pr-4 min-w-0 justify-center">
+                                    <Skeleton className="h-4 w-[60%] bg-white/[0.06]" />
+                                    <Skeleton className="h-3 w-[85%] bg-white/[0.04]" />
                                 </div>
-
-                                {/* Desktop review skeleton (>= md) */}
-                                <div className="hidden md:grid grid-cols-[minmax(0,1fr)_minmax(85px,auto)_minmax(100px,auto)_minmax(100px,auto)_minmax(100px,auto)] items-center gap-3 md:gap-5 rounded-lg border border-transparent bg-[#191919]/40 px-3 py-2.5">
-                                    <div className="flex flex-col gap-1.5 w-full pr-4 min-w-0 justify-center">
-                                        <Skeleton className="h-4 w-[60%] bg-white/[0.06]" />
-                                        <Skeleton className="h-3 w-[85%] bg-white/[0.04]" />
-                                    </div>
-                                    <div className="truncate">
-                                        <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
-                                    </div>
-                                    <div className="flex items-center gap-1.5 min-w-0">
-                                        <Skeleton className="h-5 w-20 rounded-md bg-white/[0.04]" />
-                                    </div>
-                                    <div className="flex items-center">
-                                        <Skeleton className="h-5 w-16 rounded-md bg-white/[0.04]" />
-                                    </div>
-                                    <div className="flex items-center justify-end">
-                                        <Skeleton className="h-5 w-20 rounded-md bg-white/[0.04]" />
-                                    </div>
+                                <div className="truncate">
+                                    <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
                                 </div>
-                            </React.Fragment>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <Skeleton className="h-5 w-20 rounded-md bg-white/[0.04]" />
+                                </div>
+                                <div className="flex items-center">
+                                    <Skeleton className="h-5 w-16 rounded-md bg-white/[0.04]" />
+                                </div>
+                                <div className="flex items-center justify-end">
+                                    <Skeleton className="h-5 w-20 rounded-md bg-white/[0.04]" />
+                                </div>
+                            </div>
                         ))}
                     </div>
                 ) : filteredReviews.length === 0 ? (
-                    <div className="flex min-h-[360px] flex-col items-center justify-center px-6 py-16 text-center">
-                        <div className="relative mb-6 h-28 w-32">
+                    <div className="flex min-h-[180px] md:min-h-[360px] flex-col items-center justify-center px-4 py-8 md:py-16 text-center">
+                        <div className="relative mb-3 md:mb-6 h-16 w-20 md:h-28 md:w-32">
                             <svg
                                 viewBox="0 0 128 112"
                                 fill="none"
@@ -327,9 +344,13 @@ export const ReviewPage: React.FC<ReviewPageProps> = () => {
                                 />
                             </svg>
                         </div>
-                        <h2 className="text-[17px] font-medium text-[#D6D5C9]">No reviews found</h2>
-                        <p className="mt-2 max-w-sm text-[13px] leading-6 text-[#7B7A79]">
-                            Submit a PR URL above to generate your first review report.
+                        <h2 className="text-[15px] md:text-[17px] font-medium text-[#D6D5C9]">
+                            {reviews.length === 0 ? 'No reviews found' : 'No matching reviews'}
+                        </h2>
+                        <p className="mt-1 md:mt-2 max-w-sm text-[12.5px] md:text-[13px] leading-5 md:leading-6 text-[#7B7A79]">
+                            {reviews.length === 0
+                                ? 'Submit a PR URL above to generate your first review report.'
+                                : 'Try adjusting your search or filters.'}
                         </p>
                     </div>
                 ) : (

@@ -2,6 +2,7 @@ import { GlobalRegistrator } from '@happy-dom/global-registrator'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { expect, test, describe, mock, afterEach } from 'bun:test'
 import React from 'react'
+import { MemoryRouter } from 'react-router-dom'
 
 import { WikiView } from '../src/features/wiki/components/WikiView'
 
@@ -31,13 +32,15 @@ describe('WikiView Component', () => {
 
         render(
             <QueryClientProvider client={queryClient}>
-                <WikiView
-                    initialData={{
-                        githubConnected: false,
-                        repos: [],
-                    }}
-                    onConnectGitHub={onConnectMock}
-                />
+                <MemoryRouter>
+                    <WikiView
+                        initialData={{
+                            githubConnected: false,
+                            repos: [],
+                        }}
+                        onConnectGitHub={onConnectMock}
+                    />
+                </MemoryRouter>
             </QueryClientProvider>
         )
 
@@ -75,12 +78,14 @@ describe('WikiView Component', () => {
 
         render(
             <QueryClientProvider client={queryClient}>
-                <WikiView
-                    initialData={{
-                        githubConnected: true,
-                        repos: mockRepos,
-                    }}
-                />
+                <MemoryRouter>
+                    <WikiView
+                        initialData={{
+                            githubConnected: true,
+                            repos: mockRepos,
+                        }}
+                    />
+                </MemoryRouter>
             </QueryClientProvider>
         )
 
@@ -116,13 +121,15 @@ describe('WikiView Component', () => {
 
         render(
             <QueryClientProvider client={queryClient}>
-                <WikiView
-                    initialData={{
-                        githubConnected: true,
-                        repos: mockRepos,
-                    }}
-                    onOpenWiki={onOpenWikiMock}
-                />
+                <MemoryRouter>
+                    <WikiView
+                        initialData={{
+                            githubConnected: true,
+                            repos: mockRepos,
+                        }}
+                        onOpenWiki={onOpenWikiMock}
+                    />
+                </MemoryRouter>
             </QueryClientProvider>
         )
 
@@ -148,12 +155,14 @@ describe('WikiView Component', () => {
 
         render(
             <QueryClientProvider client={queryClient}>
-                <WikiView
-                    initialData={{
-                        githubConnected: true,
-                        repos: mockRepos,
-                    }}
-                />
+                <MemoryRouter>
+                    <WikiView
+                        initialData={{
+                            githubConnected: true,
+                            repos: mockRepos,
+                        }}
+                    />
+                </MemoryRouter>
             </QueryClientProvider>
         )
 

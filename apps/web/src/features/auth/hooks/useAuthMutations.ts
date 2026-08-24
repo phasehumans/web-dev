@@ -162,7 +162,7 @@ export const useAuthMutations = ({
 
     const githubLogin = () => {
         const clientId = getGithubClientId()
-        const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&state=auth&scope=user:email%20repo`
+        const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&state=auth&scope=read:user%20user:email`
         window.location.href = url
     }
 

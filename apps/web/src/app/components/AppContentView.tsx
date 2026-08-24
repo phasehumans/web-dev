@@ -128,6 +128,7 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
                         <HomeHero
                             onPromptSubmit={onHomePromptSubmit}
                             onOpenAuth={onOpenAuth}
+                            onOpenProject={onOpenProject}
                             onImportGithub={onImportGithub}
                             onImportZip={onImportZip}
                             onResetImportState={onResetImportState}

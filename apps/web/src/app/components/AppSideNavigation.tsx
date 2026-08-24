@@ -8,6 +8,7 @@ import { Icons } from '@/shared/components/ui/Icons'
 
 interface AppSideNavigationProps {
     showSidebar: boolean
+    currentView?: ViewState
     isMobileSidebarOpen: boolean
     setIsMobileSidebarOpen: (isOpen: boolean) => void
     onNewThread: () => void
@@ -22,6 +23,7 @@ interface AppSideNavigationProps {
 
 export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
     showSidebar,
+    currentView,
     isMobileSidebarOpen,
     setIsMobileSidebarOpen,
     onNewThread,
@@ -35,6 +37,15 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
 }) => {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(isWorkspaceScreen)
     const prevIsWorkspaceRef = useRef(isWorkspaceScreen)
+
+    const showFloatingMobileToggle =
+        currentView !== 'sessions' &&
+        currentView !== 'review' &&
+        currentView !== 'wiki' &&
+        currentView !== 'templates' &&
+        currentView !== 'profile' &&
+        currentView !== 'canvas' &&
+        !isWorkspaceScreen
 
     useEffect(() => {
         if (isWorkspaceScreen && !prevIsWorkspaceRef.current) {
@@ -78,15 +89,17 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
                 onExpand={() => setIsSidebarCollapsed(false)}
             />
 
-            <div className="md:hidden fixed top-0 left-0 h-11 px-4 z-50 flex items-center pointer-events-none">
-                <button
-                    onClick={() => setIsMobileSidebarOpen(true)}
-                    className="pointer-events-auto w-7 h-7 text-[#8F8E8D] hover:text-[#D4D4D8] hover:bg-[#252525] rounded-full transition-colors flex items-center justify-center cursor-pointer outline-none"
-                    aria-label="Open sidebar"
-                >
-                    <Icons.SidebarToggle className="w-[18px] h-[18px]" />
-                </button>
-            </div>
+            {showFloatingMobileToggle && (
+                <div className="md:hidden fixed top-0 left-0 h-11 px-4 z-50 flex items-center pointer-events-none">
+                    <button
+                        onClick={() => setIsMobileSidebarOpen(true)}
+                        className="pointer-events-auto w-7 h-7 text-[#8F8E8D] hover:text-[#D4D4D8] hover:bg-[#252525] rounded-full transition-colors flex items-center justify-center cursor-pointer outline-none"
+                        aria-label="Open sidebar"
+                    >
+                        <Icons.SidebarToggle className="w-[18px] h-[18px]" />
+                    </button>
+                </div>
+            )}
 
             <MobileSidebar
                 isOpen={isMobileSidebarOpen}

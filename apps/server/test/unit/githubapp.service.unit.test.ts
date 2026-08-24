@@ -42,17 +42,27 @@ describe('GitHubApp Service - Unit Tests', () => {
             const originalUpsert = githubAppRepository.upsertInstallation
             let calledWith: any = null
 
-            githubAppRepository.upsertInstallation = (async (installationId, userId) => {
-                calledWith = { installationId, userId }
-                return { id: 'inst-1', installationId, userId } as any
+            githubAppRepository.upsertInstallation = (async (data: any) => {
+                calledWith = data
+                return { id: 'inst-1', ...data } as any
             }) as any
 
             try {
                 const res = await githubAppService.processInstallation({
                     installationId: 'install-100',
                     userId: 'user-1',
+                    accountLogin: 'test-user',
+                    accountType: 'User',
+                    targetType: 'selected',
                 })
-                expect(calledWith).toEqual({ installationId: 'install-100', userId: 'user-1' })
+                expect(calledWith).toEqual({
+                    installationId: 'install-100',
+                    userId: 'user-1',
+                    accountLogin: 'test-user',
+                    accountType: 'User',
+                    targetType: 'selected',
+                    permissions: undefined,
+                })
                 expect(res.installationId).toBe('install-100')
             } finally {
                 githubAppRepository.upsertInstallation = originalUpsert
@@ -65,7 +75,7 @@ describe('GitHubApp Service - Unit Tests', () => {
             const originalDelete = githubAppRepository.deleteInstallation
             let calledWith: any = null
 
-            githubAppRepository.deleteInstallation = (async (installationId) => {
+            githubAppRepository.deleteInstallation = (async (installationId: string) => {
                 calledWith = { installationId }
                 return { id: 'inst-1', installationId } as any
             }) as any
@@ -75,9 +85,76 @@ describe('GitHubApp Service - Unit Tests', () => {
                     installationId: 'install-100',
                 })
                 expect(calledWith).toEqual({ installationId: 'install-100' })
-                expect(res.installationId).toBe('install-100')
+                expect(res?.installationId).toBe('install-100')
             } finally {
                 githubAppRepository.deleteInstallation = originalDelete
+            }
+        })
+    })
+
+    describe('getUserInstallationStatus', () => {
+        it('should return installed: false when no installation exists', async () => {
+            const originalFindByUserId = githubAppRepository.findByUserId
+            githubAppRepository.findByUserId = (async () => null) as any
+
+            try {
+                const status = await githubAppService.getUserInstallationStatus({
+                    userId: 'user-404',
+                })
+                expect(status).toEqual({
+                    installed: false,
+                    installationId: null,
+                    accountLogin: null,
+                    accountType: null,
+                    targetType: null,
+                })
+            } finally {
+                githubAppRepository.findByUserId = originalFindByUserId
+            }
+        })
+
+        it('should return installed: true and metadata when installation exists', async () => {
+            const originalFindByUserId = githubAppRepository.findByUserId
+            githubAppRepository.findByUserId = (async () => ({
+                id: 'inst-row-1',
+                installationId: '123456',
+                userId: 'user-1',
+                accountLogin: 'octocat',
+                accountType: 'User',
+                targetType: 'selected',
+                permissions: {},
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            })) as any
+
+            try {
+                const status = await githubAppService.getUserInstallationStatus({
+                    userId: 'user-1',
+                })
+                expect(status).toEqual({
+                    installed: true,
+                    installationId: '123456',
+                    accountLogin: 'octocat',
+                    accountType: 'User',
+                    targetType: 'selected',
+                })
+            } finally {
+                githubAppRepository.findByUserId = originalFindByUserId
+            }
+        })
+    })
+
+    describe('getUserInstallationToken', () => {
+        it('should throw AppError 400 when installation does not exist', async () => {
+            const originalFindByUserId = githubAppRepository.findByUserId
+            githubAppRepository.findByUserId = (async () => null) as any
+
+            try {
+                await expect(
+                    githubAppService.getUserInstallationToken({ userId: 'user-none' })
+                ).rejects.toThrow('GitHub App is not installed for this account')
+            } finally {
+                githubAppRepository.findByUserId = originalFindByUserId
             }
         })
     })

@@ -118,11 +118,13 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
             if (!anchor) return
 
             const rect = anchor.getBoundingClientRect()
+            const popoverWidth = Math.min(280, window.innerWidth - 20)
+            const left = Math.max(10, Math.min(rect.left, window.innerWidth - popoverWidth - 10))
 
             setPosition({
                 bottom: window.innerHeight - rect.top + 12,
-                left: rect.left - 250,
-                width: 280,
+                left,
+                width: popoverWidth,
             })
         }
 
@@ -313,7 +315,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
                     {isMenuOpen && (
                         <div
                             ref={menuRef}
-                            className="absolute right-[-130px] top-8 z-[110] w-[160px] rounded-2xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-lg p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
+                            className="absolute right-0 top-8 z-[110] w-[160px] rounded-xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-2xl p-1.5 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
                         >
                             <button
                                 onClick={() => {

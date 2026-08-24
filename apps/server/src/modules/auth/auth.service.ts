@@ -394,7 +394,7 @@ const google = async (data: Google) => {
 }
 
 const github = async (data: Github) => {
-    const { name, email, sub, userAgent, ipAddress } = data
+    const { name, email, sub, username: ghUsername, userAgent, ipAddress } = data
 
     let user = await authRepository.findUserByEmail(email)
 
@@ -407,6 +407,12 @@ const github = async (data: Github) => {
             githubId: sub,
             name: name,
         })
+
+        if (ghUsername) {
+            user = await authRepository.updateUser(user.id, {
+                githubUsername: ghUsername,
+            })
+        }
 
         try {
             await notificationService.sendNotificationToUser({
@@ -430,12 +436,17 @@ const github = async (data: Github) => {
     } else if (!user.githubId) {
         user = await authRepository.updateUser(user.id, {
             githubId: sub,
+            githubUsername: ghUsername || user.githubUsername,
             emailVerified: true,
             otpHash: null,
             otpExpiresAt: null,
         })
     } else if (user.githubId !== sub) {
         throw new AppError('github id mismatch', 400)
+    } else if (ghUsername && user.githubUsername !== ghUsername) {
+        user = await authRepository.updateUser(user.id, {
+            githubUsername: ghUsername,
+        })
     }
 
     const sessionId = crypto.randomUUID()

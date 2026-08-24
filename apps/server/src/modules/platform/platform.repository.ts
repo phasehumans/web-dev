@@ -62,6 +62,7 @@ async function findUserGithubConnection(id: string) {
             githubToken: true,
             githubUsername: true,
             githubConnected: true,
+            githubAppInstall: true,
         },
     })
 }

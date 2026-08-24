@@ -172,4 +172,34 @@ describe('GitHubApp Module Integration Tests', () => {
             githubAppService.processUninstallation = originalUninstall
         }
     })
+
+    it('7. GET /api/v1/githubapp/callback - links installation and redirects (302)', async () => {
+        const state = encodeURIComponent(`${testUserId}|/profile/integrations`)
+        const res = await request(app)
+            .get(
+                `/api/v1/githubapp/callback?installation_id=98765&setup_action=install&state=${state}`
+            )
+            .set('x-forwarded-for', getRandomIP())
+
+        expect(res.status).toBe(302)
+        expect(res.headers.location).toContain('/profile/integrations')
+
+        const installation = await prisma.githubAppInstallation.findUnique({
+            where: { installationId: '98765' },
+        })
+        expect(installation).toBeDefined()
+        expect(installation?.userId).toBe(testUserId)
+    })
+
+    it('8. GET /api/v1/githubapp/status - returns installation status for authenticated user (200)', async () => {
+        const res = await request(app)
+            .get('/api/v1/githubapp/status')
+            .set('x-forwarded-for', getRandomIP())
+            .set('Authorization', `Bearer ${accessToken}`)
+
+        expect(res.status).toBe(200)
+        expect(res.body.success).toBe(true)
+        expect(res.body.data.installed).toBe(true)
+        expect(res.body.data.installationId).toBe('98765')
+    })
 })

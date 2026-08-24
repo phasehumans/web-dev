@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 
 import { WikiReader } from './WikiReader'
 
+import { MobileBreadcrumbsHeader } from '@/features/navigation/components/MobileBreadcrumbsHeader'
 import { apiFetch } from '@/shared/api/client'
 import { Icons } from '@/shared/components/ui/Icons'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
@@ -193,8 +194,9 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
 
     if (isLoading && !data) {
         return (
-            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16 text-gray-100">
-                <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
+            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar text-gray-100">
+                <MobileBreadcrumbsHeader currentPage="Wiki" />
+                <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6 px-3.5 sm:px-6 pb-8 pt-4 md:p-16">
                     {/* Top Header */}
                     <div className="mb-2 flex flex-col">
                         <h1 className="text-[24px] font-medium text-[#D6D5C9] mb-1">Wiki</h1>
@@ -280,8 +282,9 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
 
     if (data && !data.githubConnected) {
         return (
-            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16 text-gray-100">
-                <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
+            <div className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar text-gray-100">
+                <MobileBreadcrumbsHeader currentPage="Wiki" />
+                <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6 px-3.5 sm:px-6 pb-8 pt-4 md:p-16">
                     {/* Top Header */}
                     <div className="mb-2 flex flex-col">
                         <h1 className="text-[24px] font-medium text-[#D6D5C9] mb-1">Wiki</h1>
@@ -318,8 +321,9 @@ export const WikiView: React.FC<WikiViewProps> = ({ onConnectGitHub, onOpenWiki,
     }
 
     return (
-        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16 text-gray-100">
-            <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6">
+        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar text-gray-100">
+            <MobileBreadcrumbsHeader currentPage="Wiki" />
+            <div className="relative z-10 mx-auto max-w-6xl flex flex-col gap-6 px-3.5 sm:px-6 pb-8 pt-4 md:p-16">
                 {/* Top Header (Matches Sessions & Review Page structure) */}
                 <div className="mb-2 flex flex-col">
                     <h1 className="text-[24px] font-medium text-[#D6D5C9] mb-1">Wiki</h1>

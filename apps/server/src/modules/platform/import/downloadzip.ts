@@ -13,12 +13,14 @@ const execAsync = promisify(exec)
 export async function downloadGitHubRepoArchive(
     owner: string,
     repo: string,
-    accessToken: string,
+    accessToken?: string,
     ref?: string
 ): Promise<DownloadedGitHubRepoArchive> {
     const resolvedRef = ref ?? null
     const tempRootDir = join(importStagingRootDir(), `github-${owner}-${repo}-${randomUUID()}`)
-    const cloneUrl = `https://${accessToken}@github.com/${owner}/${repo}.git`
+    const cloneUrl = accessToken
+        ? `https://x-access-token:${accessToken}@github.com/${owner}/${repo}.git`
+        : `https://github.com/${owner}/${repo}.git`
 
     try {
         await mkdir(tempRootDir, { recursive: true })

@@ -49,6 +49,7 @@ export type Github = {
     name: string
     email: string
     sub: string
+    username?: string
     userAgent?: string
     ipAddress?: string
 }

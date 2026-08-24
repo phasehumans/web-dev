@@ -1,6 +1,7 @@
 import { prisma } from '@december/database'
 
 import { AppError } from '../../shared/appError'
+import { githubAppService } from '../githubapp/githubapp.service'
 
 import { wikiRepository as wikiRepo } from './wiki.repository'
 import { slugify } from './wiki.utils'
@@ -18,6 +19,43 @@ import type {
 
 const getUserGitHubRepos = async (data: GetUserGitHubRepos): Promise<GitHubReposResponse> => {
     const { userId } = data
+
+    const existingWikis = await wikiRepo.findWikisByUser(userId)
+    const wikiMap = new Map(existingWikis.map((w) => [w.repoFullName.toLowerCase(), w]))
+
+    try {
+        const appRepos = await githubAppService.getUserInstallationRepos({ userId })
+        if (appRepos && appRepos.length > 0) {
+            const repos = appRepos.map((repo) => {
+                const fullName = repo.fullName
+                const wiki = wikiMap.get(fullName.toLowerCase())
+                return {
+                    id: String(repo.id || repo.name),
+                    name: repo.name,
+                    fullName,
+                    owner: repo.owner.login,
+                    isPrivate: Boolean(repo.private),
+                    description: repo.description || null,
+                    status: (wiki?.status || 'IDLE') as any,
+                    wikiId: wiki?.id,
+                    defaultBranch: repo.defaultBranch || 'main',
+                    updatedAt: repo.updatedAt || new Date().toISOString(),
+                    isGenerating: wiki?.status === 'GENERATING',
+                    hasWiki: Boolean(wiki),
+                    wikiStatus: wiki?.status || null,
+                    isPinned: wiki?.isPinned ?? false,
+                }
+            })
+
+            return {
+                githubConnected: true,
+                repos,
+            }
+        }
+    } catch {
+        // Intentionally swallowed: fallback to user token below if app repos failed
+    }
+
     const user = await prisma.user.findUnique({
         where: { id: userId },
         select: { githubConnected: true, githubToken: true, githubUsername: true },
@@ -32,9 +70,6 @@ const getUserGitHubRepos = async (data: GetUserGitHubRepos): Promise<GitHubRepos
         }
     }
 
-    const existingWikis = await wikiRepo.findWikisByUser(userId)
-    const wikiMap = new Map(existingWikis.map((w) => [w.repoFullName.toLowerCase(), w]))
-
     let fetchedRepos: any[] = []
 
     try {
@@ -45,6 +80,7 @@ const getUserGitHubRepos = async (data: GetUserGitHubRepos): Promise<GitHubRepos
                     'User-Agent': 'December-App',
                     Accept: 'application/vnd.github.v3+json',
                 },
+                signal: AbortSignal.timeout(1500),
             })
             if (res.ok) {
                 const list = await res.json()
@@ -62,6 +98,7 @@ const getUserGitHubRepos = async (data: GetUserGitHubRepos): Promise<GitHubRepos
                         'User-Agent': 'December-App',
                         Accept: 'application/vnd.github.v3+json',
                     },
+                    signal: AbortSignal.timeout(1500),
                 }
             )
             if (res.ok) {
@@ -72,7 +109,7 @@ const getUserGitHubRepos = async (data: GetUserGitHubRepos): Promise<GitHubRepos
             }
         }
     } catch (err) {
-        console.error('Failed to fetch user GitHub repos from API:', err)
+        // Intentionally swallowed: return empty fetchedRepos fallback on network timeout or rate limit
     }
 
     const repos = fetchedRepos.map((repo: any) => {

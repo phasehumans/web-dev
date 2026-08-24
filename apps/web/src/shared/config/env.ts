@@ -87,6 +87,12 @@ export const getGithubClientId = (): string => {
     )
 }
 
+export const getGithubAppName = (): string => {
+    return (
+        getClientEnv('GITHUB_APP_NAME') ?? getClientEnv('PUBLIC_GITHUB_APP_NAME') ?? 'december-bot'
+    )
+}
+
 export const getGoogleClientId = (): string => {
     return (
         getClientEnv('GOOGLE_CLIENT_ID') ??
