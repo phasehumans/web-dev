@@ -354,22 +354,46 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         [onClose, onNewThread, navigate]
     )
 
-    const defaultRecentIds = useMemo(() => ['go-projects', 'go-settings-account'], [])
-    const activeRecentIds = recentIds.length > 0 ? recentIds : defaultRecentIds
+    const [isMobile, setIsMobile] = useState(() =>
+        typeof window !== 'undefined' ? window.innerWidth < 768 : false
+    )
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768)
+        }
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     const recentItems = useMemo(
         () =>
-            activeRecentIds
+            recentIds
                 .map((id) => allItems.find((i) => i.id === id))
                 .filter((i): i is SearchItem => Boolean(i))
                 .map((i) => ({ ...i, category: 'Recent' as const })),
-        [activeRecentIds, allItems]
+        [recentIds, allItems]
+    )
+
+    const navigationItems = useMemo(
+        () => allItems.filter((item) => item.category === 'Navigation'),
+        [allItems]
     )
 
     const displayedItems: SearchItem[] = useMemo(() => {
         if (searchQuery.trim() === '') {
-            // Show recent items first, then all remaining items
-            return [...recentItems, ...allItems]
+            if (isMobile) {
+                // In mobile view: show Recent (if any) and Navigation
+                if (recentItems.length > 0) {
+                    return [...recentItems, ...navigationItems]
+                }
+                return navigationItems
+            }
+            // Desktop view: show recent items first if any, then all remaining items
+            if (recentItems.length > 0) {
+                return [...recentItems, ...allItems]
+            }
+            return allItems
         }
         const query = searchQuery.toLowerCase()
         return allItems.filter(
@@ -379,9 +403,19 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 item.category.toLowerCase().includes(query) ||
                 item.keywords?.some((k) => k.toLowerCase().includes(query))
         )
-    }, [searchQuery, recentItems, allItems])
+    }, [searchQuery, isMobile, recentItems, navigationItems, allItems])
 
-    const categories: SearchCategory[] = ['Recent', 'Navigation', 'Settings Subpages']
+    const categories: SearchCategory[] = useMemo(() => {
+        if (searchQuery.trim() === '') {
+            if (isMobile) {
+                return recentItems.length > 0 ? ['Recent', 'Navigation'] : ['Navigation']
+            }
+            return recentItems.length > 0
+                ? ['Recent', 'Navigation', 'Settings Subpages']
+                : ['Navigation', 'Settings Subpages']
+        }
+        return ['Recent', 'Navigation', 'Settings Subpages']
+    }, [searchQuery, isMobile, recentItems.length])
 
     useEffect(() => {
         setSelectedIndex(0)
@@ -435,27 +469,27 @@ export const SearchModal: React.FC<SearchModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 bg-black/40 z-[200] flex items-start justify-center pt-[15vh] p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/50 z-[200] flex items-center sm:items-start justify-center p-3 sm:p-4 sm:pt-[15vh] animate-in fade-in duration-200"
             onClick={onClose}
         >
             <div
-                className="w-full max-w-[648px] bg-[#1E1E1E] border border-[#282828] rounded-[14px] shadow-[0_0_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
+                className="w-full max-w-[360px] xs:max-w-[420px] sm:max-w-[648px] bg-[#1E1E1E] border border-[#282828] rounded-xl sm:rounded-[14px] shadow-[0_0_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Search input */}
-                <div className="flex items-center px-4 py-3.5 border-b border-[#282828] bg-[#1E1E1E]">
-                    <Icons.Search className="w-4 h-4 text-[#888888] mr-3 shrink-0" />
+                <div className="flex items-center px-3.5 py-3 sm:px-4 sm:py-3.5 border-b border-[#282828] bg-[#1E1E1E]">
+                    <Icons.Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888888] mr-2.5 sm:mr-3 shrink-0" />
                     <input
                         ref={inputRef}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Type a page, subpage, or topic..."
-                        className="w-full bg-transparent text-[14.5px] font-medium text-[#EDEDED] placeholder-[#777777] focus:outline-none caret-white font-sans"
+                        placeholder="Search pages or topics..."
+                        className="w-full bg-transparent text-[13.5px] sm:text-[14.5px] font-medium text-[#EDEDED] placeholder-[#777777] focus:outline-none caret-white font-sans"
                     />
                 </div>
 
                 {/* Results list */}
-                <div className="flex flex-col py-2 max-h-[428px] overflow-y-auto no-scrollbar">
+                <div className="flex flex-col py-1.5 sm:py-2 max-h-[300px] sm:max-h-[428px] overflow-y-auto no-scrollbar">
                     {categories.map((category) => {
                         const categoryItems = displayedItems.filter(
                             (item) => item.category === category
@@ -463,13 +497,11 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                         if (categoryItems.length === 0) return null
 
                         return (
-                            <div key={category} className="flex flex-col mb-2 last:mb-0">
-                                <div className="px-4 py-1.5 mt-1 text-[12px] font-semibold text-[#7B7A79]">
-                                    {category === 'Recent' && recentIds.length === 0
-                                        ? 'Recommendations'
-                                        : category}
+                            <div key={category} className="flex flex-col mb-1.5 sm:mb-2 last:mb-0">
+                                <div className="px-3.5 sm:px-4 py-1 sm:py-1.5 text-[11px] sm:text-[12px] font-semibold text-[#7B7A79]">
+                                    {category}
                                 </div>
-                                <div className="flex flex-col gap-0.5 px-2 pb-1">
+                                <div className="flex flex-col gap-0.5 px-1.5 sm:px-2 pb-0.5">
                                     {categoryItems.map((item, localIdx) => {
                                         const itemIndex = currentIndex++
                                         const isSelected = itemIndex === selectedIndex
@@ -484,20 +516,20 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                                 }}
                                                 onMouseEnter={() => setSelectedIndex(itemIndex)}
                                                 className={cn(
-                                                    'flex items-center justify-between px-3 py-2 rounded-lg transition-colors w-full text-left outline-none cursor-pointer group',
+                                                    'flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg transition-colors w-full text-left outline-none cursor-pointer group',
                                                     isSelected
                                                         ? 'bg-[#2A2928]'
                                                         : 'hover:bg-[#2A2928]/40'
                                                 )}
                                             >
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                                                     <div className="shrink-0 text-[#888888] group-hover:text-[#EDEDED] flex items-center justify-center">
                                                         {item.icon}
                                                     </div>
                                                     <div className="flex items-baseline min-w-0 gap-2 truncate">
                                                         <span
                                                             className={cn(
-                                                                'text-[14px] font-medium transition-colors',
+                                                                'text-[13px] sm:text-[14px] font-medium transition-colors truncate',
                                                                 isSelected
                                                                     ? 'text-[#EDEDED]'
                                                                     : 'text-[#D6D5D4]'
@@ -506,7 +538,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                                                             {item.label}
                                                         </span>
                                                         {item.subtitle && (
-                                                            <span className="text-[13px] text-[#7B7A79] transition-colors truncate">
+                                                            <span className="text-[11.5px] sm:text-[13px] text-[#7B7A79] transition-colors truncate hidden xs:inline sm:inline">
                                                                 {item.subtitle}
                                                             </span>
                                                         )}
@@ -520,7 +552,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                         )
                     })}
                     {displayedItems.length === 0 && (
-                        <div className="py-8 text-center text-[14px] text-[#7B7A79]">
+                        <div className="py-6 sm:py-8 text-center text-[13px] sm:text-[14px] text-[#7B7A79]">
                             No results found for "{searchQuery}"
                         </div>
                     )}

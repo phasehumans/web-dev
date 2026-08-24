@@ -107,6 +107,12 @@ if [ "$(uname -s)" = "Darwin" ]; then
     xattr -d com.apple.quarantine "${INSTALL_DIR}/${BINARY_NAME}" 2>/dev/null || true
 fi
 
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/december"
+mkdir -p "$CONFIG_DIR"
+if [ ! -f "$CONFIG_DIR/config.json" ]; then
+    echo '{"installMethod":"curl"}' > "$CONFIG_DIR/config.json"
+fi
+
 log_space
 log_step "${BLUE}december successfully installed${RESET} to ${WHITE}${INSTALL_DIR}/${BINARY_NAME}${RESET}"
 

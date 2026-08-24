@@ -63,6 +63,7 @@ const App: React.FC = () => {
             <div className="flex w-full h-dvh bg-background text-textMain overflow-hidden font-sans">
                 <AppSideNavigation
                     showSidebar={showSidebar}
+                    currentView={view}
                     isMobileSidebarOpen={isMobileSidebarOpen}
                     setIsMobileSidebarOpen={setIsMobileSidebarOpen}
                     onNewThread={handleNewThread}

@@ -1,18 +1,52 @@
-import { execSync } from 'node:child_process'
+import fs from 'node:fs'
 import { homedir } from 'node:os'
+import path from 'node:path'
 
 import { Box, Text } from 'ink'
 import React from 'react'
 
 import { THEME } from '../theme'
 
-function getGitBranch(): string | null {
-    try {
-        return execSync('git rev-parse --abbrev-ref HEAD', { stdio: 'pipe' }).toString().trim()
-    } catch {
-        // Intentionally swallowed: fallback to null if git command is unavailable or non-git directory
-        return null
+let cachedBranch: string | null | undefined = undefined
+
+export function clearGitBranchCache() {
+    cachedBranch = undefined
+}
+
+export function getGitBranch(workspaceRoot: string = process.cwd()): string | null {
+    if (cachedBranch !== undefined) {
+        return cachedBranch
     }
+    try {
+        const gitPath = path.resolve(workspaceRoot, '.git')
+        if (fs.existsSync(gitPath)) {
+            const stat = fs.statSync(gitPath)
+            let headPath = path.resolve(gitPath, 'HEAD')
+            if (stat.isFile()) {
+                const content = fs.readFileSync(gitPath, 'utf-8').trim()
+                if (content.startsWith('gitdir:')) {
+                    const gitDir = content.slice(7).trim()
+                    headPath = path.resolve(workspaceRoot, gitDir, 'HEAD')
+                }
+            }
+
+            if (fs.existsSync(headPath)) {
+                const headContent = fs.readFileSync(headPath, 'utf-8').trim()
+                if (headContent.startsWith('ref: refs/heads/')) {
+                    cachedBranch = headContent.replace('ref: refs/heads/', '').trim()
+                    return cachedBranch
+                }
+                if (headContent) {
+                    cachedBranch = headContent.slice(0, 7)
+                    return cachedBranch
+                }
+            }
+        }
+    } catch {
+        // Intentionally swallowed: fallback to null if git branch cannot be resolved
+    }
+    cachedBranch = null
+    return null
 }
 
 function getCwd(): string {
@@ -26,7 +60,7 @@ function getCwd(): string {
     }
 }
 
-export function Header({
+export const Header = React.memo(function Header({
     cliVersion = '0.1.0',
     latestVersion,
     userEmail,
@@ -69,4 +103,4 @@ export function Header({
             </Box>
         </Box>
     )
-}
+})

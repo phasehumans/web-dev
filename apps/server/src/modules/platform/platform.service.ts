@@ -5,6 +5,7 @@ import {
     listPrefix,
     sessionWorkspacePrefix,
 } from '../../shared/project-storage'
+import { githubAppService } from '../githubapp/githubapp.service'
 
 import { platformRepository } from './platform.repository'
 import { buildProjectZip } from './platform.utils'
@@ -19,6 +20,24 @@ import type {
     DeployVercelDirect,
     DeployVercelProject,
 } from './platform.types'
+
+const resolveUserGithubToken = async (userId: string): Promise<string> => {
+    try {
+        const token = await githubAppService.getUserInstallationToken({ userId })
+        if (token) {
+            return token
+        }
+    } catch {
+        // Intentionally swallowed: fallback to legacy user.githubToken below
+    }
+
+    const user = await platformRepository.findUserGithubConnection(userId)
+    if (user?.githubToken) {
+        return user.githubToken
+    }
+
+    throw new AppError('GitHub is not connected. Please connect the December GitHub App.', 400)
+}
 
 const downloadSession = async (data: DownloadSession) => {
     const { sessionId, userId } = data
@@ -76,18 +95,28 @@ const downloadSession = async (data: DownloadSession) => {
 
 const getUserGithubRepos = async (data: ListGithubRepos): Promise<GithubRepo[]> => {
     const { userId } = data
+
+    try {
+        const appRepos = await githubAppService.getUserInstallationRepos({ userId })
+        if (appRepos && appRepos.length > 0) {
+            return appRepos
+        }
+    } catch {
+        // Intentionally swallowed: fallback to user token below if app repos not found
+    }
+
     const user = await platformRepository.findUserGithubConnection(userId)
 
     if (!user) {
         throw new AppError('user not found', 404)
     }
 
-    if (user.githubConnected === false) {
+    if (user.githubConnected === false && !user.githubAppInstall) {
         throw new AppError('github is not connected', 401)
     }
 
     if (!user.githubToken) {
-        throw new AppError('github access token not found', 401)
+        return []
     }
 
     let repos: any[] = []
@@ -142,11 +171,7 @@ const getUserGithubRepos = async (data: ListGithubRepos): Promise<GithubRepo[]> 
 
 const createRepo = async (data: CreateRepo) => {
     const { userId, sessionId } = data
-    const user = await platformRepository.findUserGithubConnection(userId)
-
-    if (!user || !user.githubConnected || !user.githubToken) {
-        throw new AppError('GitHub account not connected', 400)
-    }
+    const githubToken = await resolveUserGithubToken(userId)
 
     const session = await platformRepository.findSessionByIdAndUser({ sessionId, userId })
 
@@ -157,7 +182,7 @@ const createRepo = async (data: CreateRepo) => {
     const response = await fetch('https://api.github.com/user/repos', {
         method: 'POST',
         headers: {
-            Authorization: `Bearer ${user.githubToken}`,
+            Authorization: `Bearer ${githubToken}`,
             Accept: 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28',
             'Content-Type': 'application/json',
@@ -199,11 +224,7 @@ const createRepo = async (data: CreateRepo) => {
 
 const updateRepo = async (data: UpdateRepo) => {
     const { userId, sessionId } = data
-    const user = await platformRepository.findUserGithubConnection(userId)
-
-    if (!user || !user.githubConnected || !user.githubToken) {
-        throw new AppError('GitHub account not connected', 400)
-    }
+    const githubToken = await resolveUserGithubToken(userId)
 
     const session = await platformRepository.findSessionByIdAndUser({ sessionId, userId })
 
@@ -217,7 +238,6 @@ const updateRepo = async (data: UpdateRepo) => {
 
     const repoOwner = session.githubRepoOwner
     const repoName = session.githubRepoName
-    const githubToken = user.githubToken
     const commitMessage = data.commitMessage ?? 'Update session files'
 
     const prefix = sessionWorkspacePrefix(sessionId)

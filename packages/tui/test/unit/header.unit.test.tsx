@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { render } from 'ink-testing-library'
 import React from 'react'
 
-import { Header } from '../../src/components/header'
+import { Header, getGitBranch, clearGitBranchCache } from '../../src/components/header'
 
 describe('Header Component (Unit)', () => {
     it('renders with default version', () => {
@@ -22,5 +22,13 @@ describe('Header Component (Unit)', () => {
         const { lastFrame } = render(<Header cliVersion="0.2.25" latestVersion="0.2.26" />)
         const frame = lastFrame()
         expect(frame).toContain('Run /update to install December CLI 0.2.26')
+    })
+
+    it('resolves git branch without throwing and caches result', () => {
+        clearGitBranchCache()
+        const branch = getGitBranch()
+        expect(branch === null || typeof branch === 'string').toBe(true)
+        const branch2 = getGitBranch()
+        expect(branch2).toBe(branch)
     })
 })

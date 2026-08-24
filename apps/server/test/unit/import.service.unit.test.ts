@@ -31,22 +31,35 @@ describe('Import Service - Unit Tests', () => {
             }
         })
 
-        it('should throw AppError 404 if user has no github token', async () => {
+        it('should allow public repository import or proceed when user has no token', async () => {
             const originalFind = importRepository.findUserForImport
+            const originalCreateSession = importRepository.createPlaceholderSession
+            const originalCreateImport = importRepository.createImport
+
             importRepository.findUserForImport = (async () => ({
                 id: 'u1',
                 githubToken: null,
             })) as any
 
+            importRepository.createPlaceholderSession = (async () => ({}) as any) as any
+            importRepository.createImport = (async (data: any) => ({
+                id: 'import-public',
+                status: 'PENDING',
+                sourceType: 'GITHUB',
+                sourceUrl: data.sourceUrl,
+                sessionId: data.sessionId,
+            })) as any
+
             try {
-                await expect(
-                    uploadService.importFromGithub({
-                        userId: 'u1',
-                        repoURL: 'https://github.com/facebook/react',
-                    })
-                ).rejects.toThrow(new AppError('github access token not found', 404))
+                const res = await uploadService.importFromGithub({
+                    userId: 'u1',
+                    repoURL: 'https://github.com/facebook/react',
+                })
+                expect(res.id).toBe('import-public')
             } finally {
                 importRepository.findUserForImport = originalFind
+                importRepository.createPlaceholderSession = originalCreateSession
+                importRepository.createImport = originalCreateImport
             }
         })
 

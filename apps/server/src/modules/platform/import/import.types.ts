@@ -158,7 +158,7 @@ export type ProcessGithubImportParams = {
     sessionId: string
     owner: string
     repo: string
-    token: string
+    token?: string
 }
 
 export type FailImportParams = {

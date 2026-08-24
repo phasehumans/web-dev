@@ -90,7 +90,9 @@ const envSchema = z
             .default('0000000000000000000000000000000000000000000000000000000000000000'),
         REDIS_URL: emptyAsUndefined,
         AGENT_TOKEN_SECRET: emptyAsUndefined,
+        GITHUB_APP_ID: emptyAsUndefined,
         GITHUB_APP_NAME: emptyAsUndefined,
+        GITHUB_APP_PRIVATE_KEY: emptyAsUndefined,
         GITHUB_APP_WEBHOOK_SECRET: emptyAsUndefined,
         USD_TO_INR_RATE: z.coerce.number().default(84),
     })

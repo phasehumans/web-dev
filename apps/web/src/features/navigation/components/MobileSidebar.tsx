@@ -495,9 +495,21 @@ export const MobileSidebar: React.FC<
                                                 if (!isRecentMenuOpen) {
                                                     const rect =
                                                         e.currentTarget.getBoundingClientRect()
+                                                    const menuWidth = 180
+                                                    const left = Math.max(
+                                                        10,
+                                                        Math.min(
+                                                            rect.right - menuWidth,
+                                                            window.innerWidth - menuWidth - 10
+                                                        )
+                                                    )
+                                                    const top = Math.min(
+                                                        rect.bottom + 4,
+                                                        window.innerHeight - 340
+                                                    )
                                                     setRecentMenuPos({
-                                                        top: rect.top,
-                                                        left: rect.right + 8,
+                                                        top,
+                                                        left,
                                                     })
                                                 }
                                                 setIsRecentMenuOpen(!isRecentMenuOpen)
@@ -715,12 +727,24 @@ export const MobileSidebar: React.FC<
                                                         e.stopPropagation()
                                                         const rect =
                                                             e.currentTarget.getBoundingClientRect()
+                                                        const menuWidth = 180
+                                                        const left = Math.max(
+                                                            10,
+                                                            Math.min(
+                                                                rect.right - menuWidth,
+                                                                window.innerWidth - menuWidth - 10
+                                                            )
+                                                        )
+                                                        const top = Math.min(
+                                                            rect.bottom + 4,
+                                                            window.innerHeight - 200
+                                                        )
                                                         setItemMenuState({
                                                             sessionId: project.id,
                                                             sessionTitle: project.title,
                                                             isArchived: project.isArchived,
-                                                            top: rect.top,
-                                                            left: rect.right + 8,
+                                                            top,
+                                                            left,
                                                         })
                                                     }}
                                                     className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"

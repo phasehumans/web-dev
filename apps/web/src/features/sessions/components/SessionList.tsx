@@ -9,6 +9,8 @@ import { SessionListView } from './SessionListView'
 
 import type { DeleteModalState, RenameModalState } from '@/features/sessions/types'
 
+import { MobileBreadcrumbsHeader } from '@/features/navigation/components/MobileBreadcrumbsHeader'
+
 export type SortOption = 'newest' | 'oldest'
 export type TypeFilter = 'any' | 'WEB' | 'CLI' | 'SEARCH'
 
@@ -250,8 +252,9 @@ export const SessionList: React.FC<{
     const shareModal = { isOpen: false, project: null }
 
     return (
-        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background px-3.5 sm:px-6 pb-8 pt-14 md:pt-16 font-sans no-scrollbar md:p-16">
-            <div className="relative z-10 mx-auto max-w-6xl">
+        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar">
+            <MobileBreadcrumbsHeader currentPage="Sessions" onHomeClick={onNewProject} />
+            <div className="relative z-10 mx-auto max-w-6xl px-3.5 sm:px-6 pb-8 pt-4 md:p-16">
                 <SessionListView
                     projects={filteredAndSortedSessions}
                     onNewProject={onNewProject}

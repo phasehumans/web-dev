@@ -176,16 +176,16 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
 
     if (mode === 'mobile') {
         return (
-            <div className="h-full bg-[#141414] rounded-2xl border border-white/10 flex flex-col overflow-hidden font-sans min-h-0">
+            <div className="h-full bg-[#141414] flex flex-col overflow-hidden font-sans min-h-0">
                 <div
                     ref={scrollContainerRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 chat-scrollbar"
+                    className="flex-1 overflow-y-auto overflow-x-hidden p-3.5 space-y-4 chat-scrollbar"
                 >
                     {messagesList}
                 </div>
 
-                <div className="shrink-0 bg-[#141414] pt-3 pl-2.5 pr-2.5 pb-2.5">{promptInput}</div>
+                <div className="shrink-0 bg-[#141414] pt-2 px-2.5 pb-2.5">{promptInput}</div>
             </div>
         )
     }

@@ -18,7 +18,7 @@ model User {
   googleId               String?
   otpExpiresAt           DateTime?
   otpHash                String?
-  githubId               String?
+  githubId               String?         @unique
   githubToken            String?
   githubUsername         String?
   githubConnected        Boolean         @default(false)
@@ -462,6 +462,10 @@ model GithubAppInstallation {
   id             String   @id @default(uuid())
   installationId String   @unique
   userId         String
+  accountLogin   String?
+  accountType    String?
+  targetType     String?
+  permissions    Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

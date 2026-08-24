@@ -40,8 +40,8 @@ const profileTabToSlug: Record<string, string> = {
     Repositories: 'repositories',
     Skills: 'skills',
     Billing: 'billing',
-    Analytics: 'analytics',
-    Usage: 'analytics',
+    Analytics: 'usage',
+    Usage: 'usage',
     'API Keys': 'api-keys',
     Review: 'review',
     Wiki: 'wiki',
@@ -52,9 +52,13 @@ const profileTabToSlug: Record<string, string> = {
     Privacy: 'privacy',
 }
 
-const slugToProfileTab: Record<string, ProfileTab> = Object.fromEntries(
-    Object.entries(profileTabToSlug).map(([tab, slug]) => [slug, tab as ProfileTab])
-)
+const slugToProfileTab: Record<string, ProfileTab> = {
+    ...Object.fromEntries(
+        Object.entries(profileTabToSlug).map(([tab, slug]) => [slug, tab as ProfileTab])
+    ),
+    usage: 'Usage',
+    analytics: 'Usage',
+}
 
 export const getProfileTabFromSlug = (slug: string | undefined): ProfileTab =>
     (slug && slugToProfileTab[slug]) || 'Account'

@@ -42,6 +42,7 @@ import { ProfileWikiSettings } from './ProfileWikiSettings'
 import type { ProfileSettingsProps } from '@/features/profile/types'
 
 import { getProfileTabFromSlug, getSlugForProfileTab } from '@/app/types'
+import { MobileBreadcrumbsHeader } from '@/features/navigation/components/MobileBreadcrumbsHeader'
 import { ErrorAlert } from '@/shared/components/ui/ErrorAlert'
 import { Icons } from '@/shared/components/ui/Icons'
 import { cn } from '@/shared/lib/utils'
@@ -107,13 +108,13 @@ const SETTINGS_NAV_GROUPS = [
             {
                 tab: 'Billing',
                 slug: 'billing',
-                label: 'Billing & Credits',
+                label: 'Billing',
                 icon: CreditCard,
             },
             {
                 tab: 'Usage',
-                slug: 'analytics',
-                label: 'Usage & Costs',
+                slug: 'usage',
+                label: 'Usage',
                 icon: Activity,
             },
         ],
@@ -155,9 +156,9 @@ const TAB_LABEL_MAP: Record<string, string> = {
     Review: 'Code Review',
     Wiki: 'DeepWiki',
     Schedules: 'Schedules',
-    Billing: 'Billing & Credits',
-    Usage: 'Usage & Costs',
-    Analytics: 'Usage & Costs',
+    Billing: 'Billing',
+    Usage: 'Usage',
+    Analytics: 'Usage',
     Privacy: 'Privacy Policy',
     Terms: 'Terms of Service',
 }
@@ -365,16 +366,17 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
             >
                 {/* Drawer Header */}
                 <div className="px-3 mb-2 mt-0 z-30 relative">
-                    <div className="flex items-center justify-between px-2 mb-4 mt-3">
+                    <div className="flex items-center justify-between px-2 mb-6 mt-4">
                         <button
+                            type="button"
                             onClick={() => {
                                 if (onBack) onBack()
                                 else navigate('/')
                             }}
-                            className="flex items-center text-[#8F8E8D] hover:text-[#D6D5D4] text-[13px] font-medium transition-colors cursor-pointer"
+                            className="flex items-center cursor-pointer outline-none"
+                            aria-label="Home"
                         >
-                            <ChevronLeft className="w-4 h-4 mr-1" />
-                            Home
+                            <Icons.DecemberLogo className="w-6 h-6 text-[#D6D5D4]" />
                         </button>
                         <div
                             className="flex items-center justify-center text-[#919191] hover:text-[#D4D4D8] group/collapse p-1 rounded-md hover:bg-[#252525] transition-colors cursor-pointer relative"
@@ -729,28 +731,23 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                 {/* Mobile View with top bar and direct subpage content */}
                 <div className="flex-1 flex flex-col min-h-0 overflow-y-auto no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
                     {/* Mobile Top Bar */}
-                    <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-3.5 py-3 bg-[#141414]/95 backdrop-blur-md shrink-0">
-                        <div className="flex items-center gap-2.5 text-[13px] font-medium min-w-0">
-                            <button
-                                onClick={() => setIsMobileDrawerOpen(true)}
-                                className="p-1 -ml-1 text-[#8F8E8D] hover:text-[#D6D5D4] hover:bg-[#252525] rounded-lg transition-colors flex items-center justify-center shrink-0 cursor-pointer"
-                                aria-label="Open settings sidebar"
-                            >
-                                <Icons.SidebarToggle className="w-4 h-4" />
-                            </button>
-
-                            <button
-                                onClick={() => setIsMobileDrawerOpen(true)}
-                                className="text-[#7B7A79] hover:text-[#D6D5D4] transition-colors cursor-pointer"
-                            >
-                                Settings
-                            </button>
-                            <span className="text-[#4A4948] select-none">/</span>
-                            <span className="text-white font-medium truncate">
-                                {activeTabLabel}
-                            </span>
-                        </div>
-                    </div>
+                    <MobileBreadcrumbsHeader
+                        onOpenSidebar={() => setIsMobileDrawerOpen(true)}
+                        onHomeClick={() => {
+                            if (onBack) onBack()
+                            else navigate('/')
+                        }}
+                        items={[
+                            {
+                                label: 'Settings',
+                                onClick: () => setIsMobileDrawerOpen(true),
+                            },
+                            {
+                                label: activeTabLabel,
+                                isLast: true,
+                            },
+                        ]}
+                    />
 
                     {/* Mobile Content: Active Tab Content directly rendered */}
                     <div className="md:hidden flex-1 flex flex-col p-4 pb-12 w-full no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
