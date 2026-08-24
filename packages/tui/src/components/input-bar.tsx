@@ -183,10 +183,6 @@ export const InputBar = React.memo(function InputBar({
         if ((key.backspace || key.delete) && value.length === 0 && grillMode) {
             onSubmit('/grill-me')
         }
-        if (key.ctrl && input === 'c') {
-            if (onInterrupt) onInterrupt()
-            return
-        }
         if (key.ctrl && input === 'y') {
             if (onCopy) onCopy()
             return
@@ -415,16 +411,18 @@ export const InputBar = React.memo(function InputBar({
             </Box>
 
             {/* status row — clean & minimal: <model> (<authMethod>)                  ? for shortcuts */}
-            {!showCommandMenu && !showShortcutsMenu && !authUI && (
+            {!showCommandMenu && !showShortcutsMenu && (!authUI || showExitConfirm) && (
                 <Box width="100%" justifyContent="space-between">
                     <Box gap={2} alignItems="center" flexShrink={1}>
                         <Box gap={1} flexShrink={1}>
-                            <Text color={THEME.colors.muted}>
-                                {activeModel}
-                                {hasBothAuth && authMethod
-                                    ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
-                                    : ''}
-                            </Text>
+                            {!authUI && (
+                                <Text color={THEME.colors.muted}>
+                                    {activeModel}
+                                    {hasBothAuth && authMethod
+                                        ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
+                                        : ''}
+                                </Text>
+                            )}
                             {activeToast ? (
                                 <Text
                                     wrap="truncate"
@@ -443,9 +441,11 @@ export const InputBar = React.memo(function InputBar({
                             ) : null}
                         </Box>
                     </Box>
-                    <Box gap={0} flexShrink={0} marginLeft={2}>
-                        <Text color={THEME.colors.muted}>? for shortcuts</Text>
-                    </Box>
+                    {!authUI && (
+                        <Box gap={0} flexShrink={0} marginLeft={2}>
+                            <Text color={THEME.colors.muted}>? for shortcuts</Text>
+                        </Box>
+                    )}
                 </Box>
             )}
 

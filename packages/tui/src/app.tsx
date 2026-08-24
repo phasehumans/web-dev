@@ -1,6 +1,6 @@
 import { Agent } from '@december/agent'
-import { Box } from 'ink'
-import { useState, useCallback, useEffect } from 'react'
+import { Box, useInput } from 'ink'
+import { useState, useCallback, useEffect, useRef } from 'react'
 
 import { GlobalShortcuts } from './components/global-shortcuts'
 import { InputBar } from './components/input-bar'
@@ -33,13 +33,49 @@ export function ChatApp({
     session: any
 }) {
     const [exitConfirm, setExitConfirm] = useState(false)
+    const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const handleInterrupt = useCallback(() => {
+        if (session.isStreaming) {
+            if (session.handleAbort) {
+                session.handleAbort()
+            } else if (agent?.abort) {
+                agent.abort()
+            }
+        }
+
+        if (exitConfirm) {
+            if (exitTimerRef.current) {
+                clearTimeout(exitTimerRef.current)
+                exitTimerRef.current = null
+            }
+            process.exit(0)
+        } else {
+            setExitConfirm(true)
+            if (exitTimerRef.current) {
+                clearTimeout(exitTimerRef.current)
+            }
+            exitTimerRef.current = setTimeout(() => {
+                setExitConfirm(false)
+                exitTimerRef.current = null
+            }, 3000)
+        }
+    }, [exitConfirm, session, agent])
 
     useEffect(() => {
-        if (exitConfirm) {
-            const timer = setTimeout(() => setExitConfirm(false), 3000)
-            return () => clearTimeout(timer)
+        return () => {
+            if (exitTimerRef.current) {
+                clearTimeout(exitTimerRef.current)
+                exitTimerRef.current = null
+            }
         }
-    }, [exitConfirm])
+    }, [])
+
+    useInput((input, key) => {
+        if (key.ctrl && input === 'c') {
+            handleInterrupt()
+        }
+    })
 
     const {
         staticKey,
@@ -117,17 +153,6 @@ export function ChatApp({
             <InputBar
                 onSubmit={handleFormSubmit}
                 disabled={authMode !== 'none'}
-                onInterrupt={() => {
-                    if (session.isStreaming) {
-                        agent.abort()
-                    } else {
-                        if (exitConfirm) {
-                            process.exit(0)
-                        } else {
-                            setExitConfirm(true)
-                        }
-                    }
-                }}
                 onCopy={() => {
                     import('./utils/clipboard')
                         .then((cb) => {

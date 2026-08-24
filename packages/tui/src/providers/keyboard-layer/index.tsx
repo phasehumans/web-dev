@@ -1,4 +1,3 @@
-import { useInput } from 'ink'
 import React, { createContext, useContext, useCallback, useRef } from 'react'
 
 type Responder = () => boolean
@@ -35,13 +34,6 @@ export function KeyboardLayerProvider({ children }: { children: React.ReactNode 
         if (responder) responders.current.set(id, responder)
         else responders.current.delete(id)
     }, [])
-
-    // ctrl+c does nothing — user must use /exit
-    useInput((_input, key) => {
-        if (key.ctrl && _input === 'c') {
-            // intentionally swallowed — no exit
-        }
-    })
 
     return (
         <KeyboardLayerContext.Provider value={{ push, pop, isTopLayer, setResponder }}>
