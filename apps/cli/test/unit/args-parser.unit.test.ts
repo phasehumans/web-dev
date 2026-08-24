@@ -29,6 +29,7 @@ describe('CLI Args Parser (Unit)', () => {
         expect(parseCliArgs(['login']).command).toBe('login')
         expect(parseCliArgs(['logout']).command).toBe('logout')
         expect(parseCliArgs(['init']).command).toBe('init')
+        expect(parseCliArgs(['update']).command).toBe('update')
     })
 
     it('parses --scope and --cwd flags', () => {
@@ -42,5 +43,6 @@ describe('CLI Args Parser (Unit)', () => {
         expect(help).toContain('December CLI v0.3.9')
         expect(help).toContain('december init')
         expect(help).toContain('december login')
+        expect(help).toContain('december update')
     })
 })

@@ -4,7 +4,7 @@ import { loadConfig } from '../config'
 
 import { clearVersionCheckCache } from './version-check'
 
-export type InstallMethod = 'curl' | 'npm' | 'bun' | 'pnpm' | 'yarn' | 'brew' | 'source'
+export type InstallMethod = 'npm' | 'bun' | 'pnpm' | 'yarn' | 'brew' | 'npx' | 'source'
 
 export interface UpdateCommandInfo {
     command: string
@@ -30,7 +30,7 @@ export interface DetectOptions {
 
 export function detectInstallMethod(options?: DetectOptions): InstallMethod {
     const configMethod = options?.configInstallMethod
-    const validMethods: InstallMethod[] = ['curl', 'npm', 'bun', 'pnpm', 'yarn', 'brew', 'source']
+    const validMethods: InstallMethod[] = ['npm', 'bun', 'pnpm', 'yarn', 'brew', 'npx', 'source']
     if (configMethod && validMethods.includes(configMethod as InstallMethod)) {
         return configMethod as InstallMethod
     }
@@ -52,7 +52,17 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
         return 'source'
     }
 
-    // 2. Homebrew
+    // 2. NPX / Bunx ephemeral execution
+    if (
+        argv1.includes('/_npx/') ||
+        argv1.includes('\\_npx\\') ||
+        argv1.includes('/.bunx/') ||
+        env.npm_config_user_agent?.includes('npx')
+    ) {
+        return 'npx'
+    }
+
+    // 3. Homebrew
     if (
         execPath.includes('/Cellar/december') ||
         execPath.includes('/opt/homebrew/Cellar/december') ||
@@ -62,26 +72,11 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
         return 'brew'
     }
 
-    // 3. Standalone binary / curl installer
-    // e.g. ~/.local/bin/december, %LOCALAPPDATA%\Programs\december\december.exe
-    if (
-        execPath.includes('.local/bin/december') ||
-        execPath.includes('Programs/december') ||
-        env.DECEMBER_INSTALL_DIR ||
-        (execPath.endsWith('/december') &&
-            !execPath.includes('node_modules') &&
-            !execPath.includes('bun') &&
-            !execPath.includes('node')) ||
-        (execPath.endsWith('/december.exe') && !execPath.includes('node_modules'))
-    ) {
-        return 'curl'
-    }
-
     // 4. Bun global
     if (
         argv1.includes('.bun/bin') ||
         argv1.includes('/.bun/') ||
-        (execPath.includes('/bun') && !execPath.endsWith('/december'))
+        (execPath.includes('/bun') && !execPath.endsWith('/node'))
     ) {
         return 'bun'
     }
@@ -100,52 +95,19 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
         return 'yarn'
     }
 
-    // 7. NPM global or standard Node module
-    if (
-        argv1.includes('node_modules/@trydecember') ||
-        argv1.includes('node_modules/.bin/december') ||
-        argv1.includes('/npm/')
-    ) {
-        return 'npm'
-    }
-
-    // Fallback: if running via node, default to npm; otherwise curl standalone
-    if (execPath.endsWith('/node') || execPath.endsWith('/node.exe')) {
-        return 'npm'
-    }
-
-    return 'curl'
+    // 7. NPM global or standard Node module (default)
+    return 'npm'
 }
 
 export function getUpdateCommand(
     method: InstallMethod,
-    platform: string = process.platform
+    _platform: string = process.platform
 ): UpdateCommandInfo {
     switch (method) {
-        case 'curl': {
-            if (platform === 'win32') {
-                const cmd =
-                    'powershell.exe -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/phasehumans/december/main/install.ps1 | iex"'
-                return {
-                    command: cmd,
-                    manualCmd:
-                        'irm https://raw.githubusercontent.com/phasehumans/december/main/install.ps1 | iex',
-                    description: 'Standalone binary via install.ps1',
-                }
-            }
-            const cmd =
-                'curl -fsSL https://raw.githubusercontent.com/phasehumans/december/main/install.sh | bash'
-            return {
-                command: cmd,
-                manualCmd:
-                    'curl -fsSL https://raw.githubusercontent.com/phasehumans/december/main/install.sh | bash',
-                description: 'Standalone binary via install.sh',
-            }
-        }
         case 'bun': {
             return {
-                command: 'bun install -g @trydecember/cli@latest',
-                manualCmd: 'bun install -g @trydecember/cli@latest',
+                command: 'bun add -g @trydecember/cli@latest',
+                manualCmd: 'bun add -g @trydecember/cli@latest',
                 description: 'Bun global package',
             }
         }
@@ -168,6 +130,13 @@ export function getUpdateCommand(
                 command: 'brew upgrade december',
                 manualCmd: 'brew upgrade december',
                 description: 'Homebrew package',
+            }
+        }
+        case 'npx': {
+            return {
+                command: 'npx @trydecember/cli@latest',
+                manualCmd: 'npx @trydecember/cli@latest',
+                description: 'NPX execution (always latest)',
             }
         }
         case 'source': {
@@ -218,6 +187,19 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
         return {
             success: true,
             method: 'source',
+            command,
+            manualCmd,
+            output: msg,
+        }
+    }
+
+    if (method === 'npx') {
+        const msg =
+            'Running December CLI via npx/bunx. Each invocation automatically uses the latest version.'
+        options?.onProgress?.(msg)
+        return {
+            success: true,
+            method: 'npx',
             command,
             manualCmd,
             output: msg,

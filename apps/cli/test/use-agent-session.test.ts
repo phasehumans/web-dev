@@ -75,4 +75,10 @@ describe('useCliStore activeMessages handling', () => {
             '- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.'
         )
     })
+
+    it('exports clipboard and handoff utilities from @december/tui for slash command handling', async () => {
+        const tui = await import('@december/tui')
+        expect(typeof tui.writeToClipboard).toBe('function')
+        expect(typeof tui.createWorkspaceArchive).toBe('function')
+    })
 })

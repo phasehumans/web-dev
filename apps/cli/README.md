@@ -14,18 +14,23 @@ December is an AI coding agent that lives in your terminal. It understands your 
 
 ### Get Started
 
-1. Install December (via npm, curl, or powershell):
+1. Install December globally via your package manager:
 
 ```bash
+# npm (default)
 npm install -g @trydecember/cli
+
+# bun
+bun add -g @trydecember/cli
+
+# pnpm
+pnpm add -g @trydecember/cli
 ```
+
+Or run instantly without installing:
 
 ```bash
-curl -fsSL https://trydecember.com/install.sh | bash
-```
-
-```powershell
-irm https://trydecember.com/install.ps1 | iex
+npx @trydecember/cli
 ```
 
 2. Navigate to your project directory and run `december`.

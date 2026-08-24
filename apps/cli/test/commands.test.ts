@@ -3,7 +3,7 @@ import path from 'node:path'
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
 
-import { handleLogoutCommand, handleInitCommand } from '../src/commands'
+import { handleLogoutCommand, handleInitCommand, handleUpdateCommand } from '../src/commands'
 import { loadConfig, saveConfig } from '../src/config'
 
 describe('CLI Standalone Commands', () => {
@@ -88,6 +88,20 @@ describe('CLI Standalone Commands', () => {
             expect(parsedCommands.commands.some((c: any) => c.name === 'test')).toBe(true)
         } finally {
             process.chdir(originalCwd)
+        }
+    })
+
+    it('handleUpdateCommand executes successfully for local source environment', async () => {
+        let loggedOutput = ''
+        const originalLog = console.log
+        console.log = (...args: any[]) => {
+            loggedOutput += args.join(' ') + '\n'
+        }
+        try {
+            await handleUpdateCommand()
+            expect(loggedOutput).toContain('December CLI')
+        } finally {
+            console.log = originalLog
         }
     })
 })

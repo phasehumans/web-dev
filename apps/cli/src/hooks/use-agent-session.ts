@@ -653,8 +653,142 @@ export function useAgentSession({
                 return
             }
 
-            if (text.trim() === '/hooks') {
-                setAuthMode('hooks' as any)
+            if (text.trim() === '/new') {
+                if (agent) {
+                    await agent.newContext()
+                }
+                setStaticMessages([{ id: 'header-' + Date.now(), role: 'header' }])
+                setStaticKey((k: number) => k + 1)
+                setActiveMessages([])
+                setQueuedPrompts([])
+                addToast('Started a new conversation.', 'success')
+                return
+            }
+
+            if (text.trim() === '/clear') {
+                if (agent) {
+                    await agent.clearContext()
+                }
+                setStaticMessages([{ id: 'header-' + Date.now(), role: 'header' }])
+                setStaticKey((k: number) => k + 1)
+                setActiveMessages([])
+                setQueuedPrompts([])
+                addToast('Cleared conversation history.', 'success')
+                return
+            }
+
+            if (text.trim() === '/fork') {
+                if (agent) {
+                    const newId = await agent.forkContext()
+                    addToast(`Forked to new session: ${newId}`, 'success')
+                } else {
+                    addToast('Agent not available to fork session.', 'error')
+                }
+                return
+            }
+
+            if (text.trim() === '/copy') {
+                try {
+                    const { writeToClipboard } = await import('@december/tui')
+                    const assistantMsgs = (agent?.messages || []).filter(
+                        (m: any) => m.role === 'assistant'
+                    )
+                    const lastAgentMsg =
+                        assistantMsgs.length > 0 ? assistantMsgs[assistantMsgs.length - 1] : null
+
+                    let textToCopy = ''
+                    if (
+                        lastAgentMsg &&
+                        typeof lastAgentMsg.content === 'string' &&
+                        lastAgentMsg.content.trim()
+                    ) {
+                        textToCopy = lastAgentMsg.content
+                    } else {
+                        const allMsgs = [
+                            ...useCliStore.getState().staticMessages,
+                            ...useCliStore.getState().activeMessages,
+                        ]
+                        const lastAssistant = [...allMsgs]
+                            .reverse()
+                            .find((m) => m.role === 'assistant' && m.blocks)
+                        if (lastAssistant && lastAssistant.blocks) {
+                            textToCopy = lastAssistant.blocks
+                                .map((b: any) => b.content || '')
+                                .join('\n')
+                                .trim()
+                        }
+                    }
+
+                    if (textToCopy) {
+                        writeToClipboard(textToCopy)
+                        addToast('Copied last planner response to clipboard!', 'success')
+                    } else {
+                        addToast('No planner response found to copy.', 'error')
+                    }
+                } catch {
+                    // Intentionally swallowed: clipboard write error fallback
+                    addToast('Failed to write to clipboard.', 'error')
+                }
+                return
+            }
+
+            if (text.trim() === '/handoff') {
+                const archivePath = '.december-handoff.tar.gz'
+                try {
+                    const config = await loadConfig()
+                    if (!config.decemberToken) {
+                        addToast('You must be logged in to use handoff.', 'error')
+                        return
+                    }
+
+                    addToast('Zipping workspace...', 'info')
+                    const { createWorkspaceArchive } = await import('@december/tui')
+                    await createWorkspaceArchive(archivePath)
+
+                    addToast('Requesting upload URL...', 'info')
+                    const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
+                    const proxyUrl = `${serverUrl}/api/v1`
+                    const urlRes = await fetch(`${proxyUrl}/cli/handoff/upload-url`, {
+                        headers: { Authorization: `Bearer ${config.decemberToken}` },
+                    })
+                    const urlJson = (await urlRes.json()) as any
+                    const { uploadUrl, objectKey } = urlJson.data || urlJson
+
+                    addToast('Uploading to MinIO...', 'info')
+                    const fs = await import('node:fs/promises')
+                    const fileData = await fs.readFile(archivePath)
+                    const uploadRes = await fetch(uploadUrl, {
+                        method: 'PUT',
+                        body: fileData,
+                    })
+                    if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.statusText}`)
+
+                    addToast('Completing handoff...', 'info')
+                    const sessionRes = await fetch(`${proxyUrl}/cli/handoff/complete`, {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${config.decemberToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            title: 'Handoff from ' + process.cwd().split('/').pop(),
+                            messages: agent ? agent.messages : [],
+                            objectKey,
+                        }),
+                    })
+                    if (!sessionRes.ok) throw new Error(await sessionRes.text())
+
+                    await fs.unlink(archivePath).catch(() => {})
+                    addToast('Handoff complete! Exiting in 3s.', 'success')
+                    setTimeout(() => {
+                        setShouldExit(true)
+                        process.exit(0)
+                    }, 3000)
+                } catch (e: any) {
+                    const fs = await import('node:fs/promises')
+                    await fs.unlink(archivePath).catch(() => {})
+                    addToast(`Handoff failed: ${e.message}`, 'error')
+                }
                 return
             }
 
@@ -742,6 +876,11 @@ export function useAgentSession({
                 if (result.method === 'source') {
                     addToast(
                         'Running December CLI from local source. Run "git pull && bun install" to update.',
+                        'info'
+                    )
+                } else if (result.method === 'npx') {
+                    addToast(
+                        'Running December CLI via npx/bunx. You are automatically using the latest version.',
                         'info'
                     )
                 } else if (result.success) {
@@ -972,6 +1111,16 @@ export function useAgentSession({
 
             let currentText: string | undefined = text.trim()
             while (currentText) {
+                if (currentText.includes('@') && !currentText.includes('<context_file')) {
+                    try {
+                        const { resolveContextMentions } = await import('@december/shared')
+                        const resolved = await resolveContextMentions(currentText)
+                        currentText = resolved.expandedPrompt
+                    } catch {
+                        // Intentionally swallowed: keep currentText on resolution error
+                    }
+                }
+
                 setIsStreaming(true)
                 const assistantMsgId = getNextMsgId()
                 const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text: currentText }

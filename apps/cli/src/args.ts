@@ -44,7 +44,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
         const scope = values.scope as string | undefined
         const cwd = values.cwd as string | undefined
 
-        const knownCommands = ['login', 'logout', 'init']
+        const knownCommands = ['login', 'logout', 'init', 'update']
         let command: string | undefined
         let prompt: string | undefined
 
@@ -92,6 +92,7 @@ Usage:
   december login                    Log in to December (via Device Code)
   december logout                   Remove saved authentication credentials
   december init                     Initialize local .december configuration
+  december update                   Update December CLI to the latest version
 
 Options:
   -h, --help                        Show CLI help and exit

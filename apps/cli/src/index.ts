@@ -5,10 +5,10 @@ import path from 'node:path'
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
-import { handleLogoutCommand, handleInitCommand } from './commands'
+import { handleLogoutCommand, handleInitCommand, handleUpdateCommand } from './commands'
 
 export { parseCliArgs, getHelpText } from './args'
-export { handleLogoutCommand, handleInitCommand } from './commands'
+export { handleLogoutCommand, handleInitCommand, handleUpdateCommand } from './commands'
 export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
 export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 
@@ -40,6 +40,11 @@ async function main() {
     if (parsedArgs.command === 'init') {
         await handleInitCommand()
         process.exit(0)
+    }
+
+    if (parsedArgs.command === 'update') {
+        await handleUpdateCommand()
+        process.exit(process.exitCode || 0)
     }
 
     if (parsedArgs.command === 'login') {

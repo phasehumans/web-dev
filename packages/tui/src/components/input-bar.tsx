@@ -254,6 +254,12 @@ export const InputBar = React.memo(function InputBar({
                 '/feedback',
                 '/mcp',
                 '/update',
+                '/new',
+                '/clear',
+                '/fork',
+                '/copy',
+                '/handoff',
+                '/init',
             ]
 
             if (forwardCommands.includes(command.value) || !command.action) {
@@ -283,7 +289,7 @@ export const InputBar = React.memo(function InputBar({
     )
 
     const handleSubmit = useCallback(
-        (text: string) => {
+        async (text: string) => {
             if (disabled) return
             if (showCommandMenu) {
                 const command = resolveCommand(selectedIndex)
@@ -297,9 +303,24 @@ export const InputBar = React.memo(function InputBar({
             if (trimmed.length === 0) return
             defaultPromptHistory.append(trimmed)
             defaultPromptHistory.resetCursor()
-            onSubmit(trimmed)
             setValue('')
             handleContentChange('')
+
+            // Forward slash commands and shell escapes directly without @ context expansion
+            if (trimmed.startsWith('/') || trimmed.startsWith('!')) {
+                onSubmit(trimmed)
+                return
+            }
+
+            // Expand @ file mentions into rich context blocks
+            try {
+                const { resolveContextMentions } = await import('@december/shared')
+                const resolved = await resolveContextMentions(trimmed)
+                onSubmit(resolved.expandedPrompt)
+            } catch {
+                // Intentionally swallowed: fallback to unexpanded text on resolution error
+                onSubmit(trimmed)
+            }
         },
         [
             disabled,

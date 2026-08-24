@@ -74,25 +74,48 @@ describe('API Client Base URL and Environment Configuration', () => {
     })
 
     test('falls back to default integration values when env is unset', () => {
-        ;(globalThis as any).window = {
-            location: {
-                hostname: 'localhost',
-                origin: 'http://localhost:3000',
-            },
+        const origSupabase = process.env.SUPABASE_REDIRECT_URI
+        const origNotion = process.env.NOTION_REDIRECT_URI
+        const origBunSupabase = (globalThis as any).Bun?.env?.SUPABASE_REDIRECT_URI
+        const origBunNotion = (globalThis as any).Bun?.env?.NOTION_REDIRECT_URI
+
+        delete process.env.SUPABASE_REDIRECT_URI
+        delete process.env.NOTION_REDIRECT_URI
+        if ((globalThis as any).Bun?.env) {
+            delete (globalThis as any).Bun.env.SUPABASE_REDIRECT_URI
+            delete (globalThis as any).Bun.env.NOTION_REDIRECT_URI
         }
 
-        expect(getGithubClientId()).toBe('Ov23liFGkTAwCW7E8gtk')
-        expect(getGoogleClientId()).toBe(
-            '762203307362-qg77ln4ci9eldv3i0q1smv804epsbhk0.apps.googleusercontent.com'
-        )
-        expect(getVercelIntegrationSlug()).toBe('december')
-        expect(getSupabaseClientId()).toBe('4a0473bb-3c69-4d28-8896-d1d8b6e18347')
-        expect(getNotionClientId()).toBe('36ad872b-594c-8101-9e7c-00378ba2e5f6')
-        expect(getSupabaseRedirectUri('https://api.trydecember.com/api/v1')).toBe(
-            'https://api.trydecember.com/api/v1/integrations/supabase/connect'
-        )
-        expect(getNotionRedirectUri('https://api.trydecember.com/api/v1')).toBe(
-            'https://api.trydecember.com/api/v1/integrations/notion/connect'
-        )
+        try {
+            ;(globalThis as any).window = {
+                location: {
+                    hostname: 'localhost',
+                    origin: 'http://localhost:3000',
+                },
+            }
+
+            expect(getGithubClientId()).toBe('Ov23liFGkTAwCW7E8gtk')
+            expect(getGoogleClientId()).toBe(
+                '762203307362-qg77ln4ci9eldv3i0q1smv804epsbhk0.apps.googleusercontent.com'
+            )
+            expect(getVercelIntegrationSlug()).toBe('december')
+            expect(getSupabaseClientId()).toBe('4a0473bb-3c69-4d28-8896-d1d8b6e18347')
+            expect(getNotionClientId()).toBe('36ad872b-594c-8101-9e7c-00378ba2e5f6')
+            expect(getSupabaseRedirectUri('https://api.trydecember.com/api/v1')).toBe(
+                'https://api.trydecember.com/api/v1/integrations/supabase/connect'
+            )
+            expect(getNotionRedirectUri('https://api.trydecember.com/api/v1')).toBe(
+                'https://api.trydecember.com/api/v1/integrations/notion/connect'
+            )
+        } finally {
+            if (origSupabase !== undefined) process.env.SUPABASE_REDIRECT_URI = origSupabase
+            if (origNotion !== undefined) process.env.NOTION_REDIRECT_URI = origNotion
+            if ((globalThis as any).Bun?.env) {
+                if (origBunSupabase !== undefined)
+                    (globalThis as any).Bun.env.SUPABASE_REDIRECT_URI = origBunSupabase
+                if (origBunNotion !== undefined)
+                    (globalThis as any).Bun.env.NOTION_REDIRECT_URI = origBunNotion
+            }
+        }
     })
 })

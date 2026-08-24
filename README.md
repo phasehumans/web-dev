@@ -20,22 +20,28 @@ December is an open-source AI coding assistant that helps you build faster by wr
 
 ## Installation
 
-#### Standalone Installer (macOS & Linux)
+Install globally using your favorite package manager:
 
 ```bash
-curl -fsSL https://trydecember.com/install.sh | bash
-```
-
-#### Standalone Installer (Windows PowerShell)
-
-```powershell
-irm https://trydecember.com/install.ps1 | iex
-```
-
-#### NPM Package
-
-```bash
+# npm (default)
 npm install -g @trydecember/cli
+
+# bun
+bun add -g @trydecember/cli
+
+# pnpm
+pnpm add -g @trydecember/cli
+
+# yarn
+yarn global add @trydecember/cli
+```
+
+#### Instant Run (No Install Required)
+
+```bash
+npx @trydecember/cli
+# or
+bunx @trydecember/cli
 ```
 
 ## Contributing & Setup

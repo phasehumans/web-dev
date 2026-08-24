@@ -5,46 +5,13 @@ import { detectInstallMethod, getUpdateCommand, performCliUpdate } from '../src/
 describe('CLI Updater & Install Method Detection (Unit)', () => {
     describe('detectInstallMethod', () => {
         test('respects explicit config installMethod if valid', () => {
-            expect(detectInstallMethod({ configInstallMethod: 'curl' })).toBe('curl')
             expect(detectInstallMethod({ configInstallMethod: 'bun' })).toBe('bun')
             expect(detectInstallMethod({ configInstallMethod: 'pnpm' })).toBe('pnpm')
             expect(detectInstallMethod({ configInstallMethod: 'yarn' })).toBe('yarn')
             expect(detectInstallMethod({ configInstallMethod: 'brew' })).toBe('brew')
             expect(detectInstallMethod({ configInstallMethod: 'npm' })).toBe('npm')
+            expect(detectInstallMethod({ configInstallMethod: 'npx' })).toBe('npx')
             expect(detectInstallMethod({ configInstallMethod: 'source' })).toBe('source')
-        })
-
-        test('detects curl install from ~/.local/bin path', () => {
-            const method = detectInstallMethod({
-                execPath: '/home/user/.local/bin/december',
-                argv1: '/home/user/.local/bin/december',
-            })
-            expect(method).toBe('curl')
-        })
-
-        test('detects curl install from Windows Programs directory', () => {
-            const method = detectInstallMethod({
-                execPath: 'C:\\Users\\User\\AppData\\Local\\Programs\\december\\december.exe',
-                argv1: 'C:\\Users\\User\\AppData\\Local\\Programs\\december\\december.exe',
-            })
-            expect(method).toBe('curl')
-        })
-
-        test('detects curl install when DECEMBER_INSTALL_DIR is set in env', () => {
-            const method = detectInstallMethod({
-                execPath: '/opt/custom/december',
-                argv1: '/opt/custom/december',
-                env: { DECEMBER_INSTALL_DIR: '/opt/custom' },
-            })
-            expect(method).toBe('curl')
-        })
-
-        test('detects standalone compiled binary', () => {
-            const method = detectInstallMethod({
-                execPath: '/usr/bin/december',
-                argv1: '/usr/bin/december',
-            })
-            expect(method).toBe('curl')
         })
 
         test('detects homebrew installation', () => {
@@ -79,7 +46,15 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             expect(method).toBe('yarn')
         })
 
-        test('detects npm global installation', () => {
+        test('detects npx ephemeral execution', () => {
+            const method = detectInstallMethod({
+                execPath: '/usr/local/bin/node',
+                argv1: '/home/user/.npm/_npx/12345/node_modules/@trydecember/cli/dist/december.js',
+            })
+            expect(method).toBe('npx')
+        })
+
+        test('detects npm global installation by default', () => {
             const method = detectInstallMethod({
                 execPath: '/usr/local/bin/node',
                 argv1: '/usr/local/lib/node_modules/@trydecember/cli/dist/december.js',
@@ -97,23 +72,9 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
     })
 
     describe('getUpdateCommand', () => {
-        test('returns curl installer command on Linux/macOS', () => {
-            const info = getUpdateCommand('curl', 'linux')
-            expect(info.command).toContain('curl -fsSL')
-            expect(info.command).toContain('install.sh')
-            expect(info.manualCmd).toContain('curl -fsSL')
-        })
-
-        test('returns powershell installer command on Windows', () => {
-            const info = getUpdateCommand('curl', 'win32')
-            expect(info.command).toContain('powershell.exe')
-            expect(info.command).toContain('install.ps1')
-            expect(info.manualCmd).toContain('install.ps1')
-        })
-
         test('returns bun update command', () => {
             const info = getUpdateCommand('bun')
-            expect(info.command).toBe('bun install -g @trydecember/cli@latest')
+            expect(info.command).toBe('bun add -g @trydecember/cli@latest')
         })
 
         test('returns npm update command', () => {
@@ -136,6 +97,11 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             expect(info.command).toBe('brew upgrade december')
         })
 
+        test('returns npx command for npx mode', () => {
+            const info = getUpdateCommand('npx')
+            expect(info.command).toBe('npx @trydecember/cli@latest')
+        })
+
         test('returns git pull command for source development', () => {
             const info = getUpdateCommand('source')
             expect(info.command).toBe('git pull && bun install')
@@ -156,6 +122,21 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             expect(result.method).toBe('source')
             expect(result.command).toBe('git pull && bun install')
             expect(progressMsg).toContain('source development')
+        })
+
+        test('handles npx mode without executing child process', async () => {
+            let progressMsg = ''
+            const result = await performCliUpdate({
+                configInstallMethod: 'npx',
+                onProgress: (msg) => {
+                    progressMsg = msg
+                },
+            })
+
+            expect(result.success).toBe(true)
+            expect(result.method).toBe('npx')
+            expect(result.command).toBe('npx @trydecember/cli@latest')
+            expect(progressMsg).toContain('npx/bunx')
         })
 
         test('executes update command and handles success', async () => {
@@ -181,7 +162,7 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
 
             expect(result.success).toBe(true)
             expect(result.method).toBe('bun')
-            expect(executedCommand).toBe('bun install -g @trydecember/cli@latest')
+            expect(executedCommand).toBe('bun add -g @trydecember/cli@latest')
             expect(progressCalled).toBe(true)
             expect(successCalled).toBe(true)
         })

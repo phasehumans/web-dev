@@ -42,7 +42,7 @@ export interface DecemberConfig {
     pathGuard?: boolean
     scope?: string
     authPriority?: 'byok' | 'december'
-    installMethod?: 'curl' | 'npm' | 'bun' | 'pnpm' | 'yarn' | 'brew' | 'source'
+    installMethod?: 'npm' | 'bun' | 'pnpm' | 'yarn' | 'brew' | 'npx' | 'source'
     versionCheckCache?: {
         latestVersion: string
         checkedAt: number

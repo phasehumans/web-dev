@@ -23,6 +23,64 @@ describe('/update command action', () => {
     })
 })
 
+describe('/clear & /new commands', () => {
+    test('clearContext and resetChat are called on /clear', async () => {
+        const clearCmd = COMMANDS.find((c) => c.name === 'clear')
+        expect(clearCmd).toBeDefined()
+
+        const mockClear = mock(async () => {})
+        const mockReset = mock(() => {})
+        const toastMsgs: any[] = []
+
+        await clearCmd?.action({
+            agent: { clearContext: mockClear },
+            resetChat: mockReset,
+            toast: { show: (m: any) => toastMsgs.push(m) },
+        } as any)
+
+        expect(mockClear).toHaveBeenCalledTimes(1)
+        expect(mockReset).toHaveBeenCalledTimes(1)
+        expect(toastMsgs[0]?.message).toContain('Cleared conversation')
+    })
+
+    test('newContext and resetChat are called on /new', async () => {
+        const newCmd = COMMANDS.find((c) => c.name === 'new')
+        expect(newCmd).toBeDefined()
+
+        const mockNew = mock(async () => {})
+        const mockReset = mock(() => {})
+        const toastMsgs: any[] = []
+
+        await newCmd?.action({
+            agent: { newContext: mockNew },
+            resetChat: mockReset,
+            toast: { show: (m: any) => toastMsgs.push(m) },
+        } as any)
+
+        expect(mockNew).toHaveBeenCalledTimes(1)
+        expect(mockReset).toHaveBeenCalledTimes(1)
+        expect(toastMsgs[0]?.message).toContain('Started a new conversation')
+    })
+})
+
+describe('/fork command', () => {
+    test('forkContext is called on /fork', async () => {
+        const forkCmd = COMMANDS.find((c) => c.name === 'fork')
+        expect(forkCmd).toBeDefined()
+
+        const mockFork = mock(async () => 'session-fork-123')
+        const toastMsgs: any[] = []
+
+        await forkCmd?.action({
+            agent: { forkContext: mockFork },
+            toast: { show: (m: any) => toastMsgs.push(m) },
+        } as any)
+
+        expect(mockFork).toHaveBeenCalledTimes(1)
+        expect(toastMsgs[0]?.message).toContain('Forked to new session: session-fork-123')
+    })
+})
+
 describe('/init command action', () => {
     test('scaffolds AGENTS.md in root and rules/skills in .december without headings', async () => {
         const fs = await import('node:fs')

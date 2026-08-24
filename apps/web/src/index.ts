@@ -32,20 +32,8 @@ const proxyBackendApi = (req: Request) => {
     return fetch(targetUrl, options)
 }
 
-const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/phasehumans/december/main'
-
 const server = serve({
     routes: {
-        '/install.sh': () => Response.redirect(`${GITHUB_RAW_BASE}/install.sh`, 302),
-        '/install.ps1': () => Response.redirect(`${GITHUB_RAW_BASE}/install.ps1`, 302),
-        '/ps1': () => Response.redirect(`${GITHUB_RAW_BASE}/install.ps1`, 302),
-        '/install': (req) => {
-            const userAgent = (req.headers.get('user-agent') || '').toLowerCase()
-            if (userAgent.includes('powershell')) {
-                return Response.redirect(`${GITHUB_RAW_BASE}/install.ps1`, 302)
-            }
-            return Response.redirect(`${GITHUB_RAW_BASE}/install.sh`, 302)
-        },
         '/robots.txt': () => {
             const file = Bun.file(path.join(import.meta.dir, '../assets/robots.txt'))
             return new Response(file, {

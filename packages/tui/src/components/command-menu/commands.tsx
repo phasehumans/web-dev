@@ -9,6 +9,18 @@ import type { Command } from './types'
 
 export const COMMANDS: Command[] = [
     {
+        name: 'clear',
+        description: 'Clear conversation history',
+        value: '/clear',
+        action: async (ctx) => {
+            if (ctx.agent) {
+                await ctx.agent.clearContext()
+                ctx.resetChat?.()
+                ctx.toast.show({ variant: 'success', message: 'Cleared conversation history.' })
+            }
+        },
+    },
+    {
         name: 'context',
         description: 'Visualize current context usage',
         value: '/context',
