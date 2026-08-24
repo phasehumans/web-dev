@@ -28,45 +28,30 @@ describe('Database Schema & Model Constraints (Integration)', () => {
         expect(dbAvailable).toBe(true)
     })
 
-    test('enforces RepositoryWiki unique constraint per user and repoFullName', async () => {
+    test('enforces User email unique constraint and cascading delete', async () => {
         if (!dbAvailable) return
 
         const uniqueEmail = `test-user-${Date.now()}@example.com`
+        const username = `testuser_${Date.now()}`
         const user = await prisma.user.create({
             data: {
                 name: 'Test DB User',
                 email: uniqueEmail,
-                username: `testuser_${Date.now()}`,
+                username,
             },
         })
 
-        const wiki1 = await prisma.repositoryWiki.create({
-            data: {
-                userId: user.id,
-                repoFullName: 'phasehumans/december',
-                repoOwner: 'phasehumans',
-                repoName: 'december',
-                pages: {
-                    create: [
-                        { slug: 'overview', title: 'Overview', content: 'Repo overview content' },
-                    ],
-                },
-            },
-            include: { pages: true },
-        })
+        expect(user.id).toBeDefined()
+        expect(user.email).toBe(uniqueEmail)
 
-        expect(wiki1.pages.length).toBe(1)
-        expect(wiki1.pages[0]?.title).toBe('Overview')
-
-        // Attempting to create duplicate wiki for same user and repoFullName should throw unique constraint error
+        // Attempting to create duplicate user with same email should throw unique constraint error
         await expect(
             Promise.resolve(
-                prisma.repositoryWiki.create({
+                prisma.user.create({
                     data: {
-                        userId: user.id,
-                        repoFullName: 'phasehumans/december',
-                        repoOwner: 'phasehumans',
-                        repoName: 'december',
+                        name: 'Duplicate User',
+                        email: uniqueEmail,
+                        username: `${username}_dup`,
                     },
                 })
             )

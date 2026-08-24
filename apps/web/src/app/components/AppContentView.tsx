@@ -12,7 +12,6 @@ import { WorkspaceScreen } from '@/features/preview/components/WorkspaceScreen'
 import { ProfileSettings } from '@/features/profile/components/ProfileSettings'
 import { SearchSpaceScreen } from '@/features/search/components/SearchSpaceScreen'
 import { SessionList } from '@/features/sessions/components/SessionList'
-import { WikiView } from '@/features/wiki/components/WikiView'
 
 interface AppContentViewProps {
     view: ViewState
@@ -101,12 +100,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
             {view === 'profile' && (
                 <AnimatedPage pageKey="profile">
                     <ProfileSettings onSignOut={onSignOut} onBack={onNewProject} />
-                </AnimatedPage>
-            )}
-
-            {(view === 'templates' || view === 'wiki') && (
-                <AnimatedPage pageKey="wiki">
-                    <WikiView />
                 </AnimatedPage>
             )}
 

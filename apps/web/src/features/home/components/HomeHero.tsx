@@ -127,6 +127,8 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         }
     }
 
+    // Disabled: first-time onboarding video modal is temporarily disabled until video asset is ready
+    /*
     useEffect(() => {
         let timer: any = null
         if (isAuthenticated && profile && profile.hasCompletedOnboarding === false) {
@@ -140,6 +142,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
             if (timer) clearTimeout(timer)
         }
     }, [isAuthenticated, profile])
+    */
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -175,14 +178,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
         onResetImportState?.()
         setActiveImportForm((prev) => (prev === form ? null : form))
-    }
-
-    const handleTemplateClick = () => {
-        if (!isAuthenticated) {
-            onOpenAuth()
-            return
-        }
-        navigate('/templates')
     }
 
     return (

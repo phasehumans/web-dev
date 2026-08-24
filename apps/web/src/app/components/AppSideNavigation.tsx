@@ -41,8 +41,6 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
     const showFloatingMobileToggle =
         currentView !== 'sessions' &&
         currentView !== 'review' &&
-        currentView !== 'wiki' &&
-        currentView !== 'templates' &&
         currentView !== 'profile' &&
         currentView !== 'canvas' &&
         !isWorkspaceScreen
@@ -77,7 +75,6 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
                 onNewThread={onNewThread}
                 onSessions={() => onNavigate('sessions')}
                 onReview={() => onNavigate('review')}
-                onTemplates={() => onNavigate('templates')}
                 onProfile={() => onNavigate('profile')}
                 onOpenProject={onOpenProject}
                 isAuthenticated={isAuthenticated}
@@ -108,7 +105,6 @@ export const AppSideNavigation: React.FC<AppSideNavigationProps> = ({
                 onSessions={() => onNavigate('sessions')}
                 onReview={() => onNavigate('review')}
                 onAllProjects={() => onNavigate('all-projects')}
-                onTemplates={() => onNavigate('templates')}
                 onProfile={() => onNavigate('profile')}
                 onOpenProject={onOpenProject}
                 isAuthenticated={isAuthenticated}

@@ -5,8 +5,6 @@ Allow: /docs
 Allow: /docs/*
 Allow: /privacy
 Allow: /terms
-Disallow: /wiki
-Disallow: /wiki/*
 Disallow: /api/
 Disallow: /auth/
 Disallow: /sessions

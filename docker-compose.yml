@@ -38,6 +38,7 @@ services:
             retries: 5
 
     db-migrate:
+        image: ghcr.io/phasehumans/december-db-migrate:latest
         build:
             context: .
             dockerfile: Dockerfile
@@ -53,6 +54,7 @@ services:
         command: bun run db:deploy
 
     server:
+        image: ghcr.io/phasehumans/december-server:latest
         build:
             context: .
             dockerfile: Dockerfile
@@ -70,6 +72,7 @@ services:
             - '4000:4000'
 
     worker:
+        image: ghcr.io/phasehumans/december-worker:latest
         build:
             context: .
             dockerfile: Dockerfile

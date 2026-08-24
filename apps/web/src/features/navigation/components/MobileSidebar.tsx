@@ -26,7 +26,6 @@ export const MobileSidebar: React.FC<
     onAllProjects,
     onSessions,
     onReview,
-    onTemplates,
     onProfile,
     onOpenProject,
     isAuthenticated,
@@ -45,7 +44,6 @@ export const MobileSidebar: React.FC<
     const isHomeActive = path === '/'
     const isProjectsActive = path.startsWith('/projects')
     const isReviewActive = path.startsWith('/review')
-    const isWikiActive = path.startsWith('/wiki') || path.startsWith('/templates')
     const isSettingsActive = path.startsWith('/settings') || path.startsWith('/profile')
 
     const [isSearchOpen, setIsSearchOpen] = React.useState(false)
@@ -88,8 +86,7 @@ export const MobileSidebar: React.FC<
     } else if (!isHomeActive) {
         if (isProjectsActive) activeIndex = 2
         else if (isReviewActive) activeIndex = 3
-        else if (isWikiActive) activeIndex = 4
-        else if (isSettingsActive) activeIndex = 5
+        else if (isSettingsActive) activeIndex = 4
     } else {
         activeIndex = 0
     }
@@ -142,15 +139,6 @@ export const MobileSidebar: React.FC<
             icon: <Icons.GitPullRequest className="w-[18px] h-[18px]" />,
             onClick: () => {
                 onReview()
-                onClose()
-            },
-        },
-        {
-            id: 'templates',
-            label: 'Wiki',
-            icon: <Icons.BookOpen className="w-[18px] h-[18px]" />,
-            onClick: () => {
-                onTemplates()
                 onClose()
             },
         },

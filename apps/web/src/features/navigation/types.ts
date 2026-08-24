@@ -9,7 +9,6 @@ export interface SidebarProps {
     onAllProjects: () => void
     onSessions?: () => void
     onReview?: () => void
-    onTemplates: () => void
     onProfile: () => void
     onOpenProject: (projectId: string) => void
     isAuthenticated: boolean
@@ -25,7 +24,6 @@ export interface MobileSidebarProps {
     onAllProjects: () => void
     onSessions?: () => void
     onReview?: () => void
-    onTemplates: () => void
     onProfile: () => void
     onOpenProject: (projectId: string) => void
     isAuthenticated: boolean

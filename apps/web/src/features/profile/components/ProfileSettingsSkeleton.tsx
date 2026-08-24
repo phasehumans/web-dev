@@ -196,28 +196,6 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
         )
     }
 
-    if (activeTab === 'Wiki') {
-        return (
-            <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150">
-                <div className="flex flex-col mb-8">
-                    <Skeleton className="h-[18px] w-32 mb-4 bg-white/[0.06]" />
-                    <div className="flex flex-col border-t border-[#242323] pt-4 divide-y divide-[#242323]/50">
-                        <SettingRowSkeleton
-                            titleWidth="w-44"
-                            descWidth="w-80"
-                            actionType="toggle"
-                        />
-                        <SettingRowSkeleton
-                            titleWidth="w-36"
-                            descWidth="w-64"
-                            actionType="button"
-                        />
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     if (activeTab === 'Schedules') {
         return (
             <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150">

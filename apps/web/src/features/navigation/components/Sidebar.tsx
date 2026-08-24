@@ -30,7 +30,6 @@ const Sidebar: React.FC<
     onAllProjects,
     onSessions,
     onReview,
-    onTemplates,
     onProfile,
     onOpenProject,
     isAuthenticated,
@@ -273,7 +272,6 @@ const Sidebar: React.FC<
         path.startsWith('/all-projects') ||
         path.startsWith('/sessions')
     const isReviewActive = path.startsWith('/review')
-    const isWikiActive = path.startsWith('/wiki') || path.startsWith('/templates')
     const isSettingsActive = path.startsWith('/settings') || path.startsWith('/profile')
 
     let activeIndex = 0
@@ -282,8 +280,7 @@ const Sidebar: React.FC<
     } else if (!isHomeActive) {
         if (isProjectsActive) activeIndex = 2
         else if (isReviewActive) activeIndex = 3
-        else if (isWikiActive) activeIndex = 4
-        else if (isSettingsActive) activeIndex = 5
+        else if (isSettingsActive) activeIndex = 4
     } else {
         activeIndex = 0
     }
@@ -330,12 +327,6 @@ const Sidebar: React.FC<
             label: 'Review',
             icon: <Icons.GitPullRequest className="w-[17px] h-[17px]" />,
             onClick: onReview,
-        },
-        {
-            id: 'templates',
-            label: 'Wiki',
-            icon: <Icons.BookOpen className="w-[17px] h-[17px]" />,
-            onClick: onTemplates,
         },
         {
             id: 'settings',

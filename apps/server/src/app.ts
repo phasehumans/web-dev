@@ -26,7 +26,6 @@ import sessionRouter from './modules/session/session.routes'
 import settingRouter from './modules/setting/setting.routes'
 import skillsRouter from './modules/skills/skills.routes'
 import usageRouter from './modules/usage/usage.routes'
-import wikiRouter from './modules/wiki/wiki.routes'
 
 const app = express()
 
@@ -110,8 +109,6 @@ app.use('/api/v1/cli', cliRateLimiter, cliRouter)
 app.use('/api/v1/review', reviewRouter)
 app.use('/api/v1/reviews', reviewRouter)
 app.use('/api/v1/skills', skillsRouter)
-app.use('/api/v1/wiki', wikiRouter)
-app.use('/api/wiki', wikiRouter)
 app.use('/api/v1/schedule', scheduleRouter)
 app.use('/api/v1/session', sessionRouter)
 app.use('/api/v1/sessions', sessionRouter)

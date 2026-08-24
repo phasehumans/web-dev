@@ -47,8 +47,6 @@ const server = serve({
             })
         },
         '/api/v1/*': proxyBackendApi,
-        '/api/wiki/*': proxyBackendApi,
-        '/api/wiki': proxyBackendApi,
         '/*': index,
     },
 

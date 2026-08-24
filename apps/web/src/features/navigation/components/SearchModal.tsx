@@ -90,18 +90,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 },
             },
             {
-                id: 'go-templates',
-                label: 'Wiki & Templates',
-                subtitle: 'Explore repository wikis & templates',
-                category: 'Navigation',
-                icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
-                keywords: ['wiki', 'templates', 'codebase', 'repos', 'architecture'],
-                action: () => {
-                    onClose()
-                    navigate('/templates')
-                },
-            },
-            {
                 id: 'go-activate',
                 label: 'Device Activation',
                 subtitle: 'Link CLI or secondary device code',
@@ -254,18 +242,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 action: () => {
                     onClose()
                     navigate('/settings/review')
-                },
-            },
-            {
-                id: 'go-settings-wiki',
-                label: 'Repository Wiki Settings',
-                subtitle: 'Settings / Wiki',
-                category: 'Settings Subpages',
-                icon: <Icons.BookOpen className="w-4 h-4 text-neutral-400" />,
-                keywords: ['wiki settings', 'docs generation', 'markdown', 'knowledge base'],
-                action: () => {
-                    onClose()
-                    navigate('/settings/wiki')
                 },
             },
             {

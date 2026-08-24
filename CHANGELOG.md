@@ -1,4 +1,4 @@
-## [unreleased]
+## [0.3.15] - 2026-08-24
 
 ### Features
 
@@ -7,6 +7,10 @@
 ### Bug Fixes
 
 - _(tui)_ Handle double ctrl+c exit globally and abort streaming
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.15
 
 ## [0.3.14] - 2026-08-24
 

@@ -42,22 +42,52 @@ const toApiError = async (res: Response) => {
     return new ApiError(message, res.status, payload?.errors)
 }
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const isTransientError = (status?: number) => {
+    if (!status) return true // Network failure or connection refused
+    return status === 502 || status === 503 || status === 504 || status === 500
+}
+
 let activeRefreshPromise: Promise<boolean> | null = null
 
-export const refreshAuthSession = async () => {
+export const refreshAuthSession = async (maxRetries = 3) => {
     if (activeRefreshPromise) {
         return activeRefreshPromise
     }
 
     activeRefreshPromise = (async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-                method: 'POST',
-                credentials: 'include',
-            })
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                        method: 'POST',
+                        credentials: 'include',
+                    })
 
-            return res.ok
-        } catch {
+                    if (res.ok) {
+                        return true
+                    }
+
+                    // If it's a permanent auth error (401/403/400), don't retry
+                    if (!isTransientError(res.status)) {
+                        return false
+                    }
+
+                    // If transient server error (502/503/504) during deployment, wait and retry
+                    if (attempt < maxRetries) {
+                        const delayMs = attempt === 0 ? 2000 : 3000
+                        await wait(delayMs)
+                    }
+                } catch {
+                    // Intentionally swallowed: Network errors (e.g. EC2 restarting) are retried before declaring unauthenticated
+                    if (attempt < maxRetries) {
+                        const delayMs = attempt === 0 ? 2000 : 3000
+                        await wait(delayMs)
+                    }
+                }
+            }
+
             return false
         } finally {
             activeRefreshPromise = null

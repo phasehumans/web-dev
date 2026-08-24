@@ -60,7 +60,7 @@ export interface HandleDisconnectInput {
 
 export interface EphemeralTaskInput {
     sessionId?: string
-    taskType: 'pr_review' | 'wiki_ast' | 'security_audit' | 'one_click_fix'
+    taskType: 'pr_review' | 'security_audit' | 'one_click_fix'
     repoUrl?: string
     gitToken?: string
     taskRunner?: (sandbox: any) => Promise<any>

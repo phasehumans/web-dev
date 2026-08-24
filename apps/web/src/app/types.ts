@@ -5,10 +5,8 @@ export type ViewState =
     | 'sessions'
     | 'review'
     | 'profile'
-    | 'templates'
     | 'project'
     | 'canvas'
-    | 'wiki'
     | 'automations'
 
 export type ProfileTab =
@@ -24,7 +22,6 @@ export type ProfileTab =
     | 'Usage'
     | 'API Keys'
     | 'Review'
-    | 'Wiki'
     | 'Schedules'
     | 'December CLI'
     | 'Secrets'
@@ -44,7 +41,6 @@ const profileTabToSlug: Record<string, string> = {
     Usage: 'usage',
     'API Keys': 'api-keys',
     Review: 'review',
-    Wiki: 'wiki',
     Schedules: 'schedules',
     'December CLI': 'december-cli',
     Secrets: 'secrets',
@@ -77,9 +73,7 @@ const simpleViewToPath: Record<string, string> = {
     'all-projects': '/projects',
     sessions: '/sessions',
     review: '/review',
-    templates: '/wiki',
     canvas: '/canvas',
-    wiki: '/wiki',
     automations: '/automations',
 }
 
@@ -102,10 +96,6 @@ export const getPathForView = (
 }
 
 export const getViewForPath = (pathname: string): ViewState => {
-    if (pathname === '/templates' || pathname.startsWith('/templates/')) {
-        return 'wiki'
-    }
-
     // exact simple matches
     const simple = simplePathToView[pathname]
     if (simple) return simple

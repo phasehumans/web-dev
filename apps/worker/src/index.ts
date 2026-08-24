@@ -31,13 +31,10 @@ export const worker = new Worker(
             `Processing job ${job.id} (type: ${effectiveTaskType}) for session ${sessionId || reviewId}`
         )
 
-        // Handle Ephemeral Tasks (PR Review, One-Click Fix, Security Audit, Wiki AST)
-        const isEphemeralTask = [
-            'pr_review',
-            'one_click_fix',
-            'security_audit',
-            'wiki_ast',
-        ].includes(effectiveTaskType)
+        // Handle Ephemeral Tasks (PR Review, One-Click Fix, Security Audit)
+        const isEphemeralTask = ['pr_review', 'one_click_fix', 'security_audit'].includes(
+            effectiveTaskType
+        )
 
         if (isEphemeralTask) {
             if (userId) {
@@ -96,8 +93,6 @@ export const worker = new Worker(
                                 .run('npm run fix --if-present', { cwd: '/workspace' })
                                 .catch(() => null)
                             runOutput = fixRes?.stdout || 'Fix applied'
-                        } else if (effectiveTaskType === 'wiki_ast') {
-                            runOutput = 'AST generated'
                         }
                     }
                     return {

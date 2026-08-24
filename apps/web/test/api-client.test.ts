@@ -118,4 +118,45 @@ describe('API Client Base URL and Environment Configuration', () => {
             }
         }
     })
+
+    test('refreshAuthSession retries on 502/network downtime and succeeds when available', async () => {
+        const { refreshAuthSession } = await import('../src/shared/api/client')
+        const originalFetch = globalThis.fetch
+        let callCount = 0
+
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            callCount++
+            if (callCount === 1) {
+                return new Response(JSON.stringify({ message: 'Bad Gateway' }), { status: 502 })
+            }
+            return new Response(JSON.stringify({ success: true }), { status: 200 })
+        }) as any
+
+        try {
+            const result = await refreshAuthSession(2)
+            expect(result).toBe(true)
+            expect(callCount).toBe(2)
+        } finally {
+            globalThis.fetch = originalFetch
+        }
+    })
+
+    test('refreshAuthSession does not retry on 401 unauthorized', async () => {
+        const { refreshAuthSession } = await import('../src/shared/api/client')
+        const originalFetch = globalThis.fetch
+        let callCount = 0
+
+        globalThis.fetch = (async (url: string | URL | Request) => {
+            callCount++
+            return new Response(JSON.stringify({ message: 'Session expired' }), { status: 401 })
+        }) as any
+
+        try {
+            const result = await refreshAuthSession(2)
+            expect(result).toBe(false)
+            expect(callCount).toBe(1)
+        } finally {
+            globalThis.fetch = originalFetch
+        }
+    })
 })

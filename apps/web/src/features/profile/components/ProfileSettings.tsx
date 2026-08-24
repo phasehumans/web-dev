@@ -6,7 +6,6 @@ import {
     FileClock,
     ArrowUpRight,
     Link2,
-    BookOpen,
     KeyRound,
     FileText,
     Puzzle,
@@ -37,7 +36,6 @@ import { ProfileSignOutAllSessionsModal } from './ProfileSignOutAllSessionsModal
 import { ProfileSkillsSettings } from './ProfileSkillsSettings'
 import { ProfileTermsSettings } from './ProfileTermsSettings'
 import { ProfileUsageSettings } from './ProfileUsageSettings'
-import { ProfileWikiSettings } from './ProfileWikiSettings'
 
 import type { ProfileSettingsProps } from '@/features/profile/types'
 
@@ -94,12 +92,6 @@ const SETTINGS_NAV_GROUPS = [
                 icon: Icons.GitPullRequest,
             },
             {
-                tab: 'Wiki',
-                slug: 'wiki',
-                label: 'DeepWiki',
-                icon: BookOpen,
-            },
-            {
                 tab: 'Schedules',
                 slug: 'schedules',
                 label: 'Schedules',
@@ -154,7 +146,6 @@ const TAB_LABEL_MAP: Record<string, string> = {
     Skills: 'Skills',
     Secrets: 'Secrets',
     Review: 'Code Review',
-    Wiki: 'DeepWiki',
     Schedules: 'Schedules',
     Billing: 'Billing',
     Usage: 'Usage',
@@ -317,8 +308,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                 return <ProfileSecretsSettings />
             case 'Review':
                 return <ProfileReviewSettings />
-            case 'Wiki':
-                return <ProfileWikiSettings />
             case 'Schedules':
                 return <ProfileSchedulesSettings />
             case 'Terms':
@@ -633,17 +622,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         >
                             <Icons.GitPullRequest className="w-[18px] h-[18px]" />
                             Review
-                        </button>
-                        <button
-                            onClick={() => navigate(`/settings/${getSlugForProfileTab('Wiki')}`)}
-                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                                activeTab === 'Wiki'
-                                    ? 'bg-[#242323] text-[#D6D5C9]'
-                                    : 'text-[#D6D5C9] hover:bg-[#191919]'
-                            }`}
-                        >
-                            <BookOpen className="w-[18px] h-[18px]" strokeWidth={1.5} />
-                            Wiki
                         </button>
                         <button
                             onClick={() =>

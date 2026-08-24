@@ -10,8 +10,6 @@ interface MobileSidebarNavProps {
     onAllProjects: () => void
     onSessions?: () => void
     onReview?: () => void
-    onTemplates: () => void
-    onWiki?: () => void
     onProfile?: () => void
     isAuthenticated?: boolean
     onOpenAuth?: () => void
@@ -23,7 +21,6 @@ export const MobileSidebarNav: React.FC<MobileSidebarNavProps> = ({
     onAllProjects,
     onSessions,
     onReview,
-    onTemplates,
     onProfile,
     isAuthenticated,
     onOpenAuth,
@@ -45,15 +42,6 @@ export const MobileSidebarNav: React.FC<MobileSidebarNavProps> = ({
                 collapsed={false}
                 onClick={() => {
                     onReview?.()
-                    onClose()
-                }}
-            />
-            <SidebarNavItem
-                icon={<Icons.BookOpen className="w-[18px] h-[18px]" />}
-                label="Wiki"
-                collapsed={false}
-                onClick={() => {
-                    onTemplates()
                     onClose()
                 }}
             />

@@ -78,7 +78,7 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
                 <h1 className="text-[16px] font-medium mb-4">Repositories</h1>
 
                 <div className="flex flex-col border-t border-[#242323] pt-6">
-                    {/* Top Control Bar matching Wiki Page */}
+                    {/* Top Control Bar */}
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
                         <div className="relative w-full max-w-full sm:max-w-[340px]">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
@@ -173,7 +173,7 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
                             </span>
                         </div>
                     ) : (
-                        /* Repositories Grid View (Exact Wiki Page Card Color: #1B1B1B, No Border, Hover: #202020) */
+                        /* Repositories Grid View */
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                             {filteredRepos.map((repo: GithubRepo) => {
                                 const [owner, name] = repo.fullName.split('/')

@@ -67,7 +67,6 @@ model User {
   feedbacks          Feedback[]
   pullRequestReviews PullRequestReview[]
   reviewPreference   ReviewPreference?
-  wikis              RepositoryWiki[]
 }
 
 model Notification {
@@ -183,47 +182,6 @@ model ReviewComment {
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId])
-}
-
-enum WikiStatus {
-  IDLE
-  GENERATING
-  COMPLETED
-  FAILED
-}
-
-model RepositoryWiki {
-  id           String     @id @default(uuid())
-  userId       String
-  repoFullName String
-  repoOwner    String
-  repoName     String
-  status       WikiStatus @default(IDLE)
-  isPinned     Boolean    @default(false)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pages WikiPage[]
-
-  @@unique([userId, repoFullName])
-  @@index([userId])
-}
-
-model WikiPage {
-  id        String         @id @default(uuid())
-  wikiId    String
-  slug      String
-  title     String
-  content   String         @db.Text
-  order     Int            @default(0)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-
-  wiki RepositoryWiki @relation(fields: [wikiId], references: [id], onDelete: Cascade)
-
-  @@unique([wikiId, slug])
-  @@index([wikiId])
 }
 
 enum SessionType {

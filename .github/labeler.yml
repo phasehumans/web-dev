@@ -1,0 +1,44 @@
+backend:
+    - changed-files:
+          - any-glob-to-any-file: 'apps/server/**'
+
+worker:
+    - changed-files:
+          - any-glob-to-any-file: 'apps/worker/**'
+
+frontend:
+    - changed-files:
+          - any-glob-to-any-file: 'apps/web/**'
+
+cli:
+    - changed-files:
+          - any-glob-to-any-file: 'apps/cli/**'
+
+database:
+    - changed-files:
+          - any-glob-to-any-file: 'packages/database/**'
+
+agent:
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'packages/agent/**'
+                - 'packages/providers/**'
+                - 'packages/tools/**'
+
+evals:
+    - changed-files:
+          - any-glob-to-any-file: 'packages/evals/**'
+
+infra:
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'infra/**'
+                - 'Dockerfile'
+                - 'docker-compose.yml'
+                - '.github/workflows/deploy.yml'
+
+ci:
+    - changed-files:
+          - any-glob-to-any-file:
+                - '.github/**'
+                - '.husky/**'

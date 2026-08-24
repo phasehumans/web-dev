@@ -1,0 +1,16 @@
+[extend]
+# Use default gitleaks rules
+
+[allowlist]
+description = "Global allowlist for tests, examples, and lockfiles"
+paths = [
+    '''bun\.lock''',
+    '''package-lock\.json''',
+    '''\.env\.example''',
+    '''\.env\.test''',
+    '''packages/database/prisma/migrations/.*''',
+]
+regexes = [
+    '''ci-testing-secret-key-12345''',
+    '''mock-[a-zA-Z0-9_\-]+''',
+]
