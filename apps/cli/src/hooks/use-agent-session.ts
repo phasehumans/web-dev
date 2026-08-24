@@ -164,24 +164,18 @@ export function useAgentSession({
     }, [])
 
     useEffect(() => {
-        setIsAuthenticated(initialAuth)
-        setAuthMethod(initialAuthMethod)
-        if (initialHasBothAuth !== undefined) setHasBothAuth(initialHasBothAuth)
-        if (initialSettingsAuthPriority !== undefined)
-            setSettingsAuthPriority(initialSettingsAuthPriority)
-        if (userEmail !== undefined) setCurrentEmail(userEmail)
-    }, [
-        initialAuth,
-        initialAuthMethod,
-        initialHasBothAuth,
-        initialSettingsAuthPriority,
-        userEmail,
-        setIsAuthenticated,
-        setAuthMethod,
-        setHasBothAuth,
-        setSettingsAuthPriority,
-        setCurrentEmail,
-    ])
+        useCliStore.setState((prev) => ({
+            ...prev,
+            isAuthenticated: initialAuth,
+            authMethod: initialAuthMethod,
+            hasBothAuth: initialHasBothAuth !== undefined ? initialHasBothAuth : prev.hasBothAuth,
+            settingsAuthPriority:
+                initialSettingsAuthPriority !== undefined
+                    ? initialSettingsAuthPriority
+                    : prev.settingsAuthPriority,
+            currentEmail: userEmail !== undefined ? userEmail : prev.currentEmail,
+        }))
+    }, [initialAuth, initialAuthMethod, initialHasBothAuth, initialSettingsAuthPriority, userEmail])
 
     useEffect(() => {
         if (agent) {

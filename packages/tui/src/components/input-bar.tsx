@@ -40,7 +40,7 @@ type Props = {
 
 const MAX_FILE_SUGGESTIONS = 5
 
-export function InputBar({
+export const InputBar = React.memo(function InputBar({
     onSubmit,
     disabled = false,
     placeholder = 'Ask December to build...',
@@ -96,27 +96,44 @@ export function InputBar({
 
     const [showShortcutsMenu, setShowShortcutsMenu] = useState(false)
 
-    // Load workspace files lazily for @ mention autocomplete
+    // Check for @filename mention query
+    const fileMatch = value.match(/@(\S*)$/)
+    const showFileMenu = Boolean(fileMatch) && !showCommandMenu && !showShortcutsMenu
+    const fileQuery = fileMatch ? fileMatch[1]?.toLowerCase() || '' : ''
+
+    // Load workspace files lazily and asynchronously ONLY when user types @
     useEffect(() => {
+        if (!fileMatch || allWorkspaceFiles.length > 0) return
+
+        let isMounted = true
         try {
             const ignores = getWorkspaceIgnores()
-            const files = fg.sync(['**/*'], {
+            fg(['**/*'], {
                 dot: true,
                 ignore: ignores,
                 onlyFiles: true,
                 suppressErrors: true,
             })
-            setAllWorkspaceFiles(files)
+                .then((files) => {
+                    if (isMounted) {
+                        setAllWorkspaceFiles(files)
+                    }
+                })
+                .catch(() => {
+                    // Intentionally swallowed: fallback to empty workspace files on error
+                    if (isMounted) {
+                        setAllWorkspaceFiles([])
+                    }
+                })
         } catch {
             // Intentionally swallowed: ignore file listing errors
             setAllWorkspaceFiles([])
         }
-    }, [])
 
-    // Check for @filename mention query
-    const fileMatch = value.match(/@(\S*)$/)
-    const showFileMenu = Boolean(fileMatch) && !showCommandMenu && !showShortcutsMenu
-    const fileQuery = fileMatch ? fileMatch[1]?.toLowerCase() || '' : ''
+        return () => {
+            isMounted = false
+        }
+    }, [fileMatch, allWorkspaceFiles.length])
 
     const matchingFiles = useMemo(() => {
         if (!showFileMenu) return []
@@ -439,4 +456,4 @@ export function InputBar({
             )}
         </Box>
     )
-}
+})

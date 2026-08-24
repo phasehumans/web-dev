@@ -44,7 +44,7 @@ function renderSingleMessage(
     )
 }
 
-export function MessageList({
+export const MessageList = React.memo(function MessageList({
     staticKey,
     staticMessages,
     activeMessages,
@@ -80,4 +80,4 @@ export function MessageList({
             )}
         </Box>
     )
-}
+})
