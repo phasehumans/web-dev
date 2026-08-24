@@ -165,7 +165,8 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
 
         // Modifying operations check always-proceed or session whitelist
         if (classification.tier === 'modifying' && !toolCall.isSecretAccess) {
-            if (config.toolPermission === 'always-proceed') return { block: false }
+            if ((config.toolPermission ?? 'always-proceed') === 'always-proceed')
+                return { block: false }
 
             if (
                 globalSessionWhitelist.isApproved(cmdString) ||

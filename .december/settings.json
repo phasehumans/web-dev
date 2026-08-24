@@ -1,0 +1,7 @@
+{
+    "thinkingLevel": "auto",
+    "steeringMode": "all",
+    "followUpMode": "all",
+    "toolPermission": "always-proceed",
+    "pathGuard": true
+}

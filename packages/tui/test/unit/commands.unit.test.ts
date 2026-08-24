@@ -118,8 +118,18 @@ describe('/init command action', () => {
 
             expect(fs.existsSync(ignoreFile)).toBe(true)
             expect(fs.existsSync(commandsFile)).toBe(true)
+            const commandsContent = fs.readFileSync(commandsFile, 'utf8')
+            expect(commandsContent).toContain('// {')
+            expect(commandsContent).toContain('"name": "test"')
+
             expect(fs.existsSync(mcpFile)).toBe(true)
             expect(fs.existsSync(settingsFile)).toBe(true)
+            const settingsContent = JSON.parse(fs.readFileSync(settingsFile, 'utf8'))
+            expect(settingsContent.toolPermission).toBe('always-proceed')
+            expect(settingsContent.thinkingLevel).toBe('auto')
+            expect(settingsContent.steeringMode).toBe('all')
+            expect(settingsContent.followUpMode).toBe('all')
+            expect(settingsContent.pathGuard).toBe(true)
 
             expect(fs.existsSync(rulesFile)).toBe(true)
             const rulesContent = fs.readFileSync(rulesFile, 'utf8')

@@ -39,8 +39,12 @@ function CommandInputHarness({ onAutocomplete }: { onAutocomplete?: (text: strin
 }
 
 function TestTrigger({ onTrigger }: { onTrigger: () => void }) {
+    const triggered = React.useRef(false)
     React.useLayoutEffect(() => {
-        onTrigger()
+        if (!triggered.current) {
+            triggered.current = true
+            onTrigger()
+        }
     }, [onTrigger])
     return null
 }
@@ -77,5 +81,50 @@ describe('CommandMenu Component (Unit)', () => {
 
         const filtered = getFilteredCommands('pl')
         expect(filtered.some((c: any) => c.name === 'plan')).toBe(true)
+    })
+
+    it('navigates commands with up and down arrow keys', async () => {
+        function CommandNavigationHarness() {
+            const {
+                showCommandMenu,
+                commandQuery,
+                selectedIndex,
+                windowStart,
+                handleContentChange,
+                setSelectedIndex,
+            } = useCommandMenu()
+
+            return (
+                <>
+                    {showCommandMenu && (
+                        <CommandMenu
+                            query={commandQuery}
+                            selectedIndex={selectedIndex}
+                            windowStart={windowStart}
+                            totalFiltered={0}
+                            onSelect={setSelectedIndex}
+                            onExecute={() => {}}
+                        />
+                    )}
+                    <TestTrigger onTrigger={() => handleContentChange('/')} />
+                </>
+            )
+        }
+
+        const { stdin, lastFrame } = render(
+            <KeyboardLayerProvider>
+                <CommandNavigationHarness />
+            </KeyboardLayerProvider>
+        )
+
+        expect(lastFrame()).toContain('❭ /clear')
+
+        stdin.write('\u001B[B') // Down
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        expect(lastFrame()).toContain('❭ /context')
+
+        stdin.write('\u001B[A') // Up
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        expect(lastFrame()).toContain('❭ /clear')
     })
 })

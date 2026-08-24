@@ -43,4 +43,25 @@ describe('InputBar Component (Unit)', () => {
         const frame = lastFrame()
         expect(frame).toContain('Press Ctrl+C again to exit')
     })
+
+    it('navigates slash command menu with up and down arrows in InputBar', async () => {
+        const handleSubmit = mock(() => {})
+        const { stdin, lastFrame } = render(
+            <RootLayout>
+                <InputBar onSubmit={handleSubmit} />
+            </RootLayout>
+        )
+
+        stdin.write('/')
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        expect(lastFrame()).toContain('❭ /clear')
+
+        stdin.write('\u001B[B') // Down
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        expect(lastFrame()).toContain('❭ /context')
+
+        stdin.write('\u001B[A') // Up
+        await new Promise((resolve) => setTimeout(resolve, 20))
+        expect(lastFrame()).toContain('❭ /clear')
+    })
 })

@@ -142,31 +142,53 @@ export const InputBar = React.memo(function InputBar({
             .slice(0, MAX_FILE_SUGGESTIONS)
     }, [showFileMenu, allWorkspaceFiles, fileQuery])
 
+    const stateRef = useRef({
+        showFileMenu,
+        matchingFiles,
+        selectedFileIndex,
+        value,
+        handleContentChange,
+        grillMode,
+        onSubmit,
+        onCopy,
+    })
+    stateRef.current = {
+        showFileMenu,
+        matchingFiles,
+        selectedFileIndex,
+        value,
+        handleContentChange,
+        grillMode,
+        onSubmit,
+        onCopy,
+    }
+
     const isCtrlW = useRef(false)
     useInput((input, key) => {
-        if (showFileMenu && matchingFiles.length > 0) {
+        const state = stateRef.current
+        if (state.showFileMenu && state.matchingFiles.length > 0) {
             if (key.upArrow) {
                 setSelectedFileIndex((prev) => Math.max(0, prev - 1))
                 return
             }
             if (key.downArrow) {
-                setSelectedFileIndex((prev) => Math.min(matchingFiles.length - 1, prev + 1))
+                setSelectedFileIndex((prev) => Math.min(state.matchingFiles.length - 1, prev + 1))
                 return
             }
             if (key.tab || key.return) {
-                const selectedFile = matchingFiles[selectedFileIndex]
+                const selectedFile = state.matchingFiles[state.selectedFileIndex]
                 if (selectedFile) {
-                    const nextVal = value.replace(/@\S*$/, `@${selectedFile} `)
+                    const nextVal = state.value.replace(/@\S*$/, `@${selectedFile} `)
                     setValue(nextVal)
-                    handleContentChange(nextVal)
+                    state.handleContentChange(nextVal)
                     setSelectedFileIndex(0)
                 }
                 return
             }
             if (key.escape) {
-                const nextVal = value.replace(/@\S*$/, '')
+                const nextVal = state.value.replace(/@\S*$/, '')
                 setValue(nextVal)
-                handleContentChange(nextVal)
+                state.handleContentChange(nextVal)
                 return
             }
         }
@@ -176,15 +198,15 @@ export const InputBar = React.memo(function InputBar({
             setValue((prev) => {
                 const match = prev.match(/(\s*\S+\s*)$/)
                 const next = match ? prev.slice(0, -match[0].length) : prev
-                handleContentChange(next)
+                state.handleContentChange(next)
                 return next
             })
         }
-        if ((key.backspace || key.delete) && value.length === 0 && grillMode) {
-            onSubmit('/grill-me')
+        if ((key.backspace || key.delete) && state.value.length === 0 && state.grillMode) {
+            state.onSubmit('/grill-me')
         }
         if (key.ctrl && input === 'y') {
-            if (onCopy) onCopy()
+            if (state.onCopy) state.onCopy()
             return
         }
     })

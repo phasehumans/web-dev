@@ -229,29 +229,7 @@ export const COMMANDS: Command[] = [
                 if (!fs.existsSync(commandsFile)) {
                     fs.writeFileSync(
                         commandsFile,
-                        JSON.stringify(
-                            {
-                                commands: [
-                                    {
-                                        name: 'test',
-                                        description: 'Run tests and fix failures',
-                                        prompt: "Run 'bun test $PKG'. If any test fails, fix the root cause and verify.",
-                                    },
-                                    {
-                                        name: 'lint',
-                                        description: 'Run linter and fix errors',
-                                        prompt: 'Run linter and fix any reported issues in $FILE.',
-                                    },
-                                    {
-                                        name: 'commit',
-                                        description: 'Create conventional git commit',
-                                        prompt: 'Inspect git status and staged changes, then create a clean git commit adhering strictly to lowercase conventional commits.',
-                                    },
-                                ],
-                            },
-                            null,
-                            2
-                        ) + '\n'
+                        `{\n  "commands": [\n    // {\n    //   "name": "test",\n    //   "description": "Run tests and fix failures",\n    //   "prompt": "Run 'bun test $PKG'. If any test fails, fix the root cause and verify."\n    // }\n  ]\n}\n`
                     )
                 }
                 if (!fs.existsSync(mcpFile)) {
@@ -271,9 +249,10 @@ export const COMMANDS: Command[] = [
                         settingsFile,
                         JSON.stringify(
                             {
-                                thinkingLevel: 'low',
+                                thinkingLevel: 'auto',
                                 steeringMode: 'all',
-                                toolPermission: 'always-ask',
+                                followUpMode: 'all',
+                                toolPermission: 'always-proceed',
                                 pathGuard: true,
                             },
                             null,

@@ -11,7 +11,6 @@ export function renderWithProviders(ui: React.ReactNode) {
             <DialogProvider>
                 <ToastProvider>{ui}</ToastProvider>
             </DialogProvider>
-        </KeyboardLayerProvider>,
-        { exitOnCtrlC: false }
+        </KeyboardLayerProvider>
     )
 }

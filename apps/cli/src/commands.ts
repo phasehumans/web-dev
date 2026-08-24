@@ -38,30 +38,16 @@ build/
 *.key
 `
 
-const DEFAULT_COMMANDS_JSON =
-    JSON.stringify(
-        {
-            commands: [
-                {
-                    name: 'test',
-                    description: 'Run tests and fix failures',
-                    prompt: "Run 'bun test $PKG'. If any test fails, fix the root cause and verify.",
-                },
-                {
-                    name: 'lint',
-                    description: 'Run linter and fix errors',
-                    prompt: 'Run linter and fix any reported issues in $FILE.',
-                },
-                {
-                    name: 'commit',
-                    description: 'Create conventional git commit',
-                    prompt: 'Inspect git status and staged changes, then create a clean git commit adhering strictly to lowercase conventional commits.',
-                },
-            ],
-        },
-        null,
-        2
-    ) + '\n'
+const DEFAULT_COMMANDS_JSON = `{
+  "commands": [
+    // {
+    //   "name": "test",
+    //   "description": "Run tests and fix failures",
+    //   "prompt": "Run 'bun test $PKG'. If any test fails, fix the root cause and verify."
+    // }
+  ]
+}
+`
 
 const DEFAULT_MCP_JSON =
     JSON.stringify(
@@ -72,7 +58,20 @@ const DEFAULT_MCP_JSON =
         2
     ) + '\n'
 
-export async function handleInitCommand(): Promise<void> {
+const DEFAULT_SETTINGS_JSON =
+    JSON.stringify(
+        {
+            thinkingLevel: 'auto',
+            steeringMode: 'all',
+            followUpMode: 'all',
+            toolPermission: 'always-proceed',
+            pathGuard: true,
+        },
+        null,
+        2
+    ) + '\n'
+
+export async function handleInitCommand(options?: { quiet?: boolean }): Promise<void> {
     const rootDir = process.cwd()
     const decDir = path.join(rootDir, '.december')
     await fs.mkdir(decDir, { recursive: true })
@@ -123,31 +122,27 @@ export async function handleInitCommand(): Promise<void> {
             name: 'settings.json',
             targetPath: path.join(decDir, 'settings.json'),
             displayPath: '.december/settings.json',
-            content:
-                JSON.stringify(
-                    {
-                        thinkingLevel: 'low',
-                        steeringMode: 'all',
-                        toolPermission: 'always-ask',
-                        pathGuard: true,
-                    },
-                    null,
-                    2
-                ) + '\n',
+            content: DEFAULT_SETTINGS_JSON,
         },
     ]
 
     for (const file of filesToScaffold) {
         try {
             await fs.access(file.targetPath)
-            console.log(`${file.displayPath} already exists.`)
+            if (!options?.quiet) {
+                console.log(`${file.displayPath} already exists.`)
+            }
         } catch {
             await fs.writeFile(file.targetPath, file.content, 'utf-8')
-            console.log(`Created ${file.displayPath}`)
+            if (!options?.quiet) {
+                console.log(`Created ${file.displayPath}`)
+            }
         }
     }
 
-    console.log('\nDecember project initialization complete.')
+    if (!options?.quiet) {
+        console.log('\nDecember project initialization complete.')
+    }
 }
 
 export async function handleUpdateCommand(): Promise<void> {

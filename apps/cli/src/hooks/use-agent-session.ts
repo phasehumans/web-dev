@@ -857,7 +857,7 @@ export function useAgentSession({
 
             if (text.trim() === '/init') {
                 const { handleInitCommand } = await import('../commands')
-                await handleInitCommand()
+                await handleInitCommand({ quiet: true })
                 addToast('Initialized December workspace successfully!', 'success')
                 return
             }

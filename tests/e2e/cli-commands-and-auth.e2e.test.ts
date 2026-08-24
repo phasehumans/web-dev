@@ -24,8 +24,11 @@ describe('CLI Commands, Configuration & Session Persistence E2E Tests', () => {
             const settings = JSON.parse(
                 fs.readFileSync(path.join(tmpDir, '.december', 'settings.json'), 'utf-8')
             )
-            expect(settings.thinkingLevel).toBe('low')
+            expect(settings.thinkingLevel).toBe('auto')
             expect(settings.steeringMode).toBe('all')
+            expect(settings.followUpMode).toBe('all')
+            expect(settings.toolPermission).toBe('always-proceed')
+            expect(settings.pathGuard).toBe(true)
         } finally {
             process.chdir(originalCwd)
             fs.rmSync(tmpDir, { recursive: true, force: true })

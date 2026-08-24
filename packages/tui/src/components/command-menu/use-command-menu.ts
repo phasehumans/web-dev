@@ -1,5 +1,5 @@
 import { useInput } from 'ink'
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 
 import { useKeyboardLayer } from '../../providers/keyboard-layer'
 
@@ -72,17 +72,11 @@ export function useCommandMenu(options?: UseCommandMenuOptions): UseCommandMenuR
 
     const moveSelection = useCallback(
         (direction: 'up' | 'down') => {
-            if (!showCommandMenu) return
+            if (!showCommandMenu || filteredCommands.length === 0) return
 
             setSelectedIndex((prev) => {
                 const maxIdx = filteredCommands.length - 1
-                let next = prev
-
-                if (direction === 'up') {
-                    next = Math.max(0, prev - 1)
-                } else {
-                    next = Math.min(maxIdx, prev + 1)
-                }
+                const next = direction === 'up' ? Math.max(0, prev - 1) : Math.min(maxIdx, prev + 1)
 
                 // scroll window to keep selected item visible
                 setWindowStart((ws) => {
@@ -97,22 +91,40 @@ export function useCommandMenu(options?: UseCommandMenuOptions): UseCommandMenuR
         [showCommandMenu, filteredCommands.length]
     )
 
+    const stateRef = useRef({
+        showCommandMenu,
+        filteredCommands,
+        selectedIndex,
+        options,
+        close,
+        moveSelection,
+    })
+    stateRef.current = {
+        showCommandMenu,
+        filteredCommands,
+        selectedIndex,
+        options,
+        close,
+        moveSelection,
+    }
+
     useInput((input, key) => {
-        if (!showCommandMenu) return
+        const state = stateRef.current
+        if (!state.showCommandMenu) return
 
         if (key.escape) {
-            close()
+            state.close()
         } else if (key.upArrow) {
-            moveSelection('up')
+            state.moveSelection('up')
         } else if (key.downArrow) {
-            moveSelection('down')
+            state.moveSelection('down')
         } else if (key.tab || input === '\t') {
-            const command = filteredCommands[selectedIndex]
+            const command = state.filteredCommands[state.selectedIndex]
             if (command) {
-                if (options?.onAutocomplete) {
-                    options.onAutocomplete(`/${command.name} `)
+                if (state.options?.onAutocomplete) {
+                    state.options.onAutocomplete(`/${command.name} `)
                 }
-                close()
+                state.close()
             }
         }
     })

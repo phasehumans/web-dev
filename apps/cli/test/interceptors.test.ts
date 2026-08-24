@@ -71,8 +71,20 @@ describe('setupAgentInterceptors', () => {
             expect(mockStoreState.setAuthMode).not.toHaveBeenCalled()
         })
 
-        it('blocks and requests permission for unknown modifying tools', async () => {
+        it('defaults toolPermission to always-proceed for modifying tools when unset', async () => {
             ;(configModule.loadConfig as any).mockResolvedValue({} as any)
+            const result = await mockAgent.operations.ui.requestPermission({
+                name: 'replace_file_content',
+                input: { TargetFile: 'a.txt' },
+            })
+            expect(result).toEqual({ block: false })
+            expect(mockStoreState.setAuthMode).not.toHaveBeenCalled()
+        })
+
+        it('blocks and requests permission for unknown modifying tools when toolPermission is always-ask', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({
+                toolPermission: 'always-ask',
+            } as any)
             const tc = { name: 'replace_file_content', input: { TargetFile: 'a.txt' } }
             const p = mockAgent.operations.ui.requestPermission(tc)
 
@@ -88,8 +100,8 @@ describe('setupAgentInterceptors', () => {
             await expect(p).resolves.toEqual({ block: false })
         })
 
-        it('persists session approval when allowAlways is selected', async () => {
-            const configObj: any = { approvedTools: [] }
+        it('persists session approval when allowAlways is selected and toolPermission is always-ask', async () => {
+            const configObj: any = { toolPermission: 'always-ask', approvedTools: [] }
             ;(configModule.loadConfig as any).mockResolvedValue(configObj)
             const tc = { name: 'write_to_file', input: { TargetFile: 'new.ts' } }
             const p = mockAgent.operations.ui.requestPermission(tc)

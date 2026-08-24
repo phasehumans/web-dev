@@ -2,6 +2,16 @@
 
 ### Features
 
+- _(cli)_ Transition to npm distribution and add december update command
+
+### Bug Fixes
+
+- _(tui)_ Handle double ctrl+c exit globally and abort streaming
+
+## [0.3.14] - 2026-08-24
+
+### Features
+
 - _(cli)_ Add multi-installer detection and /update support for curl and npm
 - Migrate to unified github app architecture for auth and repository access
 - Migrate to unified github app architecture for auth and repo access (#441)
@@ -10,6 +20,10 @@
 
 - _(tui)_ Eliminate cli startup input lag and optimize render pipeline
 - _(web)_ Update mobile workspace screen menu and session insights
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.14
 
 ## [0.3.13] - 2026-08-23
 

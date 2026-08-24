@@ -28,6 +28,8 @@ export async function resolveContextMentions(
 
     while ((match = tokenRegex.exec(rawPrompt)) !== null) {
         const relPath = match[1]
+        if (!relPath) continue
+
         const startLineStr = match[2]
         const endLineStr = match[3]
 

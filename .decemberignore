@@ -1,0 +1,12 @@
+# Build outputs and dependencies
+node_modules/
+dist/
+build/
+.next/
+.turbo/
+*.log
+
+# Environment and secrets
+.env*
+*.pem
+*.key
