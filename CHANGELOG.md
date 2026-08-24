@@ -2,6 +2,19 @@
 
 ### Features
 
+- _(cli)_ Add multi-installer detection and /update support for curl and npm
+- Migrate to unified github app architecture for auth and repository access
+- Migrate to unified github app architecture for auth and repo access (#441)
+
+### Bug Fixes
+
+- _(tui)_ Eliminate cli startup input lag and optimize render pipeline
+- _(web)_ Update mobile workspace screen menu and session insights
+
+## [0.3.13] - 2026-08-23
+
+### Features
+
 - _(infra)_ Add production ec2 deployment configs, health checks, and docker setup
 - _(infra)_ Add ec2 deployment configs, health checks, and docker setup (#432)
 - _(web,docs)_ Improve mobile responsive ui and add research docs
@@ -34,6 +47,7 @@
 - Update gitignore for local deploy notes
 - _(infra)_ Organize nginx reverse proxy config and remove unused bare-metal files
 - _(deploy)_ Add automated ec2 deployment workflow on push to main
+- _(release)_ V0.3.13
 
 ## [0.3.12] - 2026-08-22
 
