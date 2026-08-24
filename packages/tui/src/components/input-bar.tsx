@@ -253,6 +253,7 @@ export const InputBar = React.memo(function InputBar({
                 '/usage',
                 '/feedback',
                 '/mcp',
+                '/update',
             ]
 
             if (forwardCommands.includes(command.value) || !command.action) {

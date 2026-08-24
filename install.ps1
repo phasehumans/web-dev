@@ -45,6 +45,13 @@ try {
     New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     Move-Item -Path (Join-Path $TempDir $BinaryName) -Destination (Join-Path $InstallDir $BinaryName) -Force
 
+    $ConfigDir = Join-Path $env:USERPROFILE ".config\december"
+    New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
+    $ConfigFile = Join-Path $ConfigDir "config.json"
+    if (-not (Test-Path $ConfigFile)) {
+        '{"installMethod":"curl"}' | Out-File -FilePath $ConfigFile -Encoding utf8
+    }
+
     Log-Space
     Log-Step "${Blue}december successfully installed$Reset to $White$InstallDir\$BinaryName$Reset"
 

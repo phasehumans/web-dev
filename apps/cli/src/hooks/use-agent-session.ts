@@ -728,6 +728,36 @@ export function useAgentSession({
                 return
             }
 
+            if (text.trim() === '/update') {
+                const { performCliUpdate } = await import('../utils/updater')
+                const result = await performCliUpdate({
+                    onProgress: (msg) => addToast(msg, 'info'),
+                    onSuccess: async () => {
+                        if (agent) {
+                            await agent.saveContext().catch(() => {})
+                        }
+                    },
+                })
+
+                if (result.method === 'source') {
+                    addToast(
+                        'Running December CLI from local source. Run "git pull && bun install" to update.',
+                        'info'
+                    )
+                } else if (result.success) {
+                    addToast(
+                        `December CLI updated successfully via ${result.method}! Please restart the CLI in your terminal.`,
+                        'success'
+                    )
+                } else {
+                    addToast(
+                        `Update failed (${result.method}): ${result.error || 'Unknown error'}. Try running: ${result.manualCmd}`,
+                        'error'
+                    )
+                }
+                return
+            }
+
             if (text.trim() === '/context') {
                 setAuthMode('context_select')
                 return

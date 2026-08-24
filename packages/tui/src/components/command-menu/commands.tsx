@@ -1,4 +1,3 @@
-import { exec } from 'node:child_process'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -362,30 +361,7 @@ export const COMMANDS: Command[] = [
         description: 'Update to the latest version',
         value: '/update',
         action: (ctx) => {
-            ctx.toast.show({ message: 'Updating CLI...' })
-            exec('npm install -g @trydecember/cli', async (err) => {
-                if (err) {
-                    ctx.toast.show({
-                        variant: 'error',
-                        message: 'Update failed. Check your npm logs.',
-                    })
-                    return
-                }
-
-                if (ctx.agent) {
-                    await ctx.agent.saveContext()
-                }
-
-                if (ctx.onUpdateSuccess) {
-                    await ctx.onUpdateSuccess()
-                }
-
-                ctx.toast.show({
-                    variant: 'success',
-                    message:
-                        'December CLI updated successfully! Please restart the CLI in your terminal.',
-                })
-            })
+            // forwarded to chat screen
         },
     },
     {
