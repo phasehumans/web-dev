@@ -568,6 +568,9 @@ export function McpManagerMenu({
                     {catalogPresets.map((preset, idx) => {
                         const isSelected = idx === catalogIndex
                         const installed = serverInfos.some((s: any) => s.name === preset.id)
+                        const presetCmd = preset.config.command
+                            ? `${preset.config.command}${preset.config.args && preset.config.args.length > 0 ? ' ' + preset.config.args.join(' ') : ''}`
+                            : preset.config.url || ''
 
                         return (
                             <Box key={preset.id} flexDirection="row" gap={1}>
@@ -580,6 +583,7 @@ export function McpManagerMenu({
                                     {preset.name}
                                 </Text>
                                 <Text color={THEME.colors.dim}>[{preset.category}]</Text>
+                                {presetCmd && <Text color={THEME.colors.dim}>- {presetCmd}</Text>}
                                 {installed && <Text color={THEME.colors.success}>[Installed]</Text>}
                             </Box>
                         )
@@ -595,12 +599,17 @@ export function McpManagerMenu({
                         paddingX={1}
                     >
                         <Text color={THEME.colors.muted}>{selectedPreset.description}</Text>
-                        <Box marginTop={1}>
-                            <Text color={THEME.colors.dim}>
-                                Command: {selectedPreset.config.command}{' '}
-                                {selectedPreset.config.args?.join(' ')}
-                            </Text>
-                        </Box>
+                        {selectedPreset.config.autoApprove &&
+                            selectedPreset.config.autoApprove.length > 0 && (
+                                <Box marginTop={1}>
+                                    <Text color={THEME.colors.muted}>
+                                        Auto-approved:{' '}
+                                        <Text color={THEME.colors.brand}>
+                                            {selectedPreset.config.autoApprove.join(', ')}
+                                        </Text>
+                                    </Text>
+                                </Box>
+                            )}
                     </Box>
                 )}
 
@@ -657,6 +666,9 @@ export function McpManagerMenu({
                         const toolCount = srv.tools?.length || 0
                         const latencyStr = srv.latencyMs !== undefined ? `, ${srv.latencyMs}ms` : ''
                         const inlineTest = testStatus[srv.name]
+                        const cmdStr = srv.config?.command
+                            ? `${srv.config.command}${srv.config.args && srv.config.args.length > 0 ? ' ' + srv.config.args.join(' ') : ''}`
+                            : srv.config?.url || ''
 
                         return (
                             <Box
@@ -680,6 +692,7 @@ export function McpManagerMenu({
                                         ({toolCount} tool{toolCount === 1 ? '' : 's'}
                                         {latencyStr})
                                     </Text>
+                                    {cmdStr && <Text color={THEME.colors.dim}>- {cmdStr}</Text>}
                                     {inlineTest && (
                                         <Text
                                             color={
@@ -704,29 +717,6 @@ export function McpManagerMenu({
                                         marginTop={1}
                                         paddingX={1}
                                     >
-                                        {srv.config?.command && (
-                                            <Box marginBottom={0}>
-                                                <Text color={THEME.colors.muted}>
-                                                    Command:{' '}
-                                                    <Text color={THEME.colors.text}>
-                                                        {srv.config.command}{' '}
-                                                        {srv.config.args?.join(' ')}
-                                                    </Text>
-                                                </Text>
-                                            </Box>
-                                        )}
-
-                                        {srv.config?.url && (
-                                            <Box marginBottom={0}>
-                                                <Text color={THEME.colors.muted}>
-                                                    URL:{' '}
-                                                    <Text color={THEME.colors.text}>
-                                                        {srv.config.url}
-                                                    </Text>
-                                                </Text>
-                                            </Box>
-                                        )}
-
                                         {srv.config?.env &&
                                             Object.keys(srv.config.env).length > 0 && (
                                                 <Box marginBottom={0}>
