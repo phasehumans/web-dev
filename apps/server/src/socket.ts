@@ -42,7 +42,9 @@ export function initSocket(httpServer: any) {
     io = new Server(httpServer, {
         cors: {
             origin: (origin, callback) => {
-                if (!origin) return callback(null, true)
+                if (!origin || (env.NODE_ENV !== 'production' && origin === 'null')) {
+                    return callback(null, true)
+                }
                 if (
                     allowedOrigins.includes(origin) ||
                     origin.endsWith('.vercel.app') ||
@@ -51,7 +53,7 @@ export function initSocket(httpServer: any) {
                 ) {
                     return callback(null, true)
                 }
-                return callback(new Error(`Socket CORS origin not allowed: ${origin}`), false)
+                return callback(null, false)
             },
             credentials: true,
         },
@@ -146,6 +148,18 @@ export function initSocket(httpServer: any) {
                 await pubClient.publish(`session_terminal_input:${data.sessionId}`, data.data)
             }
         })
+
+        socket.on(
+            'TERMINAL_RESIZE',
+            async (data: { sessionId: string; cols: number; rows: number }) => {
+                if (data?.sessionId && data?.cols && data?.rows) {
+                    await pubClient.publish(
+                        `session_terminal_resize:${data.sessionId}`,
+                        JSON.stringify({ cols: data.cols, rows: data.rows })
+                    )
+                }
+            }
+        )
 
         socket.on('disconnect', async () => {
             console.log(`[Socket] User disconnected: ${socket.data.userId} (socket: ${socket.id})`)

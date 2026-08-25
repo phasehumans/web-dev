@@ -105,4 +105,47 @@ describe('Ticket #391: Interactive Changes Workspace', () => {
         expect(diffs[0].additions).toBe(2)
         expect(diffs[0].deletions).toBe(0)
     })
+
+    describe('Ticket #399: Real-time file changes and diff viewer without mock fallbacks', () => {
+        it('returns empty array when messages have no file changes, ensuring no mock fallbacks', () => {
+            const messages: Message[] = [
+                {
+                    id: 'm-empty',
+                    role: 'assistant',
+                    content: 'Hello, how can I help you today?',
+                },
+            ]
+
+            const diffs = extractSessionFileDiffs(messages)
+            expect(diffs).toHaveLength(0)
+        })
+
+        it('accurately parses line structures without mock counts', () => {
+            const messages: Message[] = [
+                {
+                    id: 'm-lines',
+                    role: 'assistant',
+                    content: '',
+                    blocks: [
+                        {
+                            type: 'file_change',
+                            filePath: 'src/utils.ts',
+                            action: 'modified',
+                            diff: '@@ -10,3 +10,4 @@\n context line\n-deleted line\n+added line 1\n+added line 2',
+                        },
+                    ],
+                },
+            ]
+
+            const diffs = extractSessionFileDiffs(messages)
+            expect(diffs).toHaveLength(1)
+            expect(diffs[0].additions).toBe(2)
+            expect(diffs[0].deletions).toBe(1)
+            expect(diffs[0].lines).toHaveLength(4)
+            expect(diffs[0].lines[0].type).toBe('context')
+            expect(diffs[0].lines[1].type).toBe('deleted')
+            expect(diffs[0].lines[2].type).toBe('added')
+            expect(diffs[0].lines[3].type).toBe('added')
+        })
+    })
 })

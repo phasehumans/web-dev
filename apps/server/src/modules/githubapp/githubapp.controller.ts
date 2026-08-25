@@ -6,6 +6,7 @@ import { asyncHandler } from '../../shared/asyncHandler'
 import { sendSuccess } from '../../shared/response'
 
 import { githubAppService } from './githubapp.service'
+import { getInstallationDetails } from './githubapp.utils'
 
 import type { Request, Response } from 'express'
 
@@ -40,9 +41,20 @@ const handleCallback = asyncHandler(async (req: Request, res: Response) => {
     }
 
     if (installationId && userId) {
+        let details: any = null
+        try {
+            details = await getInstallationDetails(installationId.toString())
+        } catch {
+            // Intentionally swallowed: fallback to basic info if API call fails
+        }
+
         await githubAppService.processInstallation({
             installationId: installationId.toString(),
             userId,
+            ...(details?.account?.login ? { accountLogin: details.account.login } : {}),
+            ...(details?.account?.type ? { accountType: details.account.type } : {}),
+            ...(details?.target_type ? { targetType: details.target_type } : {}),
+            ...(details?.permissions ? { permissions: details.permissions } : {}),
         })
     }
 
@@ -96,13 +108,28 @@ const handleWebhook = asyncHandler(async (req: Request, res: Response) => {
             }
         }
 
+        if (userId === 'system' && payload.sender?.login) {
+            const senderUser = await prisma.user.findFirst({
+                where: {
+                    OR: [
+                        { githubUsername: payload.sender.login },
+                        { githubId: payload.sender?.id?.toString() },
+                    ],
+                },
+                select: { id: true },
+            })
+            if (senderUser) {
+                userId = senderUser.id
+            }
+        }
+
         await githubAppService.processInstallation({
             installationId,
             userId,
-            accountLogin,
-            accountType,
-            targetType,
-            permissions,
+            ...(accountLogin ? { accountLogin } : {}),
+            ...(accountType ? { accountType } : {}),
+            ...(targetType ? { targetType } : {}),
+            ...(permissions ? { permissions } : {}),
         })
     } else if (event === 'installation' && payload.action === 'deleted') {
         const installationId = payload.installation.id.toString()

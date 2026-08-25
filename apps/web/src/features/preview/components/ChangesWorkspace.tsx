@@ -1,12 +1,4 @@
-import {
-    ChevronDown,
-    ChevronRight,
-    Copy,
-    Check,
-    ArrowDown,
-    ArrowUp,
-    ChevronsUpDown,
-} from 'lucide-react'
+import { ChevronDown, ChevronRight, Copy, Check } from 'lucide-react'
 import React, { useState, useMemo, useRef } from 'react'
 
 import type { ParsedFileDiff, DiffLine } from '@/features/preview/utils/diffParser'
@@ -575,31 +567,6 @@ export const ChangesWorkspace: React.FC = () => {
                                 {/* Expanded Diff Viewer */}
                                 {isExpanded && (
                                     <div className="w-full shrink-0 flex flex-col bg-[#1F1F1F] font-mono">
-                                        {/* Top Context Expander Bar */}
-                                        <div className="shrink-0 flex items-center gap-4 px-4 py-1.5 bg-[#171719] border-b border-[#262626] text-[12px] text-[#38BDF8] select-none">
-                                            <button
-                                                type="button"
-                                                className="flex items-center gap-1 hover:underline cursor-pointer opacity-90 hover:opacity-100"
-                                            >
-                                                <ArrowDown className="w-3 h-3" />
-                                                <span>5 lines</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="flex items-center gap-1 hover:underline cursor-pointer opacity-90 hover:opacity-100"
-                                            >
-                                                <ChevronsUpDown className="w-3 h-3" />
-                                                <span>All {file.totalLines || 57} lines</span>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="flex items-center gap-1 hover:underline cursor-pointer opacity-90 hover:opacity-100"
-                                            >
-                                                <ArrowUp className="w-3 h-3" />
-                                                <span>5 lines</span>
-                                            </button>
-                                        </div>
-
                                         {/* Diff Lines Content */}
                                         <div className="overflow-x-auto chat-scrollbar py-0.5 bg-[#1F1F1F] w-full">
                                             <div className="min-w-full w-max flex flex-col">
@@ -611,19 +578,6 @@ export const ChangesWorkspace: React.FC = () => {
                                                     />
                                                 ))}
                                             </div>
-                                        </div>
-
-                                        {/* Bottom Context Expander Bar */}
-                                        <div className="shrink-0 flex items-center gap-2 px-4 py-1.5 bg-[#171719] border-t border-[#262626] text-[12px] text-[#38BDF8] select-none">
-                                            <button
-                                                type="button"
-                                                className="flex items-center gap-1 hover:underline cursor-pointer opacity-90 hover:opacity-100"
-                                            >
-                                                <ChevronsUpDown className="w-3 h-3" />
-                                                <span>
-                                                    All {file.bottomContextLines || 6} lines
-                                                </span>
-                                            </button>
                                         </div>
                                     </div>
                                 )}

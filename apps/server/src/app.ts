@@ -57,7 +57,9 @@ const allowedOrigins = [
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin) return callback(null, true)
+            if (!origin || (env.NODE_ENV !== 'production' && origin === 'null')) {
+                return callback(null, true)
+            }
             if (
                 allowedOrigins.includes(origin) ||
                 origin.endsWith('.vercel.app') ||
@@ -66,7 +68,7 @@ app.use(
             ) {
                 return callback(null, true)
             }
-            return callback(new Error(`CORS origin not allowed: ${origin}`), false)
+            return callback(null, false)
         },
         credentials: true,
     })

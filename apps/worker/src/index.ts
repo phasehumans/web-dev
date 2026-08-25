@@ -111,6 +111,19 @@ export const worker = new Worker(
                 `[WORKER ENGINE] Picked up job #${job.id} (type: ${effectiveTaskType}) for session '${sessionId}'`
             )
 
+            if (sessionId) {
+                const session = await prisma.session.findUnique({
+                    where: { id: sessionId },
+                    select: { id: true },
+                })
+                if (!session) {
+                    console.warn(
+                        `[WORKER ENGINE] Session '${sessionId}' not found in database. Discarding stale/orphan job #${job.id}.`
+                    )
+                    return { status: 'DISCARDED', error: 'Session not found' }
+                }
+            }
+
             if (userId) {
                 const user = await prisma.user.findUnique({
                     where: { id: userId },
@@ -125,7 +138,9 @@ export const worker = new Worker(
                             where: { id: sessionId },
                             data: { vmStatus: 'FAILED' },
                         })
-                        .catch(() => {})
+                        .catch(() => {
+                            // Intentionally swallowed: DB fallback on credit check failure
+                        })
                     await E2BSandboxService.emitSessionEvent({
                         sessionId,
                         event: {

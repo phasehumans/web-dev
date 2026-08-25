@@ -39,6 +39,7 @@ export type GetInstallationAccessToken = {
 
 export type GetUserInstallationToken = {
     userId: string
+    owner?: string
 }
 
 export type GetUserInstallationRepos = {

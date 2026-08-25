@@ -84,8 +84,16 @@ const getInstallationAccessToken = async (
 }
 
 const getUserInstallationToken = async (data: GetUserInstallationToken): Promise<string> => {
-    const { userId } = data
-    const installation = await githubAppRepository.findByUserId(userId)
+    const { userId, owner } = data
+    let installation = null
+
+    if (owner) {
+        installation = await githubAppRepository.findByOwnerAndUser(owner, userId)
+    }
+
+    if (!installation && userId) {
+        installation = await githubAppRepository.findByUserId(userId)
+    }
 
     if (!installation) {
         throw new AppError('GitHub App is not installed for this account', 400)
@@ -101,44 +109,83 @@ const getUserInstallationRepos = async (
     data: GetUserInstallationRepos
 ): Promise<GithubInstallationRepo[]> => {
     const { userId } = data
-    const token = await getUserInstallationToken({ userId })
+    let installations = await githubAppRepository.findAllByUserId(userId)
 
-    const response = await fetch('https://api.github.com/installation/repositories?per_page=100', {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/vnd.github+json',
-            'X-GitHub-Api-Version': '2022-11-28',
-        },
-    })
-
-    if (!response.ok) {
-        const errorText = await response.text()
-        throw new AppError(
-            `Failed to fetch installation repositories: ${errorText}`,
-            response.status
-        )
+    if (!installations || installations.length === 0) {
+        const single = await githubAppRepository.findByUserId(userId)
+        if (single) {
+            installations = [single]
+        } else {
+            return []
+        }
     }
 
-    const json = (await response.json()) as any
-    const repositories = json.repositories || []
+    const allRepos: GithubInstallationRepo[] = []
+    const seenRepoIds = new Set<number>()
 
-    return repositories.map((repo: any) => ({
-        id: repo.id,
-        name: repo.name,
-        fullName: repo.full_name,
-        private: repo.private,
-        defaultBranch: repo.default_branch,
-        updatedAt: repo.updated_at,
-        htmlUrl: repo.html_url,
-        cloneUrl: repo.clone_url,
-        language: repo.language ?? null,
-        description: repo.description ?? null,
-        owner: {
-            login: repo.owner?.login,
-            avatarUrl: repo.owner?.avatar_url,
-        },
-    }))
+    for (const installation of installations) {
+        try {
+            const { token } = await getInstallationAccessToken({
+                installationId: installation.installationId,
+            })
+
+            let page = 1
+            let hasMore = true
+
+            while (hasMore) {
+                const response = await fetch(
+                    `https://api.github.com/installation/repositories?per_page=100&page=${page}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            Accept: 'application/vnd.github+json',
+                            'X-GitHub-Api-Version': '2022-11-28',
+                        },
+                    }
+                )
+
+                if (!response.ok) {
+                    break
+                }
+
+                const json = (await response.json()) as any
+                const repositories = json.repositories || []
+
+                for (const repo of repositories) {
+                    if (!seenRepoIds.has(repo.id)) {
+                        seenRepoIds.add(repo.id)
+                        allRepos.push({
+                            id: repo.id,
+                            name: repo.name,
+                            fullName: repo.full_name,
+                            private: repo.private,
+                            defaultBranch: repo.default_branch,
+                            updatedAt: repo.updated_at,
+                            htmlUrl: repo.html_url,
+                            cloneUrl: repo.clone_url,
+                            language: repo.language ?? null,
+                            description: repo.description ?? null,
+                            owner: {
+                                login: repo.owner?.login,
+                                avatarUrl: repo.owner?.avatar_url,
+                            },
+                        })
+                    }
+                }
+
+                if (repositories.length < 100) {
+                    hasMore = false
+                } else {
+                    page++
+                }
+            }
+        } catch {
+            // Intentionally swallowed: continue to next installation if one fails
+        }
+    }
+
+    return allRepos
 }
 
 const getUserInstallationStatus = async (

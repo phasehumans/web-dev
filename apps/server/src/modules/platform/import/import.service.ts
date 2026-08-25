@@ -402,7 +402,10 @@ const importFromGithub = async (data: ImportFromGithub) => {
 
     let token: string | undefined = undefined
     try {
-        token = await githubAppService.getUserInstallationToken({ userId })
+        token = await githubAppService.getUserInstallationToken({
+            userId,
+            owner: parseData.owner,
+        })
     } catch {
         // Intentionally swallowed: fallback to legacy user token or public repo
         token = user.githubToken || undefined

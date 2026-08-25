@@ -235,4 +235,46 @@ describe('Native Agent Streaming & Chat Slice', () => {
         expect(blocks[2].type).toBe('file_change')
         expect(blocks[3].type).toBe('text')
     })
+
+    it('Ticket #403: updates step indicators and status messages purely from agent stream events', () => {
+        const assistantMsgId = 'stream-status-msg-1'
+        const initialMsg: Message = {
+            id: assistantMsgId,
+            role: 'assistant',
+            content: '',
+            status: 'thinking',
+        }
+
+        useAppStore.getState().setMessages([initialMsg])
+
+        // 1. AgentStatus event updates statusMessage in real time
+        useAppStore.getState().setAssistantStatusMessage(assistantMsgId, 'Planning architecture...')
+        expect(useAppStore.getState().messages[0].statusMessage).toBe('Planning architecture...')
+        expect(useAppStore.getState().messages[0].status).toBe('thinking')
+
+        // 2. ToolCallStart updates lifecycle state to building with live running block
+        useAppStore.getState().setAssistantStatus(assistantMsgId, 'building')
+        useAppStore.getState().addToolCallBlock(assistantMsgId, {
+            toolCallId: 'tool-exec-1',
+            toolName: 'write_to_file',
+            toolInput: { TargetFile: 'src/index.ts' },
+            status: 'running',
+        })
+        expect(useAppStore.getState().messages[0].status).toBe('building')
+        const activeBlocks = useAppStore.getState().messages[0].blocks!
+        expect(activeBlocks).toHaveLength(1)
+        expect((activeBlocks[0] as any).status).toBe('running')
+
+        // 3. ToolCallResult transitions tool execution state to success
+        useAppStore.getState().updateToolCallResult(assistantMsgId, {
+            toolCallId: 'tool-exec-1',
+            status: 'success',
+            output: 'File created successfully',
+        })
+        expect((useAppStore.getState().messages[0].blocks![0] as any).status).toBe('success')
+
+        // 4. Turn completion transitions status to done
+        useAppStore.getState().setAssistantStatus(assistantMsgId, 'done')
+        expect(useAppStore.getState().messages[0].status).toBe('done')
+    })
 })

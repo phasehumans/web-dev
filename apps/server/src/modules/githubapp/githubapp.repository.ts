@@ -5,10 +5,21 @@ import type { ProcessInstallation } from './githubapp.types'
 const upsertInstallation = async (data: ProcessInstallation) => {
     const { installationId, userId, accountLogin, accountType, targetType, permissions } = data
 
+    const existing = await prisma.githubAppInstallation.findUnique({
+        where: { installationId },
+    })
+
+    const effectiveUserId =
+        userId && userId !== 'system'
+            ? userId
+            : existing?.userId && existing.userId !== 'system'
+              ? existing.userId
+              : userId || 'system'
+
     const installation = await prisma.githubAppInstallation.upsert({
         where: { installationId },
         update: {
-            userId,
+            userId: effectiveUserId,
             accountLogin: accountLogin ?? undefined,
             accountType: accountType ?? undefined,
             targetType: targetType ?? undefined,
@@ -16,7 +27,7 @@ const upsertInstallation = async (data: ProcessInstallation) => {
         },
         create: {
             installationId,
-            userId,
+            userId: effectiveUserId,
             accountLogin,
             accountType,
             targetType,
@@ -24,9 +35,9 @@ const upsertInstallation = async (data: ProcessInstallation) => {
         },
     })
 
-    if (userId && userId !== 'system') {
+    if (effectiveUserId && effectiveUserId !== 'system') {
         await prisma.user.update({
-            where: { id: userId },
+            where: { id: effectiveUserId },
             data: {
                 githubAppInstall: true,
                 githubCardDone: true,
@@ -75,6 +86,33 @@ const findByUserId = async (userId: string) => {
     })
 }
 
+const findAllByUserId = async (userId: string) => {
+    return prisma.githubAppInstallation.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+    })
+}
+
+const findByOwnerAndUser = async (owner: string, userId?: string) => {
+    if (userId) {
+        const userInstallation = await prisma.githubAppInstallation.findFirst({
+            where: {
+                userId,
+                accountLogin: { equals: owner, mode: 'insensitive' },
+            },
+        })
+        if (userInstallation) {
+            return userInstallation
+        }
+    }
+
+    return prisma.githubAppInstallation.findFirst({
+        where: {
+            accountLogin: { equals: owner, mode: 'insensitive' },
+        },
+    })
+}
+
 const findByInstallationId = async (installationId: string) => {
     return prisma.githubAppInstallation.findUnique({
         where: { installationId },
@@ -85,5 +123,7 @@ export const githubAppRepository = {
     upsertInstallation,
     deleteInstallation,
     findByUserId,
+    findAllByUserId,
+    findByOwnerAndUser,
     findByInstallationId,
 }

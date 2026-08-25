@@ -21,9 +21,9 @@ import type {
     DeployVercelProject,
 } from './platform.types'
 
-const resolveUserGithubToken = async (userId: string): Promise<string> => {
+const resolveUserGithubToken = async (userId: string, owner?: string): Promise<string> => {
     try {
-        const token = await githubAppService.getUserInstallationToken({ userId })
+        const token = await githubAppService.getUserInstallationToken({ userId, owner })
         if (token) {
             return token
         }
@@ -224,8 +224,6 @@ const createRepo = async (data: CreateRepo) => {
 
 const updateRepo = async (data: UpdateRepo) => {
     const { userId, sessionId } = data
-    const githubToken = await resolveUserGithubToken(userId)
-
     const session = await platformRepository.findSessionByIdAndUser({ sessionId, userId })
 
     if (!session) {
@@ -238,6 +236,7 @@ const updateRepo = async (data: UpdateRepo) => {
 
     const repoOwner = session.githubRepoOwner
     const repoName = session.githubRepoName
+    const githubToken = await resolveUserGithubToken(userId, repoOwner)
     const commitMessage = data.commitMessage ?? 'Update session files'
 
     const prefix = sessionWorkspacePrefix(sessionId)
