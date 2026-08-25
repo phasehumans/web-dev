@@ -94,12 +94,16 @@ export class AgentHarness {
     }
 
     public async initMCP(config?: McpConfigFile): Promise<Tool[]> {
-        const serverInfos = await this.mcpPool.initialize(config || this.config.mcpConfig)
+        await this.mcpPool.initialize(config || this.config.mcpConfig)
         const tools = this.mcpPool.getTools()
-        for (const tool of tools) {
-            this.agent.registerTool(tool)
-        }
+        this.agent.syncMcpTools(tools)
         return tools
+    }
+
+    public async reloadMCP(config?: McpConfigFile): Promise<{ tools: Tool[]; serverInfos: any[] }> {
+        const result = await this.mcpPool.reload(config)
+        this.agent.syncMcpTools(result.tools)
+        return result
     }
 
     public getMcpPool(): McpClientPool {

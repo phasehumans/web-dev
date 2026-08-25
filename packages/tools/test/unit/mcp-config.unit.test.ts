@@ -10,6 +10,9 @@ import {
     mergeMcpConfigs,
     interpolateEnv,
     interpolateServerConfig,
+    addMcpServer,
+    removeMcpServer,
+    toggleMcpServer,
 } from '../../src/mcp/config'
 
 import type { McpConfigFile, McpServerConfig } from '../../src/mcp/types'
@@ -205,6 +208,63 @@ describe('MCP Configuration & Variable Expansion (Unit)', () => {
             )
             const parsed = JSON.parse(savedRaw)
             expect(parsed.mcpServers.sqlite.disabled).toBe(true)
+        })
+    })
+
+    describe('addMcpServer, removeMcpServer, and toggleMcpServer helpers', () => {
+        it('adds a new server to workspace config', async () => {
+            const updated = await addMcpServer({
+                name: 'brave',
+                serverConfig: {
+                    command: 'npx',
+                    args: ['-y', '@modelcontextprotocol/server-brave-search'],
+                },
+                scope: 'workspace',
+                workspaceDir,
+            })
+
+            expect(updated.mcpServers.brave).toBeDefined()
+            expect(updated.mcpServers.brave.command).toBe('npx')
+
+            const onDisk = await loadMcpConfig({ workspaceDir })
+            expect(onDisk.mcpServers.brave).toBeDefined()
+        })
+
+        it('toggles disabled status of existing server', async () => {
+            await addMcpServer({
+                name: 'toggle_test',
+                serverConfig: { command: 'node', args: ['server.js'] },
+                workspaceDir,
+            })
+
+            const { disabled } = await toggleMcpServer({
+                name: 'toggle_test',
+                workspaceDir,
+            })
+            expect(disabled).toBe(true)
+
+            const { disabled: disabledAgain } = await toggleMcpServer({
+                name: 'toggle_test',
+                workspaceDir,
+            })
+            expect(disabledAgain).toBe(false)
+        })
+
+        it('removes an existing server from workspace config', async () => {
+            await addMcpServer({
+                name: 'to_remove',
+                serverConfig: { command: 'uvx', args: ['mcp-test'] },
+                workspaceDir,
+            })
+
+            const removed = await removeMcpServer({
+                name: 'to_remove',
+                workspaceDir,
+            })
+
+            expect(removed.mcpServers.to_remove).toBeUndefined()
+            const onDisk = await loadMcpConfig({ workspaceDir })
+            expect(onDisk.mcpServers.to_remove).toBeUndefined()
         })
     })
 })

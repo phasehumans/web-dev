@@ -109,5 +109,50 @@ describe('AgentHarness (Unit)', () => {
 
         const output = await dynamicTool?.execute({ id: '123' }, {} as any)
         expect(output).toBe('data-result')
+
+        // Test reloadMCP cleanly unregisters old tools and syncs new tools without zombie entries
+        const mockClientV2 = {
+            connect: mock(async () => {}),
+            listTools: mock(async () => ({
+                tools: [
+                    {
+                        name: 'query_v2',
+                        description: 'New tool',
+                        inputSchema: {},
+                    },
+                ],
+            })),
+            callTool: mock(async () => ({ content: [{ type: 'text', text: 'v2' }] })),
+            close: mock(async () => {}),
+        }
+
+        const poolV2 = new McpClientPool({
+            clientFactory: () => mockClientV2 as any,
+        })
+        const harnessV2 = new AgentHarness({
+            llm: new MockLLM(),
+            tools: [],
+            operations: {} as any,
+            workspaceDir: tmpDir,
+            mcpPool: poolV2,
+        })
+
+        await harnessV2.initMCP({
+            mcpServers: {
+                test_srv: { command: 'node' },
+            },
+        })
+
+        const agentV2 = harnessV2.getAgent()
+        expect(agentV2.tools.has('test_srv__query_v2')).toBe(true)
+
+        // Reload with disabled server - old tool should be pruned immediately
+        await harnessV2.reloadMCP({
+            mcpServers: {
+                test_srv: { command: 'node', disabled: true },
+            },
+        })
+
+        expect(agentV2.tools.has('test_srv__query_v2')).toBe(false)
     })
 })

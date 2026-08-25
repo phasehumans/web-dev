@@ -74,11 +74,12 @@ export async function loadMcpConfig(options: LoadMcpConfigOptions = {}): Promise
     const workspaceDir = options.workspaceDir || process.cwd()
     const globalConfigDir =
         options.globalConfigDir || path.join(os.homedir(), '.config', 'december')
+    const altGlobalDir = path.join(os.homedir(), '.december')
 
     let globalConfig: McpConfigFile = { mcpServers: {} }
     let workspaceConfig: McpConfigFile = { mcpServers: {} }
 
-    // 1. Read global mcp.json
+    // 1. Read global mcp.json (try ~/.config/december/mcp.json then ~/.december/mcp.json)
     try {
         const globalPath = path.join(globalConfigDir, 'mcp.json')
         const raw = await fs.readFile(globalPath, 'utf8')
@@ -87,7 +88,16 @@ export async function loadMcpConfig(options: LoadMcpConfigOptions = {}): Promise
             globalConfig = parsed
         }
     } catch {
-        // Global config is optional
+        try {
+            const altPath = path.join(altGlobalDir, 'mcp.json')
+            const raw = await fs.readFile(altPath, 'utf8')
+            const parsed = JSON.parse(raw)
+            if (parsed && typeof parsed.mcpServers === 'object') {
+                globalConfig = parsed
+            }
+        } catch {
+            // Global config is optional
+        }
     }
 
     // 2. Read workspace .december/mcp.json (or root mcp.json)
@@ -129,4 +139,52 @@ export async function saveMcpConfig(options: SaveMcpConfigOptions): Promise<void
     const targetFile = path.join(targetDir, 'mcp.json')
     await fs.mkdir(targetDir, { recursive: true })
     await fs.writeFile(targetFile, JSON.stringify(config, null, 2) + '\n', 'utf8')
+}
+
+export interface ModifyMcpServerOptions {
+    name: string
+    serverConfig?: McpServerConfig
+    scope?: 'workspace' | 'global'
+    workspaceDir?: string
+    globalConfigDir?: string
+}
+
+export async function addMcpServer(options: ModifyMcpServerOptions): Promise<McpConfigFile> {
+    const { name, serverConfig, scope = 'workspace', workspaceDir, globalConfigDir } = options
+    if (!serverConfig) {
+        throw new Error('serverConfig is required for addMcpServer')
+    }
+
+    const config = await loadMcpConfig({ workspaceDir, globalConfigDir })
+    config.mcpServers = config.mcpServers || {}
+    config.mcpServers[name] = serverConfig
+
+    await saveMcpConfig({ config, scope, workspaceDir, globalConfigDir })
+    return config
+}
+
+export async function removeMcpServer(
+    options: Omit<ModifyMcpServerOptions, 'serverConfig'>
+): Promise<McpConfigFile> {
+    const { name, scope = 'workspace', workspaceDir, globalConfigDir } = options
+    const config = await loadMcpConfig({ workspaceDir, globalConfigDir })
+    if (config.mcpServers && config.mcpServers[name]) {
+        delete config.mcpServers[name]
+        await saveMcpConfig({ config, scope, workspaceDir, globalConfigDir })
+    }
+    return config
+}
+
+export async function toggleMcpServer(
+    options: Omit<ModifyMcpServerOptions, 'serverConfig'>
+): Promise<{ config: McpConfigFile; disabled: boolean }> {
+    const { name, scope = 'workspace', workspaceDir, globalConfigDir } = options
+    const config = await loadMcpConfig({ workspaceDir, globalConfigDir })
+    let disabled = false
+    if (config.mcpServers && config.mcpServers[name]) {
+        config.mcpServers[name].disabled = !config.mcpServers[name].disabled
+        disabled = Boolean(config.mcpServers[name].disabled)
+        await saveMcpConfig({ config, scope, workspaceDir, globalConfigDir })
+    }
+    return { config, disabled }
 }

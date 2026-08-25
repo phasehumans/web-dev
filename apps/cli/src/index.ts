@@ -139,7 +139,6 @@ async function main() {
             toolsModule.BrowserTool,
             toolsModule.WebSearchTool,
             toolsModule.PythonReplTool,
-            toolsModule.MCPTool,
         ],
         operations: localOperations,
         modelOptions: {

@@ -61,6 +61,7 @@ export class McpClientPool {
                 this.options.env || process.env
             )
 
+            const startTime = Date.now()
             try {
                 const connectPromise = this.connectServer(serverName, interpolatedConfig)
                 const timeoutPromise = new Promise<never>((_, reject) => {
@@ -75,6 +76,7 @@ export class McpClientPool {
                 })
 
                 const connectedClient = await Promise.race([connectPromise, timeoutPromise])
+                const latencyMs = Date.now() - startTime
                 this.activeClients.set(serverName, connectedClient)
 
                 // List tools
@@ -127,6 +129,7 @@ export class McpClientPool {
                     name: serverName,
                     status: 'connected',
                     config: interpolatedConfig,
+                    latencyMs,
                     tools: discoveredTools.map((t: any) => ({
                         name: t.name,
                         description: t.description,
@@ -140,6 +143,7 @@ export class McpClientPool {
                     name: serverName,
                     status: 'failed',
                     config: interpolatedConfig,
+                    latencyMs: Date.now() - startTime,
                     error: err.message,
                     tools: [],
                 }
@@ -165,6 +169,63 @@ export class McpClientPool {
         })
 
         return this.serverInfos
+    }
+
+    public async testServer(
+        serverName: string,
+        serverConfig?: McpServerConfig
+    ): Promise<{ success: boolean; latencyMs: number; toolsCount: number; error?: string }> {
+        const configToTest =
+            serverConfig ||
+            this.serverInfos.find((s) => s.name === serverName)?.config ||
+            this.currentConfig?.mcpServers?.[serverName]
+
+        if (!configToTest) {
+            return {
+                success: false,
+                latencyMs: 0,
+                toolsCount: 0,
+                error: `Server '${serverName}' configuration not found`,
+            }
+        }
+
+        const interpolatedConfig = interpolateServerConfig(
+            configToTest,
+            this.options.env || process.env
+        )
+
+        const start = Date.now()
+        let tempClient: ActiveMcpClient | undefined
+        try {
+            tempClient = await this.connectServer(serverName, interpolatedConfig)
+            const toolsResp = await tempClient.client.listTools()
+            const toolsCount = toolsResp?.tools?.length || 0
+            const latencyMs = Date.now() - start
+
+            if (tempClient.client?.close) {
+                await tempClient.client.close()
+            } else if (tempClient.transport?.close) {
+                await tempClient.transport.close()
+            }
+
+            return {
+                success: true,
+                latencyMs,
+                toolsCount,
+            }
+        } catch (err: any) {
+            if (tempClient?.client?.close) {
+                await tempClient.client.close().catch(() => {})
+            } else if (tempClient?.transport?.close) {
+                await tempClient.transport.close().catch(() => {})
+            }
+            return {
+                success: false,
+                latencyMs: Date.now() - start,
+                toolsCount: 0,
+                error: err.message,
+            }
+        }
     }
 
     private async connectServer(
@@ -208,10 +269,15 @@ export class McpClientPool {
         } else {
             const { StdioClientTransport } =
                 await import('@modelcontextprotocol/sdk/client/stdio.js')
+            const spawnEnv: Record<string, string> = {
+                ...(process.env as Record<string, string>),
+                ...(serverConfig.env || {}),
+            }
             transport = new StdioClientTransport({
                 command: serverConfig.command!,
                 args: serverConfig.args || [],
-                env: serverConfig.env,
+                env: spawnEnv,
+                cwd: serverConfig.cwd || this.options.workspaceDir || process.cwd(),
             })
         }
 

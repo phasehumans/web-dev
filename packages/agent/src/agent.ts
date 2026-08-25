@@ -133,6 +133,17 @@ export class Agent {
         this.tools.delete(toolName)
     }
 
+    public syncMcpTools(newMcpTools: Tool[]): void {
+        for (const toolName of Array.from(this.tools.keys())) {
+            if (toolName.includes('__')) {
+                this.tools.delete(toolName)
+            }
+        }
+        for (const tool of newMcpTools) {
+            this.tools.set(tool.name, tool)
+        }
+    }
+
     public abort() {
         if (this.activeAbortController) {
             this.activeAbortController.abort()

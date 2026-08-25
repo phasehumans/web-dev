@@ -54,4 +54,41 @@ describe('McpManagerMenu Component (Unit)', () => {
         expect(lastFrame()).toContain('create_issue')
         expect(lastFrame()).toContain('Create a new GitHub issue')
     })
+
+    it('navigates to Preset Catalog when pressing "a"', async () => {
+        const { lastFrame, stdin } = render(
+            <McpManagerMenu mcpServerInfos={[]} setAuthMode={mock(() => {})} />
+        )
+
+        stdin.write('a')
+        await new Promise((r) => setTimeout(r, 50))
+
+        const output = lastFrame() || ''
+        expect(output).toContain('MCP Preset Catalog')
+        expect(output).toContain('GitHub')
+        expect(output).toContain('PostgreSQL')
+        expect(output).toContain('SQLite')
+        expect(output).toContain('Brave Search')
+    })
+
+    it('shows confirmation screen when pressing "x"', async () => {
+        const mockServers = [
+            {
+                name: 'to_delete',
+                status: 'connected',
+                config: { command: 'node' },
+                tools: [],
+            },
+        ]
+        const { lastFrame, stdin } = render(
+            <McpManagerMenu mcpServerInfos={mockServers as any} setAuthMode={mock(() => {})} />
+        )
+
+        stdin.write('x')
+        await new Promise((r) => setTimeout(r, 50))
+
+        const output = lastFrame() || ''
+        expect(output).toContain('Remove MCP Server')
+        expect(output).toContain('Are you sure you want to remove server "to_delete"')
+    })
 })

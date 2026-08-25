@@ -92,7 +92,7 @@ describe('instantiateProvider', () => {
         process.env.SERVER_PORT = '5000'
         instantiateProvider('unknown', 'key-123')
         expect(providers.openaiProvider).toHaveBeenCalledWith(
-            'http://localhost:5000/api/v1',
+            'http://localhost:5000/api/v1/cli',
             'key-123'
         )
     })

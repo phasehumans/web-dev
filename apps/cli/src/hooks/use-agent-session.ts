@@ -1372,22 +1372,17 @@ export function useAgentSession({
 
     const handleToggleMcpServer = async (serverName: string) => {
         try {
-            const { loadMcpConfig, saveMcpConfig } = await import('@december/tools')
-            const config = await loadMcpConfig({ workspaceDir: process.cwd() })
-            if (config.mcpServers?.[serverName]) {
-                config.mcpServers[serverName].disabled = !config.mcpServers[serverName].disabled
-                await saveMcpConfig({ config, scope: 'workspace', workspaceDir: process.cwd() })
-                if (agent.mcpPool) {
-                    await agent.mcpPool.reload(config)
-                    for (const tool of agent.mcpPool.getTools()) {
-                        agent.registerTool(tool)
-                    }
-                }
-                addToast(
-                    `MCP server '${serverName}' ${config.mcpServers[serverName].disabled ? 'disabled' : 'enabled'}`
-                )
-                setStaticKey((k: number) => k + 1)
+            const { toggleMcpServer } = await import('@december/tools')
+            const { config, disabled } = await toggleMcpServer({
+                name: serverName,
+                workspaceDir: process.cwd(),
+            })
+            if (agent.mcpPool) {
+                const { tools } = await agent.mcpPool.reload(config)
+                agent.syncMcpTools(tools)
             }
+            addToast(`MCP server '${serverName}' ${disabled ? 'disabled' : 'enabled'}`)
+            setStaticKey((k: number) => k + 1)
         } catch (err: any) {
             addToast(`Failed to toggle MCP server: ${err.message}`, 'error')
         }
@@ -1397,9 +1392,7 @@ export function useAgentSession({
         try {
             if (agent.mcpPool) {
                 const { tools } = await agent.mcpPool.reload()
-                for (const tool of tools) {
-                    agent.registerTool(tool)
-                }
+                agent.syncMcpTools(tools)
                 addToast('MCP servers and tools reloaded successfully')
                 setStaticKey((k: number) => k + 1)
             } else {
@@ -1407,6 +1400,71 @@ export function useAgentSession({
             }
         } catch (err: any) {
             addToast(`Failed to reload MCP servers: ${err.message}`, 'error')
+        }
+    }
+
+    const handleAddMcpServer = async (
+        name: string,
+        serverConfig: any,
+        scope: 'workspace' | 'global' = 'workspace'
+    ) => {
+        try {
+            const { addMcpServer } = await import('@december/tools')
+            const config = await addMcpServer({
+                name,
+                serverConfig,
+                scope,
+                workspaceDir: process.cwd(),
+            })
+            if (agent.mcpPool) {
+                const { tools } = await agent.mcpPool.reload(config)
+                agent.syncMcpTools(tools)
+            }
+            addToast(`Added MCP server '${name}'`)
+            setStaticKey((k: number) => k + 1)
+        } catch (err: any) {
+            addToast(`Failed to add MCP server: ${err.message}`, 'error')
+        }
+    }
+
+    const handleRemoveMcpServer = async (
+        serverName: string,
+        scope: 'workspace' | 'global' = 'workspace'
+    ) => {
+        try {
+            const { removeMcpServer } = await import('@december/tools')
+            const config = await removeMcpServer({
+                name: serverName,
+                scope,
+                workspaceDir: process.cwd(),
+            })
+            if (agent.mcpPool) {
+                const { tools } = await agent.mcpPool.reload(config)
+                agent.syncMcpTools(tools)
+            }
+            addToast(`Removed MCP server '${serverName}'`)
+            setStaticKey((k: number) => k + 1)
+        } catch (err: any) {
+            addToast(`Failed to remove MCP server: ${err.message}`, 'error')
+        }
+    }
+
+    const handleTestMcpServer = async (serverName: string) => {
+        try {
+            if (agent.mcpPool) {
+                const result = await agent.mcpPool.testServer(serverName)
+                if (result.success) {
+                    addToast(
+                        `Server '${serverName}' connected (${result.latencyMs}ms, ${result.toolsCount} tools)`
+                    )
+                } else {
+                    addToast(`Connection failed: ${result.error}`, 'error')
+                }
+                return result
+            }
+        } catch (err: any) {
+            addToast(`Test connection failed: ${err.message}`, 'error')
+            return { success: false, error: err.message }
         }
     }
 
@@ -1520,5 +1578,8 @@ export function useAgentSession({
         setPendingToolCall,
         handleToggleMcpServer,
         handleReloadMcp,
+        handleAddMcpServer,
+        handleRemoveMcpServer,
+        handleTestMcpServer,
     }
 }
