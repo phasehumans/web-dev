@@ -67,34 +67,6 @@ const getPreviewHtmlFromFiles = (generatedFiles?: Record<string, GeneratedProjec
     return html
 }
 
-const getOperationSteps = (operation: OutputOperation | null | undefined) => {
-    if (operation === 'edit') {
-        return [
-            'Reading the current project files',
-            'Planning a minimal code patch',
-            'Applying targeted file changes',
-            'Refreshing the saved project version',
-        ]
-    }
-
-    if (operation === 'fix') {
-        return [
-            'Capturing the preview runtime error',
-            'Tracing the failing file path',
-            'Applying the smallest reliable fix',
-            'Refreshing the saved project version',
-        ]
-    }
-
-    return [
-        'Analyzing request intent',
-        'Locking implementation plan',
-        'Preparing build order and file tree',
-        'Streaming file generation to the IDE',
-        'Finalizing generated project output',
-    ]
-}
-
 export const useWorkspaceScreenController = ({
     isGenerating,
     generatedFiles,
@@ -113,8 +85,6 @@ export const useWorkspaceScreenController = ({
     const [editPrompt, setEditPrompt] = React.useState('')
     const [isApplyingEdit, setIsApplyingEdit] = React.useState(false)
     const [isChatSidebarCollapsed, setIsChatSidebarCollapsed] = React.useState(false)
-    const [steps, setSteps] = React.useState<string[]>([])
-    const [isThoughtsOpen, setIsThoughtsOpen] = React.useState(true)
     const [executionTime, setExecutionTime] = React.useState(0)
     const iframeRef = React.useRef<HTMLIFrameElement>(null)
     const hasSwitchedToCodeForBuildRef = React.useRef(false)
@@ -143,34 +113,13 @@ export const useWorkspaceScreenController = ({
             setExecutionTime((Date.now() - start) / 1000)
         }, 100)
 
-        setSteps([])
-        setIsThoughtsOpen(true)
         hasSwitchedToCodeForBuildRef.current = false
         setActiveTab((prev) => (activeOperation === 'build' || !activeOperation ? 'preview' : prev))
 
-        const sequences = getOperationSteps(activeOperation)
-        let stepIndex = 0
-        const stepInterval = setInterval(() => {
-            if (stepIndex < sequences.length) {
-                setSteps((prev) => [...prev, sequences[stepIndex]!])
-                stepIndex += 1
-            } else {
-                clearInterval(stepInterval)
-            }
-        }, 800)
-
         return () => {
             clearInterval(timerInterval)
-            clearInterval(stepInterval)
         }
     }, [activeOperation, isGenerating])
-
-    React.useEffect(() => {
-        if (!isGenerating && steps.length > 0) {
-            const timeout = setTimeout(() => setIsThoughtsOpen(false), 2000)
-            return () => clearTimeout(timeout)
-        }
-    }, [isGenerating, steps.length])
 
     React.useEffect(() => {
         if (!isGenerating && previewSession?.backendStatus === 'ready') {
@@ -316,9 +265,6 @@ export const useWorkspaceScreenController = ({
         isApplyingEdit,
         isChatSidebarCollapsed,
         setIsChatSidebarCollapsed,
-        steps,
-        isThoughtsOpen,
-        setIsThoughtsOpen,
         executionTime,
         iframeRef,
         handleIframeMessage,

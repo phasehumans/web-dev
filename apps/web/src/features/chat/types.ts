@@ -84,10 +84,7 @@ export interface ChatSidebarProps {
     onPromptSubmit: (prompt: string) => void
     onBack: () => void
     isGenerating: boolean
-    steps: string[]
     executionTime: number
-    isThoughtsOpen: boolean
-    setIsThoughtsOpen: (value: boolean) => void
     editPrompt: string
     setEditPrompt: (value: string) => void
     handleApplyEdit: () => void

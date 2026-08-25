@@ -210,9 +210,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         isApplyingEdit,
         isChatSidebarCollapsed,
         setIsChatSidebarCollapsed,
-        steps,
-        isThoughtsOpen,
-        setIsThoughtsOpen,
         executionTime,
         iframeRef,
         handleIframeMessage,
@@ -950,10 +947,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                             }}
                             onBack={handleTriggerExit}
                             isGenerating={isGenerating}
-                            steps={steps}
                             executionTime={executionTime}
-                            isThoughtsOpen={isThoughtsOpen}
-                            setIsThoughtsOpen={setIsThoughtsOpen}
                             editPrompt={editPrompt}
                             setEditPrompt={setEditPrompt}
                             handleApplyEdit={() => {
@@ -1124,10 +1118,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                         }}
                         onBack={handleTriggerExit}
                         isGenerating={isGenerating}
-                        steps={steps}
                         executionTime={executionTime}
-                        isThoughtsOpen={isThoughtsOpen}
-                        setIsThoughtsOpen={setIsThoughtsOpen}
                         editPrompt={editPrompt}
                         setEditPrompt={setEditPrompt}
                         handleApplyEdit={() => {
