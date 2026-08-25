@@ -81,9 +81,13 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
     }
 }
 
-export const generateAccessToken = (payload: TokenPayload) => {
+export const generateAccessToken = (
+    payload: TokenPayload,
+    options?: { expiresIn?: SignOptions['expiresIn'] }
+) => {
     const secret = env.ACCESS_TOKEN_SECRET
-    const expiresIn = env.ACCESS_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
+    const expiresIn = (options?.expiresIn ||
+        env.ACCESS_TOKEN_EXPIRES_IN) as SignOptions['expiresIn']
 
     return jwt.sign(
         {

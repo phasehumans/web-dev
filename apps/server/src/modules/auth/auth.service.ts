@@ -620,9 +620,29 @@ const deleteAccount = async (data: DeleteAccount) => {
 }
 
 const getCliToken = async (data: GetCliToken) => {
-    const { token, userId } = data
+    const { token: _token, userId } = data
     const user = await authRepository.findUserById(userId)
-    return { token, email: user?.email }
+
+    if (!user) {
+        throw new AppError('User not found', 404)
+    }
+
+    const sessionId = crypto.randomUUID()
+    const refreshToken = generateRefreshToken({ userId: user.id, sessionId })
+    const refreshTokenHash = hashRefreshToken(refreshToken)
+
+    await authRepository.createSession({
+        id: sessionId,
+        userId: user.id,
+        refreshTokenHash,
+        userAgent: 'cli-token',
+        ipAddress: 'unknown',
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    })
+
+    const token = generateAccessToken({ userId: user.id, sessionId }, { expiresIn: '30d' })
+
+    return { token, email: user.email }
 }
 
 const generateDeviceCode = async () => {
@@ -698,7 +718,10 @@ const pollDeviceToken = async (data: PollDeviceToken) => {
             expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         })
 
-        const accessToken = generateAccessToken({ userId: user.id, sessionId })
+        const accessToken = generateAccessToken(
+            { userId: user.id, sessionId },
+            { expiresIn: '30d' }
+        )
 
         await authRepository.deleteDeviceCode(codeRecord.id)
 
