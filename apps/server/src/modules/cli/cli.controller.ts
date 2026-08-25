@@ -18,7 +18,7 @@ const chatCompletions = asyncHandler(async (req: Request, res: Response) => {
     const hasBalance = await cliService.verifyWalletBalance({ userId })
     if (!hasBalance) {
         throw new AppError(
-            'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.',
+            'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing or configure Bring Your Own Key (BYOK) via `/login` to continue using December.',
             402
         )
     }

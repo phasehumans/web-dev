@@ -310,6 +310,7 @@ describe('Agent Loop Integration', () => {
         const errEvent = events.find((e) => e.type === 'AgentError')
         expect(errEvent).toBeDefined()
         expect((errEvent as any).error).toContain('https://trydecember.com/settings/billing')
+        expect((errEvent as any).error).toContain('Bring Your Own Key (BYOK)')
     })
 
     it('should include pricing CTA link when 429 rate limit is exhausted', async () => {

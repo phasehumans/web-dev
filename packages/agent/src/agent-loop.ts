@@ -560,7 +560,7 @@ async function streamAssistantResponse(
 
         if (errorMsg.includes('402') || errorMsg.toLowerCase().includes('insufficient credits')) {
             errorMsg =
-                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.\n' +
+                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing or configure Bring Your Own Key (BYOK) via `/login` to continue using December.\n' +
                 errorMsg
         } else if (
             errorMsg.includes('429') ||

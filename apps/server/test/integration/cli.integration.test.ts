@@ -18,6 +18,7 @@ describe('CLI Handoff API Endpoints', () => {
                 name: 'CLI Handoff Test User',
                 email: `cli-test-${Date.now()}@example.com`,
                 username: `clitest${Date.now()}`,
+                creditBalance: 100,
             },
         })
         testUserId = user.id
