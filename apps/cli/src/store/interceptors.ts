@@ -138,7 +138,7 @@ export function setupAgentInterceptors(agent: Agent, storeState: any) {
         // 3. Classify operation
         const classification = classifyOperation(toolCall)
 
-        // Safe operations bypass UI prompts entirely, unless accessing secret files
+        // Tier 1 (Safe Read & Inspect): Safe operations bypass UI prompts entirely, even in always-ask mode (unless accessing secret files)
         if (classification.tier === 'safe' && !toolCall.isSecretAccess) {
             return { block: false }
         }

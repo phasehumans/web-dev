@@ -82,7 +82,7 @@ describe('/fork command', () => {
 })
 
 describe('/init command action', () => {
-    test('scaffolds AGENTS.md in root and rules/skills in .december without headings', async () => {
+    test('scaffolds AGENTS.md in root and config in .december', async () => {
         const fs = await import('node:fs')
         const path = await import('node:path')
         const os = await import('node:os')
@@ -116,7 +116,10 @@ describe('/init command action', () => {
             expect(fs.existsSync(agentsFile)).toBe(true)
             expect(fs.readFileSync(agentsFile, 'utf8')).toContain('Agent Guidelines')
 
-            expect(fs.existsSync(ignoreFile)).toBe(true)
+            expect(fs.existsSync(ignoreFile)).toBe(false)
+            expect(fs.existsSync(rulesFile)).toBe(false)
+            expect(fs.existsSync(skillsFile)).toBe(false)
+
             expect(fs.existsSync(commandsFile)).toBe(true)
             const commandsContent = fs.readFileSync(commandsFile, 'utf8')
             expect(commandsContent).toContain('// {')
@@ -130,16 +133,6 @@ describe('/init command action', () => {
             expect(settingsContent.steeringMode).toBe('all')
             expect(settingsContent.followUpMode).toBe('all')
             expect(settingsContent.pathGuard).toBe(true)
-
-            expect(fs.existsSync(rulesFile)).toBe(true)
-            const rulesContent = fs.readFileSync(rulesFile, 'utf8')
-            expect(rulesContent).not.toContain('#')
-            expect(rulesContent).toBe('Add rules in this file for the agent to use as context.\n')
-
-            expect(fs.existsSync(skillsFile)).toBe(true)
-            const skillsContent = fs.readFileSync(skillsFile, 'utf8')
-            expect(skillsContent).not.toContain('#')
-            expect(skillsContent).toBe('Add skills in this file for the agent to use as context.\n')
 
             expect(toastMessages[0]).toEqual({
                 variant: 'success',

@@ -17,25 +17,7 @@ export async function handleLogoutCommand(): Promise<void> {
 
 const DEFAULT_AGENTS_MD = `# Agent Guidelines & Project Instructions
 
-Add project-specific guidelines, testing commands, architecture patterns, and conventions in this file for December to follow.
-`
-
-const DEFAULT_RULES_MD = 'Add rules in this file for the agent to use as context.\n'
-
-const DEFAULT_SKILLS_MD = 'Add skills in this file for the agent to use as context.\n'
-
-const DEFAULT_DECEMBER_IGNORE = `# Build outputs and dependencies
-node_modules/
-dist/
-build/
-.next/
-.turbo/
-*.log
-
-# Environment and secrets
-.env*
-*.pem
-*.key
+Add project-specific guidelines, rules, skills, testing commands, architecture patterns, and conventions in this file for December to follow.
 `
 
 const DEFAULT_COMMANDS_JSON = `{
@@ -87,24 +69,6 @@ export async function handleInitCommand(options?: { quiet?: boolean }): Promise<
             targetPath: path.join(rootDir, 'AGENTS.md'),
             displayPath: 'AGENTS.md',
             content: DEFAULT_AGENTS_MD,
-        },
-        {
-            name: '.decemberignore',
-            targetPath: path.join(rootDir, '.decemberignore'),
-            displayPath: '.decemberignore',
-            content: DEFAULT_DECEMBER_IGNORE,
-        },
-        {
-            name: 'rules.md',
-            targetPath: path.join(decDir, 'rules.md'),
-            displayPath: '.december/rules.md',
-            content: DEFAULT_RULES_MD,
-        },
-        {
-            name: 'skills.md',
-            targetPath: path.join(decDir, 'skills.md'),
-            displayPath: '.december/skills.md',
-            content: DEFAULT_SKILLS_MD,
         },
         {
             name: 'commands.json',

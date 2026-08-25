@@ -16,13 +16,12 @@ describe('CLI Commands & Workflows (Integration)', () => {
             await handleInitCommand()
 
             expect(fs.existsSync(path.join(tmpDir, 'AGENTS.md'))).toBe(true)
-            expect(fs.existsSync(path.join(tmpDir, '.decemberignore'))).toBe(true)
             expect(fs.existsSync(path.join(tmpDir, '.december', 'commands.json'))).toBe(true)
-            const rulesContent = fs.readFileSync(
-                path.join(tmpDir, '.december', 'rules.md'),
-                'utf-8'
-            )
-            expect(rulesContent).toContain('Add rules in this file')
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'mcp.json'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'settings.json'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.decemberignore'))).toBe(false)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'rules.md'))).toBe(false)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'skills.md'))).toBe(false)
         } finally {
             process.chdir(originalCwd)
             fs.rmSync(tmpDir, { recursive: true, force: true })

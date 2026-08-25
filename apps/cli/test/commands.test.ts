@@ -34,7 +34,7 @@ describe('CLI Standalone Commands', () => {
         expect(config.activeProvider).toBeUndefined()
     })
 
-    it('handleInitCommand scaffolds workspace files with AGENTS.md in root and rules/skills in .december', async () => {
+    it('handleInitCommand scaffolds workspace files with AGENTS.md in root and config in .december', async () => {
         const originalCwd = process.cwd()
         try {
             process.chdir(tmpDir)
@@ -50,7 +50,7 @@ describe('CLI Standalone Commands', () => {
             const agentsContent = await fs.readFile(rootAgentsPath, 'utf-8')
             expect(agentsContent).toContain('Agent Guidelines')
 
-            const decFiles = ['rules.md', 'skills.md', 'settings.json', 'commands.json', 'mcp.json']
+            const decFiles = ['settings.json', 'commands.json', 'mcp.json']
             for (const file of decFiles) {
                 const exists = await fs
                     .access(path.join(tmpDir, '.december', file))
@@ -63,21 +63,19 @@ describe('CLI Standalone Commands', () => {
                 .access(path.join(tmpDir, '.decemberignore'))
                 .then(() => true)
                 .catch(() => false)
-            expect(ignoreExists).toBe(true)
+            expect(ignoreExists).toBe(false)
 
-            const rulesContent = await fs.readFile(
-                path.join(tmpDir, '.december', 'rules.md'),
-                'utf-8'
-            )
-            expect(rulesContent).not.toContain('#')
-            expect(rulesContent).toBe('Add rules in this file for the agent to use as context.\n')
+            const rulesExists = await fs
+                .access(path.join(tmpDir, '.december', 'rules.md'))
+                .then(() => true)
+                .catch(() => false)
+            expect(rulesExists).toBe(false)
 
-            const skillsContent = await fs.readFile(
-                path.join(tmpDir, '.december', 'skills.md'),
-                'utf-8'
-            )
-            expect(skillsContent).not.toContain('#')
-            expect(skillsContent).toBe('Add skills in this file for the agent to use as context.\n')
+            const skillsExists = await fs
+                .access(path.join(tmpDir, '.december', 'skills.md'))
+                .then(() => true)
+                .catch(() => false)
+            expect(skillsExists).toBe(false)
 
             const rawCommandsContent = await fs.readFile(
                 path.join(tmpDir, '.december', 'commands.json'),

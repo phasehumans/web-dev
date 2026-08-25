@@ -17,9 +17,12 @@ describe('CLI Commands, Configuration & Session Persistence E2E Tests', () => {
             await handleInitCommand()
 
             expect(fs.existsSync(path.join(tmpDir, 'AGENTS.md'))).toBe(true)
-            expect(fs.existsSync(path.join(tmpDir, '.december', 'rules.md'))).toBe(true)
-            expect(fs.existsSync(path.join(tmpDir, '.december', 'skills.md'))).toBe(true)
             expect(fs.existsSync(path.join(tmpDir, '.december', 'settings.json'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'commands.json'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'mcp.json'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.decemberignore'))).toBe(false)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'rules.md'))).toBe(false)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'skills.md'))).toBe(false)
 
             const settings = JSON.parse(
                 fs.readFileSync(path.join(tmpDir, '.december', 'settings.json'), 'utf-8')

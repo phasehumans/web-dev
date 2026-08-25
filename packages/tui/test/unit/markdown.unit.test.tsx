@@ -81,4 +81,36 @@ graph LR
         const frame = lastFrame()
         expect(frame).toContain('Feedback Link')
     })
+
+    it('caches and reuses parsed AST tokens across multiple renders', async () => {
+        const { parseMarkdownTokens, clearMarkdownCache, getMarkdownCacheStats } =
+            await import('../../src/components/markdown')
+        clearMarkdownCache()
+
+        const snippet = '# Header\n\nParagraph text\n\n```ts\nconst x: number = 42;\n```'
+        const tokens1 = parseMarkdownTokens(snippet)
+        expect(tokens1.length).toBeGreaterThan(0)
+        expect(getMarkdownCacheStats().astCacheSize).toBe(1)
+
+        // Second call must return cached reference
+        const tokens2 = parseMarkdownTokens(snippet)
+        expect(tokens2).toBe(tokens1)
+        expect(getMarkdownCacheStats().astCacheSize).toBe(1)
+    })
+
+    it('caches syntax-highlighted code output', async () => {
+        const { getHighlightedCode, clearMarkdownCache, getMarkdownCacheStats } =
+            await import('../../src/components/markdown')
+        clearMarkdownCache()
+
+        const code = 'const answer: number = 42;'
+        const highlighted1 = getHighlightedCode(code, 'typescript')
+        expect(highlighted1).toContain('42')
+        expect(getMarkdownCacheStats().highlightCacheSize).toBe(1)
+
+        // Reusing same code snippet returns cached highlight string
+        const highlighted2 = getHighlightedCode(code, 'typescript')
+        expect(highlighted2).toBe(highlighted1)
+        expect(getMarkdownCacheStats().highlightCacheSize).toBe(1)
+    })
 })

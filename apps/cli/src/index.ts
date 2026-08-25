@@ -5,7 +5,6 @@ import path from 'node:path'
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
-import { handleLogoutCommand, handleInitCommand, handleUpdateCommand } from './commands'
 
 export { parseCliArgs, getHelpText } from './args'
 export { handleLogoutCommand, handleInitCommand, handleUpdateCommand } from './commands'
@@ -18,11 +17,13 @@ async function main() {
 
     const parsedArgs = parseCliArgs(process.argv.slice(2))
 
+    // Fast-path 1: Help flag (< 5ms)
     if (parsedArgs.isHelp) {
         console.log(getHelpText(pkg.version))
         process.exit(0)
     }
 
+    // Fast-path 2: Version flag (< 5ms)
     if (parsedArgs.isVersion) {
         console.log(pkg.version)
         process.exit(0)
@@ -32,17 +33,21 @@ async function main() {
         process.chdir(parsedArgs.cwd)
     }
 
+    // Fast-path 3: Standalone subcommands (lazy loaded)
     if (parsedArgs.command === 'logout') {
+        const { handleLogoutCommand } = await import('./commands')
         await handleLogoutCommand()
         process.exit(0)
     }
 
     if (parsedArgs.command === 'init') {
+        const { handleInitCommand } = await import('./commands')
         await handleInitCommand()
         process.exit(0)
     }
 
     if (parsedArgs.command === 'update') {
+        const { handleUpdateCommand } = await import('./commands')
         await handleUpdateCommand()
         process.exit(process.exitCode || 0)
     }
@@ -64,7 +69,97 @@ async function main() {
         process.exit(0)
     }
 
-    // Lazy load heavy dependencies ONLY when running an interactive session or headless task
+    // Path 4: Headless Task Execution (Load agent harness & tools, skip Ink/React/TUI)
+    if (parsedArgs.prompt) {
+        const [
+            { AgentHarness },
+            { openaiProvider },
+            toolsModule,
+            { FileSessionRepository },
+            { getProviderConfig, loadConfig },
+            { runHeadlessTask },
+            { localOperations, setActiveScopeDir },
+            { instantiateProvider },
+        ] = await Promise.all([
+            import('@december/agent'),
+            import('@december/providers'),
+            import('@december/tools'),
+            import('./file-session-repository'),
+            import('./config'),
+            import('./headless-runner'),
+            import('./local-operations'),
+            import('./utils/provider-factory'),
+        ])
+
+        if (parsedArgs.scope) {
+            setActiveScopeDir(parsedArgs.scope)
+        }
+
+        const providerConfig = await getProviderConfig()
+        let llm: any
+        if (providerConfig) {
+            llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
+        } else {
+            llm = openaiProvider(undefined, 'dummy-key')
+        }
+
+        const sessionRepository = new FileSessionRepository()
+        const sessionId = parsedArgs.sessionId || `session-${Date.now()}`
+        const config = await loadConfig()
+
+        const harness = new AgentHarness({
+            llm: llm,
+            tools: [
+                toolsModule.BashTool,
+                toolsModule.ReadFileTool,
+                toolsModule.WriteFileTool,
+                toolsModule.LsTool,
+                toolsModule.EditFileTool,
+                toolsModule.EditDiffTool,
+                toolsModule.FindFilesTool,
+                toolsModule.GrepSearchTool,
+                toolsModule.AskQuestionTool,
+                toolsModule.ManageTaskTool,
+                toolsModule.BrowserTool,
+                toolsModule.WebSearchTool,
+                toolsModule.PythonReplTool,
+            ],
+            operations: localOperations,
+            modelOptions: {
+                model:
+                    parsedArgs.model ||
+                    providerConfig?.model ||
+                    config.activeModel ||
+                    'gemini-3.6-flash',
+                thinkingLevel: config.thinkingLevel || 'auto',
+            },
+            sessionRepository,
+            sessionId,
+            workspaceDir: parsedArgs.scope
+                ? path.resolve(process.cwd(), parsedArgs.scope)
+                : process.cwd(),
+            thinkingLevel: config.thinkingLevel || 'auto',
+            steeringMode: config.steeringMode || 'all',
+            followUpMode: config.followUpMode || 'all',
+        })
+
+        const agent = harness.getAgent()
+        await agent.loadContext()
+        await harness.initMCP().catch(() => {})
+
+        if (!parsedArgs.json) {
+            console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
+        }
+
+        const result = await runHeadlessTask(parsedArgs.prompt, {
+            agent,
+            nonInteractive: parsedArgs.yes,
+            json: parsedArgs.json,
+        })
+        process.exit(result.success ? 0 : 1)
+    }
+
+    // Path 5: Full Interactive TUI Session (Lazy load Ink, React, and TUI modules)
     const [
         { AgentHarness },
         { openaiProvider },
@@ -74,7 +169,7 @@ async function main() {
         reactModule,
         { FileSessionRepository },
         { getProviderConfig, loadConfig, getAuthStatus },
-        { runHeadlessTask, suppressConsole },
+        { suppressConsole },
         { useAgentSession },
         { localOperations, setActiveScopeDir },
         { instantiateProvider },
@@ -117,10 +212,8 @@ async function main() {
     }
 
     const isAuthenticated = !!providerConfig
-
     const sessionRepository = new FileSessionRepository()
-    const sessionId = `session-${Date.now()}`
-
+    const sessionId = parsedArgs.sessionId || `session-${Date.now()}`
     const config = await loadConfig()
 
     const harness = new AgentHarness({
@@ -150,15 +243,10 @@ async function main() {
             thinkingLevel: config.thinkingLevel || 'auto',
         },
         sessionRepository,
-        sessionId: parsedArgs.sessionId || sessionId,
+        sessionId,
         workspaceDir: parsedArgs.scope
             ? path.resolve(process.cwd(), parsedArgs.scope)
             : process.cwd(),
-        hooks: {
-            beforeToolCall: async (toolCall) => {
-                // Future integration: hook into the TUI to request user approval for destructive bash commands
-            },
-        },
         thinkingLevel: config.thinkingLevel || 'auto',
         steeringMode: config.steeringMode || 'all',
         followUpMode: config.followUpMode || 'all',
@@ -166,24 +254,10 @@ async function main() {
 
     const agent = harness.getAgent()
 
-    if (parsedArgs.prompt) {
-        await agent.loadContext()
-        await harness.initMCP().catch(() => {})
-        if (!parsedArgs.json) {
-            console.log(`\nExecuting Headless Task: "${parsedArgs.prompt}"\n`)
-        }
-        const result = await runHeadlessTask(parsedArgs.prompt, {
-            agent,
-            nonInteractive: parsedArgs.yes,
-            json: parsedArgs.json,
-        })
-        process.exit(result.success ? 0 : 1)
-    }
-
     // Non-blocking MCP initialization and session context loading during TUI mounting
     harness.initMCP().catch(() => {})
-    agent.loadContext().catch((err: any) => {
-        // Log silently or ignore context load errors on fresh sessions
+    agent.loadContext().catch(() => {
+        // Intentionally swallowed: ignore context load errors on fresh sessions
     })
 
     function AppWrapper(props: any) {

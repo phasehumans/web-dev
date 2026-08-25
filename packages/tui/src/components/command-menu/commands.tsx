@@ -221,7 +221,7 @@ export const COMMANDS: Command[] = [
     },
     {
         name: 'init',
-        description: 'Create initial configuration, rules, skills, and .decemberignore',
+        description: 'Create initial configuration, commands, and AGENTS.md',
         value: '/init',
         action: (ctx) => {
             try {
@@ -229,18 +229,12 @@ export const COMMANDS: Command[] = [
                 const decDir = path.join(rootDir, '.december')
 
                 const agentsFile = path.join(rootDir, 'AGENTS.md')
-                const ignoreFile = path.join(rootDir, '.decemberignore')
-                const rulesFile = path.join(decDir, 'rules.md')
-                const skillsFile = path.join(decDir, 'skills.md')
                 const commandsFile = path.join(decDir, 'commands.json')
                 const mcpFile = path.join(decDir, 'mcp.json')
                 const settingsFile = path.join(decDir, 'settings.json')
 
                 if (
                     fs.existsSync(agentsFile) &&
-                    fs.existsSync(ignoreFile) &&
-                    fs.existsSync(rulesFile) &&
-                    fs.existsSync(skillsFile) &&
                     fs.existsSync(commandsFile) &&
                     fs.existsSync(mcpFile) &&
                     fs.existsSync(settingsFile)
@@ -254,25 +248,7 @@ export const COMMANDS: Command[] = [
                 if (!fs.existsSync(agentsFile)) {
                     fs.writeFileSync(
                         agentsFile,
-                        '# Agent Guidelines & Project Instructions\n\nAdd project-specific guidelines, testing commands, architecture patterns, and conventions in this file for December to follow.\n'
-                    )
-                }
-                if (!fs.existsSync(ignoreFile)) {
-                    fs.writeFileSync(
-                        ignoreFile,
-                        `# Build outputs and dependencies\nnode_modules/\ndist/\nbuild/\n.next/\n.turbo/\n*.log\n\n# Environment and secrets\n.env*\n*.pem\n*.key\n`
-                    )
-                }
-                if (!fs.existsSync(rulesFile)) {
-                    fs.writeFileSync(
-                        rulesFile,
-                        'Add rules in this file for the agent to use as context.\n'
-                    )
-                }
-                if (!fs.existsSync(skillsFile)) {
-                    fs.writeFileSync(
-                        skillsFile,
-                        'Add skills in this file for the agent to use as context.\n'
+                        '# Agent Guidelines & Project Instructions\n\nAdd project-specific guidelines, rules, skills, testing commands, architecture patterns, and conventions in this file for December to follow.\n'
                     )
                 }
                 if (!fs.existsSync(commandsFile)) {

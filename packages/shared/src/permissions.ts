@@ -44,12 +44,15 @@ const SAFE_TOOLS = new Set([
     'read_file',
     'view_file',
     'find_files',
+    'find_by_name',
     'grep_search',
     'list_dir',
     'ls',
     'search_web',
+    'read_url_content',
     'ask_question',
     'manage_task',
+    'schedule',
 ])
 
 const DESTRUCTIVE_COMMAND_REGEXES = [

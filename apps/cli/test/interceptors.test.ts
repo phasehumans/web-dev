@@ -59,6 +59,28 @@ describe('setupAgentInterceptors', () => {
             expect(mockStoreState.setAuthMode).not.toHaveBeenCalled()
         })
 
+        it('allows Tier 1 safe tools and commands autonomously without prompt even when toolPermission is always-ask', async () => {
+            ;(configModule.loadConfig as any).mockResolvedValue({
+                toolPermission: 'always-ask',
+            } as any)
+
+            const safeTools = [
+                { name: 'read_file', input: { path: 'src/index.ts' } },
+                { name: 'grep_search', input: { query: 'export' } },
+                { name: 'find_files', input: { pattern: '*.ts' } },
+                { name: 'find_by_name', input: { Pattern: '*.ts', SearchDirectory: '.' } },
+                { name: 'list_dir', input: { dirPath: '.' } },
+                { name: 'run_command', input: { CommandLine: 'git status' } },
+                { name: 'run_command', input: { CommandLine: 'git diff' } },
+            ]
+
+            for (const tc of safeTools) {
+                const result = await mockAgent.operations.ui.requestPermission(tc)
+                expect(result).toEqual({ block: false })
+            }
+            expect(mockStoreState.setAuthMode).not.toHaveBeenCalled()
+        })
+
         it('allows approved commands', async () => {
             ;(configModule.loadConfig as any).mockResolvedValue({
                 approvedTools: ['npm install'],

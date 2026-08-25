@@ -191,15 +191,68 @@ const renderToken = (token: any, index: number): React.ReactNode => {
     }
 }
 
+const MAX_HIGHLIGHT_CACHE_SIZE = 500
+const highlightCache = new Map<string, string>()
+
+export function getHighlightedCode(code: string, lang: string): string {
+    const key = `${lang}:${code}`
+    const cached = highlightCache.get(key)
+    if (cached !== undefined) return cached
+
+    let result = code
+    try {
+        result = highlight(code, {
+            language: lang,
+            ignoreIllegals: true,
+        })
+    } catch {
+        // Intentionally swallowed: fallback to plain text if highlighting fails
+    }
+
+    if (highlightCache.size >= MAX_HIGHLIGHT_CACHE_SIZE) {
+        const firstKey = highlightCache.keys().next().value
+        if (firstKey) highlightCache.delete(firstKey)
+    }
+    highlightCache.set(key, result)
+    return result
+}
+
+const MAX_AST_CACHE_SIZE = 500
+const astCache = new Map<string, any[]>()
+
+export function parseMarkdownTokens(source: string): any[] {
+    if (!source) return []
+    const cached = astCache.get(source)
+    if (cached) return cached
+
+    const tokens = marked.lexer(source).filter((t) => t.type !== 'space')
+
+    if (astCache.size >= MAX_AST_CACHE_SIZE) {
+        const firstKey = astCache.keys().next().value
+        if (firstKey) astCache.delete(firstKey)
+    }
+    astCache.set(source, tokens)
+    return tokens
+}
+
+export function clearMarkdownCache(): void {
+    highlightCache.clear()
+    astCache.clear()
+}
+
+export function getMarkdownCacheStats(): { astCacheSize: number; highlightCacheSize: number } {
+    return {
+        astCacheSize: astCache.size,
+        highlightCacheSize: highlightCache.size,
+    }
+}
+
 const CodeBlock = React.memo(function CodeBlock({ token }: { token: any }) {
     const lang = token.lang || 'typescript'
 
     const highlighted = React.useMemo(() => {
         if (!token.text) return ''
-        return highlight(token.text, {
-            language: lang,
-            ignoreIllegals: true,
-        })
+        return getHighlightedCode(token.text, lang)
     }, [token.text, lang])
 
     return (
@@ -211,8 +264,7 @@ const CodeBlock = React.memo(function CodeBlock({ token }: { token: any }) {
 
 export const Markdown = React.memo(function Markdown({ children }: Props) {
     const tokens = React.useMemo(() => {
-        if (!children) return []
-        return marked.lexer(children).filter((t) => t.type !== 'space')
+        return parseMarkdownTokens(children)
     }, [children])
 
     if (!children) return null
