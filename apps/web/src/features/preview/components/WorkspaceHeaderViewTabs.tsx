@@ -98,13 +98,7 @@ export const BASE_TAB_DEFS: WorkspaceTabDef[] = [
     { id: 'tasks', label: 'Tasks', icon: <TasksIcon /> },
 ]
 
-export const AVAILABLE_PRS: WorkspaceTabDef[] = [
-    {
-        id: 'pull_requests',
-        label: 'PR #97',
-        icon: <PullRequestsIcon className="w-3.5 h-3.5 text-[#C084FC]" />,
-    },
-]
+export const AVAILABLE_PRS: WorkspaceTabDef[] = []
 
 export const ALL_TAB_DEFS: WorkspaceTabDef[] = [...BASE_TAB_DEFS, ...AVAILABLE_PRS]
 
@@ -116,6 +110,7 @@ interface WorkspaceHeaderViewTabsProps {
     onAddTab: (tab: WorkspaceTabId) => void
     onReorderTabs: (tabs: WorkspaceTabId[]) => void
     onBack?: () => void
+    availablePrs?: WorkspaceTabDef[]
 }
 
 const ViewTabItem: React.FC<{
@@ -197,6 +192,7 @@ export const WorkspaceHeaderViewTabs: React.FC<WorkspaceHeaderViewTabsProps> = (
     onAddTab,
     onReorderTabs,
     onBack,
+    availablePrs = [],
 }) => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
     const [isPrSubmenuOpen, setIsPrSubmenuOpen] = React.useState(false)
@@ -205,6 +201,8 @@ export const WorkspaceHeaderViewTabs: React.FC<WorkspaceHeaderViewTabsProps> = (
     const draggedTabRef = React.useRef<WorkspaceTabId | null>(null)
     const menuRef = React.useRef<HTMLDivElement | null>(null)
     const prCloseTimeoutRef = React.useRef<NodeJS.Timeout | null>(null)
+
+    const allDefs = React.useMemo(() => [...BASE_TAB_DEFS, ...availablePrs], [availablePrs])
 
     const handlePrMouseEnter = () => {
         if (prCloseTimeoutRef.current) {
@@ -290,7 +288,7 @@ export const WorkspaceHeaderViewTabs: React.FC<WorkspaceHeaderViewTabsProps> = (
 
             <div className="hidden md:flex items-center gap-1 bg-[#141414] p-0.5 rounded-xl">
                 {openTabs.map((tabId) => {
-                    const def = ALL_TAB_DEFS.find((t) => t.id === tabId)
+                    const def = allDefs.find((t) => t.id === tabId)
                     if (!def) return null
                     return (
                         <ViewTabItem
@@ -350,53 +348,55 @@ export const WorkspaceHeaderViewTabs: React.FC<WorkspaceHeaderViewTabsProps> = (
                                 })}
 
                                 {/* Pull Requests submenu trigger row */}
-                                <div
-                                    className="relative"
-                                    onMouseEnter={handlePrMouseEnter}
-                                    onMouseLeave={handlePrMouseLeave}
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsPrSubmenuOpen(!isPrSubmenuOpen)}
-                                        className={cn(
-                                            'flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#D6D5D4] hover:bg-[#252528] hover:text-white transition-colors text-left outline-none cursor-pointer',
-                                            isPrSubmenuOpen && 'bg-[#252528] text-white'
-                                        )}
+                                {availablePrs.length > 0 && (
+                                    <div
+                                        className="relative"
+                                        onMouseEnter={handlePrMouseEnter}
+                                        onMouseLeave={handlePrMouseLeave}
                                     >
-                                        <div className="flex items-center gap-2.5 truncate">
-                                            <span className="text-[#8E8D8C] shrink-0">
-                                                <PullRequestsIcon className="w-3.5 h-3.5 text-[#8E8D8C]" />
-                                            </span>
-                                            <span className="truncate">Pull requests</span>
-                                        </div>
-                                        <ChevronRight className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0 ml-1.5" />
-                                    </button>
-
-                                    {/* Flyout Submenu on hover/click with invisible hover bridge */}
-                                    {isPrSubmenuOpen && (
-                                        <div
-                                            className="absolute left-full top-0 ml-1.5 w-44 bg-[#1A1A1C] border border-[#2A2A2D] rounded-xl shadow-2xl z-50 p-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100 before:content-[''] before:absolute before:-left-3 before:top-0 before:bottom-0 before:w-3"
-                                            onMouseEnter={handlePrMouseEnter}
-                                            onMouseLeave={handlePrMouseLeave}
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsPrSubmenuOpen(!isPrSubmenuOpen)}
+                                            className={cn(
+                                                'flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#D6D5D4] hover:bg-[#252528] hover:text-white transition-colors text-left outline-none cursor-pointer',
+                                                isPrSubmenuOpen && 'bg-[#252528] text-white'
+                                            )}
                                         >
-                                            {AVAILABLE_PRS.map((pr) => (
-                                                <button
-                                                    key={pr.id}
-                                                    type="button"
-                                                    onClick={() => {
-                                                        onAddTab(pr.id)
-                                                        setIsMenuOpen(false)
-                                                        setIsPrSubmenuOpen(false)
-                                                    }}
-                                                    className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#D6D5D4] hover:bg-[#252528] hover:text-white transition-colors text-left outline-none cursor-pointer"
-                                                >
-                                                    <span className="shrink-0">{pr.icon}</span>
-                                                    <span className="truncate">{pr.label}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                            <div className="flex items-center gap-2.5 truncate">
+                                                <span className="text-[#8E8D8C] shrink-0">
+                                                    <PullRequestsIcon className="w-3.5 h-3.5 text-[#8E8D8C]" />
+                                                </span>
+                                                <span className="truncate">Pull requests</span>
+                                            </div>
+                                            <ChevronRight className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0 ml-1.5" />
+                                        </button>
+
+                                        {/* Flyout Submenu on hover/click with invisible hover bridge */}
+                                        {isPrSubmenuOpen && (
+                                            <div
+                                                className="absolute left-full top-0 ml-1.5 w-44 bg-[#1A1A1C] border border-[#2A2A2D] rounded-xl shadow-2xl z-50 p-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100 before:content-[''] before:absolute before:-left-3 before:top-0 before:bottom-0 before:w-3"
+                                                onMouseEnter={handlePrMouseEnter}
+                                                onMouseLeave={handlePrMouseLeave}
+                                            >
+                                                {availablePrs.map((pr) => (
+                                                    <button
+                                                        key={pr.id}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            onAddTab(pr.id)
+                                                            setIsMenuOpen(false)
+                                                            setIsPrSubmenuOpen(false)
+                                                        }}
+                                                        className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#D6D5D4] hover:bg-[#252528] hover:text-white transition-colors text-left outline-none cursor-pointer"
+                                                    >
+                                                        <span className="shrink-0">{pr.icon}</span>
+                                                        <span className="truncate">{pr.label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

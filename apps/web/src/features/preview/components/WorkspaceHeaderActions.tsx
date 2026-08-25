@@ -22,6 +22,7 @@ import { BadSessionModal } from './BadSessionModal'
 import type { BackendProjectVersionSummary } from '@/features/sessions/api/project'
 
 import { sessionAPI } from '@/features/sessions/api/session'
+import { SessionInsightsModal } from '@/features/sessions/components/SessionInsightsModal'
 import { Button } from '@/shared/components/ui/Button'
 import { Icons } from '@/shared/components/ui/Icons'
 import { Tooltip } from '@/shared/components/ui/Tooltip'
@@ -54,6 +55,7 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
 }) => {
     const queryClient = useQueryClient()
     const [isBadSessionModalOpen, setIsBadSessionModalOpen] = useState(false)
+    const [isInsightsModalOpen, setIsInsightsModalOpen] = useState(false)
 
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
     const [isFolderSubmenuOpen, setIsFolderSubmenuOpen] = useState(false)
@@ -155,19 +157,43 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
     }
 
     const navigate = useNavigate()
-    const prNumberDisplay = activeVersionId ? `#${activeVersionId.slice(0, 4)}` : '#1'
+    const prNumber = (sessionData as any)?.prNumber
+    const prState = (sessionData as any)?.prState
+    const githubRepoUrl = (sessionData as any)?.githubRepoUrl
+    const hasPr = Boolean(prNumber != null || githubRepoUrl)
+    const prNumberDisplay =
+        prNumber != null
+            ? `#${prNumber}`
+            : activeVersionId
+              ? `#${activeVersionId.slice(0, 4)}`
+              : '#1'
+    const prBadgeTitle =
+        prNumber != null
+            ? `Open Pull Request #${prNumber} in GitHub`
+            : `Open Pull Request ${prNumberDisplay} in GitHub`
     const prTitle = projectName ? `feat(workspace): ${projectName}` : 'Workspace Project'
     const branchName = projectName
         ? `feature/${projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
         : 'main'
 
+    const telemetry = (sessionData as any)?.telemetry
+    const usage = telemetry?.onDemandUsage || (sessionData as any)?.usage
+    const messagesCount =
+        telemetry?.totalMessages ??
+        (sessionData as any)?.messagesCount ??
+        (sessionData as any)?.messageCount
+    const sessionSize = (sessionData as any)?.sessionSize
+    const platform = (sessionData as any)?.platform || (sessionData as any)?.type
+    const hasStats = Boolean(usage || messagesCount != null || sessionSize || platform)
+
     const handleOpenReview = (e: React.MouseEvent) => {
         e.stopPropagation()
         e.preventDefault()
         setIsPrTooltipOpen(false)
-        const prNum = activeVersionId ? activeVersionId.slice(0, 4) : '1'
+        const prNum =
+            prNumber != null ? prNumber : activeVersionId ? activeVersionId.slice(0, 4) : '1'
         const params = new URLSearchParams()
-        params.set('pr', prNum)
+        params.set('pr', String(prNum))
         if (projectId) params.set('session', projectId)
         navigate(`/review?${params.toString()}`)
     }
@@ -183,7 +209,13 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
     const handleOpenGithub = (e: React.MouseEvent) => {
         e.stopPropagation()
         e.preventDefault()
-        const prNum = activeVersionId ? activeVersionId.slice(0, 4) : '1'
+        if (githubRepoUrl && prNumber != null) {
+            const base = githubRepoUrl.endsWith('/') ? githubRepoUrl.slice(0, -1) : githubRepoUrl
+            window.open(`${base}/pull/${prNumber}`, '_blank', 'noopener,noreferrer')
+            return
+        }
+        const prNum =
+            prNumber != null ? prNumber : activeVersionId ? activeVersionId.slice(0, 4) : '1'
         const url = `https://github.com/phasehumans/december/pull/${prNum}`
         window.open(url, '_blank', 'noopener,noreferrer')
     }
@@ -485,141 +517,144 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
             )}
 
             {/* 2. PR Tag Badge with Hover Info Card */}
-            <div
-                className="hidden lg:flex items-center mx-0.5 relative"
-                onMouseEnter={handlePrMouseEnter}
-                onMouseLeave={handlePrMouseLeave}
-            >
+            {hasPr && (
                 <div
-                    onClick={handleOpenGithub}
-                    className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1C1A22] border border-[#2E2838] text-[11px] font-mono text-[#C084FC] hover:bg-[#252030] hover:border-[#3E344A] transition-colors cursor-pointer select-none"
-                    title={`Open Pull Request ${versionDisplay} in GitHub`}
+                    className="hidden lg:flex items-center mx-0.5 relative"
+                    onMouseEnter={handlePrMouseEnter}
+                    onMouseLeave={handlePrMouseLeave}
                 >
-                    <svg
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.3"
-                        className="w-3.5 h-3.5 text-[#C084FC]"
-                    >
-                        <circle cx="5" cy="4" r="1.5" />
-                        <circle cx="5" cy="12" r="1.5" />
-                        <circle cx="11" cy="6" r="1.5" />
-                        <path
-                            d="M5 5.5v5M11 7.5v1.5a3 3 0 0 1-3 3H6.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </svg>
-                    <span className="font-medium tracking-tight text-[#C084FC]">
-                        {versionDisplay}
-                    </span>
-                </div>
-
-                {/* PR Info Tooltip Popup */}
-                {isPrTooltipOpen && (
                     <div
-                        className="absolute right-0 top-full mt-1.5 z-50 flex w-[300px] flex-col rounded-xl border border-[#2F2F2F] bg-[#1E1E1E] px-2.5 py-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 select-none font-sans"
-                        onMouseEnter={handlePrMouseEnter}
-                        onMouseLeave={handlePrMouseLeave}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={handleOpenGithub}
+                        className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#1C1A22] border border-[#2E2838] text-[11px] font-mono text-[#C084FC] hover:bg-[#252030] hover:border-[#3E344A] transition-colors cursor-pointer select-none"
+                        title={prBadgeTitle}
                     >
-                        {/* Top Row: PR Title + Action Icons (Copy & GitHub) */}
-                        <div className="flex items-center justify-between gap-1.5">
-                            <button
-                                type="button"
-                                onClick={handleOpenGithub}
-                                className="truncate text-left text-[12.5px] font-medium text-[#E1E1E1] hover:text-purple-300 transition-colors max-w-[190px] leading-snug cursor-pointer"
-                                title={`Open in GitHub: ${prTitle}`}
-                            >
-                                {prTitle}
-                            </button>
+                        <svg
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.3"
+                            className="w-3.5 h-3.5 text-[#C084FC]"
+                        >
+                            <circle cx="5" cy="4" r="1.5" />
+                            <circle cx="5" cy="12" r="1.5" />
+                            <circle cx="11" cy="6" r="1.5" />
+                            <path
+                                d="M5 5.5v5M11 7.5v1.5a3 3 0 0 1-3 3H6.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                        <span className="font-medium tracking-tight text-[#C084FC]">
+                            {prNumberDisplay}
+                        </span>
+                    </div>
 
-                            {/* Action Icons Pill Capsule */}
-                            <div className="flex items-center gap-0.5 shrink-0 relative bg-[#262626]/90 border border-[#333333] rounded-md p-0.5">
-                                {hoveredPrIcon && (
-                                    <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 pointer-events-none z-50">
-                                        <div className="rounded-md bg-[#181818] border border-[#333333] px-2 py-0.5 text-[10.5px] font-medium text-[#FFFFFF] shadow-xl whitespace-nowrap">
-                                            {hoveredPrIcon === 'copy'
-                                                ? isCopiedBranch
-                                                    ? 'Copied!'
-                                                    : 'Copy branch name'
-                                                : 'Open in GitHub'}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Copy Branch */}
-                                <button
-                                    type="button"
-                                    onClick={handleCopyBranch}
-                                    onMouseEnter={() => setHoveredPrIcon('copy')}
-                                    onMouseLeave={() => setHoveredPrIcon(null)}
-                                    className={`flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF] outline-none cursor-pointer ${
-                                        isCopiedBranch ? 'bg-[#333333] text-emerald-400' : ''
-                                    }`}
-                                    aria-label="Copy branch name"
-                                >
-                                    {isCopiedBranch ? (
-                                        <Icons.Check className="h-3 w-3 text-emerald-400" />
-                                    ) : (
-                                        <Icons.Copy className="h-3 w-3" />
-                                    )}
-                                </button>
-
-                                {/* GitHub */}
+                    {/* PR Info Tooltip Popup */}
+                    {isPrTooltipOpen && (
+                        <div
+                            className="absolute right-0 top-full mt-1.5 z-50 flex w-[300px] flex-col rounded-xl border border-[#2F2F2F] bg-[#1E1E1E] px-2.5 py-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 select-none font-sans"
+                            onMouseEnter={handlePrMouseEnter}
+                            onMouseLeave={handlePrMouseLeave}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Top Row: PR Title + Action Icons (Copy & GitHub) */}
+                            <div className="flex items-center justify-between gap-1.5">
                                 <button
                                     type="button"
                                     onClick={handleOpenGithub}
-                                    onMouseEnter={() => setHoveredPrIcon('github')}
-                                    onMouseLeave={() => setHoveredPrIcon(null)}
-                                    className="flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF] outline-none cursor-pointer"
-                                    aria-label="Open in GitHub"
+                                    className="truncate text-left text-[12.5px] font-medium text-[#E1E1E1] hover:text-purple-300 transition-colors max-w-[190px] leading-snug cursor-pointer"
+                                    title={`Open in GitHub: ${prTitle}`}
                                 >
-                                    <Icons.Github className="h-3 w-3" />
+                                    {prTitle}
                                 </button>
+
+                                {/* Action Icons Pill Capsule */}
+                                <div className="flex items-center gap-0.5 shrink-0 relative bg-[#262626]/90 border border-[#333333] rounded-md p-0.5">
+                                    {hoveredPrIcon && (
+                                        <div className="absolute bottom-full mb-1.5 left-1/2 -translate-x-1/2 pointer-events-none z-50">
+                                            <div className="rounded-md bg-[#181818] border border-[#333333] px-2 py-0.5 text-[10.5px] font-medium text-[#FFFFFF] shadow-xl whitespace-nowrap">
+                                                {hoveredPrIcon === 'copy'
+                                                    ? isCopiedBranch
+                                                        ? 'Copied!'
+                                                        : 'Copy branch name'
+                                                    : 'Open in GitHub'}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Copy Branch */}
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyBranch}
+                                        onMouseEnter={() => setHoveredPrIcon('copy')}
+                                        onMouseLeave={() => setHoveredPrIcon(null)}
+                                        className={`flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF] outline-none cursor-pointer ${
+                                            isCopiedBranch ? 'bg-[#333333] text-emerald-400' : ''
+                                        }`}
+                                        aria-label="Copy branch name"
+                                    >
+                                        {isCopiedBranch ? (
+                                            <Icons.Check className="h-3 w-3 text-emerald-400" />
+                                        ) : (
+                                            <Icons.Copy className="h-3 w-3" />
+                                        )}
+                                    </button>
+
+                                    {/* GitHub */}
+                                    <button
+                                        type="button"
+                                        onClick={handleOpenGithub}
+                                        onMouseEnter={() => setHoveredPrIcon('github')}
+                                        onMouseLeave={() => setHoveredPrIcon(null)}
+                                        className="flex h-5 w-5 items-center justify-center rounded text-[#999999] transition-colors hover:bg-[#333333] hover:text-[#FFFFFF] outline-none cursor-pointer"
+                                        aria-label="Open in GitHub"
+                                    >
+                                        <Icons.Github className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Bottom Row: Git PR Icon + Repo/PR Ref + State + Branch */}
+                            <div className="mt-0.5 flex items-center gap-1 text-[11px] leading-tight pt-0.5">
+                                <svg
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.3"
+                                    className="w-3 h-3 text-[#C084FC] shrink-0"
+                                >
+                                    <circle cx="5" cy="4" r="1.5" />
+                                    <circle cx="5" cy="12" r="1.5" />
+                                    <circle cx="11" cy="6" r="1.5" />
+                                    <path
+                                        d="M5 5.5v5M11 7.5v1.5a3 3 0 0 1-3 3H6.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    />
+                                </svg>
+                                <span className="truncate text-[#999999] font-normal">
+                                    {prNumberDisplay}
+                                </span>
+                                {prState && (
+                                    <>
+                                        <span className="text-[#555555] select-none">•</span>
+                                        <span className="font-medium text-[#10B981] text-[11px] capitalize">
+                                            {prState}
+                                        </span>
+                                    </>
+                                )}
+                                <span className="text-[#555555] select-none">•</span>
+                                <span
+                                    className="truncate font-mono text-[10.5px] text-[#888888] max-w-[120px]"
+                                    title={branchName}
+                                >
+                                    {branchName}
+                                </span>
                             </div>
                         </div>
-
-                        {/* Bottom Row: Git PR Icon + Repo/PR Ref + Additions/Deletions + Branch */}
-                        <div className="mt-0.5 flex items-center gap-1 text-[11px] leading-tight pt-0.5">
-                            <svg
-                                viewBox="0 0 16 16"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.3"
-                                className="w-3 h-3 text-[#C084FC] shrink-0"
-                            >
-                                <circle cx="5" cy="4" r="1.5" />
-                                <circle cx="5" cy="12" r="1.5" />
-                                <circle cx="11" cy="6" r="1.5" />
-                                <path
-                                    d="M5 5.5v5M11 7.5v1.5a3 3 0 0 1-3 3H6.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                />
-                            </svg>
-                            <span className="truncate text-[#999999] font-normal">
-                                ...ember{versionDisplay}
-                            </span>
-                            <span className="text-[#555555] select-none">•</span>
-                            <span className="font-mono font-medium text-[#10B981] text-[11px]">
-                                +220
-                            </span>
-                            <span className="font-mono font-medium text-[#EF4444] text-[11px]">
-                                -82
-                            </span>
-                            <span className="text-[#555555] select-none">•</span>
-                            <span
-                                className="truncate font-mono text-[10.5px] text-[#888888] max-w-[100px]"
-                                title="devin-ai-integration"
-                            >
-                                devin-ai-integration...
-                            </span>
-                        </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
 
             {/* 3. Flag */}
             <Tooltip content="Report issue" position="bottom">
@@ -734,7 +769,10 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
                         <div className="flex flex-col gap-0.5">
                             <button
                                 type="button"
-                                onClick={() => setIsMoreMenuOpen(false)}
+                                onClick={() => {
+                                    setIsMoreMenuOpen(false)
+                                    setIsInsightsModalOpen(true)
+                                }}
                                 className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#EDEDEF] hover:bg-white/5 hover:text-white transition-colors text-left outline-none cursor-pointer"
                             >
                                 <TrendingUp className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
@@ -743,24 +781,42 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
                         </div>
 
                         {/* Stats Section */}
-                        <div className="mt-1.5 pt-1.5 px-2.5 flex flex-col gap-1 text-[11px] text-[#8E8D8C] border-t border-[#272727]/60">
-                            <div className="flex items-center justify-between">
-                                <span>On-demand usage:</span>
-                                <span className="text-[#EDEDEF] font-semibold">$10.13</span>
+                        {hasStats && (
+                            <div className="mt-1.5 pt-1.5 px-2.5 flex flex-col gap-1 text-[11px] text-[#8E8D8C] border-t border-[#272727]/60">
+                                {usage && (
+                                    <div className="flex items-center justify-between">
+                                        <span>On-demand usage:</span>
+                                        <span className="text-[#EDEDEF] font-semibold">
+                                            {usage}
+                                        </span>
+                                    </div>
+                                )}
+                                {messagesCount != null && (
+                                    <div className="flex items-center justify-between">
+                                        <span>User messages:</span>
+                                        <span className="text-[#EDEDEF] font-semibold">
+                                            {messagesCount}
+                                        </span>
+                                    </div>
+                                )}
+                                {sessionSize && (
+                                    <div className="flex items-center justify-between">
+                                        <span>Session size:</span>
+                                        <span className="text-[#EDEDEF] font-semibold">
+                                            {sessionSize}
+                                        </span>
+                                    </div>
+                                )}
+                                {platform && (
+                                    <div className="flex items-center justify-between">
+                                        <span>Platform:</span>
+                                        <span className="text-[#EDEDEF] font-semibold">
+                                            {platform}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex items-center justify-between">
-                                <span>User messages:</span>
-                                <span className="text-[#EDEDEF] font-semibold">5</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Session size:</span>
-                                <span className="text-[#EDEDEF] font-semibold">M</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Platform:</span>
-                                <span className="text-[#EDEDEF] font-semibold">Linux</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -784,6 +840,16 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
                 onClose={() => setIsBadSessionModalOpen(false)}
                 sessionId={projectId}
                 projectName={projectName}
+            />
+
+            {/* Session Insights Modal */}
+            <SessionInsightsModal
+                isOpen={isInsightsModalOpen}
+                onClose={() => setIsInsightsModalOpen(false)}
+                session={
+                    sessionData ||
+                    (projectId ? { id: projectId, title: projectName, projectName } : null)
+                }
             />
         </div>
     )

@@ -1,13 +1,26 @@
-import { describe, it, expect } from 'bun:test'
+import { GlobalRegistrator } from '@happy-dom/global-registrator'
+import { describe, it, expect, afterEach } from 'bun:test'
+import React from 'react'
 
 import {
+    TasksWorkspace,
     parseTasksFromFile,
     findTaskFileContent,
 } from '../src/features/preview/components/TasksWorkspace'
 
 import type { Message } from '../src/features/chat/types'
 
-describe('Ticket #396: Automated TASK.md Lifecycle & Tasks Workspace Parsing', () => {
+if (!globalThis.document) {
+    GlobalRegistrator.register()
+}
+
+const { render, screen, fireEvent, cleanup } = await import('@testing-library/react')
+
+afterEach(() => {
+    cleanup()
+})
+
+describe('Ticket #396 & #400: Automated TASK.md Lifecycle & Dynamic Tasks Workspace', () => {
     it('parses markdown checkbox task items accurately', () => {
         const markdown = `
 # Project Plan: Java Icecream Landing Page
@@ -83,5 +96,29 @@ describe('Ticket #396: Automated TASK.md Lifecycle & Tasks Workspace Parsing', (
 
         const taskContent = findTaskFileContent({}, messages)
         expect(taskContent).toBe('- [x] Initial setup\n- [ ] Build UI')
+    })
+
+    it('renders empty state when no tasks are defined in the workspace without mock fallback', () => {
+        render(<TasksWorkspace generatedFiles={{}} />)
+        expect(screen.getByText('No tasks initialized')).toBeDefined()
+        expect(screen.getByText('No task checklist found in the workspace.')).toBeDefined()
+        expect(screen.queryByText('Read all current TUI source to scope the migration')).toBeNull()
+    })
+
+    it('renders dynamic tasks and updates completed count on checkbox toggle', () => {
+        const generatedFiles = {
+            'TASK.md': {
+                content: '- [ ] First task\n- [x] Second task',
+            } as any,
+        }
+
+        render(<TasksWorkspace generatedFiles={generatedFiles} />)
+        expect(screen.getByText('1/2 tasks completed')).toBeDefined()
+        expect(screen.getByText('First task')).toBeDefined()
+        expect(screen.getByText('Second task')).toBeDefined()
+
+        const firstTaskText = screen.getByText('First task')
+        fireEvent.click(firstTaskText)
+        expect(screen.getByText('2/2 tasks completed')).toBeDefined()
     })
 })

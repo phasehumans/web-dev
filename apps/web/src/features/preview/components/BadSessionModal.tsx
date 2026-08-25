@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react'
 import React, { useState } from 'react'
 
+import { profileAPI } from '@/features/profile/api/profile'
 import { Modal } from '@/shared/components/ui/Modal'
 import { cn } from '@/shared/lib/utils'
 
@@ -26,6 +27,8 @@ export const BadSessionModal: React.FC<BadSessionModalProps> = ({
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [showThankYou, setShowThankYou] = useState(false)
 
+    const detailsRef = React.useRef<HTMLTextAreaElement | null>(null)
+
     if (!isOpen) return null
 
     const toggleReason = (reason: string) => {
@@ -34,15 +37,37 @@ export const BadSessionModal: React.FC<BadSessionModalProps> = ({
         )
     }
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        if (selectedReasons.length === 0 && !details.trim()) return
+        const form = e.currentTarget
+        const formTextarea = form.querySelector('textarea')
+        const currentDetails = details || formTextarea?.value || detailsRef.current?.value || ''
+
+        if (selectedReasons.length === 0 && !currentDetails.trim()) return
 
         setIsSubmitting(true)
-        setTimeout(() => {
-            setIsSubmitting(false)
+        try {
+            const feedbackParts: string[] = []
+            if (selectedReasons.length > 0) {
+                feedbackParts.push(`Reasons: ${selectedReasons.join(', ')}`)
+            }
+            if (currentDetails.trim()) {
+                feedbackParts.push(`Details: ${currentDetails.trim()}`)
+            }
+            if (sessionId) {
+                feedbackParts.push(`Session: ${sessionId}`)
+            }
+            if (projectName) {
+                feedbackParts.push(`Project: ${projectName}`)
+            }
+
+            await profileAPI.submitFeedback({
+                rating: 'sad',
+                feedback: feedbackParts.join('\n'),
+            })
+
+            onSubmitFeedback?.({ reasons: selectedReasons, details: currentDetails })
             setShowThankYou(true)
-            onSubmitFeedback?.({ reasons: selectedReasons, details })
 
             setTimeout(() => {
                 onClose()
@@ -52,7 +77,22 @@ export const BadSessionModal: React.FC<BadSessionModalProps> = ({
                     setShowThankYou(false)
                 }, 200)
             }, 1800)
-        }, 600)
+        } catch (error) {
+            console.error('Failed to submit session feedback:', error)
+            onSubmitFeedback?.({ reasons: selectedReasons, details: currentDetails })
+            setShowThankYou(true)
+
+            setTimeout(() => {
+                onClose()
+                setTimeout(() => {
+                    setSelectedReasons([])
+                    setDetails('')
+                    setShowThankYou(false)
+                }, 200)
+            }, 1800)
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     const handleClose = () => {
@@ -115,8 +155,10 @@ export const BadSessionModal: React.FC<BadSessionModalProps> = ({
                     {/* Details Textarea */}
                     <div>
                         <textarea
+                            ref={detailsRef}
                             value={details}
                             onChange={(e) => setDetails(e.target.value)}
+                            onInput={(e: any) => setDetails(e.target.value)}
                             className="w-full bg-white/[0.03] border border-[#2B2A27] hover:border-[#383736] focus:border-[#4B4A47] rounded-lg p-3 text-[13px] text-white outline-none resize-none h-[100px] transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948] chat-scrollbar"
                             placeholder="Add more details... (Optional but highly appreciated!)"
                             disabled={isSubmitting}
