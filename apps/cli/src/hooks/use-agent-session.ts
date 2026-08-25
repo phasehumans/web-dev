@@ -3,7 +3,12 @@ import { loadCustomCommands, interpolateCommandPrompt } from '@december/shared'
 import { useEffect, useCallback, useState, useRef } from 'react'
 
 import { loadConfig } from '../config'
-import { AUTH_REQUIRED_NOTICE } from '../constants/messages'
+import {
+    AUTH_REQUIRED_NOTICE,
+    HANDOFF_LOGIN_REQUIRED_NOTICE,
+    HANDOFF_INSUFFICIENT_CREDITS_NOTICE,
+    HANDOFF_SUCCESS_NOTICE,
+} from '../constants/messages'
 import { getGrillPrompt, getPlanPrompt } from '../constants/prompts'
 import { useCliStore } from '../store'
 import { setupAgentInterceptors } from '../store/interceptors'
@@ -733,24 +738,131 @@ export function useAgentSession({
             }
 
             if (text.trim() === '/handoff') {
+                const userMsg: Message = { id: getNextMsgId(), role: 'user', text: '/handoff' }
+                const config = await loadConfig()
+
+                // Check 1: Is user logged in with December?
+                if (!config.decemberToken) {
+                    addToast('You must be logged in to December to use handoff.', 'error')
+                    const noticeMsg: Message = {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: HANDOFF_LOGIN_REQUIRED_NOTICE,
+                            },
+                        ],
+                    }
+                    setStaticMessages((prev) => [
+                        ...prev,
+                        ...useCliStore.getState().activeMessages,
+                        userMsg,
+                        noticeMsg,
+                    ])
+                    setActiveMessages([])
+                    return
+                }
+
+                const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
+                const proxyUrl = `${serverUrl}/api/v1`
+
+                // Check 2: Does user have credits > 0?
+                try {
+                    const overviewRes = await fetch(`${proxyUrl}/billing/overview`, {
+                        headers: { Authorization: `Bearer ${config.decemberToken}` },
+                    })
+                    if (overviewRes.ok) {
+                        const overviewJson = (await overviewRes.json()) as any
+                        const balance = overviewJson.data?.creditBalance ?? 0
+                        if (balance <= 0) {
+                            addToast('Insufficient credits in December Wallet.', 'error')
+                            const noticeMsg: Message = {
+                                id: getNextMsgId(),
+                                role: 'assistant',
+                                blocks: [
+                                    {
+                                        type: 'text',
+                                        content: HANDOFF_INSUFFICIENT_CREDITS_NOTICE,
+                                    },
+                                ],
+                            }
+                            setStaticMessages((prev) => [
+                                ...prev,
+                                ...useCliStore.getState().activeMessages,
+                                userMsg,
+                                noticeMsg,
+                            ])
+                            setActiveMessages([])
+                            return
+                        }
+                    }
+                } catch {
+                    // Intentionally swallowed: fallback handled if billing overview request fails
+                }
+
                 const archivePath = '.december-handoff.tar.gz'
                 try {
-                    const config = await loadConfig()
-                    if (!config.decemberToken) {
-                        addToast('You must be logged in to use handoff.', 'error')
-                        return
-                    }
-
                     addToast('Zipping workspace...', 'info')
                     const { createWorkspaceArchive } = await import('@december/tui')
                     await createWorkspaceArchive(archivePath)
 
                     addToast('Requesting upload URL...', 'info')
-                    const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
-                    const proxyUrl = `${serverUrl}/api/v1`
                     const urlRes = await fetch(`${proxyUrl}/cli/handoff/upload-url`, {
                         headers: { Authorization: `Bearer ${config.decemberToken}` },
                     })
+
+                    if (!urlRes.ok) {
+                        const fs = await import('node:fs/promises')
+                        await fs.unlink(archivePath).catch(() => {})
+                        if (urlRes.status === 401) {
+                            addToast('You must be logged in to December to use handoff.', 'error')
+                            const noticeMsg: Message = {
+                                id: getNextMsgId(),
+                                role: 'assistant',
+                                blocks: [
+                                    {
+                                        type: 'text',
+                                        content: HANDOFF_LOGIN_REQUIRED_NOTICE,
+                                    },
+                                ],
+                            }
+                            setStaticMessages((prev) => [
+                                ...prev,
+                                ...useCliStore.getState().activeMessages,
+                                userMsg,
+                                noticeMsg,
+                            ])
+                            setActiveMessages([])
+                            return
+                        }
+                        if (urlRes.status === 402) {
+                            addToast('Insufficient credits in December Wallet.', 'error')
+                            const noticeMsg: Message = {
+                                id: getNextMsgId(),
+                                role: 'assistant',
+                                blocks: [
+                                    {
+                                        type: 'text',
+                                        content: HANDOFF_INSUFFICIENT_CREDITS_NOTICE,
+                                    },
+                                ],
+                            }
+                            setStaticMessages((prev) => [
+                                ...prev,
+                                ...useCliStore.getState().activeMessages,
+                                userMsg,
+                                noticeMsg,
+                            ])
+                            setActiveMessages([])
+                            return
+                        }
+                        const errJson = (await urlRes.json().catch(() => ({}))) as any
+                        throw new Error(
+                            errJson.message || `Failed to get upload URL (${urlRes.status})`
+                        )
+                    }
+
                     const urlJson = (await urlRes.json()) as any
                     const { uploadUrl, objectKey } = urlJson.data || urlJson
 
@@ -776,10 +888,32 @@ export function useAgentSession({
                             objectKey,
                         }),
                     })
-                    if (!sessionRes.ok) throw new Error(await sessionRes.text())
+                    if (!sessionRes.ok) {
+                        const errJson = (await sessionRes.json().catch(() => ({}))) as any
+                        throw new Error(errJson.message || (await sessionRes.text()))
+                    }
+                    const sessionJson = (await sessionRes.json()) as any
+                    const sessionId = sessionJson.data?.id || 'session'
 
                     await fs.unlink(archivePath).catch(() => {})
                     addToast('Handoff complete! Exiting in 3s.', 'success')
+                    const successMsg: Message = {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: HANDOFF_SUCCESS_NOTICE(sessionId),
+                            },
+                        ],
+                    }
+                    setStaticMessages((prev) => [
+                        ...prev,
+                        ...useCliStore.getState().activeMessages,
+                        userMsg,
+                        successMsg,
+                    ])
+                    setActiveMessages([])
                     setTimeout(() => {
                         setShouldExit(true)
                         process.exit(0)

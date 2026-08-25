@@ -76,6 +76,30 @@ describe('useCliStore activeMessages handling', () => {
         )
     })
 
+    it('contains HANDOFF_LOGIN_REQUIRED_NOTICE, HANDOFF_INSUFFICIENT_CREDITS_NOTICE, and HANDOFF_SUCCESS_NOTICE matching expected structure', async () => {
+        const {
+            HANDOFF_LOGIN_REQUIRED_NOTICE,
+            HANDOFF_INSUFFICIENT_CREDITS_NOTICE,
+            HANDOFF_SUCCESS_NOTICE,
+        } = await import('../src/constants/messages')
+
+        expect(HANDOFF_LOGIN_REQUIRED_NOTICE).toContain('Cloud Handoff Requires a December Account')
+        expect(HANDOFF_LOGIN_REQUIRED_NOTICE).toContain('/login')
+        expect(HANDOFF_LOGIN_REQUIRED_NOTICE).toContain('december login')
+
+        expect(HANDOFF_INSUFFICIENT_CREDITS_NOTICE).toContain(
+            'Insufficient Credits for Cloud Handoff'
+        )
+        expect(HANDOFF_INSUFFICIENT_CREDITS_NOTICE).toContain(
+            'https://trydecember.com/settings/billing'
+        )
+        expect(HANDOFF_INSUFFICIENT_CREDITS_NOTICE).toContain('/handoff')
+
+        const successNotice = HANDOFF_SUCCESS_NOTICE('test-session-123')
+        expect(successNotice).toContain('Workspace Handed Off Successfully!')
+        expect(successNotice).toContain('https://trydecember.com/s/test-session-123')
+    })
+
     it('exports clipboard and handoff utilities from @december/tui for slash command handling', async () => {
         const tui = await import('@december/tui')
         expect(typeof tui.writeToClipboard).toBe('function')

@@ -57,6 +57,27 @@ describe('CLI Handoff API Endpoints', () => {
         expect(res.body.data.objectKey).toContain(`handoffs/${testUserId}/`)
     })
 
+    it('GET /cli/handoff/upload-url returns 402 when user has insufficient wallet credits', async () => {
+        await prisma.user.update({
+            where: { id: testUserId },
+            data: { creditBalance: 0 },
+        })
+
+        const res = await request(app)
+            .get('/api/v1/cli/handoff/upload-url')
+            .set('Authorization', `Bearer ${authToken}`)
+
+        expect(res.status).toBe(402)
+        expect(res.body.message).toContain('Insufficient credits in December Wallet')
+        expect(res.body.message).toContain('https://trydecember.com/settings/billing')
+
+        // Restore credits for subsequent tests
+        await prisma.user.update({
+            where: { id: testUserId },
+            data: { creditBalance: 100 },
+        })
+    })
+
     it('POST /cli/chat/completions rejects request with invalid body schema', async () => {
         const res = await request(app)
             .post('/api/v1/cli/chat/completions')
@@ -87,6 +108,7 @@ describe('CLI Handoff API Endpoints', () => {
         expect(res.status).toBe(402)
         expect(res.body.message).toContain('Insufficient credits in December Wallet')
         expect(res.body.message).toContain('https://trydecember.com/settings/billing')
+        expect(res.body.message).toContain('Bring Your Own Key (BYOK)')
     })
 
     it('POST /cli/chat/completions streams SSE response when user has balance and valid payload', async () => {
@@ -132,6 +154,32 @@ describe('CLI Handoff API Endpoints', () => {
         expect(res.text).toContain('data: [DONE]')
 
         resolveSpy.mockRestore()
+    })
+
+    it('POST /cli/handoff/complete returns 402 when user has insufficient wallet credits', async () => {
+        await prisma.user.update({
+            where: { id: testUserId },
+            data: { creditBalance: 0 },
+        })
+
+        const res = await request(app)
+            .post('/api/v1/cli/handoff/complete')
+            .set('Authorization', `Bearer ${authToken}`)
+            .send({
+                title: 'Handoff Test Session',
+                messages: [{ role: 'user', content: 'Hello world' }],
+                objectKey: `handoffs/${testUserId}/${Date.now()}-handoff.tar.gz`,
+            })
+
+        expect(res.status).toBe(402)
+        expect(res.body.message).toContain('Insufficient credits in December Wallet')
+        expect(res.body.message).toContain('https://trydecember.com/settings/billing')
+
+        // Restore credits for subsequent tests
+        await prisma.user.update({
+            where: { id: testUserId },
+            data: { creditBalance: 100 },
+        })
     })
 
     it('POST /cli/handoff/complete stores objectKey as minioPrefix on session creation', async () => {

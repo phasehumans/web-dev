@@ -115,9 +115,33 @@ export const COMMANDS: Command[] = [
                 if (!config.decemberToken) {
                     ctx.toast.show({
                         variant: 'error',
-                        message: 'You must be logged in to use handoff.',
+                        message: 'You must be logged in to December to use handoff.',
                     })
                     return
+                }
+
+                const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
+                const proxyUrl = `${serverUrl}/api/v1`
+
+                // Pre-check credits
+                try {
+                    const overviewRes = await fetch(`${proxyUrl}/billing/overview`, {
+                        headers: { Authorization: `Bearer ${config.decemberToken}` },
+                    })
+                    if (overviewRes.ok) {
+                        const overviewJson = (await overviewRes.json()) as any
+                        const balance = overviewJson.data?.creditBalance ?? 0
+                        if (balance <= 0) {
+                            ctx.toast.show({
+                                variant: 'error',
+                                message:
+                                    'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue.',
+                            })
+                            return
+                        }
+                    }
+                } catch {
+                    // Intentionally swallowed: fallback to upload-url endpoint validation
                 }
 
                 ctx.toast.show({ variant: 'info', message: 'Zipping workspace...' })
@@ -126,11 +150,33 @@ export const COMMANDS: Command[] = [
 
                 ctx.toast.show({ variant: 'info', message: 'Requesting upload URL...' })
 
-                const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
-                const proxyUrl = `${serverUrl}/api/v1`
                 const urlRes = await fetch(`${proxyUrl}/cli/handoff/upload-url`, {
                     headers: { Authorization: `Bearer ${config.decemberToken}` },
                 })
+
+                if (!urlRes.ok) {
+                    await fs.promises.unlink(archivePath).catch(() => {})
+                    if (urlRes.status === 401) {
+                        ctx.toast.show({
+                            variant: 'error',
+                            message: 'You must be logged in to December to use handoff.',
+                        })
+                        return
+                    }
+                    if (urlRes.status === 402) {
+                        ctx.toast.show({
+                            variant: 'error',
+                            message:
+                                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue.',
+                        })
+                        return
+                    }
+                    const errJson = (await urlRes.json().catch(() => ({}))) as any
+                    throw new Error(
+                        errJson.message || `Failed to get upload URL (${urlRes.status})`
+                    )
+                }
+
                 const urlJson = (await urlRes.json()) as any
                 const { uploadUrl, objectKey } = urlJson.data || urlJson
 
@@ -157,7 +203,10 @@ export const COMMANDS: Command[] = [
                         objectKey,
                     }),
                 })
-                if (!sessionRes.ok) throw new Error(await sessionRes.text())
+                if (!sessionRes.ok) {
+                    const errJson = (await sessionRes.json().catch(() => ({}))) as any
+                    throw new Error(errJson.message || (await sessionRes.text()))
+                }
 
                 await fs.promises.unlink(archivePath).catch(() => {})
 

@@ -24,6 +24,14 @@ const verifyWalletBalance = async (data: VerifyWalletBalance) => {
 
 const generateHandoffUrl = async (data: GenerateHandoffUrl) => {
     const { userId } = data
+    const hasBalance = await usageService.hasMinimumBalance({ userId })
+    if (!hasBalance) {
+        throw new AppError(
+            'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.',
+            402
+        )
+    }
+
     const activeSession = await cliRepository.findActiveSessionByUser(userId)
 
     if (activeSession) {
@@ -228,6 +236,14 @@ const proxyChatCompletions = async (data: ProxyChatCompletions) => {
 
 const completeHandoff = async (data: CompleteHandoff) => {
     const { userId, title, messages, objectKey } = data
+    const hasBalance = await usageService.hasMinimumBalance({ userId })
+    if (!hasBalance) {
+        throw new AppError(
+            'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.',
+            402
+        )
+    }
+
     const session = await cliRepository.createSession({
         userId,
         title: title || 'Handoff Session',

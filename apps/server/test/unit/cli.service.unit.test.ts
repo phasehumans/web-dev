@@ -24,7 +24,16 @@ describe('CLI Service - Unit Tests', () => {
     })
 
     describe('generateHandoffUrl', () => {
+        it('should throw AppError 402 if wallet balance is insufficient', async () => {
+            spyOn(usageService, 'hasMinimumBalance').mockImplementation((async () => false) as any)
+
+            await expect(cliService.generateHandoffUrl({ userId: 'user-1' })).rejects.toThrow(
+                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.'
+            )
+        })
+
         it('should throw AppError 409 if active running/provisioning session exists', async () => {
+            spyOn(usageService, 'hasMinimumBalance').mockImplementation((async () => true) as any)
             const originalFindFirst = prisma.session.findFirst
             prisma.session.findFirst = (async () => ({ id: 'active-session-1' })) as any
 
@@ -37,7 +46,8 @@ describe('CLI Service - Unit Tests', () => {
             }
         })
 
-        it('should generate pre-signed upload URL and objectKey if no active session exists', async () => {
+        it('should generate pre-signed upload URL and objectKey if balance is sufficient and no active session exists', async () => {
+            spyOn(usageService, 'hasMinimumBalance').mockImplementation((async () => true) as any)
             const originalFindFirst = prisma.session.findFirst
             prisma.session.findFirst = (async () => null) as any
 
@@ -53,7 +63,21 @@ describe('CLI Service - Unit Tests', () => {
     })
 
     describe('completeHandoff', () => {
+        it('should throw AppError 402 if wallet balance is insufficient', async () => {
+            spyOn(usageService, 'hasMinimumBalance').mockImplementation((async () => false) as any)
+
+            await expect(
+                cliService.completeHandoff({
+                    userId: 'user-1',
+                    objectKey: 'handoffs/user-1/key.tar.gz',
+                })
+            ).rejects.toThrow(
+                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using December Cloud.'
+            )
+        })
+
         it('should delegate to cliRepository.createSession with default title if omitted', async () => {
+            spyOn(usageService, 'hasMinimumBalance').mockImplementation((async () => true) as any)
             spyOn(cliRepository, 'createSession').mockImplementation((async (data: any) => ({
                 id: 'session-123',
                 title: data.title,
