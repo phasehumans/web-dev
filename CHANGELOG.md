@@ -1,3 +1,34 @@
+## [unreleased]
+
+### Features
+
+- _(cli,server)_ Check login and credits sequence with cta on handoff command
+- _(cli)_ Remove bold markdown formatting from handoff messages
+- _(mcp)_ Implement dynamic presets, lifecycle sync, and tui manager overhaul
+- _(auth)_ Issue 30-day tokens for cli sessions
+- Optimize cli startup, batch render flushes, ast markdown cache, and tier 1 permissions
+- _(agent,cli)_ Implement prompt caching micro-compaction and rich context expansion (#436, #439)
+- _(web)_ Replace mock terminal shell with live websocket connection status and streaming
+- _(workspace)_ Stream-driven generation progress indicators (#403)
+- _(tui)_ Standardize design system tokens, clean prompt overlay collisions, and polish menus
+- _(workspace)_ Dynamic header actions, pr badge, and feedback integration (#401)
+
+### Bug Fixes
+
+- _(cli)_ Include byok notice in insufficient credits message
+- _(cli)_ Fix proxy route url and handle 401 auth error responses
+
+### Styling
+
+- _(tui)_ Refine mcp manager styling and theme conformance
+- _(tui)_ Display mcp command inline in front of server row
+
+## [0.3.16] - 2026-08-24
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.16
+
 ## [0.3.15] - 2026-08-24
 
 ### Features

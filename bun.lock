@@ -45,7 +45,7 @@
     },
     "apps/cli": {
       "name": "@trydecember/cli",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "bin": {
         "december": "dist/december.js",
       },
@@ -70,7 +70,7 @@
     },
     "apps/server": {
       "name": "@december/server",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.1014.0",
         "@aws-sdk/s3-request-presigner": "3.1086.0",
@@ -133,7 +133,7 @@
     },
     "apps/web": {
       "name": "@december/web",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@codemirror/autocomplete": "^6.20.3",
         "@codemirror/commands": "^6.10.3",
@@ -187,7 +187,7 @@
     },
     "apps/worker": {
       "name": "@december/worker",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@aws-sdk/client-s3": "3.1089.0",
         "@aws-sdk/s3-request-presigner": "3.1089.0",
@@ -212,7 +212,7 @@
     },
     "packages/agent": {
       "name": "@december/agent",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@anthropic-ai/sdk": "0.109.0",
         "@december/providers": "workspace:*",
@@ -232,7 +232,7 @@
     },
     "packages/database": {
       "name": "@december/database",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@prisma/adapter-pg": "7.8.0",
         "@prisma/client": "7.8.0",
@@ -251,7 +251,7 @@
     },
     "packages/evals": {
       "name": "@december/evals",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@december/shared": "workspace:*",
         "zod": "^3.24.2",
@@ -264,7 +264,7 @@
     },
     "packages/providers": {
       "name": "@december/providers",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@anthropic-ai/sdk": "^0.112.3",
         "@december/shared": "workspace:*",
@@ -280,7 +280,7 @@
     },
     "packages/shared": {
       "name": "@december/shared",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "bullmq": "5.80.2",
         "ioredis": "5.11.1",
@@ -292,7 +292,7 @@
     },
     "packages/tools": {
       "name": "@december/tools",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@december/shared": "workspace:*",
         "@modelcontextprotocol/sdk": "1.29.0",
@@ -307,7 +307,7 @@
     },
     "packages/tui": {
       "name": "@december/tui",
-      "version": "0.3.16",
+      "version": "0.3.17",
       "dependencies": {
         "@december/providers": "workspace:*",
         "@december/shared": "workspace:*",
