@@ -10,7 +10,7 @@ describe('McpManagerMenu Component (Unit)', () => {
             <McpManagerMenu mcpServerInfos={[]} setAuthMode={mock(() => {})} />
         )
 
-        expect(lastFrame()).toContain('MCP Server Manager')
+        expect(lastFrame()).toContain('MCP Servers')
         expect(lastFrame()).toContain('No MCP servers configured')
     })
 
@@ -44,7 +44,7 @@ describe('McpManagerMenu Component (Unit)', () => {
             <McpManagerMenu mcpServerInfos={mockServers as any} setAuthMode={mock(() => {})} />
         )
 
-        expect(lastFrame()).toContain('MCP Server Manager')
+        expect(lastFrame()).toContain('MCP Servers')
         expect(lastFrame()).toContain('github')
         expect(lastFrame()).toContain('[connected]')
         expect(lastFrame()).toContain('broken_db')
@@ -64,7 +64,7 @@ describe('McpManagerMenu Component (Unit)', () => {
         await new Promise((r) => setTimeout(r, 50))
 
         const output = lastFrame() || ''
-        expect(output).toContain('MCP Preset Catalog')
+        expect(output).toContain('Preset Catalog')
         expect(output).toContain('GitHub')
         expect(output).toContain('PostgreSQL')
         expect(output).toContain('SQLite')
@@ -88,7 +88,7 @@ describe('McpManagerMenu Component (Unit)', () => {
         await new Promise((r) => setTimeout(r, 50))
 
         const output = lastFrame() || ''
-        expect(output).toContain('Remove MCP Server')
+        expect(output).toContain('Remove Server')
         expect(output).toContain('Are you sure you want to remove server "to_delete"')
     })
 })

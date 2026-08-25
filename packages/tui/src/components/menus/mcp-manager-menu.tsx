@@ -263,7 +263,9 @@ export function McpManagerMenu({
     const [selectedScope, setSelectedScope] = useState<'workspace' | 'global'>('workspace')
 
     // Test result feedback state
-    const [testStatus, setTestStatus] = useState<Record<string, string>>({})
+    const [testStatus, setTestStatus] = useState<
+        Record<string, { status: 'testing' | 'ok' | 'failed'; message: string }>
+    >({})
 
     const handleInstallPreset = async (preset: McpPreset, values: Record<string, string>) => {
         const serverConfig: any = {
@@ -392,17 +394,26 @@ export function McpManagerMenu({
         } else if (input === 't') {
             const current = serverInfos[selectedIndex]
             if (current && handleTestMcpServer) {
-                setTestStatus((prev) => ({ ...prev, [current.name]: 'Testing connection...' }))
+                setTestStatus((prev) => ({
+                    ...prev,
+                    [current.name]: { status: 'testing', message: 'Testing connection...' },
+                }))
                 handleTestMcpServer(current.name).then((res: any) => {
                     if (res?.success) {
                         setTestStatus((prev) => ({
                             ...prev,
-                            [current.name]: `Connected (${res.latencyMs}ms, ${res.toolsCount} tools)`,
+                            [current.name]: {
+                                status: 'ok',
+                                message: `Connected (${res.latencyMs}ms, ${res.toolsCount} tools)`,
+                            },
                         }))
                     } else {
                         setTestStatus((prev) => ({
                             ...prev,
-                            [current.name]: `Failed: ${res?.error || 'Unknown error'}`,
+                            [current.name]: {
+                                status: 'failed',
+                                message: `Failed: ${res?.error || 'Connection refused'}`,
+                            },
                         }))
                     }
                 })
@@ -421,17 +432,33 @@ export function McpManagerMenu({
         return (
             <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
                 <Box marginBottom={1}>
-                    <Text color={THEME.colors.text}>Remove MCP Server</Text>
-                </Box>
-                <Box marginY={1} flexDirection="column">
-                    <Text color={THEME.colors.error}>
-                        Are you sure you want to remove server &quot;{selectedServer.name}&quot;
-                        from configuration?
+                    <Text color={THEME.colors.text}>
+                        MCP Servers <Text color={THEME.colors.dim}>›</Text>{' '}
+                        <Text color={THEME.colors.error}>Remove Server</Text>
                     </Text>
                 </Box>
+
+                <Box
+                    borderColor={THEME.colors.border}
+                    borderStyle="round"
+                    flexDirection="column"
+                    paddingX={1}
+                    marginY={1}
+                >
+                    <Box marginBottom={1}>
+                        <Text color={THEME.colors.error}>
+                            Are you sure you want to remove server &quot;{selectedServer.name}&quot;
+                            from configuration?
+                        </Text>
+                    </Box>
+                    <Text color={THEME.colors.dim}>
+                        This will permanently delete the server entry from mcp.json.
+                    </Text>
+                </Box>
+
                 <MenuFooter
                     items={[
-                        { key: 'enter/y', label: 'Confirm Remove' },
+                        { key: 'enter/y', label: 'Confirm' },
                         { key: 'esc/n', label: 'Cancel' },
                     ]}
                 />
@@ -465,7 +492,7 @@ export function McpManagerMenu({
             <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
                 <Box marginBottom={1}>
                     <Text color={THEME.colors.text}>
-                        Configure Preset:{' '}
+                        MCP Servers <Text color={THEME.colors.dim}>›</Text> Configure{' '}
                         <Text color={THEME.colors.brand}>{activePreset.name}</Text>
                     </Text>
                 </Box>
@@ -475,8 +502,8 @@ export function McpManagerMenu({
                         Step {promptIndex + 1} of {totalPrompts}: {currentPrompt?.label}
                     </Text>
 
-                    <Box marginTop={1} flexDirection="row" gap={1}>
-                        <Text color={THEME.colors.brand}>›</Text>
+                    <Box marginTop={1}>
+                        <Text color={THEME.colors.brand}>{`${THEME.glyphs.prompt} `}</Text>
                         <TextInput
                             value={currentInputValue}
                             onChange={setCurrentInputValue}
@@ -529,8 +556,12 @@ export function McpManagerMenu({
 
         return (
             <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
-                <Box marginBottom={1}>
-                    <Text color={THEME.colors.text}>MCP Preset Catalog</Text>
+                <Box marginBottom={1} justifyContent="space-between">
+                    <Text color={THEME.colors.text}>
+                        MCP Servers <Text color={THEME.colors.dim}>›</Text>{' '}
+                        <Text color={THEME.colors.brand}>Preset Catalog</Text>
+                    </Text>
+                    <Text color={THEME.colors.muted}>{catalogPresets.length} presets</Text>
                 </Box>
 
                 <Box flexDirection="column" marginY={1}>
@@ -539,11 +570,15 @@ export function McpManagerMenu({
                         const installed = serverInfos.some((s: any) => s.name === preset.id)
 
                         return (
-                            <Box key={preset.id} flexDirection="row" gap={1} marginBottom={0}>
-                                <Text color={isSelected ? THEME.colors.brand : 'transparent'}>
-                                    {isSelected ? '›' : ' '}
+                            <Box key={preset.id} flexDirection="row" gap={1}>
+                                <Box marginRight={0}>
+                                    <Text color={THEME.colors.brand}>
+                                        {isSelected ? THEME.glyphs.selector : ' '}
+                                    </Text>
+                                </Box>
+                                <Text color={isSelected ? THEME.colors.brand : THEME.colors.text}>
+                                    {preset.name}
                                 </Text>
-                                <Text color={THEME.colors.text}>{preset.name}</Text>
                                 <Text color={THEME.colors.dim}>[{preset.category}]</Text>
                                 {installed && <Text color={THEME.colors.success}>[Installed]</Text>}
                             </Box>
@@ -553,11 +588,11 @@ export function McpManagerMenu({
 
                 {selectedPreset && (
                     <Box
+                        borderColor={THEME.colors.border}
+                        borderStyle="round"
                         flexDirection="column"
                         marginTop={1}
-                        paddingLeft={1}
-                        borderStyle="single"
-                        borderColor={THEME.colors.border}
+                        paddingX={1}
                     >
                         <Text color={THEME.colors.muted}>{selectedPreset.description}</Text>
                         <Box marginTop={1}>
@@ -573,7 +608,7 @@ export function McpManagerMenu({
                     items={[
                         { key: '↑/↓', label: 'Navigate' },
                         { key: 'enter', label: isInstalled ? 'Reconfigure' : 'Install' },
-                        { key: 'esc', label: 'Back to List' },
+                        { key: 'esc', label: 'Back' },
                     ]}
                 />
             </Box>
@@ -584,10 +619,8 @@ export function McpManagerMenu({
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1} justifyContent="space-between">
-                <Text color={THEME.colors.text}>MCP Server Manager</Text>
-                <Text color={THEME.colors.muted}>
-                    {serverInfos.length} server{serverInfos.length === 1 ? '' : 's'}
-                </Text>
+                <Text color={THEME.colors.text}>MCP Servers</Text>
+                <Text color={THEME.colors.muted}>{serverInfos.length} configured</Text>
             </Box>
 
             {serverInfos.length === 0 ? (
@@ -598,8 +631,8 @@ export function McpManagerMenu({
                     </Text>
                     <Box marginTop={1}>
                         <Text color={THEME.colors.brand}>
-                            Press &apos;a&apos; to browse the Preset Catalog (GitHub, Postgres,
-                            SQLite, Brave, Fetch, etc.)
+                            Press &apos;a&apos; to browse the Preset Catalog (GitHub, PostgreSQL,
+                            SQLite, Brave Search, etc.)
                         </Text>
                     </Box>
                 </Box>
@@ -614,36 +647,62 @@ export function McpManagerMenu({
                                   ? THEME.colors.error
                                   : THEME.colors.dim
 
+                        const statusGlyph =
+                            srv.status === 'connected'
+                                ? THEME.glyphs.status
+                                : srv.status === 'failed'
+                                  ? '▲'
+                                  : '○'
+
                         const toolCount = srv.tools?.length || 0
-                        const latencyStr = srv.latencyMs !== undefined ? ` ${srv.latencyMs}ms` : ''
+                        const latencyStr = srv.latencyMs !== undefined ? `, ${srv.latencyMs}ms` : ''
+                        const inlineTest = testStatus[srv.name]
 
                         return (
-                            <Box key={srv.name} flexDirection="column" marginBottom={1}>
+                            <Box
+                                key={srv.name}
+                                flexDirection="column"
+                                marginBottom={isSelected ? 1 : 0}
+                            >
                                 <Box flexDirection="row" gap={1}>
-                                    <Text color={isSelected ? THEME.colors.brand : 'transparent'}>
-                                        {isSelected ? '›' : ' '}
+                                    <Text color={THEME.colors.brand}>
+                                        {isSelected ? THEME.glyphs.selector : ' '}
                                     </Text>
-                                    <Text color={THEME.colors.text}>{srv.name}</Text>
-                                    <Text color={statusColor}>[{srv.status}]</Text>
+                                    <Text
+                                        color={isSelected ? THEME.colors.brand : THEME.colors.text}
+                                    >
+                                        {srv.name}
+                                    </Text>
+                                    <Text color={statusColor}>
+                                        {statusGlyph} [{srv.status}]
+                                    </Text>
                                     <Text color={THEME.colors.muted}>
                                         ({toolCount} tool{toolCount === 1 ? '' : 's'}
                                         {latencyStr})
                                     </Text>
-                                    {testStatus[srv.name] && (
-                                        <Text color={THEME.colors.brand}>
-                                            - {testStatus[srv.name]}
+                                    {inlineTest && (
+                                        <Text
+                                            color={
+                                                inlineTest.status === 'ok'
+                                                    ? THEME.colors.success
+                                                    : inlineTest.status === 'failed'
+                                                      ? THEME.colors.error
+                                                      : THEME.colors.warning
+                                            }
+                                        >
+                                            [{inlineTest.message}]
                                         </Text>
                                     )}
                                 </Box>
 
                                 {isSelected && (
                                     <Box
-                                        flexDirection="column"
-                                        marginLeft={3}
-                                        marginTop={1}
-                                        paddingLeft={1}
-                                        borderStyle="single"
                                         borderColor={THEME.colors.border}
+                                        borderStyle="round"
+                                        flexDirection="column"
+                                        marginLeft={2}
+                                        marginTop={1}
+                                        paddingX={1}
                                     >
                                         {srv.config?.command && (
                                             <Box marginBottom={0}>
@@ -697,7 +756,7 @@ export function McpManagerMenu({
                                             srv.config.autoApprove.length > 0 && (
                                                 <Box marginTop={1}>
                                                     <Text color={THEME.colors.muted}>
-                                                        Auto-approved tools:{' '}
+                                                        Auto-approved:{' '}
                                                         <Text color={THEME.colors.brand}>
                                                             {srv.config.autoApprove.join(', ')}
                                                         </Text>
@@ -708,23 +767,26 @@ export function McpManagerMenu({
                                         {srv.tools && srv.tools.length > 0 ? (
                                             <Box flexDirection="column" marginTop={1}>
                                                 <Text color={THEME.colors.muted}>
-                                                    Available Tools:
+                                                    Available Tools ({srv.tools.length}):
                                                 </Text>
                                                 {srv.tools.map((t: any) => (
                                                     <Box
                                                         key={t.name}
-                                                        flexDirection="column"
+                                                        flexDirection="row"
                                                         marginLeft={1}
+                                                        gap={1}
                                                     >
-                                                        <Text color={THEME.colors.text}>
-                                                            •{' '}
-                                                            <Text color={THEME.colors.brand}>
-                                                                {t.name}
-                                                            </Text>
-                                                            {t.description
-                                                                ? `: ${t.description}`
-                                                                : ''}
+                                                        <Text color={THEME.colors.dim}>
+                                                            {THEME.glyphs.bullet}
                                                         </Text>
+                                                        <Text color={THEME.colors.brand}>
+                                                            {t.name}
+                                                        </Text>
+                                                        {t.description && (
+                                                            <Text color={THEME.colors.muted}>
+                                                                - {t.description}
+                                                            </Text>
+                                                        )}
                                                     </Box>
                                                 ))}
                                             </Box>
@@ -749,7 +811,7 @@ export function McpManagerMenu({
                     { key: 't', label: 'Test' },
                     { key: 'x', label: 'Remove' },
                     { key: 'r', label: 'Reload' },
-                    { key: 'esc', label: 'Back' },
+                    { key: 'esc', label: 'Cancel' },
                 ]}
             />
         </Box>
