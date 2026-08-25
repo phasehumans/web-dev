@@ -563,6 +563,15 @@ async function streamAssistantResponse(
                 'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing or configure Bring Your Own Key (BYOK) via `/login` to continue using December.\n' +
                 errorMsg
         } else if (
+            errorMsg.includes('401') ||
+            errorMsg.toLowerCase().includes('unauthorized') ||
+            errorMsg.toLowerCase().includes('session expired') ||
+            errorMsg.toLowerCase().includes('invalid token')
+        ) {
+            errorMsg =
+                'Authentication failed or session expired. Please run `/login` to sign in with your December account (Cloud Wallet) or configure Bring Your Own Key (BYOK).\n' +
+                errorMsg
+        } else if (
             errorMsg.includes('429') ||
             errorMsg.toLowerCase().includes('quota') ||
             errorMsg.toLowerCase().includes('rate limit')

@@ -46,10 +46,11 @@ export function instantiateProvider(provider: string, apiKey: string): any {
             return ollamaProvider(endpoint, 'ollama')
         }
         default: {
-            if (process.env.NODE_ENV !== 'production' && process.env.SERVER_PORT) {
-                return openaiProvider(`http://localhost:${process.env.SERVER_PORT}/api/v1`, apiKey)
-            }
-            const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
+            const serverUrl =
+                process.env.SERVER_URL ||
+                (process.env.NODE_ENV !== 'production' && process.env.SERVER_PORT
+                    ? `http://localhost:${process.env.SERVER_PORT}`
+                    : 'https://api.trydecember.com')
             const proxyUrl = `${serverUrl.replace(/\/+$/, '')}/api/v1/cli`
             return openaiProvider(proxyUrl, apiKey)
         }

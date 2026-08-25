@@ -146,5 +146,23 @@ export function parseErrorMessage(err: any): string {
         return openRouterCreditsNotice + finalResult
     }
 
+    const isAuthError =
+        lowerStr.includes('401') ||
+        lowerStr.includes('unauthorized') ||
+        lowerStr.includes('invalid token') ||
+        lowerStr.includes('access token expired') ||
+        lowerStr.includes('session expired') ||
+        lowerStr.includes('session not found')
+
+    if (
+        isAuthError &&
+        !finalResult.includes('Please run `/login`') &&
+        !finalResult.includes('Please run /login')
+    ) {
+        const authNotice =
+            'Authentication failed or session expired. Please run `/login` to sign in with your December account (Cloud Wallet) or configure Bring Your Own Key (BYOK).\n'
+        return authNotice + finalResult
+    }
+
     return finalResult
 }

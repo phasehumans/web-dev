@@ -31,24 +31,38 @@ export const parseAuthToken = (req: Request, _res: Response, next: NextFunction)
 }
 
 export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+    const isCliRoute =
+        req.originalUrl?.includes('/api/v1/cli') ||
+        req.baseUrl?.includes('/api/v1/cli') ||
+        req.path?.includes('/api/v1/cli')
+
+    const sendAuthError = (status: number, message: string, errors?: any) => {
+        return res.status(status).json({
+            error: isCliRoute
+                ? {
+                      message,
+                      type: 'authentication_error',
+                      code: String(status),
+                  }
+                : undefined,
+            success: false,
+            message,
+            ...(errors ? { errors } : {}),
+        })
+    }
+
     try {
         const token = extractToken(req)
 
         if (!token) {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized',
-            })
+            return sendAuthError(401, 'Unauthorized')
         }
 
         const secret = env.ACCESS_TOKEN_SECRET
         const decoded = jwt.verify(token, secret) as TokenPayload | string
 
         if (typeof decoded === 'string') {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid token',
-            })
+            return sendAuthError(401, 'Invalid token')
         }
 
         let session = await sessionCache.get(decoded.sessionId)
@@ -78,39 +92,24 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         }
 
         if (!session) {
-            return res.status(401).json({
-                success: false,
-                message: 'Session not found',
-            })
+            return sendAuthError(401, 'Session not found')
         }
 
         if (!session.user || session.user.isDeleted) {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized',
-            })
+            return sendAuthError(401, 'Unauthorized')
         }
 
         if (session.userId !== decoded.userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid session',
-            })
+            return sendAuthError(401, 'Invalid session')
         }
 
         if (session.isRevoked) {
-            return res.status(401).json({
-                success: false,
-                message: 'Session revoked',
-            })
+            return sendAuthError(401, 'Session revoked')
         }
 
         const sessionExpiresAt = new Date(session.expiresAt)
         if (sessionExpiresAt < new Date()) {
-            return res.status(401).json({
-                success: false,
-                message: 'Session expired',
-            })
+            return sendAuthError(401, 'Session expired')
         }
 
         req.user = {
@@ -121,25 +120,13 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         next()
     } catch (error: any) {
         if (error instanceof jwt.TokenExpiredError) {
-            return res.status(401).json({
-                success: false,
-                message: 'Access token expired',
-                errors: error.message,
-            })
+            return sendAuthError(401, 'Access token expired', error.message)
         }
 
         if (error instanceof jwt.JsonWebTokenError) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid token',
-                errors: error.message,
-            })
+            return sendAuthError(401, 'Invalid token', error.message)
         }
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error',
-            errors: error.message,
-        })
+        return sendAuthError(500, 'Internal server error', error.message)
     }
 }

@@ -131,4 +131,12 @@ describe('error-parser', () => {
         expect(parsed).toContain('can only afford 10666')
         expect(parsed).not.toMatch(/[\u{1F300}-\u{1F9FF}]/u)
     })
+
+    test('attaches authentication notice when 401 or session expired error occurs', () => {
+        const raw401Err = '401 status code (no body)'
+        const parsed = parseErrorMessage(raw401Err)
+        expect(parsed).toContain('Authentication failed or session expired')
+        expect(parsed).toContain('/login')
+        expect(parsed).toContain('Bring Your Own Key (BYOK)')
+    })
 })
