@@ -18,20 +18,13 @@ export interface ToolPermissionMenuProps {
 
 function PermissionItemComponent({
     label,
-    value,
     isSelected,
 }: {
     label: string
     value?: string
     isSelected?: boolean
 }) {
-    let color: string = THEME.colors.text
-    if (value === 'approve' || value === 'always' || value === 'git-tracked') {
-        color = THEME.colors.success
-    } else if (value === 'reject' || value === 'deny') {
-        color = THEME.colors.error
-    }
-
+    const color: string = isSelected ? THEME.colors.brand : THEME.colors.text
     return <Text color={color}>{label}</Text>
 }
 
@@ -70,16 +63,16 @@ export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPerm
 
     const items = toolCall
         ? [
-              { label: '[y] Approve', value: 'approve' },
-              { label: '[a] Always allow in session', value: 'always' },
-              { label: '[g] Only git-tracked files', value: 'git-tracked' },
-              { label: '[d] Deny', value: 'deny' },
+              { label: 'Approve', value: 'approve' },
+              { label: 'Always allow in session', value: 'always' },
+              { label: 'Only git-tracked files', value: 'git-tracked' },
+              { label: 'Deny', value: 'deny' },
           ]
         : currentQ?.options.map((opt) => ({ label: opt, value: opt })) || [
-              { label: '[y] Approve', value: 'approve' },
-              { label: '[a] Always allow in session', value: 'always' },
-              { label: '[g] Only git-tracked files', value: 'git-tracked' },
-              { label: '[d] Deny', value: 'deny' },
+              { label: 'Approve', value: 'approve' },
+              { label: 'Always allow in session', value: 'always' },
+              { label: 'Only git-tracked files', value: 'git-tracked' },
+              { label: 'Deny', value: 'deny' },
           ]
 
     const handleSelect = (item: { label: string; value: string }) => {
@@ -145,14 +138,11 @@ export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPerm
                             <Box flexDirection="column" marginTop={1}>
                                 {visibleDiffLines.map((line, lidx) => {
                                     let color: string = THEME.colors.text
-                                    let bgColor: string | undefined = undefined
 
                                     if (line.startsWith('+') && !line.startsWith('+++')) {
                                         color = THEME.colors.success
-                                        bgColor = '#122f1e'
                                     } else if (line.startsWith('-') && !line.startsWith('---')) {
                                         color = THEME.colors.error
-                                        bgColor = '#3f1316'
                                     } else if (
                                         line.startsWith('@@') ||
                                         line.startsWith('diff --git') ||
@@ -163,15 +153,9 @@ export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPerm
                                     }
 
                                     return (
-                                        <Box
-                                            key={lidx}
-                                            backgroundColor={bgColor}
-                                            flexDirection="row"
-                                        >
-                                            <Text color={color} wrap="truncate-end">
-                                                {line}
-                                            </Text>
-                                        </Box>
+                                        <Text key={lidx} color={color} wrap="truncate-end">
+                                            {line}
+                                        </Text>
                                     )
                                 })}
                                 {isDiffTruncated && (

@@ -3,6 +3,7 @@ import TextInput from 'ink-text-input'
 import { useState, useCallback } from 'react'
 
 import { useKeyboardLayer } from '../providers/keyboard-layer'
+import { THEME } from '../theme'
 
 import type { ReactNode } from 'react'
 
@@ -81,10 +82,10 @@ export function DialogSearchList<T>({
                         return (
                             <Box key={getKey(item)}>
                                 <Text
-                                    color={isSelected ? '#89B4F8' : undefined}
+                                    color={isSelected ? THEME.colors.brand : undefined}
                                     dimColor={!isSelected}
                                 >
-                                    {isSelected ? '❭ ' : '  '}
+                                    {isSelected ? `${THEME.glyphs.selector} ` : '  '}
                                 </Text>
                                 {renderItem(item, isSelected)}
                             </Box>

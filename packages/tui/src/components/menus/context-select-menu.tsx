@@ -5,6 +5,8 @@ import React from 'react'
 
 import { THEME } from '../../theme'
 
+import { MenuFooter } from './menu-footer'
+
 function getModelLabel(id: string) {
     return id
 }
@@ -48,18 +50,34 @@ export function ContextSelectMenu(props: any) {
         }
     }
 
-    addSquares(Math.round((basePromptTokens / maxTokens) * totalSquares), '●', THEME.colors.muted)
-    addSquares(Math.round((rulesTokens / maxTokens) * totalSquares), '●', THEME.colors.warning)
-    addSquares(Math.round((skillsTokens / maxTokens) * totalSquares), '●', THEME.colors.error)
-    addSquares(Math.round((builtInToolsTokens / maxTokens) * totalSquares), '●', THEME.colors.brand)
+    addSquares(
+        Math.round((basePromptTokens / maxTokens) * totalSquares),
+        THEME.glyphs.status,
+        THEME.colors.muted
+    )
+    addSquares(
+        Math.round((rulesTokens / maxTokens) * totalSquares),
+        THEME.glyphs.status,
+        THEME.colors.warning
+    )
+    addSquares(
+        Math.round((skillsTokens / maxTokens) * totalSquares),
+        THEME.glyphs.status,
+        THEME.colors.error
+    )
+    addSquares(
+        Math.round((builtInToolsTokens / maxTokens) * totalSquares),
+        THEME.glyphs.status,
+        THEME.colors.brand
+    )
     addSquares(
         Math.round((dynamicMcpToolsTokens / maxTokens) * totalSquares),
-        '●',
+        THEME.glyphs.status,
         THEME.colors.dim
     )
     addSquares(
         Math.round((conversationHistoryTokens / maxTokens) * totalSquares),
-        '●',
+        THEME.glyphs.status,
         THEME.colors.success
     )
 
@@ -86,12 +104,11 @@ export function ContextSelectMenu(props: any) {
             <Box marginBottom={1}>
                 <Text color={THEME.colors.text}>Context</Text>
             </Box>
-            <Box flexDirection="row" gap={4}>
+            <Box flexDirection="row" gap={3}>
                 <Box flexDirection="column">
                     {gridRows}
-                    <Box marginTop={1} gap={1}>
-                        <Text color={THEME.colors.brand}>esc</Text>
-                        <Text color={THEME.colors.muted}>Cancel</Text>
+                    <Box marginTop={1}>
+                        <MenuFooter items={[{ key: 'esc', label: 'Cancel' }]} />
                     </Box>
                 </Box>
 
@@ -107,42 +124,42 @@ export function ContextSelectMenu(props: any) {
                     </Box>
                     <Box flexDirection="column">
                         <Box gap={1}>
-                            <Text color={THEME.colors.muted}>●</Text>
+                            <Text color={THEME.colors.muted}>{THEME.glyphs.status}</Text>
                             <Text color={THEME.colors.muted}>
                                 Base System Prompt: {formatK(basePromptTokens)} tokens (
                                 {pct(basePromptTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color={THEME.colors.warning}>●</Text>
+                            <Text color={THEME.colors.warning}>{THEME.glyphs.status}</Text>
                             <Text color={THEME.colors.muted}>
                                 Project Rules (AGENTS.md / rules.md): {formatK(rulesTokens)} tokens
                                 ({pct(rulesTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color={THEME.colors.error}>●</Text>
+                            <Text color={THEME.colors.error}>{THEME.glyphs.status}</Text>
                             <Text color={THEME.colors.muted}>
                                 Workspace Skills (skills.md): {formatK(skillsTokens)} tokens (
                                 {pct(skillsTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color={THEME.colors.brand}>●</Text>
+                            <Text color={THEME.colors.brand}>{THEME.glyphs.status}</Text>
                             <Text color={THEME.colors.muted}>
                                 Built-in Tool Schemas: {formatK(builtInToolsTokens)} tokens (
                                 {pct(builtInToolsTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color={THEME.colors.dim}>●</Text>
+                            <Text color={THEME.colors.dim}>{THEME.glyphs.status}</Text>
                             <Text color={THEME.colors.muted}>
                                 Dynamic MCP Tools: {formatK(dynamicMcpToolsTokens)} tokens (
                                 {pct(dynamicMcpToolsTokens)}%)
                             </Text>
                         </Box>
                         <Box gap={1}>
-                            <Text color={THEME.colors.success}>●</Text>
+                            <Text color={THEME.colors.success}>{THEME.glyphs.status}</Text>
                             <Text color={THEME.colors.muted}>
                                 Conversation History: {formatK(conversationHistoryTokens)} tokens (
                                 {pct(conversationHistoryTokens)}%)

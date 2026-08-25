@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink'
 import React from 'react'
 
+import { useTerminalColumns } from '../../hooks/use-terminal-columns'
 import { THEME } from '../../theme'
 
 import { MenuFooter } from './menu-footer'
@@ -21,6 +22,7 @@ export interface TasksModeMenuProps {
 
 export function TasksModeMenu(props: TasksModeMenuProps) {
     const { tasksData = [], taskViewingId, taskScrollOffset = 0, taskSelectedIndex = 0 } = props
+    const columns = useTerminalColumns()
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -48,7 +50,7 @@ export function TasksModeMenu(props: TasksModeMenuProps) {
                     <Box marginBottom={1} justifyContent="space-between">
                         <Text color={THEME.colors.text}>Task: {task.id}</Text>
                         <Text color={getStatusColor(task.status)}>
-                            [{task.status.toUpperCase()}]
+                            {THEME.glyphs.status} [{task.status.toUpperCase()}]
                         </Text>
                     </Box>
                     <Box marginBottom={1}>
@@ -58,7 +60,6 @@ export function TasksModeMenu(props: TasksModeMenuProps) {
                         borderColor={THEME.colors.border}
                         borderStyle="round"
                         flexDirection="column"
-                        minHeight={8}
                         paddingX={1}
                     >
                         {visibleLines.length === 0 ||
@@ -94,6 +95,15 @@ export function TasksModeMenu(props: TasksModeMenuProps) {
         }
     }
 
+    const paddingWidth = THEME.padding.paddingX * 2
+    const indicatorWidth = 2
+    const idWidth = 18
+    const statusWidth = 16
+    const availableCmdWidth = Math.max(
+        20,
+        columns - paddingWidth - indicatorWidth - idWidth - statusWidth - 2
+    )
+
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
@@ -107,7 +117,9 @@ export function TasksModeMenu(props: TasksModeMenuProps) {
                 tasksData.map((task, idx) => {
                     const isSelected = idx === taskSelectedIndex
                     const truncatedCommand =
-                        task.command.length > 50 ? task.command.slice(0, 47) + '...' : task.command
+                        task.command.length > availableCmdWidth
+                            ? task.command.slice(0, availableCmdWidth - 3) + '...'
+                            : task.command
                     return (
                         <Box key={task.id} flexDirection="row">
                             <Box width={2}>
@@ -115,21 +127,24 @@ export function TasksModeMenu(props: TasksModeMenuProps) {
                                     {isSelected ? `${THEME.glyphs.selector} ` : '  '}
                                 </Text>
                             </Box>
-                            <Box width={25}>
+                            <Box width={idWidth}>
                                 <Text
-                                    color={isSelected ? THEME.colors.text : THEME.colors.muted}
+                                    color={isSelected ? THEME.colors.brand : THEME.colors.text}
                                     wrap="truncate"
                                 >
                                     {task.id}
                                 </Text>
                             </Box>
-                            <Box width={15}>
+                            <Box width={statusWidth}>
                                 <Text color={getStatusColor(task.status)}>
-                                    [{task.status.toUpperCase()}]
+                                    {THEME.glyphs.status} [{task.status.toUpperCase()}]
                                 </Text>
                             </Box>
-                            <Box>
-                                <Text color={isSelected ? THEME.colors.text : THEME.colors.muted}>
+                            <Box width={availableCmdWidth}>
+                                <Text
+                                    color={isSelected ? THEME.colors.brand : THEME.colors.text}
+                                    wrap="truncate"
+                                >
                                     {truncatedCommand}
                                 </Text>
                             </Box>

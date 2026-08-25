@@ -1,4 +1,5 @@
 import { describe, expect, it, mock } from 'bun:test'
+import { Text } from 'ink'
 import { render } from 'ink-testing-library'
 import React from 'react'
 
@@ -63,5 +64,24 @@ describe('InputBar Component (Unit)', () => {
         stdin.write('\u001B[A') // Up
         await new Promise((resolve) => setTimeout(resolve, 20))
         expect(lastFrame()).toContain('❭ /clear')
+    })
+
+    it('suppresses prompt separators and prompt glyph when authUI is provided', () => {
+        const handleSubmit = mock(() => {})
+        const { lastFrame } = render(
+            <RootLayout>
+                <InputBar
+                    onSubmit={handleSubmit}
+                    placeholder="Ask December to build..."
+                    activeModel="gemini-3.6-flash"
+                    authUI={<Text>Active Menu Content</Text>}
+                />
+            </RootLayout>
+        )
+        const frame = lastFrame()
+        expect(frame).toContain('Active Menu Content')
+        expect(frame).not.toContain('Ask December to build...')
+        expect(frame).not.toContain('gemini-3.6-flash')
+        expect(frame).not.toContain('? for shortcuts')
     })
 })

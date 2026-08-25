@@ -83,6 +83,7 @@ describe('ChatApp TUI Integration', () => {
         expect(frame).toContain('Settings')
         expect(frame).not.toContain('? for shortcuts')
         expect(frame).not.toContain('gemini-3.6-flash')
+        expect(frame).not.toContain('Ask December to build...')
     })
 
     it('shows exit confirmation on first Ctrl+C and exits on second Ctrl+C', async () => {

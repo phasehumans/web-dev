@@ -89,11 +89,19 @@ describe('instantiateProvider', () => {
     })
 
     it('defaults to localhost proxy when provider is unknown', () => {
+        const prevUrl = process.env.SERVER_URL
+        delete process.env.SERVER_URL
         process.env.SERVER_PORT = '5000'
-        instantiateProvider('unknown', 'key-123')
-        expect(providers.openaiProvider).toHaveBeenCalledWith(
-            'http://localhost:5000/api/v1/cli',
-            'key-123'
-        )
+        try {
+            instantiateProvider('unknown', 'key-123')
+            expect(providers.openaiProvider).toHaveBeenCalledWith(
+                'http://localhost:5000/api/v1/cli',
+                'key-123'
+            )
+        } finally {
+            if (prevUrl !== undefined) {
+                process.env.SERVER_URL = prevUrl
+            }
+        }
     })
 })

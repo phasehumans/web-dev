@@ -1,6 +1,8 @@
 import { Box, Text, useFocus, useInput } from 'ink'
 import React, { useState } from 'react'
 
+import { THEME } from '../theme'
+
 type Props = {
     code: string
 }
@@ -120,7 +122,7 @@ function parseSequence(code: string) {
 
     for (const rawLine of lines) {
         const line = rawLine.trim()
-        if (!line || line.startsWith('%%') || line.startsWith('sequenceDiagram')) continue
+        if (!line || line.startsWith('%%')) continue
 
         if (line.startsWith('participant ')) {
             const name = line.replace('participant ', '').trim()
@@ -181,7 +183,7 @@ function parsePie(code: string) {
 }
 
 export function Mermaid({ code }: Props) {
-    const { isFocused } = useFocus({ autoFocus: true })
+    useFocus({ autoFocus: true })
     const [showRaw, setShowRaw] = useState(false)
 
     useInput((input, key) => {
@@ -209,10 +211,10 @@ export function Mermaid({ code }: Props) {
             paddingX={2}
             paddingY={1}
             borderStyle="round"
-            borderColor="#555555"
+            borderColor={THEME.colors.border}
         >
             <Box justifyContent="space-between" alignItems="center" marginBottom={1}>
-                <Text color="white">
+                <Text color={THEME.colors.text}>
                     ❖ Mermaid Diagram (
                     {isSequence
                         ? 'sequence'
@@ -223,12 +225,14 @@ export function Mermaid({ code }: Props) {
                             : 'diagram'}
                     )
                 </Text>
-                <Text color="gray">({showRaw ? 'ctrl+o for visual' : 'ctrl+o for code'})</Text>
+                <Text color={THEME.colors.dim}>
+                    ({showRaw ? 'ctrl+o for visual' : 'ctrl+o for code'})
+                </Text>
             </Box>
 
             {showRaw ? (
                 <Box flexDirection="column" paddingLeft={1}>
-                    <Text color="#AAAAAA">{code}</Text>
+                    <Text color={THEME.colors.muted}>{code}</Text>
                 </Box>
             ) : isSequence ? (
                 <RenderSequence code={code} />
@@ -245,7 +249,7 @@ function RenderFlowchart({ code }: { code: string }) {
     const { direction, nodes, edges } = parseFlowchart(code)
 
     if (nodes.length === 0) {
-        return <Text color="#AAAAAA">{code}</Text>
+        return <Text color={THEME.colors.muted}>{code}</Text>
     }
 
     const isLR = direction === 'LR' || direction === 'RL'
@@ -258,17 +262,21 @@ function RenderFlowchart({ code }: { code: string }) {
                         const outgoingEdges = edges.filter((e) => e.from === node.id)
                         return (
                             <React.Fragment key={node.id}>
-                                <Box borderStyle="round" borderColor="gray" paddingX={1}>
-                                    <Text color="white">{node.label}</Text>
+                                <Box
+                                    borderStyle="round"
+                                    borderColor={THEME.colors.border}
+                                    paddingX={1}
+                                >
+                                    <Text color={THEME.colors.text}>{node.label}</Text>
                                 </Box>
                                 {outgoingEdges.length > 0 && i < nodes.length - 1 && (
                                     <Box flexDirection="column" alignItems="center">
                                         {outgoingEdges[0].label && (
-                                            <Text color="gray" italic>
+                                            <Text color={THEME.colors.dim} italic>
                                                 [{outgoingEdges[0].label}]
                                             </Text>
                                         )}
-                                        <Text color="gray">
+                                        <Text color={THEME.colors.dim}>
                                             {outgoingEdges[0].style === 'dashed'
                                                 ? ' ┈► '
                                                 : outgoingEdges[0].style === 'thick'
@@ -287,17 +295,21 @@ function RenderFlowchart({ code }: { code: string }) {
                         const outgoingEdges = edges.filter((e) => e.from === node.id)
                         return (
                             <Box key={node.id} flexDirection="column">
-                                <Box borderStyle="round" borderColor="gray" paddingX={1}>
-                                    <Text color="white">{node.label}</Text>
+                                <Box
+                                    borderStyle="round"
+                                    borderColor={THEME.colors.border}
+                                    paddingX={1}
+                                >
+                                    <Text color={THEME.colors.text}>{node.label}</Text>
                                 </Box>
                                 {outgoingEdges.length > 0 && (
                                     <Box flexDirection="column" paddingLeft={3}>
                                         {outgoingEdges[0].label && (
-                                            <Text color="gray" italic>
+                                            <Text color={THEME.colors.dim} italic>
                                                 [{outgoingEdges[0].label}]
                                             </Text>
                                         )}
-                                        <Text color="gray">
+                                        <Text color={THEME.colors.dim}>
                                             {outgoingEdges[0].style === 'dashed'
                                                 ? '  ┆  \n  ▼  '
                                                 : '  │  \n  ▼  '}
@@ -312,14 +324,16 @@ function RenderFlowchart({ code }: { code: string }) {
 
             {edges.length > 0 && (
                 <Box flexDirection="column" marginTop={1} paddingLeft={1}>
-                    <Text color="gray">Connections:</Text>
+                    <Text color={THEME.colors.dim}>Connections:</Text>
                     {edges.map((edge, idx) => {
                         const fromNode = nodes.find((n) => n.id === edge.from)?.label || edge.from
                         const toNode = nodes.find((n) => n.id === edge.to)?.label || edge.to
                         return (
-                            <Text key={idx} color="#CCCCCC">
-                                • {fromNode}{' '}
-                                <Text color="gray">{edge.style === 'dashed' ? '┈►' : '──►'}</Text>{' '}
+                            <Text key={idx} color={THEME.colors.muted}>
+                                {THEME.glyphs.bullet} {fromNode}{' '}
+                                <Text color={THEME.colors.dim}>
+                                    {edge.style === 'dashed' ? '┈►' : '──►'}
+                                </Text>{' '}
                                 {toNode}
                                 {edge.label ? ` (${edge.label})` : ''}
                             </Text>
@@ -335,26 +349,28 @@ function RenderSequence({ code }: { code: string }) {
     const { participants, messages } = parseSequence(code)
 
     if (participants.length === 0) {
-        return <Text color="#AAAAAA">{code}</Text>
+        return <Text color={THEME.colors.muted}>{code}</Text>
     }
 
     return (
         <Box flexDirection="column" gap={1}>
             <Box flexDirection="row" gap={2}>
                 {participants.map((p) => (
-                    <Box key={p} borderStyle="single" borderColor="gray" paddingX={1}>
-                        <Text color="white">{p}</Text>
+                    <Box key={p} borderStyle="round" borderColor={THEME.colors.border} paddingX={1}>
+                        <Text color={THEME.colors.text}>{p}</Text>
                     </Box>
                 ))}
             </Box>
             <Box flexDirection="column" paddingLeft={1} marginTop={1}>
                 {messages.map((msg, idx) => (
-                    <Text key={idx} color="#DDDDDD">
-                        <Text color="white">{msg.from}</Text>{' '}
-                        <Text color="gray">{msg.style === 'dashed' ? '◄┄┄' : '──►'}</Text>{' '}
-                        <Text color="white">{msg.to}</Text>
+                    <Text key={idx} color={THEME.colors.text}>
+                        <Text color={THEME.colors.brand}>{msg.from}</Text>{' '}
+                        <Text color={THEME.colors.dim}>
+                            {msg.style === 'dashed' ? '◄┄┄' : '──►'}
+                        </Text>{' '}
+                        <Text color={THEME.colors.brand}>{msg.to}</Text>
                         {': '}
-                        <Text color="white">{msg.text}</Text>
+                        <Text color={THEME.colors.text}>{msg.text}</Text>
                     </Text>
                 ))}
             </Box>
@@ -367,26 +383,26 @@ function RenderPie({ code }: { code: string }) {
     const total = slices.reduce((sum, s) => sum + s.value, 0)
 
     if (slices.length === 0) {
-        return <Text color="#AAAAAA">{code}</Text>
+        return <Text color={THEME.colors.muted}>{code}</Text>
     }
 
     return (
         <Box flexDirection="column" gap={1}>
-            <Text color="white">{title}</Text>
+            <Text color={THEME.colors.text}>{title}</Text>
             {slices.map((slice, idx) => {
                 const percentage = total > 0 ? Math.round((slice.value / total) * 100) : 0
                 const filledWidth = Math.round((percentage / 100) * 20)
                 const emptyWidth = 20 - filledWidth
                 const bar = '█'.repeat(filledWidth) + '░'.repeat(emptyWidth)
-                const color = idx % 2 === 0 ? 'white' : 'gray'
+                const color = idx % 2 === 0 ? THEME.colors.brand : THEME.colors.dim
 
                 return (
                     <Box key={idx} flexDirection="row" gap={2}>
                         <Box width={15}>
-                            <Text color="white">{slice.label}</Text>
+                            <Text color={THEME.colors.text}>{slice.label}</Text>
                         </Box>
                         <Text color={color}>{bar}</Text>
-                        <Text color="gray">{percentage}%</Text>
+                        <Text color={THEME.colors.dim}>{percentage}%</Text>
                     </Box>
                 )
             })}

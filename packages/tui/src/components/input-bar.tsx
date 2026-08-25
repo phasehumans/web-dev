@@ -355,6 +355,8 @@ export const InputBar = React.memo(function InputBar({
     const sepWidth = Math.max(10, columns - THEME.padding.paddingX * 2)
     const sep = '─'.repeat(sepWidth)
 
+    const isOverlayActive = Boolean(authUI) && !customInputMode
+
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX} marginTop={1}>
             {/* inline dialog — shown on right above prompt when open */}
@@ -392,83 +394,100 @@ export const InputBar = React.memo(function InputBar({
                 </Box>
             )}
 
-            {/* top separator */}
-            <Box overflow="hidden" height={1} width="100%">
-                <Text color={THEME.colors.border} wrap="truncate">
-                    {sep}
-                </Text>
-            </Box>
-
-            {/* content: prompt */}
-            <Box width="100%" paddingRight={4}>
-                <Text
-                    color={disabled ? THEME.colors.muted : THEME.colors.brand}
-                >{`${THEME.glyphs.prompt} `}</Text>
-                {grillMode && <Text color={THEME.colors.brand}>/grill-me </Text>}
-                {(!authUI || customInputMode) && (
-                    <TextArea
-                        value={value}
-                        onChange={handleChange}
-                        onSubmit={handleSubmit}
-                        onHistoryUp={handleHistoryUp}
-                        onHistoryDown={handleHistoryDown}
-                        placeholder={
-                            customInputMode
-                                ? 'Type your custom answer...'
-                                : grillMode
-                                  ? ''
-                                  : placeholder
-                        }
-                        focus={!disabled && !dialog.isOpen}
-                        disableHistoryNav={showCommandMenu || showFileMenu || showShortcutsMenu}
-                    />
-                )}
-            </Box>
-
-            {/* bottom separator */}
-            <Box overflow="hidden" height={1} width="100%">
-                <Text color={THEME.colors.border} wrap="truncate">
-                    {sep}
-                </Text>
-            </Box>
-
-            {/* status row — clean & minimal: <model> (<authMethod>)                  ? for shortcuts */}
-            {!showCommandMenu && !showShortcutsMenu && (!authUI || showExitConfirm) && (
-                <Box width="100%" justifyContent="space-between">
-                    <Box gap={2} alignItems="center" flexShrink={1}>
-                        <Box gap={1} flexShrink={1}>
-                            {!authUI && (
-                                <Text color={THEME.colors.muted}>
-                                    {activeModel}
-                                    {hasBothAuth && authMethod
-                                        ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
-                                        : ''}
-                                </Text>
-                            )}
-                            {activeToast ? (
-                                <Text
-                                    wrap="truncate"
-                                    color={
-                                        activeToast.variant === 'success'
-                                            ? THEME.colors.success
-                                            : activeToast.variant === 'error'
-                                              ? THEME.colors.error
-                                              : THEME.colors.muted
-                                    }
-                                >
-                                    · {activeToast.message.replace(/\s+/g, ' ').trim()}
-                                </Text>
-                            ) : showExitConfirm ? (
-                                <Text color={THEME.colors.muted}>· Press Ctrl+C again to exit</Text>
-                            ) : null}
-                        </Box>
+            {!isOverlayActive && (
+                <>
+                    {/* top separator */}
+                    <Box overflow="hidden" height={1} width="100%">
+                        <Text color={THEME.colors.border} wrap="truncate">
+                            {sep}
+                        </Text>
                     </Box>
-                    {!authUI && (
-                        <Box gap={0} flexShrink={0} marginLeft={2}>
-                            <Text color={THEME.colors.muted}>? for shortcuts</Text>
+
+                    {/* content: prompt */}
+                    <Box width="100%" paddingRight={4}>
+                        <Text
+                            color={disabled ? THEME.colors.muted : THEME.colors.brand}
+                        >{`${THEME.glyphs.prompt} `}</Text>
+                        {grillMode && <Text color={THEME.colors.brand}>/grill-me </Text>}
+                        <TextArea
+                            value={value}
+                            onChange={handleChange}
+                            onSubmit={handleSubmit}
+                            onHistoryUp={handleHistoryUp}
+                            onHistoryDown={handleHistoryDown}
+                            placeholder={grillMode ? '' : placeholder}
+                            focus={!disabled && !dialog.isOpen}
+                            disableHistoryNav={showCommandMenu || showFileMenu || showShortcutsMenu}
+                        />
+                    </Box>
+
+                    {/* bottom separator */}
+                    <Box overflow="hidden" height={1} width="100%">
+                        <Text color={THEME.colors.border} wrap="truncate">
+                            {sep}
+                        </Text>
+                    </Box>
+
+                    {/* status row — clean & minimal: <model> (<authMethod>)                  ? for shortcuts */}
+                    {!showCommandMenu && !showShortcutsMenu && showExitConfirm && (
+                        <Box width="100%" justifyContent="space-between">
+                            <Box gap={2} alignItems="center" flexShrink={1}>
+                                <Box gap={1} flexShrink={1}>
+                                    {activeToast ? (
+                                        <Text
+                                            wrap="truncate"
+                                            color={
+                                                activeToast.variant === 'success'
+                                                    ? THEME.colors.success
+                                                    : activeToast.variant === 'error'
+                                                      ? THEME.colors.error
+                                                      : THEME.colors.muted
+                                            }
+                                        >
+                                            · {activeToast.message.replace(/\s+/g, ' ').trim()}
+                                        </Text>
+                                    ) : (
+                                        <Text color={THEME.colors.muted}>
+                                            · Press Ctrl+C again to exit
+                                        </Text>
+                                    )}
+                                </Box>
+                            </Box>
                         </Box>
                     )}
-                </Box>
+
+                    {!showCommandMenu && !showShortcutsMenu && !showExitConfirm && (
+                        <Box width="100%" justifyContent="space-between">
+                            <Box gap={2} alignItems="center" flexShrink={1}>
+                                <Box gap={1} flexShrink={1}>
+                                    <Text color={THEME.colors.muted}>
+                                        {activeModel}
+                                        {hasBothAuth && authMethod
+                                            ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
+                                            : ''}
+                                    </Text>
+                                    {activeToast && (
+                                        <Text
+                                            wrap="truncate"
+                                            color={
+                                                activeToast.variant === 'success'
+                                                    ? THEME.colors.success
+                                                    : activeToast.variant === 'error'
+                                                      ? THEME.colors.error
+                                                      : THEME.colors.muted
+                                            }
+                                        >
+                                            · {activeToast.message.replace(/\s+/g, ' ').trim()}
+                                        </Text>
+                                    )}
+                                </Box>
+                            </Box>
+                            <Box gap={0} flexShrink={0} marginLeft={2}>
+                                <Text color={THEME.colors.muted}>? for shortcuts</Text>
+                            </Box>
+                        </Box>
+                    )}
+                </>
             )}
 
             {/* auth ui */}

@@ -20,10 +20,10 @@ describe('ToolPermissionMenu Component (Unit)', () => {
         expect(output).toContain('replace_file_content: src/index.ts')
         expect(output).toContain('const old = 1')
         expect(output).toContain('const updated = 2')
-        expect(output).toContain('[y] Approve')
-        expect(output).toContain('[a] Always allow in session')
-        expect(output).toContain('[g] Only git-tracked files')
-        expect(output).toContain('[d] Deny')
+        expect(output).toContain('Approve')
+        expect(output).toContain('Always allow in session')
+        expect(output).toContain('Only git-tracked files')
+        expect(output).toContain('Deny')
     })
 
     it('approves instantly on pressing y key', () => {

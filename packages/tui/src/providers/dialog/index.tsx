@@ -2,6 +2,7 @@ import { Box, Text, useInput } from 'ink'
 import { createContext, useContext, useState, useCallback } from 'react'
 
 import { useTerminalColumns } from '../../hooks/use-terminal-columns'
+import { THEME } from '../../theme'
 import { useKeyboardLayer } from '../keyboard-layer'
 
 import type { DialogConfig } from './types'
@@ -73,17 +74,17 @@ export function InlineDialog({ config, close }: InlineDialogProps) {
         <Box
             flexDirection="column"
             width={panelWidth}
-            borderStyle="single"
-            borderColor="#444444"
+            borderStyle="round"
+            borderColor={THEME.colors.border}
             paddingX={1}
             paddingY={0}
             alignSelf="flex-end"
         >
             <Box justifyContent="space-between" marginBottom={1}>
-                <Text bold color="white">
+                <Text bold color={THEME.colors.text}>
                     {config.title}
                 </Text>
-                <Text color="gray">esc to close</Text>
+                <Text color={THEME.colors.dim}>esc to close</Text>
             </Box>
             {config.children}
         </Box>

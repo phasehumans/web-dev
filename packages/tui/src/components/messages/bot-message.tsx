@@ -128,14 +128,11 @@ function CollapsibleCommandOutput({
                 <Box flexDirection="column" marginTop={0} paddingX={1}>
                     {visibleLines.map((line, lidx) => {
                         let color: string = THEME.colors.text
-                        let bgColor: string | undefined = undefined
 
                         if (line.startsWith('+')) {
                             color = THEME.colors.success
-                            bgColor = '#122f1e'
                         } else if (line.startsWith('-')) {
                             color = THEME.colors.error
-                            bgColor = '#3f1316'
                         } else if (
                             line.startsWith('@@') ||
                             line.startsWith('diff --git') ||
@@ -146,11 +143,9 @@ function CollapsibleCommandOutput({
                         }
 
                         return (
-                            <Box key={lidx} backgroundColor={bgColor} flexDirection="row">
-                                <Text color={color} wrap="truncate-end">
-                                    {line}
-                                </Text>
-                            </Box>
+                            <Text key={lidx} color={color} wrap="truncate-end">
+                                {line}
+                            </Text>
                         )
                     })}
                     {isTruncated && (

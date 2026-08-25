@@ -1,6 +1,8 @@
 import { Box, Text } from 'ink'
 import React from 'react'
 
+import { THEME } from '../theme'
+
 export type PillProps = {
     label: string
     color?: string
@@ -8,7 +10,12 @@ export type PillProps = {
     dimColor?: boolean
 }
 
-export function Pill({ label, color = 'white', backgroundColor = '#333333', dimColor }: PillProps) {
+export function Pill({
+    label,
+    color = THEME.colors.text,
+    backgroundColor = THEME.colors.border,
+    dimColor,
+}: PillProps) {
     return (
         <Box backgroundColor={backgroundColor} paddingX={1} marginX={1}>
             <Text color={color} dimColor={dimColor}>
