@@ -83,12 +83,14 @@ describe('useCliStore activeMessages handling', () => {
             HANDOFF_SUCCESS_NOTICE,
         } = await import('../src/constants/messages')
 
-        expect(HANDOFF_LOGIN_REQUIRED_NOTICE).toContain('Cloud Handoff Requires a December Account')
+        expect(HANDOFF_LOGIN_REQUIRED_NOTICE).toContain(
+            'Cloud handoff migrates your local terminal session'
+        )
         expect(HANDOFF_LOGIN_REQUIRED_NOTICE).toContain('/login')
         expect(HANDOFF_LOGIN_REQUIRED_NOTICE).toContain('december login')
 
         expect(HANDOFF_INSUFFICIENT_CREDITS_NOTICE).toContain(
-            'Insufficient Credits for Cloud Handoff'
+            'Insufficient credits in December Wallet'
         )
         expect(HANDOFF_INSUFFICIENT_CREDITS_NOTICE).toContain(
             'https://trydecember.com/settings/billing'
@@ -96,7 +98,7 @@ describe('useCliStore activeMessages handling', () => {
         expect(HANDOFF_INSUFFICIENT_CREDITS_NOTICE).toContain('/handoff')
 
         const successNotice = HANDOFF_SUCCESS_NOTICE('test-session-123')
-        expect(successNotice).toContain('Workspace Handed Off Successfully!')
+        expect(successNotice).toContain('Workspace handed off successfully!')
         expect(successNotice).toContain('https://trydecember.com/s/test-session-123')
     })
 
