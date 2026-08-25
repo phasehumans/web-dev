@@ -72,4 +72,37 @@ describe('resolveContextMentions', () => {
         expect(result.files.length).toBe(1)
         expect(result.contextBlocks.length).toBe(1)
     })
+
+    it('expands with explicit @file: prefix', async () => {
+        const sampleFile = path.join(tmpDir, 'service.ts')
+        await fs.writeFile(sampleFile, 'export class Service {}', 'utf8')
+
+        const result = await resolveContextMentions('refactor @file:service.ts', tmpDir)
+        expect(result.hasMentions).toBe(true)
+        expect(result.files[0].path).toBe('service.ts')
+        expect(result.expandedPrompt).toContain('<context_file path="service.ts">')
+        expect(result.expandedPrompt).toContain('export class Service {}')
+    })
+
+    it('resolves @git and @diff into git context block', async () => {
+        const { execSync } = await import('node:child_process')
+        execSync('git init', { cwd: tmpDir, stdio: 'ignore' })
+        const sampleFile = path.join(tmpDir, 'tracked.ts')
+        await fs.writeFile(sampleFile, 'const a = 1;', 'utf8')
+
+        const result = await resolveContextMentions('review @git and @diff', tmpDir)
+        expect(result.hasMentions).toBe(true)
+        expect(result.expandedPrompt).toContain('<git_context>')
+        expect(result.expandedPrompt).toContain('[Git Status]:')
+        expect(result.expandedPrompt).toContain('[Git Diff]:')
+        expect(result.expandedPrompt).toContain('</git_context>')
+    })
+
+    it('resolves @problems and @diagnostics into problems context block', async () => {
+        const result = await resolveContextMentions('check @problems and fix them', tmpDir)
+        expect(result.hasMentions).toBe(true)
+        expect(result.expandedPrompt).toContain('<problems_context>')
+        expect(result.expandedPrompt).toContain('[Active Diagnostics]:')
+        expect(result.expandedPrompt).toContain('</problems_context>')
+    })
 })

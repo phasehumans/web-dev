@@ -24,7 +24,13 @@ export type ProviderStreamChunk =
     | { type: 'thinking_delta'; text: string }
     | { type: 'tool_call'; toolCall: ToolCall }
     | { type: 'tool_call_delta'; id: string; name?: string; inputDelta: string }
-    | { type: 'usage'; promptTokens: number; completionTokens: number }
+    | {
+          type: 'usage'
+          promptTokens: number
+          completionTokens: number
+          cacheCreationInputTokens?: number
+          cacheReadInputTokens?: number
+      }
 
 export interface LLMProvider {
     /**

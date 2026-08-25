@@ -90,7 +90,29 @@ export function anthropicProvider(
                 }
             }
 
-            // Apply ephemeral prompt caching directive to the last message turn
+            // Tier 3 Prompt Caching: Mark history prefix (2 turns back) and last message
+            if (antMessages.length >= 4) {
+                // Find the second-to-last assistant message
+                const targetIdx = antMessages.length - 2
+                const targetMsg = antMessages[targetIdx]
+                if (targetMsg && targetMsg.role === 'assistant') {
+                    if (typeof targetMsg.content === 'string') {
+                        targetMsg.content = [
+                            {
+                                type: 'text',
+                                text: targetMsg.content,
+                                cache_control: { type: 'ephemeral' },
+                            },
+                        ]
+                    } else if (Array.isArray(targetMsg.content) && targetMsg.content.length > 0) {
+                        const lastBlock = targetMsg.content[targetMsg.content.length - 1]
+                        if (lastBlock && typeof lastBlock === 'object') {
+                            ;(lastBlock as any).cache_control = { type: 'ephemeral' }
+                        }
+                    }
+                }
+            }
+
             const lastMsg = antMessages[antMessages.length - 1]
             if (lastMsg) {
                 if (typeof lastMsg.content === 'string') {
@@ -109,6 +131,7 @@ export function anthropicProvider(
                 }
             }
 
+            // Tier 2 Prompt Caching: Mark last tool definition
             const antTools: Anthropic.Tool[] | undefined = tools?.map((t, idx) => {
                 const toolDef: Anthropic.Tool = {
                     name: t.name,
@@ -121,6 +144,7 @@ export function anthropicProvider(
                 return toolDef
             })
 
+            // Tier 1 Prompt Caching: Mark system prompt
             const formattedSystem: Anthropic.TextBlockParam[] | undefined = systemPrompt
                 ? [
                       {
@@ -169,10 +193,19 @@ export function anthropicProvider(
 
             let promptTokens = 0
             let completionTokens = 0
+            let cacheCreationInputTokens = 0
+            let cacheReadInputTokens = 0
 
             for await (const event of stream) {
                 if (event.type === 'message_start' && event.message.usage) {
                     promptTokens += event.message.usage.input_tokens
+                    const rawUsage = event.message.usage as any
+                    if (rawUsage.cache_creation_input_tokens) {
+                        cacheCreationInputTokens += rawUsage.cache_creation_input_tokens
+                    }
+                    if (rawUsage.cache_read_input_tokens) {
+                        cacheReadInputTokens += rawUsage.cache_read_input_tokens
+                    }
                 } else if (event.type === 'message_delta' && event.usage) {
                     completionTokens += event.usage.output_tokens
                 }
@@ -206,7 +239,13 @@ export function anthropicProvider(
             }
 
             if (promptTokens > 0 || completionTokens > 0) {
-                yield { type: 'usage', promptTokens, completionTokens }
+                yield {
+                    type: 'usage',
+                    promptTokens,
+                    completionTokens,
+                    cacheCreationInputTokens: cacheCreationInputTokens || undefined,
+                    cacheReadInputTokens: cacheReadInputTokens || undefined,
+                }
             }
         }
     )

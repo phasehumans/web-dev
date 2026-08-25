@@ -11,6 +11,24 @@ export { handleLogoutCommand, handleInitCommand, handleUpdateCommand } from './c
 export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
 export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 
+export async function readPipedStdin(): Promise<string | null> {
+    if (process.stdin.isTTY) return null
+
+    return new Promise((resolve) => {
+        let data = ''
+        process.stdin.setEncoding('utf8')
+        process.stdin.on('data', (chunk) => {
+            data += chunk
+        })
+        process.stdin.on('end', () => {
+            resolve(data.trim() ? data : null)
+        })
+        process.stdin.on('error', () => {
+            resolve(null)
+        })
+    })
+}
+
 async function main() {
     process.title = 'december'
     process.stdout.write('\x1b]0;december\x07')
@@ -31,6 +49,17 @@ async function main() {
 
     if (parsedArgs.cwd) {
         process.chdir(parsedArgs.cwd)
+    }
+
+    // Ingest non-TTY piped standard input into prompt if present
+    const pipedStdin = await readPipedStdin()
+    if (pipedStdin) {
+        const formattedStdin = `<piped_stdin>\n${pipedStdin}\n</piped_stdin>`
+        if (parsedArgs.prompt) {
+            parsedArgs.prompt = `${parsedArgs.prompt}\n\n${formattedStdin}`
+        } else {
+            parsedArgs.prompt = formattedStdin
+        }
     }
 
     // Fast-path 3: Standalone subcommands (lazy loaded)

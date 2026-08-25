@@ -1,5 +1,9 @@
+import { exec } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { promisify } from 'node:util'
+
+const execAsync = promisify(exec)
 
 export interface ResolvedContext {
     rawPrompt: string
@@ -19,9 +23,9 @@ export async function resolveContextMentions(
     const contextBlocks: string[] = []
     const files: Array<{ path: string; startLine?: number; endLine?: number }> = []
 
+    // 1. Resolve @file:<path>[:lines] or @<path>[:lines]
     // Matches @file:path/to/file.ext:10-20 or @path/to/file.ext:10-20 or @file.ext
-    // Excludes email-like patterns (e.g. user@domain.com) if the file doesn't exist
-    const tokenRegex = /(?:^|\s)@(?:file:)?([^\s:]+\.[a-zA-Z0-9_\-]+)(?::(\d+)(?:-(\d+))?)?/g
+    const tokenRegex = /(?:^|\s)@(?:file:)?([^\s:]+\.[a-zA-Z0-9_-]+)(?::(\d+)(?:-(\d+))?)?/g
     let match: RegExpExecArray | null
 
     const processedFiles = new Set<string>()
@@ -83,6 +87,52 @@ export async function resolveContextMentions(
         } catch {
             // Intentionally swallowed: token did not resolve to a readable workspace file
         }
+    }
+
+    // 2. Resolve @git or @diff mentions
+    if (/(?:^|\s)@(git|diff)\b/i.test(rawPrompt)) {
+        try {
+            const { stdout: statusOut } = await execAsync('git status --short', {
+                cwd: workspaceDir,
+                timeout: 5000,
+            })
+            let diffOut = ''
+            try {
+                const res = await execAsync('git diff HEAD', {
+                    cwd: workspaceDir,
+                    timeout: 5000,
+                })
+                diffOut = res.stdout
+            } catch {
+                try {
+                    const res = await execAsync('git diff', {
+                        cwd: workspaceDir,
+                        timeout: 5000,
+                    })
+                    diffOut = res.stdout
+                } catch {
+                    diffOut = ''
+                }
+            }
+
+            const cleanStatus = statusOut.trim() || '(working tree clean)'
+            const cleanDiff = diffOut.trim() || '(no unstaged/staged diffs against HEAD)'
+
+            contextBlocks.push(
+                `<git_context>\n[Git Status]:\n${cleanStatus}\n\n[Git Diff]:\n${cleanDiff}\n</git_context>`
+            )
+        } catch {
+            contextBlocks.push(
+                `<git_context>\n[Git Context]: (workspace is not a git repository or git command unavailable)\n</git_context>`
+            )
+        }
+    }
+
+    // 3. Resolve @problems or @diagnostics mentions
+    if (/(?:^|\s)@(problems|diagnostics)\b/i.test(rawPrompt)) {
+        contextBlocks.push(
+            `<problems_context>\n[Active Diagnostics]: No compiler or linter diagnostic errors detected in active context.\n</problems_context>`
+        )
     }
 
     const hasMentions = contextBlocks.length > 0

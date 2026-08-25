@@ -202,6 +202,22 @@ describe('runHeadlessTask', () => {
         expect(mockAgent.steer).not.toHaveBeenCalled()
     })
 
+    it('expands @file mentions automatically into the agent prompt', async () => {
+        // Mocking the internal file resolver logic would be ideal,
+        // but for integration testing headless runner expansion:
+        mockRunAgentLoop.mockImplementation(async function* (agent: any, prompt: string) {
+            expect(prompt).toContain('<context_file path="package.json"')
+            yield { type: 'StreamChunk', content: 'expanded' }
+        })
+
+        await runHeadlessTask('analyze @package.json', {
+            agent: mockAgent,
+            stdin: mockStdin as any,
+            stdout: mockStdout as any,
+            stderr: mockStderr as any,
+        })
+    })
+
     it('sends user steering input to agent when no prompt is pending', async () => {
         mockRunAgentLoop.mockImplementation(async function* () {
             mockStdin.write('change approach\n')

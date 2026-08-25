@@ -170,7 +170,21 @@ export async function runHeadlessTask(
     let errorMessage: string | undefined
 
     try {
-        const stream = runAgentLoop(agent, prompt)
+        let effectivePrompt = prompt
+        if (prompt && prompt.includes('@')) {
+            try {
+                const { resolveContextMentions } = await import('@december/shared')
+                const resolved = await resolveContextMentions(
+                    prompt,
+                    agent.workspaceDir || process.cwd()
+                )
+                effectivePrompt = resolved.expandedPrompt
+            } catch {
+                // Intentionally swallowed: keep original prompt on mention resolution failure
+            }
+        }
+
+        const stream = runAgentLoop(agent, effectivePrompt)
 
         for await (const event of stream) {
             switch (event.type) {

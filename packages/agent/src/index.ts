@@ -2,6 +2,7 @@ export * from './agent'
 export * from './agent-loop'
 
 export * from './utils/compaction'
+export * from './utils/evaporation'
 export * from './utils/schema-trimmer'
 export * from './utils/request-logger'
 export * from './harness/session-repository'

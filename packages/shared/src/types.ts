@@ -104,6 +104,8 @@ export interface AgentUsageEvent {
     type: 'AgentUsage'
     promptTokens: number
     completionTokens: number
+    cacheCreationInputTokens?: number
+    cacheReadInputTokens?: number
     model?: string
 }
 

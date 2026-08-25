@@ -1,4 +1,5 @@
 import { ConversationManager } from './conversation-manager'
+import { evaporateStaleToolOutputs } from './utils/evaporation'
 
 import type { SessionRepository } from './harness/session-repository'
 import type { PlatformAdapter } from './platform-adapter'
@@ -107,14 +108,8 @@ export class Agent {
     }
 
     private defaultConvertToLlm(messages: AgentMessage[]): Message[] {
-        return messages
-            .filter((m) => !m.isUI)
-            .map((m) => ({
-                role: m.role,
-                content: m.content,
-                toolCalls: m.toolCalls,
-                toolCallId: m.toolCallId,
-            }))
+        const filtered = messages.filter((m) => !m.isUI)
+        return evaporateStaleToolOutputs(filtered, 3)
     }
 
     public steer(message: AgentMessage) {
