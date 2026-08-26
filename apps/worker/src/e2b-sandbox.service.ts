@@ -541,7 +541,7 @@ const getLlmProvider = (providerName?: string, apiKey?: string) => {
 }
 
 const runAgentSession = async (data: RunAgentSessionInput) => {
-    const { sessionId, sandboxId, prompt, workspaceDir } = data
+    const { sessionId, userId, sandboxId, prompt, workspaceDir } = data
     console.log(`[E2BSandboxService] Starting in-sandbox agent runner session for ${sessionId}`)
 
     const hasLlmKey = !!(
@@ -607,6 +607,8 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         operations: adapter,
         workspaceDir: workspaceDir || '/workspace',
         sessionId,
+        userId,
+        runtime: 'cloud',
         modelOptions: {
             model: process.env.DEFAULT_MODEL || 'gemini-3.6-flash',
             thinkingLevel: 'auto',

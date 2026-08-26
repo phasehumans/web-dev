@@ -164,6 +164,7 @@ async function main() {
             },
             sessionRepository,
             sessionId,
+            runtime: 'cli',
             workspaceDir: parsedArgs.scope
                 ? path.resolve(process.cwd(), parsedArgs.scope)
                 : process.cwd(),
@@ -273,6 +274,7 @@ async function main() {
         },
         sessionRepository,
         sessionId,
+        runtime: 'cli',
         workspaceDir: parsedArgs.scope
             ? path.resolve(process.cwd(), parsedArgs.scope)
             : process.cwd(),

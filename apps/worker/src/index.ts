@@ -192,6 +192,7 @@ export const worker = new Worker(
                 : process.env.API_URL || defaultApiUrl
             const stream = await E2BSandboxService.runAgentSession({
                 sessionId,
+                userId,
                 sandboxId: provisionResult.sandboxId,
                 prompt: job.data.prompt || 'You are Antigravity, an AI agent.',
                 workspaceDir: '/workspace',

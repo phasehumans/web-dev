@@ -1,5 +1,5 @@
 import { ConversationManager } from './conversation-manager'
-import { NoopTracer } from './telemetry/noop-tracer'
+import { createAgentTracer } from './telemetry/tracer.factory'
 import { evaporateStaleToolOutputs } from './utils/evaporation'
 
 import type { SessionRepository } from './harness/session-repository'
@@ -10,6 +10,8 @@ import type { AgentMessage, Message, Tool, AgentHooks } from '@december/shared'
 
 export interface AgentConfig {
     sessionId?: string
+    userId?: string
+    runtime?: 'cloud' | 'cli'
     systemPrompt?: string
     tools: Tool[]
     llm: LLMProvider
@@ -92,7 +94,14 @@ export class Agent {
         this.conversation = new ConversationManager()
         this.workspaceDir = config.workspaceDir
         this.disableLogging = config.disableLogging || false
-        this.tracer = config.tracer || new NoopTracer()
+        this.tracer =
+            config.tracer ||
+            createAgentTracer({
+                runtime: config.runtime || 'cli',
+                sessionId: this.sessionId,
+                userId: config.userId,
+                workspaceDir: config.workspaceDir,
+            })
 
         for (const tool of config.tools) {
             this.tools.set(tool.name, tool)

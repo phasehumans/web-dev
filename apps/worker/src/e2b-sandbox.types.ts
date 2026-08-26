@@ -27,6 +27,7 @@ export interface ExecuteSandboxCommandResult {
 
 export interface RunAgentSessionInput {
     sessionId: string
+    userId?: string
     sandboxId?: string
     prompt: string
     workspaceDir?: string
