@@ -1,8 +1,10 @@
 import { ConversationManager } from './conversation-manager'
+import { NoopTracer } from './telemetry/noop-tracer'
 import { evaporateStaleToolOutputs } from './utils/evaporation'
 
 import type { SessionRepository } from './harness/session-repository'
 import type { PlatformAdapter } from './platform-adapter'
+import type { AgentTracer } from './telemetry/tracer.types'
 import type { LLMProvider } from '@december/providers'
 import type { AgentMessage, Message, Tool, AgentHooks } from '@december/shared'
 
@@ -21,6 +23,7 @@ export interface AgentConfig {
     followUpMode?: 'all' | 'one-at-a-time'
     workspaceDir?: string
     disableLogging?: boolean
+    tracer?: AgentTracer
 }
 
 class PendingMessageQueue {
@@ -71,6 +74,7 @@ export class Agent {
     public mcpPool?: any
     public workspaceDir?: string
     public disableLogging: boolean
+    public tracer: AgentTracer
 
     constructor(config: AgentConfig) {
         this.llm = config.llm
@@ -88,6 +92,7 @@ export class Agent {
         this.conversation = new ConversationManager()
         this.workspaceDir = config.workspaceDir
         this.disableLogging = config.disableLogging || false
+        this.tracer = config.tracer || new NoopTracer()
 
         for (const tool of config.tools) {
             this.tools.set(tool.name, tool)

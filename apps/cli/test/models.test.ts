@@ -86,7 +86,7 @@ describe('models utils', () => {
         it('returns first available model for provider', () => {
             expect(getDefaultModelForProvider('anthropic')).toBe('claude-fable-5')
             expect(getDefaultModelForProvider('openai')).toBe('gpt-5.6-sol')
-            expect(getDefaultModelForProvider('december_proxy')).toBe('gemini-3.7-flash')
+            expect(getDefaultModelForProvider('december_proxy')).toBe('gemini-3.6-flash')
         })
     })
 
