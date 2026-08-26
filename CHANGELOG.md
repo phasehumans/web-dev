@@ -2,6 +2,21 @@
 
 ### Features
 
+- _(agent)_ Tracer abstraction and agent loop instrumentation (#445)
+- _(agent)_ Implement langfuse tracer and runtime resolution (#446)
+- _(agent)_ Implement telemetry and langfuse observability tracer (#450)
+- _(billing)_ Enhance wallet credits top-up, payment idempotency, and subcent precision
+
+### Bug Fixes
+
+- _(agent)_ Make telemetry flush detached and document error fallback
+- Fix docker files, exclude tests
+- _(e2b,usage)_ Remove python repl and standardize usage on sessionid
+
+## [0.3.17] - 2026-08-25
+
+### Features
+
 - _(cli,server)_ Check login and credits sequence with cta on handoff command
 - _(cli)_ Remove bold markdown formatting from handoff messages
 - _(mcp)_ Implement dynamic presets, lifecycle sync, and tui manager overhaul
@@ -22,6 +37,10 @@
 
 - _(tui)_ Refine mcp manager styling and theme conformance
 - _(tui)_ Display mcp command inline in front of server row
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.17
 
 ## [0.3.16] - 2026-08-24
 

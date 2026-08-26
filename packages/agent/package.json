@@ -31,7 +31,7 @@
         "p-retry": "8.0.0",
         "uuid": "14.0.1"
     },
-    "version": "0.3.17",
+    "version": "0.3.18",
     "author": "Chaitanya Sonawane",
     "license": "MIT"
 }
