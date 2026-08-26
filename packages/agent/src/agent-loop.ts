@@ -238,10 +238,11 @@ export async function* runAgentLoop(
             eventQueue.push({ type: 'AgentEnd' })
         } finally {
             agent.activeAbortController = undefined
-            try {
-                await agent.tracer?.flush().catch(() => {})
-            } catch {
-                // Intentionally swallowed: Telemetry flush must not disrupt agent loop
+            if (agent.tracer) {
+                // Detached non-blocking flush in background to ensure zero stream termination latency
+                agent.tracer.flush().catch(() => {
+                    // Intentionally swallowed: Detached telemetry flush error fallback
+                })
             }
             eventQueue.end()
         }
