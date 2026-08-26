@@ -5,7 +5,9 @@ import { describe, it, expect, afterEach } from 'bun:test'
 import {
     getRazorpayKeyId,
     getRazorpayKeySecret,
+    getRazorpayWebhookSecret,
     verifyRazorpayOrderPayment,
+    verifyRazorpayWebhookSignature,
 } from '../../src/modules/billing/billing.utils'
 
 describe('Billing Utils - Unit Tests', () => {
@@ -39,6 +41,20 @@ describe('Billing Utils - Unit Tests', () => {
         })
     })
 
+    describe('getRazorpayWebhookSecret', () => {
+        it('should return RAZORPAY_WEBHOOK_SECRET when environment variable is configured', () => {
+            process.env.RAZORPAY_WEBHOOK_SECRET = 'whsec_test_789'
+            expect(getRazorpayWebhookSecret()).toBe('whsec_test_789')
+        })
+
+        it('should throw an error when RAZORPAY_WEBHOOK_SECRET is missing', () => {
+            delete process.env.RAZORPAY_WEBHOOK_SECRET
+            expect(() => getRazorpayWebhookSecret()).toThrow(
+                'RAZORPAY_WEBHOOK_SECRET is not configured'
+            )
+        })
+    })
+
     describe('verifyRazorpayOrderPayment', () => {
         it('should return true for valid HMAC SHA-256 signature match', () => {
             const secret = 'test_razorpay_secret_key'
@@ -67,6 +83,50 @@ describe('Billing Utils - Unit Tests', () => {
                 orderId: 'order_998877',
                 paymentId: 'pay_112233',
                 signature: 'invalid_tampered_signature',
+            })
+
+            expect(isValid).toBe(false)
+        })
+
+        it('should return false if signature length differs', () => {
+            process.env.RAZORPAY_KEY_SECRET = 'test_razorpay_secret_key'
+
+            const isValid = verifyRazorpayOrderPayment({
+                orderId: 'order_998877',
+                paymentId: 'pay_112233',
+                signature: 'short',
+            })
+
+            expect(isValid).toBe(false)
+        })
+    })
+
+    describe('verifyRazorpayWebhookSignature', () => {
+        it('should return true for valid webhook signature', () => {
+            const secret = 'test_webhook_secret_key'
+            const rawBody = JSON.stringify({ event: 'payment.captured', id: 'evt_123' })
+            const expectedSignature = crypto
+                .createHmac('sha256', secret)
+                .update(rawBody)
+                .digest('hex')
+
+            const isValid = verifyRazorpayWebhookSignature({
+                rawBody,
+                signature: expectedSignature,
+                webhookSecret: secret,
+            })
+
+            expect(isValid).toBe(true)
+        })
+
+        it('should return false for invalid webhook signature', () => {
+            const secret = 'test_webhook_secret_key'
+            const rawBody = JSON.stringify({ event: 'payment.captured', id: 'evt_123' })
+
+            const isValid = verifyRazorpayWebhookSignature({
+                rawBody,
+                signature: 'invalid_sig',
+                webhookSecret: secret,
             })
 
             expect(isValid).toBe(false)

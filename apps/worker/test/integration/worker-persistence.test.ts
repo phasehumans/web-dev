@@ -25,6 +25,7 @@ describe('Worker Automated Persistence & S3 Workspace Sync', () => {
         prisma.usageEvent.create = usageCreateMock as any
         prisma.session.findUnique = sessionFindUniqueMock as any
         prisma.session.update = sessionUpdateMock as any
+        prisma.user.update = mock(async () => ({})) as any
         prisma.$transaction = mock(async (cb: any) => cb(prisma)) as any
     })
 

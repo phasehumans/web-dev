@@ -29,18 +29,16 @@ import usageRouter from './modules/usage/usage.routes'
 
 const app = express()
 
-// Set baseline HTTP security headers
 app.use(helmet())
-
-// Enable trust proxy for proper IP resolution behind reverse proxies/load balancers
 app.set('trust proxy', true)
-
-// Attach HTTP structured logger
 app.use(httpLogger)
 
 app.use(
     express.json({
         limit: '25mb',
+        verify: (req: any, _res, buf) => {
+            req.rawBody = buf
+        },
     })
 )
 app.use(cookieParser())

@@ -100,14 +100,36 @@ export const billingRepository = {
         providerPaymentId: string
     ) {
         return prisma.$transaction(async (tx) => {
-            // Acquire row lock on user record
-            await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE`
+            const currentTx = await tx.walletTransaction.findUnique({
+                where: { id: transactionId },
+            })
 
-            // Atomically update transaction status only if it is currently PENDING
+            if (!currentTx) {
+                throw new AppError('transaction order not found', 404)
+            }
+
+            if (currentTx.userId !== userId) {
+                throw new AppError('unauthorized to verify this transaction', 403)
+            }
+
+            // Idempotency: If already credited, return current user state without re-crediting
+            if (currentTx.status === 'SUCCESS') {
+                const user = await tx.user.findUnique({
+                    where: { id: userId },
+                })
+                return {
+                    user: user || { id: userId, creditBalance: 0 },
+                    alreadyProcessed: true,
+                }
+            }
+
+            // Atomically update transaction status to SUCCESS (from PENDING or transient FAILED)
             const updateCount = await tx.walletTransaction.updateMany({
                 where: {
                     id: transactionId,
-                    status: 'PENDING',
+                    status: {
+                        in: ['PENDING', 'FAILED'],
+                    },
                 },
                 data: {
                     status: 'SUCCESS',
@@ -116,8 +138,14 @@ export const billingRepository = {
             })
 
             if (updateCount.count === 0) {
-                // If updateCount is 0, another concurrent request already completed or marked this transaction as SUCCESS/FAILED
-                throw new AppError('transaction already processed or invalid status', 400)
+                // If another concurrent request completed it in the millisecond between findUnique and updateMany
+                const user = await tx.user.findUnique({
+                    where: { id: userId },
+                })
+                return {
+                    user: user || { id: userId, creditBalance: 0 },
+                    alreadyProcessed: true,
+                }
             }
 
             const updatedUser = await tx.user.update({
@@ -129,7 +157,10 @@ export const billingRepository = {
                 },
             })
 
-            return updatedUser
+            return {
+                user: updatedUser,
+                alreadyProcessed: false,
+            }
         })
     },
 

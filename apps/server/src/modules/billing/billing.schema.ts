@@ -5,8 +5,8 @@ export const createRazorpayOrderSchema = z
         amountInCents: z
             .number()
             .int()
-            .min(2000, { message: 'Minimum amount is $20.00' })
-            .max(10000, { message: 'Maximum amount is $100.00' }), // min $20.00, max $100.00
+            .min(100, { message: 'Minimum amount is $1.00' })
+            .max(5000, { message: 'Maximum amount is $50.00' }), // min $1.00, max $50.00
         currency: z.string().trim().length(3).default('USD'),
     })
     .strict()
@@ -34,7 +34,7 @@ export const redeemCodeSchema = z
 
 export const addCreditsSchema = z
     .object({
-        amountInCents: z.number().int().min(2000).max(10000),
+        amountInCents: z.number().int().min(100).max(5000),
         paymentMethod: z.enum(['card', 'upi', 'crypto']),
     })
     .strict()

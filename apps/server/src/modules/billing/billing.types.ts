@@ -33,3 +33,9 @@ export type AddCredits = {
     amountInCents: number
     paymentMethod: string
 }
+
+export type HandleRazorpayWebhook = {
+    rawBody: string | Buffer
+    signature: string
+    eventPayload: any
+}

@@ -20,6 +20,16 @@ export const getRazorpayKeySecret = () => {
     return keySecret
 }
 
+export const getRazorpayWebhookSecret = () => {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
+
+    if (!webhookSecret) {
+        throw new Error('RAZORPAY_WEBHOOK_SECRET is not configured')
+    }
+
+    return webhookSecret
+}
+
 export const verifyRazorpayOrderPayment = (data: {
     orderId: string
     paymentId: string
@@ -32,5 +42,31 @@ export const verifyRazorpayOrderPayment = (data: {
         .update(`${orderId}|${paymentId}`)
         .digest('hex')
 
-    return generatedSignature === signature
+    const a = Buffer.from(generatedSignature, 'utf8')
+    const b = Buffer.from(signature, 'utf8')
+
+    if (a.length !== b.length) {
+        return false
+    }
+
+    return crypto.timingSafeEqual(a, b)
+}
+
+export const verifyRazorpayWebhookSignature = (data: {
+    rawBody: string | Buffer
+    signature: string
+    webhookSecret?: string
+}) => {
+    const { rawBody, signature, webhookSecret } = data
+    const secret = webhookSecret || getRazorpayWebhookSecret()
+    const generatedSignature = crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
+
+    const a = Buffer.from(generatedSignature, 'utf8')
+    const b = Buffer.from(signature, 'utf8')
+
+    if (a.length !== b.length) {
+        return false
+    }
+
+    return crypto.timingSafeEqual(a, b)
 }

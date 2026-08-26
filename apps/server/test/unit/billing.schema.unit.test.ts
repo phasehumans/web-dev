@@ -10,7 +10,7 @@ import {
 
 describe('Billing Schema - Unit Tests', () => {
     describe('createRazorpayOrderSchema', () => {
-        it('should pass with valid amount within range ($20.00 to $100.00 in cents)', () => {
+        it('should pass with valid amount within range ($1.00 to $50.00 in cents)', () => {
             const validPayload = {
                 amountInCents: 2000,
                 currency: 'USD',
@@ -24,20 +24,20 @@ describe('Billing Schema - Unit Tests', () => {
         })
 
         it('should default currency to USD if omitted', () => {
-            const result = createRazorpayOrderSchema.safeParse({ amountInCents: 5000 })
+            const result = createRazorpayOrderSchema.safeParse({ amountInCents: 1000 })
             expect(result.success).toBe(true)
             if (result.success) {
                 expect(result.data.currency).toBe('USD')
             }
         })
 
-        it('should fail if amount is below minimum ($20.00 / 2000 cents)', () => {
-            const result = createRazorpayOrderSchema.safeParse({ amountInCents: 1500 })
+        it('should fail if amount is below minimum ($1.00 / 100 cents)', () => {
+            const result = createRazorpayOrderSchema.safeParse({ amountInCents: 50 })
             expect(result.success).toBe(false)
         })
 
-        it('should fail if amount exceeds maximum ($100.00 / 10000 cents)', () => {
-            const result = createRazorpayOrderSchema.safeParse({ amountInCents: 15000 })
+        it('should fail if amount exceeds maximum ($50.00 / 5000 cents)', () => {
+            const result = createRazorpayOrderSchema.safeParse({ amountInCents: 5500 })
             expect(result.success).toBe(false)
         })
 

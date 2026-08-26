@@ -72,6 +72,7 @@ const envSchema = z
         RAZORPAY_KEY_SECRET: emptyAsUndefined,
         RAZORPAY_PRO_PLAN_ID: emptyAsUndefined,
         RAZORPAY_WEBHOOK_SECRET: emptyAsUndefined,
+        USD_TO_INR_RATE: z.coerce.number().default(95.26),
 
         COINBASE_API_KEY: emptyAsUndefined,
         COINBASE_WEBHOOK_SECRET: emptyAsUndefined,
@@ -94,7 +95,6 @@ const envSchema = z
         GITHUB_APP_NAME: emptyAsUndefined,
         GITHUB_APP_PRIVATE_KEY: emptyAsUndefined,
         GITHUB_APP_WEBHOOK_SECRET: emptyAsUndefined,
-        USD_TO_INR_RATE: z.coerce.number().default(84),
     })
     .superRefine((data, ctx) => {
         if (data.NODE_ENV === 'production') {

@@ -46,7 +46,7 @@ model User {
   supabaseTokenExpiresAt DateTime?
   supabaseTokenScope     String?
   supabaseUserId         String?
-  creditBalance          Int             @default(0)
+  creditBalance          Float           @default(0)
   hasCompletedOnboarding Boolean         @default(false)
   welcomeCardDone        Boolean         @default(false)
   githubCardDone         Boolean         @default(false)
@@ -315,7 +315,7 @@ model UsageEvent {
   inputTokens       Int      @default(0)
   outputTokens      Int      @default(0)
   totalTokens       Int      @default(0)
-  costInCents       Int      @default(0)
+  costInCents       Float    @default(0)
   chatId            String?
   externalRequestId String?  @unique
   metadata          Json?

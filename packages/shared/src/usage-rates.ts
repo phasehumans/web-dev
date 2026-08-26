@@ -113,11 +113,12 @@ export function calculateGenerationCost(data: {
 
     const rawCost = inputTokens * inputCentsPerToken + outputTokens * outputCentsPerToken
 
-    if (rawCost === 0) {
+    if (rawCost <= 0) {
         return 0
     }
 
-    return Math.max(Math.ceil(rawCost), 0)
+    // Exact sub-cent precision rounded to 6 decimal places (micro-cent resolution)
+    return Math.round(rawCost * 1_000_000) / 1_000_000
 }
 
 export function startOfUtcMonth(date: Date = new Date()): Date {

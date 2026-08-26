@@ -118,7 +118,7 @@ describe('Usage Rates & Cost Calculation - Unit Tests', () => {
             expect(cost).toBe(0)
         })
 
-        it('calculates accurate cost in cents with ceiling rounding', () => {
+        it('calculates accurate cost in cents with sub-cent precision', () => {
             // For gemini-3.6-flash: input = $0.10/1M, output = $0.40/1M
             // 1,000,000 input tokens = $0.10 = 10 cents
             // 1,000,000 output tokens = $0.40 = 40 cents
@@ -130,13 +130,14 @@ describe('Usage Rates & Cost Calculation - Unit Tests', () => {
             expect(cost).toBe(50) // 10 + 40 cents
         })
 
-        it('enforces minimum of 1 cent for non-zero tokens', () => {
+        it('supports exact sub-cent micro-cent tracking for small token batches', () => {
+            // For 100 input tokens: 100 * (0.10 / 10,000) = 0.001 cents
             const cost = usageService.calculateGenerationCost({
                 modelName: 'gemini-3.6-flash',
-                inputTokens: 10,
-                outputTokens: 10,
+                inputTokens: 100,
+                outputTokens: 0,
             })
-            expect(cost).toBe(1)
+            expect(cost).toBe(0.001)
         })
     })
 })

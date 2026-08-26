@@ -97,6 +97,35 @@ const addCredits = asyncHandler(async (req: Request, res: Response) => {
     throw new AppError('Direct credit addition is disabled. Please use payment checkout.', 403)
 })
 
+const handleRazorpayWebhook = asyncHandler(async (req: Request, res: Response) => {
+    const signature = req.headers['x-razorpay-signature'] as string | undefined
+
+    if (!signature) {
+        throw new AppError('missing razorpay webhook signature', 400)
+    }
+
+    const rawBody = (req as any).rawBody
+        ? (req as any).rawBody
+        : Buffer.isBuffer(req.body)
+          ? req.body
+          : typeof req.body === 'string'
+            ? req.body
+            : JSON.stringify(req.body)
+
+    const eventPayload =
+        typeof req.body === 'object' && !Buffer.isBuffer(req.body)
+            ? req.body
+            : JSON.parse(rawBody.toString('utf8'))
+
+    const result = await billingService.handleRazorpayWebhook({
+        rawBody,
+        signature,
+        eventPayload,
+    })
+
+    return sendSuccess(res, 'webhook processed successfully', result)
+})
+
 export const billingController = {
     getOverview,
     createRazorpayOrder,
@@ -104,4 +133,5 @@ export const billingController = {
     getCreditsHistory,
     redeemCode,
     addCredits,
+    handleRazorpayWebhook,
 }

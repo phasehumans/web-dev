@@ -15,13 +15,14 @@ describe('Usage Service - Unit Tests', () => {
             expect(cost).toBe(0)
         })
 
-        it('should return minimum 1 cent for non-zero tokens', () => {
+        it('should calculate accurate fractional cost for small token counts', () => {
             const cost = usageService.calculateGenerationCost({
                 modelName: 'gemini-2.5-flash',
                 inputTokens: 10,
                 outputTokens: 10,
             })
-            expect(cost).toBeGreaterThanOrEqual(1)
+            expect(cost).toBeGreaterThan(0)
+            expect(cost).toBeLessThan(1)
         })
 
         it('should resolve cost correctly for heavy token counts', () => {

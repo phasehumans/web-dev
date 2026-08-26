@@ -276,18 +276,15 @@ async function updateCredits(sessionId: string, event: any) {
         )
 
         await prisma.$transaction(async (tx) => {
-            try {
-                const rows: any[] =
-                    await tx.$queryRaw`SELECT "creditBalance" FROM "User" WHERE id = ${session.userId} FOR UPDATE`
-                const currentBalance = rows && rows.length > 0 ? rows[0].creditBalance : 0
-                const newBalance = currentBalance - calculatedCost
-
+            if (session.userId) {
                 await tx.user.update({
                     where: { id: session.userId },
-                    data: { creditBalance: newBalance },
+                    data: {
+                        creditBalance: {
+                            decrement: calculatedCost,
+                        },
+                    },
                 })
-            } catch {
-                // Intentionally swallowed: fallback during unit testing or missing mock user
             }
 
             await tx.usageEvent.create({

@@ -74,15 +74,16 @@ describe('Billing Integration Tests', () => {
 
         expect(res.status).toBe(200)
         expect(res.body.data.creditBalance).toBe(1000)
+        expect(res.body.data.usdToInrRate).toBeDefined()
         expect(res.body.data.usage).toBeDefined()
         expect(res.body.data.transactions).toBeArray()
     })
 
-    it('POST /api/v1/billing/wallet/order/razorpay - rejects amount below minimum ($20.00)', async () => {
+    it('POST /api/v1/billing/wallet/order/razorpay - rejects amount below minimum ($1.00)', async () => {
         const res = await request(app)
             .post('/api/v1/billing/wallet/order/razorpay')
             .set('Authorization', `Bearer ${accessToken}`)
-            .send({ amountInCents: 1000 })
+            .send({ amountInCents: 50 })
 
         expect(res.status).toBe(400)
     })
@@ -93,7 +94,7 @@ describe('Billing Integration Tests', () => {
         createdOrderId = `order_${Date.now()}`
         spyOn(razorpay.orders, 'create').mockImplementation((async () => ({
             id: createdOrderId,
-            amount: 168000,
+            amount: 190520,
             currency: 'INR',
         })) as any)
 
@@ -105,6 +106,7 @@ describe('Billing Integration Tests', () => {
         expect(res.status).toBe(201)
         expect(res.body.data.orderId).toBe(createdOrderId)
         expect(res.body.data.keyId).toBe('rzp_test_key_123')
+        expect(res.body.data.usdToInrRate).toBeDefined()
 
         const dbTx = await prisma.walletTransaction.findFirst({
             where: { providerOrderId: createdOrderId },
@@ -153,6 +155,68 @@ describe('Billing Integration Tests', () => {
         expect(dbTx?.status).toBe('SUCCESS')
     })
 
+    it('POST /api/v1/billing/wallet/verify/razorpay - is idempotent on already verified order', async () => {
+        const paymentId = `pay_dup_${Date.now()}`
+        const signature = crypto
+            .createHmac('sha256', razorpaySecret)
+            .update(`${createdOrderId}|${paymentId}`)
+            .digest('hex')
+
+        const res = await request(app)
+            .post('/api/v1/billing/wallet/verify/razorpay')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                razorpay_order_id: createdOrderId,
+                razorpay_payment_id: paymentId,
+                razorpay_signature: signature,
+            })
+
+        expect(res.status).toBe(200)
+        expect(res.body.data.success).toBe(true)
+        expect(res.body.data.alreadyProcessed).toBe(true)
+    })
+
+    it('POST /api/v1/billing/wallet/verify/razorpay - recovers and fulfills order previously marked FAILED by failed attempt', async () => {
+        const failedOrderId = `order_failed_then_retry_${Date.now()}`
+        const retryPaymentId = `pay_retry_${Date.now()}`
+
+        // Create transaction in FAILED status (simulating first attempt failure)
+        await prisma.walletTransaction.create({
+            data: {
+                userId: testUserId,
+                amountInCents: 2000,
+                currency: 'USD',
+                provider: 'RAZORPAY',
+                providerOrderId: failedOrderId,
+                status: 'FAILED',
+            },
+        })
+
+        const retrySignature = crypto
+            .createHmac('sha256', razorpaySecret)
+            .update(`${failedOrderId}|${retryPaymentId}`)
+            .digest('hex')
+
+        const res = await request(app)
+            .post('/api/v1/billing/wallet/verify/razorpay')
+            .set('Authorization', `Bearer ${accessToken}`)
+            .send({
+                razorpay_order_id: failedOrderId,
+                razorpay_payment_id: retryPaymentId,
+                razorpay_signature: retrySignature,
+            })
+
+        expect(res.status).toBe(200)
+        expect(res.body.data.success).toBe(true)
+        expect(res.body.data.newBalance).toBe(5000) // 3000 + 2000 = 5000
+
+        const dbTx = await prisma.walletTransaction.findFirst({
+            where: { providerOrderId: failedOrderId },
+        })
+        expect(dbTx?.status).toBe('SUCCESS')
+        expect(dbTx?.providerPaymentId).toBe(retryPaymentId)
+    })
+
     it('GET /api/v1/billing/credits/history - returns usage and credit history', async () => {
         const res = await request(app)
             .get('/api/v1/billing/credits/history?limit=10&offset=0')
@@ -163,7 +227,7 @@ describe('Billing Integration Tests', () => {
         expect(res.body.data.limit).toBe(10)
     })
 
-    it('POST /api/v1/billing/credits/add - returns 403 as direct credit addition is disabled', async () => {
+    it('POST /api/v1/billing/credits/add - returns 404 as dead route is removed', async () => {
         const res = await request(app)
             .post('/api/v1/billing/credits/add')
             .set('Authorization', `Bearer ${accessToken}`)
@@ -172,8 +236,7 @@ describe('Billing Integration Tests', () => {
                 paymentMethod: 'card',
             })
 
-        expect(res.status).toBe(403)
-        expect(res.body.message).toContain('Direct credit addition is disabled')
+        expect(res.status).toBe(404)
     })
 
     it('POST /api/v1/billing/redeem-code - redeems a valid code and increases balance', async () => {
@@ -196,10 +259,79 @@ describe('Billing Integration Tests', () => {
 
         expect(res.status).toBe(200)
         expect(res.body.data.creditAmount).toBe(1500)
-        expect(res.body.data.newBalance).toBe(4500) // 3000 + 1500 = 4500
+        expect(res.body.data.newBalance).toBe(6500) // 5000 + 1500 = 6500
 
         // Cleanup redeem code
         await prisma.redeemCodeClaim.deleteMany({ where: { redeemCodeId: redeemCode.id } })
         await prisma.redeemCode.delete({ where: { id: redeemCode.id } })
+    })
+
+    it('POST /api/v1/billing/webhook/razorpay - rejects missing or invalid signature', async () => {
+        process.env.RAZORPAY_WEBHOOK_SECRET = 'test_webhook_secret_key'
+
+        const res = await request(app)
+            .post('/api/v1/billing/webhook/razorpay')
+            .send({ event: 'payment.captured' })
+
+        expect(res.status).toBe(400)
+    })
+
+    it('POST /api/v1/billing/webhook/razorpay - processes valid payment.captured webhook and is idempotent', async () => {
+        const webhookSecret = 'test_webhook_secret_key'
+        process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret
+
+        const webhookOrderId = `order_wh_${Date.now()}`
+        const webhookPaymentId = `pay_wh_${Date.now()}`
+
+        // Create pending transaction
+        await prisma.walletTransaction.create({
+            data: {
+                userId: testUserId,
+                amountInCents: 2000,
+                currency: 'USD',
+                provider: 'RAZORPAY',
+                providerOrderId: webhookOrderId,
+                status: 'PENDING',
+            },
+        })
+
+        const payload = {
+            event: 'payment.captured',
+            payload: {
+                payment: {
+                    entity: {
+                        id: webhookPaymentId,
+                        order_id: webhookOrderId,
+                        amount: 190520,
+                    },
+                },
+            },
+        }
+
+        const rawBody = JSON.stringify(payload)
+        const signature = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex')
+
+        const res = await request(app)
+            .post('/api/v1/billing/webhook/razorpay')
+            .set('x-razorpay-signature', signature)
+            .send(payload)
+
+        expect(res.status).toBe(200)
+        expect(res.body.data.status).toBe('processed')
+
+        const dbTx = await prisma.walletTransaction.findFirst({
+            where: { providerOrderId: webhookOrderId },
+        })
+        expect(dbTx?.status).toBe('SUCCESS')
+        expect(dbTx?.providerPaymentId).toBe(webhookPaymentId)
+
+        // Repeat webhook call - verify idempotency
+        const resDup = await request(app)
+            .post('/api/v1/billing/webhook/razorpay')
+            .set('x-razorpay-signature', signature)
+            .send(payload)
+
+        expect(resDup.status).toBe(200)
+        expect(resDup.body.data.status).toBe('already_processed')
     })
 })

@@ -1,13 +1,22 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check } from 'lucide-react'
 import React, { useState } from 'react'
 
 import { billingAPI } from '@/features/billing/api/billing'
+import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
+import { profileAPI } from '@/features/profile/api/profile'
 import { Modal } from '@/shared/components/ui/Modal'
 
 interface AddCreditsModalProps {
     onClose: () => void
 }
+
+const PRESET_TIERS = [
+    { amount: 5, label: 'Starter' },
+    { amount: 10, label: 'Popular', badge: 'Popular' },
+    { amount: 25, label: 'Developer' },
+    { amount: 50, label: 'Pro' },
+]
 
 const loadRazorpayScript = () => {
     return new Promise<boolean>((resolve) => {
@@ -25,7 +34,14 @@ const loadRazorpayScript = () => {
 
 export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => {
     const queryClient = useQueryClient()
-    const [amountStr, setAmountStr] = useState('20')
+    const { data: profile } = useQuery({
+        queryKey: ['profile'],
+        queryFn: profileAPI.getProfile,
+        staleTime: 60000,
+    })
+    const { data: overview } = useBillingOverview()
+    const usdToInrRate = overview?.usdToInrRate ?? 95.26
+    const [amountStr, setAmountStr] = useState('10')
     const [error, setError] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -42,9 +58,14 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
         }
 
         const amountNum = parseInt(cleanVal, 10)
-        if (amountNum < 20 || amountNum > 100) {
-            setError('Amount must be a whole number between $20 and $100.')
+        if (amountNum < 1 || amountNum > 50) {
+            setError('Amount must be a whole number between $1 and $50.')
         }
+    }
+
+    const selectPreset = (amount: number) => {
+        setAmountStr(amount.toString())
+        setError(null)
     }
 
     const handlePayment = async () => {
@@ -54,8 +75,8 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
         }
 
         const amount = parseInt(amountStr, 10)
-        if (isNaN(amount) || amount < 20 || amount > 100) {
-            setError('Amount must be a whole number between $20 and $100.')
+        if (isNaN(amount) || amount < 1 || amount > 50) {
+            setError('Amount must be a whole number between $1 and $50.')
             return
         }
 
@@ -117,11 +138,11 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
                     },
                 },
                 prefill: {
-                    name: '',
-                    email: '',
+                    name: profile?.name || '',
+                    email: profile?.email || '',
                 },
                 theme: {
-                    color: '#FFFFFF', // clean white theme for checkout button
+                    color: '#FFFFFF',
                 },
             }
 
@@ -135,25 +156,40 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
         }
     }
 
+    const amountNum = parseInt(amountStr, 10)
+    const inrEstimate =
+        !isNaN(amountNum) && amountNum >= 1 && amountNum <= 50
+            ? Math.round(amountNum * usdToInrRate)
+            : null
+
     return (
         <Modal
             isOpen={true}
             onClose={onClose}
             title="Add Wallet Credits"
-            description="Enter a USD amount to top up your credits. Minimum $20, maximum $100."
+            description="Top up your wallet balance to continue using AI models ($1.00 to $50.00)."
             variant="premium"
         >
-            <div className="flex flex-col gap-6 py-2">
-                {/* amount input */}
-                <div className="flex flex-col gap-2">
-                    <label
-                        htmlFor="credit-amount-input"
-                        className="text-[11px] font-semibold text-[#8F8E8D] uppercase tracking-wider block"
-                    >
-                        Amount (USD)
-                    </label>
-                    <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-mono text-lg font-medium">
+            <div className="flex flex-col gap-4 py-1">
+                {/* Hero Amount Card */}
+                <div className="flex flex-col gap-3.5 p-5 bg-[#141414] border border-[#2B2A27] rounded-2xl">
+                    <div className="flex items-center justify-between">
+                        <label
+                            htmlFor="credit-amount-input"
+                            className="text-[11px] font-semibold text-[#8F8E8D] uppercase tracking-wider block"
+                        >
+                            Enter Amount
+                        </label>
+                        {inrEstimate && !error && (
+                            <span className="text-[11.5px] text-[#A1A09E] font-mono">
+                                ≈ ₹{inrEstimate.toLocaleString('en-IN')} INR
+                            </span>
+                        )}
+                    </div>
+
+                    {/* Large focal input */}
+                    <div className="relative flex items-center">
+                        <span className="text-neutral-400 font-mono text-3xl font-medium mr-2 select-none">
                             $
                         </span>
                         <input
@@ -163,40 +199,73 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
                             pattern="[0-9]*"
                             value={amountStr}
                             onChange={(e) => handleAmountChange(e.target.value)}
-                            className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-xl pl-9 pr-4 py-4 text-white text-2xl font-mono font-medium focus:outline-none focus:border-white transition-colors shadow-inner"
-                            placeholder="20"
+                            className="w-full bg-transparent text-white text-3xl sm:text-4xl font-mono font-semibold focus:outline-none placeholder-neutral-700 tracking-tight"
+                            placeholder="10"
                             disabled={isProcessing || !!successMessage}
                             autoComplete="off"
+                            autoFocus
                         />
                     </div>
-                    {/* error displayed directly below input in simple red text */}
-                    {error && (
-                        <p className="text-[12px] text-red-500 mt-1 px-1 animate-in fade-in duration-200">
-                            {error}
-                        </p>
-                    )}
+
+                    {/* Minimalist preset pills */}
+                    <div className="flex items-center gap-2 pt-2 border-t border-[#222120]">
+                        <span className="text-[11px] text-[#7B7A79] mr-1 hidden sm:inline">
+                            Presets:
+                        </span>
+                        {PRESET_TIERS.map((tier) => {
+                            const isSelected = amountNum === tier.amount
+                            return (
+                                <button
+                                    key={tier.amount}
+                                    type="button"
+                                    onClick={() => selectPreset(tier.amount)}
+                                    disabled={isProcessing || !!successMessage}
+                                    className={`px-3 py-1.5 rounded-lg text-[12px] font-mono transition-all active:scale-95 cursor-pointer ${
+                                        isSelected
+                                            ? 'bg-white text-black font-semibold shadow-sm'
+                                            : 'bg-white/[0.04] text-[#A1A09E] hover:text-white hover:bg-white/[0.08] border border-[#2B2A27]'
+                                    }`}
+                                >
+                                    ${tier.amount}
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
 
-                {/* success messaging (error is displayed above) */}
+                {/* Subtext info */}
+                <div className="px-1 flex items-center justify-between text-[11.5px] text-[#7B7A79] font-mono">
+                    <span>Rate: $1 ≈ ₹{usdToInrRate}</span>
+                    <span>Billed via UPI / Cards</span>
+                </div>
+
+                {/* Error message */}
+                {error && (
+                    <div className="text-[12px] text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-xl animate-in fade-in duration-200">
+                        {error}
+                    </div>
+                )}
+
+                {/* Success messaging */}
                 {successMessage && (
-                    <div className="flex items-center gap-2 text-xs text-emerald-500 bg-emerald-500/5 border border-emerald-500/10 p-3.5 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl animate-in fade-in slide-in-from-top-2 duration-200">
                         <Check className="h-4 w-4 shrink-0" />
                         <span>{successMessage}</span>
                     </div>
                 )}
 
-                {/* footer controls */}
-                <div className="mt-2 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 opacity-60">
+                {/* Footer actions */}
+                <div className="mt-2 flex items-center justify-between gap-3 pt-2 border-t border-[#222120]">
+                    <div className="flex items-center gap-1.5 opacity-60">
                         <svg
                             fill="#FFFFFF"
                             viewBox="0 0 24 24"
-                            className="h-5 w-5"
+                            className="h-4 w-4"
                             xmlns="http://www.w3.org/2000/svg"
                         >
                             <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24zM14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z" />
                         </svg>
-                        <span className="text-[11px] font-medium tracking-wide whitespace-nowrap text-[#8F8E8D]">
+                        <span className="text-[10.5px] font-medium tracking-wide whitespace-nowrap text-[#8F8E8D]">
                             SECURED BY RAZORPAY
                         </span>
                     </div>
@@ -205,7 +274,7 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
                         type="button"
                         onClick={handlePayment}
                         disabled={isProcessing || !!successMessage || !amountStr || !!error}
-                        className="bg-white text-black hover:bg-neutral-200 active:scale-95 transition-[transform,background-color,border-color,color] duration-200 text-[13px] font-semibold px-6 py-2.5 rounded-xl focus:outline-none disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center min-w-[150px] cursor-pointer"
+                        className="bg-white text-black hover:bg-neutral-200 active:scale-95 transition-[transform,background-color,border-color,color] duration-200 text-[13px] font-semibold px-5 py-2.5 rounded-xl focus:outline-none disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center min-w-[140px] cursor-pointer shadow-sm"
                     >
                         {isProcessing ? (
                             <div className="flex items-center gap-1.5 justify-center">
@@ -213,7 +282,7 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
                                 <span>Processing...</span>
                             </div>
                         ) : (
-                            'Continue'
+                            `Pay ${inrEstimate ? `₹${inrEstimate.toLocaleString('en-IN')}` : `$${amountStr || 0}`}`
                         )}
                     </button>
                 </div>

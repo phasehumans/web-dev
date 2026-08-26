@@ -6,7 +6,11 @@ import { AppError } from '../../shared/appError'
 import { notificationService } from '../notification/notification.service'
 
 import { billingRepository } from './billing.repository'
-import { getRazorpayKeyId, verifyRazorpayOrderPayment } from './billing.utils'
+import {
+    getRazorpayKeyId,
+    verifyRazorpayOrderPayment,
+    verifyRazorpayWebhookSignature,
+} from './billing.utils'
 
 import type {
     GetOverview,
@@ -15,6 +19,7 @@ import type {
     CreditsHistory,
     AddCredits,
     RedeemCode,
+    HandleRazorpayWebhook,
 } from './billing.types'
 
 const getOverview = async (data: GetOverview) => {
@@ -37,11 +42,13 @@ const getOverview = async (data: GetOverview) => {
     }))
 
     const giftedCredits = claims.reduce((sum: number, claim: any) => sum + claim.amountInCents, 0)
+    const USD_TO_INR_RATE = env.USD_TO_INR_RATE ?? 95.26
 
     return {
         creditBalance: user.creditBalance,
         giftedCredits,
         createdAt: user.createdAt,
+        usdToInrRate: USD_TO_INR_RATE,
         usage: {
             inputTokens: aggregate._sum.inputTokens ?? 0,
             outputTokens: aggregate._sum.outputTokens ?? 0,
@@ -65,17 +72,40 @@ const createRazorpayOrder = async (data: CreateRazorpayOrder) => {
 
     // razorpay requires inr to enable upi and domestic payment options.
     // convert usd cents to inr paise using configurable USD_TO_INR_RATE.
-    const USD_TO_INR_RATE = env.USD_TO_INR_RATE ?? 84
-    const amountInPaise = amountInCents * USD_TO_INR_RATE
+    const USD_TO_INR_RATE = env.USD_TO_INR_RATE ?? 95.26
+    const amountInPaise = Math.round(amountInCents * USD_TO_INR_RATE)
+    const keyId = getRazorpayKeyId()
 
-    const order = await razorpay.orders.create({
-        amount: amountInPaise,
-        currency: 'INR',
-        notes: {
-            userId,
-            amountInCents: amountInCents.toString(),
-        },
-    })
+    let order: any
+    try {
+        order = await razorpay.orders.create({
+            amount: amountInPaise,
+            currency: 'INR',
+            notes: {
+                userId,
+                amountInCents: amountInCents.toString(),
+            },
+        })
+    } catch (err: any) {
+        console.error('[Razorpay Order Creation Error]:', err)
+        const desc =
+            err?.error?.description ||
+            err?.error?.message ||
+            err?.message ||
+            'Razorpay order creation failed'
+
+        if (
+            err?.statusCode === 401 ||
+            (typeof desc === 'string' && desc.toLowerCase().includes('auth'))
+        ) {
+            throw new AppError(
+                'Payment gateway authentication failed. Please verify RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET credentials.',
+                502
+            )
+        }
+
+        throw new AppError(`Failed to create payment order: ${desc}`, 502)
+    }
 
     await billingRepository.createWalletTransaction({
         userId,
@@ -86,10 +116,11 @@ const createRazorpayOrder = async (data: CreateRazorpayOrder) => {
     })
 
     return {
-        keyId: getRazorpayKeyId(),
+        keyId,
         orderId: order.id,
         amount: order.amount,
         currency: order.currency,
+        usdToInrRate: USD_TO_INR_RATE,
     }
 }
 
@@ -120,15 +151,28 @@ const verifyRazorpayPayment = async (data: VerifyRazorpayPayment) => {
     }
 
     if (transaction.status === 'SUCCESS') {
-        return { success: true, alreadyProcessed: true }
+        const user = await billingRepository.findUserById(userId)
+        return {
+            success: true,
+            alreadyProcessed: true,
+            newBalance: (user as any)?.creditBalance,
+        }
     }
 
-    const updatedUser = await billingRepository.verifyAndUpdateWalletTransaction(
+    const result = await billingRepository.verifyAndUpdateWalletTransaction(
         transaction.id,
         userId,
         transaction.amountInCents,
         razorpay_payment_id
     )
+
+    if (result.alreadyProcessed) {
+        return {
+            success: true,
+            alreadyProcessed: true,
+            newBalance: result.user.creditBalance,
+        }
+    }
 
     try {
         await notificationService.sendNotificationToUser({
@@ -143,7 +187,7 @@ const verifyRazorpayPayment = async (data: VerifyRazorpayPayment) => {
 
     return {
         success: true,
-        newBalance: updatedUser.creditBalance,
+        newBalance: result.user.creditBalance,
     }
 }
 
@@ -258,6 +302,90 @@ const addCredits = async (data: AddCredits) => {
     }
 }
 
+const handleRazorpayWebhook = async (data: HandleRazorpayWebhook) => {
+    const { rawBody, signature, eventPayload } = data
+
+    const isValid = verifyRazorpayWebhookSignature({
+        rawBody,
+        signature,
+    })
+
+    if (!isValid) {
+        throw new AppError('invalid razorpay webhook signature', 400)
+    }
+
+    const event = eventPayload?.event
+    const paymentEntity = eventPayload?.payload?.payment?.entity
+    const orderEntity = eventPayload?.payload?.order?.entity
+
+    if (event === 'payment.captured' || event === 'order.paid') {
+        const orderId = paymentEntity?.order_id || orderEntity?.id
+        const paymentId = paymentEntity?.id || 'webhook_captured'
+
+        if (!orderId) {
+            return { received: true, status: 'ignored_no_order_id' }
+        }
+
+        const transaction = await billingRepository.findWalletTransactionByOrderId(orderId)
+        if (!transaction) {
+            return { received: true, status: 'order_not_found' }
+        }
+
+        if (transaction.status === 'SUCCESS') {
+            return { received: true, status: 'already_processed' }
+        }
+
+        const result = await billingRepository.verifyAndUpdateWalletTransaction(
+            transaction.id,
+            transaction.userId,
+            transaction.amountInCents,
+            paymentId
+        )
+
+        if (result.alreadyProcessed) {
+            return { received: true, status: 'already_processed' }
+        }
+
+        try {
+            await notificationService.sendNotificationToUser({
+                userId: transaction.userId,
+                title: 'Credits Added',
+                message: `Successfully added $${(transaction.amountInCents / 100).toFixed(2)} to your wallet!`,
+                type: 'SUCCESS',
+            })
+        } catch (err) {
+            console.error('Failed to send webhook notification:', err)
+        }
+
+        return {
+            received: true,
+            status: 'processed',
+            newBalance: result.user.creditBalance,
+        }
+    }
+
+    if (event === 'payment.failed') {
+        const orderId = paymentEntity?.order_id
+        const paymentId = paymentEntity?.id
+        const errorDescription =
+            paymentEntity?.error_description || paymentEntity?.error_reason || 'Payment failed'
+
+        if (orderId) {
+            const transaction = await billingRepository.findWalletTransactionByOrderId(orderId)
+            if (transaction && transaction.status === 'PENDING') {
+                await billingRepository.updateWalletTransaction(transaction.id, {
+                    status: 'FAILED',
+                    providerPaymentId: paymentId,
+                    metadata: { error: errorDescription },
+                })
+                return { received: true, status: 'failed_recorded' }
+            }
+        }
+    }
+
+    return { received: true, status: 'ignored' }
+}
+
 export const billingService = {
     getOverview,
     createRazorpayOrder,
@@ -265,4 +393,5 @@ export const billingService = {
     getCreditsHistory,
     redeemCode,
     addCredits,
+    handleRazorpayWebhook,
 }

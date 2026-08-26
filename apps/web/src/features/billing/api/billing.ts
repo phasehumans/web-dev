@@ -4,6 +4,7 @@ export interface BillingOverview {
     creditBalance: number
     giftedCredits: number
     createdAt: string
+    usdToInrRate?: number
     usage: {
         inputTokens: number
         outputTokens: number
@@ -36,6 +37,7 @@ export interface CreateRazorpayOrderResponse {
     orderId: string
     amount: number
     currency: string
+    usdToInrRate?: number
 }
 
 export interface VerifyRazorpayPaymentInput {

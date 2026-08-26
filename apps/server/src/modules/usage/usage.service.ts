@@ -37,12 +37,12 @@ const calculateGenerationCost = (data: CalculateGenerationCost): number => {
 
     const rawCost = inputTokens * inputCentsPerToken + outputTokens * outputCentsPerToken
 
-    if (rawCost === 0) {
+    if (rawCost <= 0) {
         return 0
     }
 
-    // ceiling rounding to integer cents
-    return Math.max(Math.ceil(rawCost), 0)
+    // Exact sub-cent precision rounded to 6 decimal places (micro-cent resolution)
+    return Math.round(rawCost * 1_000_000) / 1_000_000
 }
 
 const startOfUtcMonth = (date: Date) => {

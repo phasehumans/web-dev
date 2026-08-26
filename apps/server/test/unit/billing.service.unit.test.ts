@@ -64,6 +64,7 @@ describe('Billing Service - Unit Tests', () => {
                 const res = await billingService.getOverview({ userId: 'user-1' })
                 expect(res.creditBalance).toBe(5000)
                 expect(res.giftedCredits).toBe(1000)
+                expect(res.usdToInrRate).toBe(95.26)
                 expect(res.usage.totalTokens).toBe(300)
                 expect(res.usage.costInCents).toBe(150)
                 expect(res.claims.length).toBe(1)
@@ -104,15 +105,16 @@ describe('Billing Service - Unit Tests', () => {
                     amountInCents: 2000, // $20 USD
                 })
 
-                // $20 * 84 INR = 1680 INR = 168000 Paise
-                expect(createdOrderPayload.amount).toBe(168000)
+                // $20 * 95.26 INR = 1905.2 INR = 190520 Paise
+                expect(createdOrderPayload.amount).toBe(190520)
                 expect(createdOrderPayload.currency).toBe('INR')
                 expect(createdTxPayload.amountInCents).toBe(2000)
                 expect(createdTxPayload.providerOrderId).toBe('order_rzp_12345')
 
                 expect(res.keyId).toBe('rzp_test_key_123')
                 expect(res.orderId).toBe('order_rzp_12345')
-                expect(res.amount).toBe(168000)
+                expect(res.amount).toBe(190520)
+                expect(res.usdToInrRate).toBe(95.26)
             } finally {
                 razorpay.orders.create = originalOrdersCreate
                 billingRepository.createWalletTransaction = originalCreateTx
@@ -252,8 +254,11 @@ describe('Billing Service - Unit Tests', () => {
             })) as any
 
             billingRepository.verifyAndUpdateWalletTransaction = (async () => ({
-                id: 'user-1',
-                creditBalance: 7000,
+                user: {
+                    id: 'user-1',
+                    creditBalance: 7000,
+                },
+                alreadyProcessed: false,
             })) as any
 
             let notificationSent = false
@@ -416,6 +421,195 @@ describe('Billing Service - Unit Tests', () => {
                 billingRepository.findUserByIdForCredits = originalFindUser
                 billingRepository.addCredits = originalAddCredits
                 notificationService.sendNotificationToUser = originalSendNotif
+            }
+        })
+    })
+
+    describe('handleRazorpayWebhook', () => {
+        const webhookSecret = 'test_wh_secret_999'
+
+        it('should throw AppError 400 when webhook signature is invalid', async () => {
+            process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret
+
+            const payload = { event: 'payment.captured' }
+            const rawBody = JSON.stringify(payload)
+
+            await expect(
+                billingService.handleRazorpayWebhook({
+                    rawBody,
+                    signature: 'invalid_sig',
+                    eventPayload: payload,
+                })
+            ).rejects.toThrow(new AppError('invalid razorpay webhook signature', 400))
+        })
+
+        it('should process payment.captured event, update transaction, and increment credits', async () => {
+            process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret
+
+            const orderId = 'order_wh_123'
+            const paymentId = 'pay_wh_456'
+            const payload = {
+                event: 'payment.captured',
+                payload: {
+                    payment: {
+                        entity: {
+                            id: paymentId,
+                            order_id: orderId,
+                            amount: 190520,
+                        },
+                    },
+                },
+            }
+            const rawBody = JSON.stringify(payload)
+            const signature = crypto
+                .createHmac('sha256', webhookSecret)
+                .update(rawBody)
+                .digest('hex')
+
+            const originalFindTx = billingRepository.findWalletTransactionByOrderId
+            const originalVerifyUpdate = billingRepository.verifyAndUpdateWalletTransaction
+            const originalSendNotif = notificationService.sendNotificationToUser
+
+            billingRepository.findWalletTransactionByOrderId = (async () => ({
+                id: 'tx-wh-1',
+                userId: 'user-wh',
+                status: 'PENDING',
+                amountInCents: 2000,
+            })) as any
+
+            billingRepository.verifyAndUpdateWalletTransaction = (async () => ({
+                user: {
+                    id: 'user-wh',
+                    creditBalance: 5000,
+                },
+                alreadyProcessed: false,
+            })) as any
+
+            let notificationSent = false
+            notificationService.sendNotificationToUser = (async () => {
+                notificationSent = true
+                return {} as any
+            }) as any
+
+            try {
+                const res = await billingService.handleRazorpayWebhook({
+                    rawBody,
+                    signature,
+                    eventPayload: payload,
+                })
+
+                expect(res.received).toBe(true)
+                expect(res.status).toBe('processed')
+                expect(res.newBalance).toBe(5000)
+                expect(notificationSent).toBe(true)
+            } finally {
+                billingRepository.findWalletTransactionByOrderId = originalFindTx
+                billingRepository.verifyAndUpdateWalletTransaction = originalVerifyUpdate
+                notificationService.sendNotificationToUser = originalSendNotif
+            }
+        })
+
+        it('should return already_processed if transaction status is already SUCCESS', async () => {
+            process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret
+
+            const orderId = 'order_wh_123'
+            const paymentId = 'pay_wh_456'
+            const payload = {
+                event: 'order.paid',
+                payload: {
+                    order: {
+                        entity: {
+                            id: orderId,
+                        },
+                    },
+                    payment: {
+                        entity: {
+                            id: paymentId,
+                            order_id: orderId,
+                        },
+                    },
+                },
+            }
+            const rawBody = JSON.stringify(payload)
+            const signature = crypto
+                .createHmac('sha256', webhookSecret)
+                .update(rawBody)
+                .digest('hex')
+
+            const originalFindTx = billingRepository.findWalletTransactionByOrderId
+            billingRepository.findWalletTransactionByOrderId = (async () => ({
+                id: 'tx-wh-1',
+                userId: 'user-wh',
+                status: 'SUCCESS',
+                amountInCents: 2000,
+            })) as any
+
+            try {
+                const res = await billingService.handleRazorpayWebhook({
+                    rawBody,
+                    signature,
+                    eventPayload: payload,
+                })
+
+                expect(res.received).toBe(true)
+                expect(res.status).toBe('already_processed')
+            } finally {
+                billingRepository.findWalletTransactionByOrderId = originalFindTx
+            }
+        })
+
+        it('should record failure on payment.failed event', async () => {
+            process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret
+
+            const orderId = 'order_wh_fail'
+            const paymentId = 'pay_wh_fail'
+            const payload = {
+                event: 'payment.failed',
+                payload: {
+                    payment: {
+                        entity: {
+                            id: paymentId,
+                            order_id: orderId,
+                            error_description: 'Payment was declined by bank',
+                        },
+                    },
+                },
+            }
+            const rawBody = JSON.stringify(payload)
+            const signature = crypto
+                .createHmac('sha256', webhookSecret)
+                .update(rawBody)
+                .digest('hex')
+
+            const originalFindTx = billingRepository.findWalletTransactionByOrderId
+            const originalUpdateTx = billingRepository.updateWalletTransaction
+
+            let updatedStatus = ''
+            billingRepository.findWalletTransactionByOrderId = (async () => ({
+                id: 'tx-wh-fail',
+                userId: 'user-wh',
+                status: 'PENDING',
+                amountInCents: 2000,
+            })) as any
+
+            billingRepository.updateWalletTransaction = (async (_id: string, data: any) => {
+                updatedStatus = data.status
+                return {} as any
+            }) as any
+
+            try {
+                const res = await billingService.handleRazorpayWebhook({
+                    rawBody,
+                    signature,
+                    eventPayload: payload,
+                })
+
+                expect(res.received).toBe(true)
+                expect(res.status).toBe('failed_recorded')
+                expect(updatedStatus).toBe('FAILED')
+            } finally {
+                billingRepository.findWalletTransactionByOrderId = originalFindTx
+                billingRepository.updateWalletTransaction = originalUpdateTx
             }
         })
     })
