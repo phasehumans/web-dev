@@ -89,6 +89,7 @@ jobs:
                   script: |
                       echo "==> Pulling latest changes from main branch..."
                       cd /var/www/december
+                      git sparse-checkout set --no-cone '/docker-compose.yml'
                       git pull origin main
 
                       echo "==> Pulling pre-built images from GHCR..."
