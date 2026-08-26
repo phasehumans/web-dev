@@ -10,7 +10,8 @@ import PromptInput from './PromptInput'
 import type { HomeHeroProps } from '@/features/home/types'
 
 import { useAppStore } from '@/app/store'
-import { ProUpgradeModal } from '@/features/billing/components/ProUpgradeModal'
+import { OutOfCreditsModal } from '@/features/billing/components/OutOfCreditsModal'
+import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
 import { type CanvasRef } from '@/features/canvas/components/Canvas'
 import { profileAPI } from '@/features/profile/api/profile'
 import { ProfileFeedbackModal } from '@/features/profile/components/ProfileFeedbackModal'
@@ -32,7 +33,10 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         setCanvasState: onCanvasStateChange,
         activeProjectId: projectId,
         importState,
+        showOutOfCreditsModal,
+        setShowOutOfCreditsModal,
     } = useAppStore()
+    const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
     const navigate = useNavigate()
     const canvasRef = useRef<CanvasRef>(null)
     const [prompt, setPrompt] = React.useState('')
@@ -242,6 +246,14 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                             if (chatMode === 'search') {
                                 navigate('/search')
                             } else {
+                                if (
+                                    isAuthenticated &&
+                                    overview !== undefined &&
+                                    (overview.creditBalance ?? 0) <= 0
+                                ) {
+                                    setShowOutOfCreditsModal(true)
+                                    return
+                                }
                                 onPromptSubmit(submittedPrompt)
                             }
                         }}
@@ -391,7 +403,13 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                 }}
             />
 
-            <ProUpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
+            <OutOfCreditsModal
+                isOpen={showOutOfCreditsModal || showUpgradeModal}
+                onClose={() => {
+                    setShowOutOfCreditsModal(false)
+                    setShowUpgradeModal(false)
+                }}
+            />
 
             <ProfileFeedbackModal
                 isOpen={showFeedbackModal}

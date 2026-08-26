@@ -8,9 +8,29 @@ dist
 build
 target
 coverage
-tests
 *.log
 .env
-.env.test
-.env.local
+.env.*
+!.env.example
 .december
+
+# Tests and benchmarks
+tests
+**/test/**
+**/tests/**
+**/*.test.*
+**/*.spec.*
+**/__tests__/**
+
+# Documentation and tooling metadata
+docs
+*.md
+.gitleaks.toml
+.cspell.json
+.editorconfig
+.prettier*
+eslint.config.js
+knip.jsonc
+commitlint.config.js
+cliff.toml
+Justfile

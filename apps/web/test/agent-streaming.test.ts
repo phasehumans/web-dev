@@ -277,4 +277,29 @@ describe('Native Agent Streaming & Chat Slice', () => {
         useAppStore.getState().setAssistantStatus(assistantMsgId, 'done')
         expect(useAppStore.getState().messages[0].status).toBe('done')
     })
+
+    it('maps insufficient wallet credit error messages clearly instead of generic error', () => {
+        const assistantMsgId = 'credit-err-msg-1'
+        const initialMsg: Message = {
+            id: assistantMsgId,
+            role: 'assistant',
+            content: '',
+            status: 'thinking',
+        }
+
+        useAppStore.getState().setMessages([initialMsg])
+        useAppStore
+            .getState()
+            .setAssistantError(
+                assistantMsgId,
+                'Insufficient wallet credits. Please add credits at https://trydecember.com/settings/billing to continue.'
+            )
+
+        const state = useAppStore.getState()
+        expect(state.messages[0].status).toBe('error')
+        expect(state.messages[0].content).toContain('Insufficient credits')
+        expect(state.messages[0].content).not.toContain(
+            'Something went wrong while generating this project'
+        )
+    })
 })

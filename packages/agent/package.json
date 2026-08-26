@@ -26,6 +26,7 @@
         "@december/shared": "workspace:*",
         "@december/tools": "workspace:*",
         "@types/uuid": "11.0.0",
+        "langfuse": "^3.38.0",
         "openai": "6.45.0",
         "p-retry": "8.0.0",
         "uuid": "14.0.1"

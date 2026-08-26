@@ -12,12 +12,11 @@ describe('BotMessage Component (Unit)', () => {
         expect(lastFrame()).toContain('Assistant response text')
     })
 
-    it('renders completed thought blocks expanded by default and respects expandCommands', () => {
+    it('renders completed thought blocks collapsed by default and respects expandCommands', () => {
         const thoughtContent =
             'Line 1: Planning search\nLine 2: Locating files\nLine 3: Reading contents\nLine 4: Done'
         const { lastFrame, rerender } = render(
             <BotMessage
-                expandCommands={true}
                 blocks={[
                     { type: 'thinking', content: thoughtContent },
                     { type: 'text', content: 'Final answer' },
@@ -27,12 +26,13 @@ describe('BotMessage Component (Unit)', () => {
         let frame = lastFrame() || ''
         expect(frame).toContain('Thoughts')
         expect(frame).toContain('20 tokens')
-        expect(frame).toContain('Line 1: Planning search')
+        expect(frame).toContain('ctrl+o to expand')
+        expect(frame).not.toContain('Line 1: Planning search')
 
-        // Re-render with expandCommands=false
+        // Re-render with expandCommands=true
         rerender(
             <BotMessage
-                expandCommands={false}
+                expandCommands={true}
                 blocks={[
                     { type: 'thinking', content: thoughtContent },
                     { type: 'text', content: 'Final answer' },
@@ -43,7 +43,8 @@ describe('BotMessage Component (Unit)', () => {
         frame = lastFrame() || ''
         expect(frame).toContain('Thoughts')
         expect(frame).toContain('20 tokens')
-        expect(frame).not.toContain('Line 1: Planning search')
+        expect(frame).toContain('ctrl+o to collapse')
+        expect(frame).toContain('Line 1: Planning search')
     })
 
     it('renders active streaming thought blocks cleanly with side border', () => {
@@ -90,9 +91,28 @@ describe('BotMessage Component (Unit)', () => {
         expect(frame).not.toContain('HIGH DEMAND')
     })
 
-    it('renders git diff outputs expanded by default and respects expandCommands', () => {
+    it('renders git diff outputs collapsed by default and respects expandCommands', () => {
         const diffOutput = '--- a/file.ts\n+++ b/file.ts\n@@ -1,2 +1,2 @@\n-old code\n+new code'
         const { lastFrame, rerender } = render(
+            <BotMessage
+                blocks={[
+                    {
+                        type: 'command',
+                        toolCallId: '101',
+                        toolName: 'bash',
+                        command: 'git diff',
+                        status: 'success',
+                        output: diffOutput,
+                    },
+                ]}
+            />
+        )
+        let frame = lastFrame() || ''
+        expect(frame).toContain('ctrl+o to expand')
+        expect(frame).not.toContain('-old code')
+
+        // Re-render with expandCommands=true
+        rerender(
             <BotMessage
                 expandCommands={true}
                 blocks={[
@@ -107,31 +127,11 @@ describe('BotMessage Component (Unit)', () => {
                 ]}
             />
         )
-        let frame = lastFrame() || ''
+
+        frame = lastFrame() || ''
         expect(frame).toContain('ctrl+o to collapse')
         expect(frame).toContain('-old code')
         expect(frame).toContain('+new code')
-
-        // Re-render with expandCommands=false
-        rerender(
-            <BotMessage
-                expandCommands={false}
-                blocks={[
-                    {
-                        type: 'command',
-                        toolCallId: '101',
-                        toolName: 'bash',
-                        command: 'git diff',
-                        status: 'success',
-                        output: diffOutput,
-                    },
-                ]}
-            />
-        )
-
-        frame = lastFrame() || ''
-        expect(frame).toContain('ctrl+o to expand')
-        expect(frame).not.toContain('-old code')
     })
 
     it('renders multiple command blocks compactly without gaps between them', () => {

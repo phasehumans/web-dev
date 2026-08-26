@@ -356,29 +356,31 @@ const deleteSession = async (data: DeleteSession) => {
         console.warn('Socket not connected or io not available', e)
     }
 
-    const redisUrl =
-        env.REDIS_URL || (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)
-    if (redisUrl) {
-        let redis: Redis | null = null
-        let minioWipeQueue: Queue | null = null
-        try {
-            redis = new Redis(redisUrl)
-            minioWipeQueue = new Queue('minio_wipe', { connection: redis as any })
-            await minioWipeQueue.add(
-                'wipe',
-                { prefix: sessionPrefix(sessionId) },
-                { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
-            )
-        } catch (e) {
-            console.warn('[Session] Failed to enqueue minio_wipe job:', e)
-        } finally {
-            if (minioWipeQueue) {
-                await minioWipeQueue.close().catch(() => {
-                    // Intentionally swallowed: queue close error during deletion cleanup
-                })
-            }
-            if (redis) {
-                redis.disconnect()
+    if (env.NODE_ENV !== 'test') {
+        const redisUrl =
+            env.REDIS_URL || (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)
+        if (redisUrl) {
+            let redis: Redis | null = null
+            let minioWipeQueue: Queue | null = null
+            try {
+                redis = new Redis(redisUrl)
+                minioWipeQueue = new Queue('minio_wipe', { connection: redis as any })
+                await minioWipeQueue.add(
+                    'wipe',
+                    { prefix: sessionPrefix(sessionId) },
+                    { attempts: 3, backoff: { type: 'exponential', delay: 1000 } }
+                )
+            } catch (e) {
+                console.warn('[Session] Failed to enqueue minio_wipe job:', e)
+            } finally {
+                if (minioWipeQueue) {
+                    await minioWipeQueue.close().catch(() => {
+                        // Intentionally swallowed: queue close error during deletion cleanup
+                    })
+                }
+                if (redis) {
+                    redis.disconnect()
+                }
             }
         }
     }

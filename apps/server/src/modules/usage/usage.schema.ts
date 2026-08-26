@@ -11,7 +11,6 @@ export const recordUsageEventSchema = z
         outputTokens: z.number().int().min(0).default(0),
         totalTokens: z.number().int().min(0).optional(),
         costInCents: z.number().int().min(0).default(0),
-        projectId: z.string().uuid().optional(),
         sessionId: z.string().uuid().optional(),
         chatId: z.string().trim().min(1).max(100).optional(),
         externalRequestId: z.string().trim().min(1).max(255).optional(),

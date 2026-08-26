@@ -400,7 +400,7 @@ const importFromGithub = async (data: ImportFromGithub) => {
         throw new AppError('user not found', 404)
     }
 
-    let token: string | undefined = undefined
+    let token: string | undefined
     try {
         token = await githubAppService.getUserInstallationToken({
             userId,

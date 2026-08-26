@@ -199,16 +199,51 @@ export async function* runAgentLoop(
     }
     ;(async () => {
         try {
+            try {
+                agent.tracer?.startSession(agent.sessionId, {
+                    workspaceDir: agent.workspaceDir,
+                    model: agent.modelOptions?.model,
+                    thinkingLevel: agent.thinkingLevel,
+                })
+            } catch {
+                // Intentionally swallowed: Telemetry start session must not disrupt agent loop
+            }
+
             eventQueue.push({ type: 'AgentStart' })
             await runOuterLoop(agent, eventQueue, abortController.signal as any)
+
+            try {
+                if (abortController.signal.aborted) {
+                    agent.tracer?.endSession('ABORTED')
+                } else {
+                    agent.tracer?.endSession('COMPLETED')
+                }
+            } catch {
+                // Intentionally swallowed: Telemetry end session must not disrupt agent loop
+            }
             eventQueue.push({ type: 'AgentEnd' })
         } catch (e: any) {
             console.error('Agent Loop Error:', e)
             const errMsg = formatError(e)
+            try {
+                if (abortController.signal.aborted) {
+                    agent.tracer?.endSession('ABORTED')
+                } else {
+                    agent.tracer?.endSession('FAILED', errMsg)
+                }
+            } catch {
+                // Intentionally swallowed: Telemetry end session must not disrupt agent loop
+            }
             eventQueue.push({ type: 'AgentError', error: errMsg })
             eventQueue.push({ type: 'AgentEnd' })
         } finally {
             agent.activeAbortController = undefined
+            if (agent.tracer) {
+                // Detached non-blocking flush in background to ensure zero stream termination latency
+                agent.tracer.flush().catch(() => {
+                    // Intentionally swallowed: Detached telemetry flush error fallback
+                })
+            }
             eventQueue.end()
         }
     })()
@@ -242,6 +277,12 @@ async function runInnerLoop(agent: Agent, eventQueue: AsyncQueue<AgentEvent>, si
 
     while (!isDone && turnCount < 100 && !signal.aborted) {
         turnCount++
+
+        try {
+            agent.tracer?.startTurn(turnCount)
+        } catch {
+            // Intentionally swallowed: Telemetry start turn must not disrupt agent loop
+        }
 
         // handle steering messages
         if (agent.hooks?.getSteeringMessages) {
@@ -287,6 +328,12 @@ async function runInnerLoop(agent: Agent, eventQueue: AsyncQueue<AgentEvent>, si
 
         await agent.saveContext()
         eventQueue.push({ type: 'TurnEnd' })
+
+        try {
+            agent.tracer?.endTurn(turnCount)
+        } catch {
+            // Intentionally swallowed: Telemetry end turn must not disrupt agent loop
+        }
 
         if (agent.hooks?.prepareNextTurn) {
             const nextTurn = (await agent.hooks.prepareNextTurn()) as any
@@ -518,6 +565,21 @@ async function streamAssistantResponse(
             })
         }
 
+        try {
+            agent.tracer?.recordGeneration({
+                model: loggedModel,
+                messages:
+                    loggedMessages.length > 0 ? loggedMessages : agent.convertToLlm(agent.messages),
+                systemPrompt: agent.systemPrompt,
+                assistantMessage,
+                thinking: thinkingText || undefined,
+                usage: lastUsage,
+                durationMs,
+            })
+        } catch {
+            // Intentionally swallowed: Telemetry generation recording must not disrupt agent loop
+        }
+
         eventQueue.push({ type: 'AgentStatus', message: '' }) // clear status on success
         return { assistantMessage, toolCalls }
     } catch (error: any) {
@@ -547,6 +609,22 @@ async function streamAssistantResponse(
             await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
                 // Intentionally swallowed: Request logging must not block or crash agent loop
             })
+        }
+
+        try {
+            agent.tracer?.recordGeneration({
+                model: loggedModel,
+                messages:
+                    loggedMessages.length > 0 ? loggedMessages : agent.convertToLlm(agent.messages),
+                systemPrompt: agent.systemPrompt,
+                assistantMessage,
+                thinking: thinkingText || undefined,
+                usage: lastUsage,
+                durationMs,
+                error: errorMsg,
+            })
+        } catch {
+            // Intentionally swallowed: Telemetry generation recording must not disrupt agent loop
         }
 
         if (signal.aborted || (error.name === 'AbortError' && errorMsg === 'Aborted')) {
@@ -616,7 +694,7 @@ async function executeToolCalls(
         const tool = agent.tools.get(tc.name)
         return (
             tool?.executionMode === 'sequential' ||
-            ['bash', 'write_file', 'edit_file', 'edit_diff', 'python_repl'].includes(tc.name)
+            ['bash', 'write_file', 'edit_file', 'edit_diff'].includes(tc.name)
         )
     }
 
@@ -646,6 +724,7 @@ async function executeSingleTool(
     eventQueue: AsyncQueue<AgentEvent>,
     signal: AbortSignal
 ): Promise<{ toolCall: ToolCall; toolResult: ToolResult; resultStr: string; errorStr?: string }> {
+    const toolStartTime = Date.now()
     eventQueue.push({ type: 'ToolCallStart', toolCall })
 
     const tool = agent.tools.get(toolCall.name)
@@ -658,6 +737,18 @@ async function executeSingleTool(
             errorStr = `Tool execution blocked: ${hookRes.reason || 'No reason provided'}`
             const res = { toolCallId: toolCall.id, result: '', error: errorStr }
             eventQueue.push({ type: 'ToolCallResult', result: res })
+            try {
+                agent.tracer?.recordToolExecution({
+                    toolCallId: toolCall.id,
+                    toolName: toolCall.name,
+                    input: toolCall.input,
+                    output: '',
+                    error: errorStr,
+                    durationMs: Date.now() - toolStartTime,
+                })
+            } catch {
+                // Intentionally swallowed: Telemetry tool execution recording must not disrupt agent loop
+            }
             return { toolCall, toolResult: res, resultStr: '', errorStr }
         }
     }
@@ -692,6 +783,20 @@ async function executeSingleTool(
             if (afterRes.result !== undefined) toolResult.result = afterRes.result
             if (afterRes.error !== undefined) toolResult.error = afterRes.error
         }
+    }
+
+    const toolDuration = Date.now() - toolStartTime
+    try {
+        agent.tracer?.recordToolExecution({
+            toolCallId: toolCall.id,
+            toolName: toolCall.name,
+            input: toolCall.input,
+            output: toolResult.result,
+            error: toolResult.error,
+            durationMs: toolDuration,
+        })
+    } catch {
+        // Intentionally swallowed: Telemetry tool execution recording must not disrupt agent loop
     }
 
     eventQueue.push({ type: 'ToolCallResult', result: toolResult })

@@ -32,13 +32,13 @@ import { WorkspaceHeader } from './WorkspaceHeader'
 import type { WorkspaceScreenProps } from '@/features/preview/types'
 
 import { useAppStore } from '@/app/store'
+import { OutOfCreditsModal } from '@/features/billing/components/OutOfCreditsModal'
 import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
 import { ChatThread as ChatSidebar } from '@/features/chat/components/ChatThread'
 import { useOutputScreenController } from '@/features/preview/hooks/useOutputScreenController'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionTagsModal } from '@/features/sessions/components/SessionTagsModal'
 import { Icons } from '@/shared/components/ui/Icons'
-import { Modal } from '@/shared/components/ui/Modal'
 import { cn } from '@/shared/lib/utils'
 
 type MobileWorkspaceTab = 'chat' | 'changes' | 'desktop' | 'editor' | 'shell' | 'tasks'
@@ -140,6 +140,8 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         importState,
         projectType = 'generated',
         isAuthenticated,
+        showOutOfCreditsModal,
+        setShowOutOfCreditsModal,
     } = useAppStore()
 
     const activeFilesToDisplay = React.useMemo(() => {
@@ -189,11 +191,16 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
 
     const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
 
-    const remainingInCents = (overview as any)?.credits?.remainingInCents ?? 100
+    const remainingInCents =
+        overview?.creditBalance ??
+        (overview as any)?.credits?.remainingInCents ??
+        (overview ? 0 : 100)
     const unlimited = (overview as any)?.credits?.unlimited ?? false
 
-    const isOutOfCredits = !unlimited && overview !== undefined && remainingInCents === 0
-    const showLowCreditsWarning = !unlimited && remainingInCents > 0 && remainingInCents < 10
+    const isOutOfCredits =
+        showOutOfCreditsModal || (!unlimited && overview !== undefined && remainingInCents <= 0)
+    const showLowCreditsWarning =
+        !unlimited && overview !== undefined && remainingInCents > 0 && remainingInCents < 10
 
     const {
         activeTab,
@@ -618,7 +625,9 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                                 className="text-[13px] font-normal lowercase text-[#D6D5D4] hover:text-white hover:bg-[#222225] px-1.5 py-0.5 rounded transition-colors cursor-pointer truncate max-w-[100px] tracking-tight select-none"
                                 title="Click to rename"
                             >
-                                {displayProjectName.toLowerCase()}
+                                {displayProjectName
+                                    ? displayProjectName.toLowerCase()
+                                    : 'new session'}
                             </span>
                         )}
 
@@ -1212,61 +1221,13 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                 </div>
             )}
             {/* out of credits upgrade card overlay */}
-            <Modal
+            <OutOfCreditsModal
                 isOpen={isOutOfCredits}
-                onClose={handleTriggerExit}
-                title="Out of Credits"
-                description="You have used all your credits. Add credits to your account balance to resume your project development."
-                variant="premium"
-            >
-                <div className="flex flex-col gap-4 mt-2">
-                    <div className="flex flex-col gap-3 px-2">
-                        <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                                <Check className="w-3.5 h-3.5 text-[#D6D5C9]" />
-                            </div>
-                            <span className="text-[13px] text-[#D6D5C9]">
-                                Pay-as-you-go: Only pay for the tokens you actually use
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                                <Check className="w-3.5 h-3.5 text-[#D6D5C9]" />
-                            </div>
-                            <span className="text-[13px] text-[#D6D5C9]">
-                                Priority execution and full model access
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center shrink-0">
-                                <Check className="w-3.5 h-3.5 text-[#D6D5C9]" />
-                            </div>
-                            <span className="text-[13px] text-[#D6D5C9]">
-                                Top up instantly via UPI QR, Cards, or Crypto
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 mt-2">
-                        <button
-                            onClick={() => {
-                                navigate('/settings/billing')
-                            }}
-                            className="w-full py-2.5 rounded-lg bg-white text-black text-[13px] font-semibold hover:bg-[#E5E5E5] transition-colors focus:outline-none"
-                        >
-                            Add Credits
-                        </button>
-                        <button
-                            onClick={handleTriggerExit}
-                            className="text-[11px] text-[#7B7A79] text-center hover:text-white transition-colors cursor-pointer outline-none w-full"
-                        >
-                            Cancel and Exit
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+                onClose={() => {
+                    setShowOutOfCreditsModal(false)
+                    handleTriggerExit()
+                }}
+            />
 
             <ExitConfirmModal
                 isOpen={showExitModal}

@@ -218,6 +218,10 @@ export function geminiProvider(apiKey?: string, customClient?: GoogleGenAI): LLM
                     temperature: modelOptions?.temperature,
                     maxOutputTokens,
                     thinkingConfig,
+                    abortSignal: signal,
+                    httpOptions: {
+                        signal,
+                    },
                 },
                 abortSignal: signal,
             })

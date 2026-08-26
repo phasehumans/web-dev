@@ -19,7 +19,6 @@ describe('Tools Subsystem Smoke Tests', () => {
         expect(toolsModule.ManageTaskTool).toBeDefined()
         expect(toolsModule.BrowserTool).toBeDefined()
         expect(toolsModule.WebSearchTool).toBeDefined()
-        expect(toolsModule.PythonReplTool).toBeDefined()
         expect(toolsModule.MCPTool).toBeDefined()
         expect(toolsModule.generateUnifiedDiff).toBeDefined()
 

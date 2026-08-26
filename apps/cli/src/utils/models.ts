@@ -19,13 +19,13 @@ export const getProviderModels = (provider: string) => {
         case 'google':
         case 'gemini':
             return [
-                { label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
+                { label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
+                { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
+                { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
                 { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
                 { label: 'Gemini 3.5 Flash Lite', value: 'gemini-3.5-flash-lite' },
                 { label: 'Gemini 3 Pro Preview', value: 'gemini-3-pro-preview' },
-                { label: 'Gemini 2.5 Pro', value: 'gemini-2.5-pro' },
-                { label: 'Gemini 2.5 Flash', value: 'gemini-2.5-flash' },
                 { label: 'Gemini 2.0 Flash', value: 'gemini-2.0-flash' },
                 { label: 'Gemini 2.0 Flash Lite', value: 'gemini-2.0-flash-lite' },
                 { label: 'Gemini 1.5 Pro', value: 'gemini-1.5-pro' },
@@ -100,8 +100,8 @@ export const getProviderModels = (provider: string) => {
         case 'december':
         case 'december_proxy':
             return [
-                { label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
+                { label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
                 { label: 'Claude 3.7 Sonnet', value: 'claude-3-7-sonnet-latest' },
                 { label: 'Claude 3.5 Sonnet', value: 'claude-3-5-sonnet-latest' },
                 { label: 'o3-mini', value: 'o3-mini' },

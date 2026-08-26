@@ -273,6 +273,12 @@ export function useAuthHandlers(
             }
 
             const probeAbortController = new AbortController()
+            const probeTimeout = setTimeout(() => {
+                probeAbortController.abort(
+                    new Error('Connection timed out while verifying API key.')
+                )
+            }, 10000)
+
             const stream = testProvider.stream(
                 [{ role: 'user', content: 'Hi' }],
                 [],
@@ -286,6 +292,7 @@ export function useAuthHandlers(
             try {
                 await stream.next()
             } finally {
+                clearTimeout(probeTimeout)
                 probeAbortController.abort()
                 await stream.return?.()
             }
@@ -317,6 +324,11 @@ export function useAuthHandlers(
             addToast(MESSAGES.AUTH.API_KEY_SAVED(selectedProvider), 'success')
         } catch (err: any) {
             const errStr = (err?.message || JSON.stringify(err) || String(err)).toLowerCase()
+            const isTimeout =
+                err?.name === 'AbortError' ||
+                errStr.includes('aborted') ||
+                errStr.includes('timed out') ||
+                errStr.includes('timeout')
             const isLowCredit =
                 errStr.includes('402') ||
                 errStr.includes('credits') ||
@@ -369,7 +381,10 @@ export function useAuthHandlers(
                 }
             } else {
                 let cleanMessage = err?.message || String(err)
-                if (
+                if (isTimeout) {
+                    cleanMessage =
+                        'Connection timed out while verifying API key. Please check your network connection or try again.'
+                } else if (
                     cleanMessage.includes('fetch failed') ||
                     cleanMessage.includes('ECONNREFUSED') ||
                     cleanMessage.includes('ENOTFOUND') ||
@@ -399,7 +414,11 @@ export function useAuthHandlers(
                 }
 
                 let errorText: string
-                if (cleanMessage === 'Unable to connect. Is the computer able to access the url?') {
+                if (isTimeout) {
+                    errorText = `Login failed for ${selectedProvider}: ${cleanMessage}`
+                } else if (
+                    cleanMessage === 'Unable to connect. Is the computer able to access the url?'
+                ) {
                     errorText = `Login failed: ${cleanMessage}`
                 } else if (
                     cleanMessage.includes('401') ||

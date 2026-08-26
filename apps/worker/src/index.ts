@@ -63,9 +63,10 @@ export const worker = new Worker(
                 taskRunner: async (sandbox) => {
                     let runOutput = ''
                     if (sandbox.commands?.run) {
+                        await sandbox.commands.run('mkdir -p /workspace').catch(() => {})
                         if (prUrl) {
                             await sandbox.commands
-                                .run(`git clone ${prUrl} /workspace`, { cwd: '/workspace' })
+                                .run(`git clone ${prUrl} /workspace`)
                                 .catch((e: any) => {
                                     console.warn(
                                         `Git clone warning for ephemeral task: ${e?.message || e}`
@@ -192,6 +193,7 @@ export const worker = new Worker(
                 : process.env.API_URL || defaultApiUrl
             const stream = await E2BSandboxService.runAgentSession({
                 sessionId,
+                userId,
                 sandboxId: provisionResult.sandboxId,
                 prompt: job.data.prompt || 'You are Antigravity, an AI agent.',
                 workspaceDir: '/workspace',
