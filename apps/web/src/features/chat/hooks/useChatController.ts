@@ -7,6 +7,8 @@ import type { Message } from '@/features/chat/types'
 import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/preview/types'
 
 import { useAppStore } from '@/app/store'
+import { billingAPI, type BillingOverview } from '@/features/billing/api/billing'
+import { billingQueryKeys } from '@/features/billing/hooks/useBillingData'
 import { mapBackendMessageToUIMessage } from '@/features/chat/utils'
 import {
     generationAPI,
@@ -64,6 +66,7 @@ export const useChatController = (
         canvasState,
         isAuthenticated,
         setShowAuthModal,
+        setShowOutOfCreditsModal,
     } = useAppStore()
 
     const requireAuthOr = React.useCallback(
@@ -261,16 +264,28 @@ export const useChatController = (
                                     setAssistantStatus(activeMessageId, 'done')
                                     setIsGenerating(false)
                                     return
-                                case 'AgentError':
+                                case 'AgentError': {
                                     setGenerationPhase(null)
-                                    setAssistantError(
-                                        activeMessageId,
+                                    const errText =
                                         event.data?.error ||
-                                            event.data?.message ||
-                                            'Agent Execution Error'
-                                    )
+                                        event.data?.message ||
+                                        'Agent Execution Error'
+                                    const lowerErr = String(errText).toLowerCase()
+                                    if (
+                                        lowerErr.includes('insufficient') ||
+                                        lowerErr.includes('credit') ||
+                                        lowerErr.includes('balance') ||
+                                        lowerErr.includes('wallet')
+                                    ) {
+                                        void queryClient.invalidateQueries({
+                                            queryKey: billingQueryKeys.overview,
+                                        })
+                                        setShowOutOfCreditsModal(true)
+                                    }
+                                    setAssistantError(activeMessageId, errText)
                                     setIsGenerating(false)
                                     return
+                                }
                                 case 'phase':
                                     if (event.data.phase === 'building') {
                                         setGenerationPhase('building')
@@ -351,6 +366,18 @@ export const useChatController = (
                     const activeMessageId = activeAssistantMessageIdRef.current
                     const message =
                         error instanceof Error ? error.message : 'Generation failed unexpectedly.'
+                    const lowerMsg = String(message).toLowerCase()
+                    if (
+                        lowerMsg.includes('insufficient') ||
+                        lowerMsg.includes('credit') ||
+                        lowerMsg.includes('balance') ||
+                        lowerMsg.includes('wallet')
+                    ) {
+                        void queryClient.invalidateQueries({
+                            queryKey: billingQueryKeys.overview,
+                        })
+                        setShowOutOfCreditsModal(true)
+                    }
 
                     const activeFile = useAppStore.getState().activeGeneratedFilePath
                     if (activeFile) {
@@ -403,14 +430,31 @@ export const useChatController = (
             setProjectLoadError,
             setProjectType,
             startGeneratedFile,
+            setShowOutOfCreditsModal,
         ]
     )
 
     const handlePromptSubmit = React.useCallback(
         (prompt: string) => {
-            requireAuthOr(() => {
+            requireAuthOr(async () => {
                 const normalizedPrompt = prompt.trim()
                 if (!normalizedPrompt) {
+                    return
+                }
+
+                // Check credits before creating session or navigating to workspace
+                let overview = queryClient.getQueryData<BillingOverview>(billingQueryKeys.overview)
+                if (overview === undefined && isAuthenticated) {
+                    try {
+                        overview = await billingAPI.getOverview()
+                        queryClient.setQueryData(billingQueryKeys.overview, overview)
+                    } catch {
+                        // Intentionally swallowed: ignore billing check network error and proceed
+                    }
+                }
+
+                if (overview !== undefined && (overview.creditBalance ?? 0) <= 0) {
+                    setShowOutOfCreditsModal(true)
                     return
                 }
 
@@ -445,6 +489,9 @@ export const useChatController = (
             outputOriginViewRef,
             setProjectLoadError,
             setMessages,
+            queryClient,
+            isAuthenticated,
+            setShowOutOfCreditsModal,
         ]
     )
 

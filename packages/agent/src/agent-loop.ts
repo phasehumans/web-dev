@@ -694,7 +694,7 @@ async function executeToolCalls(
         const tool = agent.tools.get(tc.name)
         return (
             tool?.executionMode === 'sequential' ||
-            ['bash', 'write_file', 'edit_file', 'edit_diff', 'python_repl'].includes(tc.name)
+            ['bash', 'write_file', 'edit_file', 'edit_diff'].includes(tc.name)
         )
     }
 

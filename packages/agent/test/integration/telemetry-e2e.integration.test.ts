@@ -18,6 +18,12 @@ describe('Telemetry End-to-End Runtime Resolution & Tracing (Integration)', () =
 
     beforeEach(() => {
         process.env = { ...originalEnv }
+        delete process.env.DECEMBER_DEV_TELEMETRY
+        delete process.env.LANGFUSE_PUBLIC_KEY
+        delete process.env.LANGFUSE_SECRET_KEY
+        delete process.env.LANGFUSE_BASE_URL
+        delete process.env.LANGFUSE_BASEURL
+        delete process.env.LANGFUSE_HOST
     })
 
     afterEach(() => {

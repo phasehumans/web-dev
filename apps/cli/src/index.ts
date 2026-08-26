@@ -151,7 +151,6 @@ async function main() {
                 toolsModule.ManageTaskTool,
                 toolsModule.BrowserTool,
                 toolsModule.WebSearchTool,
-                toolsModule.PythonReplTool,
             ],
             operations: localOperations,
             modelOptions: {
@@ -261,7 +260,6 @@ async function main() {
             toolsModule.ManageTaskTool,
             toolsModule.BrowserTool,
             toolsModule.WebSearchTool,
-            toolsModule.PythonReplTool,
         ],
         operations: localOperations,
         modelOptions: {

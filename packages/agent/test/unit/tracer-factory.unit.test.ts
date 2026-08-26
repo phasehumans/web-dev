@@ -9,6 +9,12 @@ describe('Agent Tracer Factory (Unit)', () => {
 
     beforeEach(() => {
         process.env = { ...originalEnv }
+        delete process.env.DECEMBER_DEV_TELEMETRY
+        delete process.env.LANGFUSE_PUBLIC_KEY
+        delete process.env.LANGFUSE_SECRET_KEY
+        delete process.env.LANGFUSE_BASE_URL
+        delete process.env.LANGFUSE_BASEURL
+        delete process.env.LANGFUSE_HOST
     })
 
     afterEach(() => {
@@ -78,5 +84,20 @@ describe('Agent Tracer Factory (Unit)', () => {
         })
 
         expect(tracer).toBeInstanceOf(NoopTracer)
+    })
+
+    it('resolves baseUrl from LANGFUSE_BASE_URL, LANGFUSE_BASEURL, and LANGFUSE_HOST', () => {
+        process.env.LANGFUSE_PUBLIC_KEY = 'pk-lf-test'
+        process.env.LANGFUSE_SECRET_KEY = 'sk-lf-test'
+        process.env.NODE_ENV = 'development'
+        process.env.LANGFUSE_BASE_URL = 'https://jp.cloud.langfuse.com'
+
+        const tracer = createAgentTracer({
+            runtime: 'cli',
+            sessionId: 'cli-jp-sess',
+        }) as LangfuseTracer
+
+        expect(tracer).toBeInstanceOf(LangfuseTracer)
+        expect((tracer as any).options.baseUrl).toBe('https://jp.cloud.langfuse.com')
     })
 })

@@ -213,7 +213,7 @@ export async function restoreWorkspaceState(data: {
                 await sandbox.commands
                     .run(
                         `curl -sSL "${downloadUrl}" -o /tmp/restore.tar.gz && mkdir -p /workspace && tar -xzf /tmp/restore.tar.gz -C /workspace && rm -f /tmp/restore.tar.gz`,
-                        { cwd: '/workspace' }
+                        { cwd: '/home/user' }
                     )
                     .catch((e: any) => {
                         console.error(

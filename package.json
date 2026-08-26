@@ -21,7 +21,7 @@
         "lint:spelling": "cspell --no-must-find-files \"**/*.{md,ts,tsx,json}\"",
         "build": "turbo run build",
         "typecheck": "turbo run typecheck",
-        "dev": "turbo run dev --filter=!@trydecember/cli --filter=!@december/tui 2>&1 | tee -a log.txt",
+        "dev": "turbo run dev --filter=!@trydecember/cli --filter=!@december/tui",
         "test": "turbo run test",
         "test:unit": "turbo run test:unit",
         "test:integration": "turbo run test:integration",

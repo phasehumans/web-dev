@@ -138,11 +138,14 @@ export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPerm
                             <Box flexDirection="column" marginTop={1}>
                                 {visibleDiffLines.map((line, lidx) => {
                                     let color: string = THEME.colors.text
+                                    let bgColor: string | undefined = undefined
 
                                     if (line.startsWith('+') && !line.startsWith('+++')) {
                                         color = THEME.colors.success
+                                        bgColor = THEME.colors.diffAddBg
                                     } else if (line.startsWith('-') && !line.startsWith('---')) {
                                         color = THEME.colors.error
+                                        bgColor = THEME.colors.diffDeleteBg
                                     } else if (
                                         line.startsWith('@@') ||
                                         line.startsWith('diff --git') ||
@@ -153,9 +156,15 @@ export function ToolPermissionMenu({ toolCall, questions, onComplete }: ToolPerm
                                     }
 
                                     return (
-                                        <Text key={lidx} color={color} wrap="truncate-end">
-                                            {line}
-                                        </Text>
+                                        <Box
+                                            key={lidx}
+                                            backgroundColor={bgColor}
+                                            flexDirection="row"
+                                        >
+                                            <Text color={color} wrap="truncate-end">
+                                                {line}
+                                            </Text>
+                                        </Box>
                                     )
                                 })}
                                 {isDiffTruncated && (

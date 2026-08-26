@@ -63,9 +63,10 @@ export const worker = new Worker(
                 taskRunner: async (sandbox) => {
                     let runOutput = ''
                     if (sandbox.commands?.run) {
+                        await sandbox.commands.run('mkdir -p /workspace').catch(() => {})
                         if (prUrl) {
                             await sandbox.commands
-                                .run(`git clone ${prUrl} /workspace`, { cwd: '/workspace' })
+                                .run(`git clone ${prUrl} /workspace`)
                                 .catch((e: any) => {
                                     console.warn(
                                         `Git clone warning for ephemeral task: ${e?.message || e}`

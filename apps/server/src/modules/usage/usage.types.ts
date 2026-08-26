@@ -19,7 +19,6 @@ export type RecordUsageEvent = {
     outputTokens: number
     totalTokens: number
     costInCents?: number
-    projectId?: string
     sessionId?: string
     chatId?: string
     externalRequestId?: string

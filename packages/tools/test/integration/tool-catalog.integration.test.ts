@@ -13,7 +13,6 @@ import {
     ManageTaskTool,
     BrowserTool,
     WebSearchTool,
-    PythonReplTool,
     MCPTool,
 } from '../../src/index'
 
@@ -31,12 +30,11 @@ describe('Tool Catalog Schema & Contract Conformance (Integration)', () => {
         ManageTaskTool,
         BrowserTool,
         WebSearchTool,
-        PythonReplTool,
         MCPTool,
     ]
 
     it('exports all standard tools with valid names, descriptions, and schemas', () => {
-        expect(allTools.length).toBe(14)
+        expect(allTools.length).toBe(13)
 
         for (const tool of allTools) {
             expect(typeof tool.name).toBe('string')

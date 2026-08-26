@@ -139,14 +139,12 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
         inputTokens,
         outputTokens,
         totalTokens,
-        projectId,
         sessionId,
         chatId,
         externalRequestId,
         metadata,
     } = data
     const user = await getUsageUser(userId)
-    await assertProjectOwnership(user.id, projectId)
 
     if (externalRequestId) {
         const existingEvent = await findExternalUsageEvent(externalRequestId)
@@ -201,7 +199,6 @@ const recordUsageEvent = async (data: RecordUsageEvent) => {
                     outputTokens,
                     totalTokens,
                     costInCents: costLogged,
-                    projectId,
                     sessionId,
                     chatId,
                     externalRequestId,

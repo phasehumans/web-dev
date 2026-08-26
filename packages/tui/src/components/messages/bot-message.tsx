@@ -45,7 +45,7 @@ function CollapsibleThought({
     isStreaming?: boolean
     forceExpanded?: boolean
 }) {
-    const expanded = forceExpanded ?? true
+    const expanded = forceExpanded ?? false
 
     const words = content.trim() ? content.trim().split(/\s+/).length : 0
     const tokenCount = Math.max(1, Math.round(words * 1.33))
@@ -61,7 +61,8 @@ function CollapsibleThought({
     return (
         <Box flexDirection="column" marginY={0}>
             <Text color={THEME.colors.muted} italic>
-                Thoughts ({tokenCount} tokens{expanded ? ' · ctrl+o to collapse' : ''})
+                Thoughts ({tokenCount} tokens
+                {expanded ? ' · ctrl+o to collapse' : ' · ctrl+o to expand'})
             </Text>
             {expanded && (
                 <Box paddingLeft={1} paddingTop={0.5}>
@@ -107,7 +108,7 @@ function CollapsibleCommandOutput({
     output?: string
     forceExpanded?: boolean
 }) {
-    const isExpanded = forceExpanded ?? true
+    const isExpanded = forceExpanded ?? false
 
     const lines = output ? output.trim().split(/\r?\n/) : []
     const MAX_VISIBLE_LINES = 20
@@ -128,11 +129,14 @@ function CollapsibleCommandOutput({
                 <Box flexDirection="column" marginTop={0} paddingX={1}>
                     {visibleLines.map((line, lidx) => {
                         let color: string = THEME.colors.text
+                        let bgColor: string | undefined = undefined
 
-                        if (line.startsWith('+')) {
+                        if (line.startsWith('+') && !line.startsWith('+++')) {
                             color = THEME.colors.success
-                        } else if (line.startsWith('-')) {
+                            bgColor = THEME.colors.diffAddBg
+                        } else if (line.startsWith('-') && !line.startsWith('---')) {
                             color = THEME.colors.error
+                            bgColor = THEME.colors.diffDeleteBg
                         } else if (
                             line.startsWith('@@') ||
                             line.startsWith('diff --git') ||
@@ -143,9 +147,11 @@ function CollapsibleCommandOutput({
                         }
 
                         return (
-                            <Text key={lidx} color={color} wrap="truncate-end">
-                                {line}
-                            </Text>
+                            <Box key={lidx} backgroundColor={bgColor} flexDirection="row">
+                                <Text color={color} wrap="truncate-end">
+                                    {line}
+                                </Text>
+                            </Box>
                         )
                     })}
                     {isTruncated && (

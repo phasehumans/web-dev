@@ -11,7 +11,6 @@ import {
     ManageTaskTool,
     BrowserTool,
     WebSearchTool,
-    PythonReplTool,
     MCPTool,
 } from '@december/tools'
 import { describe, expect, it } from 'bun:test'
@@ -30,12 +29,11 @@ describe('Tool Catalog Monorepo Smoke Tests', () => {
         ManageTaskTool,
         BrowserTool,
         WebSearchTool,
-        PythonReplTool,
         MCPTool,
     ]
 
-    it('verifies all 14 tools have non-empty names, descriptions, and execute functions', () => {
-        expect(allTools.length).toBe(14)
+    it('verifies all 13 tools have non-empty names, descriptions, and execute functions', () => {
+        expect(allTools.length).toBe(13)
 
         for (const tool of allTools) {
             expect(typeof tool.name).toBe('string')

@@ -8,6 +8,16 @@ export const getUserFacingGenerationError = (message: string) => {
         return 'Please sign in and try again.'
     }
 
+    if (
+        normalizedMessage.includes('insufficient') ||
+        normalizedMessage.includes('wallet') ||
+        normalizedMessage.includes('credit') ||
+        normalizedMessage.includes('balance') ||
+        normalizedMessage.includes('billing')
+    ) {
+        return 'Insufficient credits. Please add credits to your account in Settings > Billing to continue using December Cloud.'
+    }
+
     if (normalizedMessage.includes('implementation plan')) {
         return "I couldn't turn that request into a reliable implementation plan. Try again or simplify the prompt to the essential pages and flows."
     }

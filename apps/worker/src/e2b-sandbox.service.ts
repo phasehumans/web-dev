@@ -17,7 +17,6 @@ import {
     LsTool,
     ManageTaskTool,
     MCPTool,
-    PythonReplTool,
     ReadFileTool,
     WebSearchTool,
     WriteFileTool,
@@ -221,6 +220,21 @@ const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionS
                 template: template || 'base',
                 timeoutMs: timeoutMs || 1800000,
             })
+
+            // Ensure /workspace exists and has correct permissions in E2B microVM
+            try {
+                if (sandbox.commands && typeof sandbox.commands.run === 'function') {
+                    await sandbox.commands.run(
+                        'sudo mkdir -p /workspace && sudo chown -R user:user /workspace',
+                        { cwd: '/home/user' }
+                    )
+                }
+            } catch (initErr) {
+                console.warn(
+                    `[E2BSandboxService] Warning initializing /workspace for session ${sessionId}:`,
+                    initErr
+                )
+            }
 
             const sandboxId = sandbox.sandboxId
             activeSandboxes.set(sessionId, sandbox)
@@ -597,7 +611,6 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         ManageTaskTool,
         BrowserTool,
         WebSearchTool,
-        PythonReplTool,
         MCPTool,
     ]
 

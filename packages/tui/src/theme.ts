@@ -11,6 +11,8 @@ export const THEME = {
         success: '#6EE7B7',
         error: '#FCA5A5',
         warning: '#FDD663',
+        diffAddBg: '#122f1e',
+        diffDeleteBg: '#3f1316',
     },
     padding: {
         paddingX: 2,

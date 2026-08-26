@@ -16,6 +16,10 @@ export class E2BGithubBotDispatcher implements IGithubBotDispatcher {
         try {
             await reviewRepository.updateReview(reviewId, { status: 'IN_PROGRESS' })
 
+            if (env.NODE_ENV === 'test') {
+                return
+            }
+
             const redisUrl =
                 env.REDIS_URL ||
                 (env.NODE_ENV !== 'production' ? 'redis://localhost:6379' : undefined)

@@ -294,7 +294,6 @@ async function updateCredits(sessionId: string, event: any) {
                 data: {
                     userId: session.userId,
                     sessionId,
-                    projectId: session.projectId,
                     model,
                     inputTokens: promptTokens,
                     outputTokens: completionTokens,
