@@ -4,7 +4,7 @@ import { putTextFile } from '../../shared/project-storage'
 import { canvasRepository } from './canvas.repository'
 import { persistCanvasDocument } from './canvas.utils'
 
-import type { SaveCanvas, CreateWebClips, SessionAccessParam } from './canvas.types'
+import type { SaveCanvas, CreateWebClips, SessionAccessParam, JoinWaitlist } from './canvas.types'
 
 const assertSessionAccess = async (data: SessionAccessParam) => {
     const { sessionId, projectId, userId } = data
@@ -57,7 +57,16 @@ const saveCanvas = async (data: SaveCanvas) => {
     }
 }
 
+const joinWaitlist = async (data: JoinWaitlist) => {
+    const { userId } = data
+    const user = await canvasRepository.updateCanvasWaitlist({ userId })
+    return {
+        canvasWaitlist: user.canvasWaitlist,
+    }
+}
+
 export const canvasService = {
     createWebClips,
     saveCanvas,
+    joinWaitlist,
 }

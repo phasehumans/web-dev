@@ -1,4 +1,5 @@
-import { Paperclip, KeyRound, Code2, Puzzle, Folder } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Paperclip, KeyRound, Puzzle, Folder } from 'lucide-react'
 import React, { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -7,6 +8,8 @@ import sidebarPng from '../../../../assets/sidebar.png'
 import { Icons } from './Icons'
 
 import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
+import { canvasAPI } from '@/features/canvas/api'
+import { profileAPI } from '@/features/profile/api/profile'
 import { useVoiceToText } from '@/shared/lib/useVoiceToText'
 import { cn } from '@/shared/lib/utils'
 
@@ -36,13 +39,30 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
     mode = 'agent',
 }) => {
     const navigate = useNavigate()
+    const queryClient = useQueryClient()
     const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false)
     const [plusMenuPosition, setPlusMenuPosition] = useState<'top' | 'bottom'>('bottom')
     const [selectedPlusIndex, setSelectedPlusIndex] = useState(0)
     const plusRef = useRef<HTMLDivElement>(null)
+    const canvasRef = useRef<HTMLDivElement>(null)
 
     const [showCanvasCard, setShowCanvasCard] = useState(false)
     const canvasHideTimeoutRef = useRef<any>(null)
+
+    const { data: profile } = useQuery({
+        queryKey: ['profile'],
+        queryFn: profileAPI.getProfile,
+        enabled: Boolean(isAuthenticated),
+    })
+
+    const joinWaitlistMutation = useMutation({
+        mutationFn: canvasAPI.joinWaitlist,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['profile'] })
+        },
+    })
+
+    const isCanvasWaitlistJoined = Boolean(profile?.canvasWaitlist)
 
     const handleCanvasMouseEnter = () => {
         if (canvasHideTimeoutRef.current) {
@@ -74,104 +94,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         onVoiceStateChange?.(isListening)
     }, [isListening, onVoiceStateChange])
 
-    useEffect(() => {
-        if (!isPlusMenuOpen) {
-            setSelectedPlusIndex(0)
-            return
-        }
-        const handleKeyDown = (e: KeyboardEvent) => {
-            const menuCount = mode === 'search' ? 3 : 7
-            if (e.key === 'ArrowDown') {
-                e.preventDefault()
-                e.stopPropagation()
-                setSelectedPlusIndex((prev) => (prev + 1) % menuCount)
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault()
-                e.stopPropagation()
-                setSelectedPlusIndex((prev) => (prev - 1 + menuCount) % menuCount)
-            } else if (e.key === 'Enter') {
-                e.preventDefault()
-                e.stopPropagation()
-                if (!isAuthenticated) {
-                    setIsPlusMenuOpen(false)
-                    onOpenAuth?.()
-                    return
-                }
-                const actions =
-                    mode === 'search'
-                        ? [
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onUpload()
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('repos:')
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('files:')
-                              },
-                          ]
-                        : [
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onUpload()
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('repos:')
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('files:')
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('skills:')
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('sessions:')
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('playbooks:')
-                              },
-                              () => {
-                                  setIsPlusMenuOpen(false)
-                                  onOptionSelect?.('secrets:')
-                              },
-                          ]
-                actions[selectedPlusIndex]?.()
-            } else if (e.key === 'Escape') {
-                setIsPlusMenuOpen(false)
-            }
-        }
-        document.addEventListener('keydown', handleKeyDown, true)
-        return () => document.removeEventListener('keydown', handleKeyDown, true)
-    }, [
-        isPlusMenuOpen,
-        selectedPlusIndex,
-        onUpload,
-        onOptionSelect,
-        mode,
-        isAuthenticated,
-        onOpenAuth,
-    ])
-
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (plusRef.current && !plusRef.current.contains(e.target as Node)) {
-                setIsPlusMenuOpen(false)
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [])
-
-    const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
-
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const handleUploadClick = () => {
@@ -195,11 +117,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
             action: () => onOptionSelect?.('repos:'),
         },
         {
-            label: 'Codebase files',
-            icon: <Code2 className="w-4 h-4 text-[#8F8E8D]" />,
-            action: () => onOptionSelect?.('files:'),
-        },
-        {
             label: 'Sessions',
             icon: <Folder className="w-4 h-4 text-[#8F8E8D]" />,
             action: () => onOptionSelect?.('sessions:'),
@@ -211,31 +128,74 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         },
         {
             label: 'Secrets',
-            icon: <KeyRound className="w-4 h-4 text-[#8F8E8D]" />,
-            action: () => onOptionSelect?.('secrets:'),
-        },
-        {
-            label: 'Send secrets',
             icon: (
                 <KeyRound
                     className="w-4 h-4 text-[#8F8E8D]"
                     style={{ transform: 'scaleY(-1) rotate(-135deg)' }}
                 />
             ),
-            action: () => onOptionSelect?.('send-secrets:'),
+            action: () => onOptionSelect?.('secrets:'),
         },
     ]
 
     const plusMenuItems =
         mode === 'search'
             ? allPlusMenuItems.filter((item) =>
-                  ['Upload attachment', 'Repositories', 'Codebase files'].includes(item.label)
+                  ['Upload attachment', 'Repositories'].includes(item.label)
               )
             : mode === 'chat'
               ? allPlusMenuItems.filter(
-                    (item) => !['Repositories', 'Codebase files', 'Sessions'].includes(item.label)
+                    (item) => !['Repositories', 'Sessions'].includes(item.label)
                 )
               : allPlusMenuItems
+
+    useEffect(() => {
+        if (!isPlusMenuOpen) {
+            setSelectedPlusIndex(0)
+            return
+        }
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const menuCount = plusMenuItems.length
+            if (e.key === 'ArrowDown') {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedPlusIndex((prev) => (prev + 1) % menuCount)
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault()
+                e.stopPropagation()
+                setSelectedPlusIndex((prev) => (prev - 1 + menuCount) % menuCount)
+            } else if (e.key === 'Enter') {
+                e.preventDefault()
+                e.stopPropagation()
+                if (!isAuthenticated) {
+                    setIsPlusMenuOpen(false)
+                    onOpenAuth?.()
+                    return
+                }
+                setIsPlusMenuOpen(false)
+                plusMenuItems[selectedPlusIndex]?.action()
+            } else if (e.key === 'Escape') {
+                setIsPlusMenuOpen(false)
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown, true)
+        return () => document.removeEventListener('keydown', handleKeyDown, true)
+    }, [isPlusMenuOpen, selectedPlusIndex, plusMenuItems, isAuthenticated, onOpenAuth])
+
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (plusRef.current && !plusRef.current.contains(e.target as Node)) {
+                setIsPlusMenuOpen(false)
+            }
+            if (canvasRef.current && !canvasRef.current.contains(e.target as Node)) {
+                setShowCanvasCard(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
 
     return (
         <div className="flex items-center justify-between px-3 pb-3 mt-0 pl-3 relative">
@@ -336,21 +296,19 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                 {mode !== 'search' && (
                     <div
                         className="relative group/btn"
+                        ref={canvasRef}
                         onMouseEnter={handleCanvasMouseEnter}
                         onMouseLeave={handleCanvasMouseLeave}
                     >
                         <button
+                            type="button"
                             onClick={(e) => {
-                                if (!isAuthenticated && onOpenAuth) {
-                                    onOpenAuth()
-                                    return
+                                e.preventDefault()
+                                if (canvasHideTimeoutRef.current) {
+                                    clearTimeout(canvasHideTimeoutRef.current)
+                                    canvasHideTimeoutRef.current = null
                                 }
-                                if (window.innerWidth < 768) {
-                                    e.preventDefault()
-                                    setShowCanvasCard(!showCanvasCard)
-                                    return
-                                }
-                                window.open('/canvas', '_blank')
+                                setShowCanvasCard((prev) => !prev)
                             }}
                             className="flex items-center gap-1.5 text-[#8E8E8E] hover:text-white hover:bg-[#27272A] px-2 py-0.5 rounded-full transition-all duration-200 outline-none cursor-pointer bg-transparent border border-dashed border-white/20 hover:border-white/40"
                         >
@@ -382,18 +340,39 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                     </div>
                                     <div className="flex justify-end mx-1 mt-1">
                                         <button
-                                            className="px-2.5 py-1 bg-[#2B2A29] hover:bg-[#343331] text-[#E8E8E8] text-[11px] font-medium rounded-md transition-colors border border-white/10"
+                                            type="button"
+                                            disabled={
+                                                isCanvasWaitlistJoined ||
+                                                joinWaitlistMutation.isPending
+                                            }
+                                            className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors border ${
+                                                isCanvasWaitlistJoined
+                                                    ? 'bg-[#2B2A29]/50 text-[#8F8E8D] border-white/5 cursor-default'
+                                                    : joinWaitlistMutation.isPending
+                                                      ? 'bg-[#2B2A29] text-[#8F8E8D] border-white/10 cursor-not-allowed'
+                                                      : 'bg-[#2B2A29] hover:bg-[#343331] text-[#E8E8E8] border-white/10 cursor-pointer'
+                                            }`}
                                             onClick={(e) => {
                                                 e.preventDefault()
                                                 e.stopPropagation()
-                                                if (!isAuthenticated && onOpenAuth) {
-                                                    onOpenAuth()
+                                                if (!isAuthenticated) {
+                                                    setShowCanvasCard(false)
+                                                    onOpenAuth?.()
                                                     return
                                                 }
-                                                window.open('/canvas', '_blank')
+                                                if (
+                                                    isCanvasWaitlistJoined ||
+                                                    joinWaitlistMutation.isPending
+                                                )
+                                                    return
+                                                joinWaitlistMutation.mutate()
                                             }}
                                         >
-                                            Join waitlist
+                                            {isCanvasWaitlistJoined
+                                                ? 'Joined waitlist'
+                                                : joinWaitlistMutation.isPending
+                                                  ? 'Joining...'
+                                                  : 'Join waitlist'}
                                         </button>
                                     </div>
                                 </div>

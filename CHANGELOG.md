@@ -1,3 +1,13 @@
+## [0.3.19] - 2026-08-27
+
+### Bug Fixes
+
+- _(cli)_ Use scripts/postinstall.js for pre-build compatibility
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.19
+
 ## [0.3.18] - 2026-08-26
 
 ### Features

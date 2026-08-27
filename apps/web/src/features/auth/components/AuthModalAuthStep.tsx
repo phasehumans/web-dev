@@ -159,28 +159,6 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                         </span>
                     )}
                 </button>
-
-                <p className="text-[11.5px] text-[#707070] leading-tight max-w-[320px]">
-                    By continuing, you agree to December&apos;s{' '}
-                    <a
-                        href="/settings/terms"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#9E9E9E] hover:text-white underline underline-offset-2"
-                    >
-                        Terms of Service
-                    </a>{' '}
-                    and{' '}
-                    <a
-                        href="/settings/privacy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#9E9E9E] hover:text-white underline underline-offset-2"
-                    >
-                        Privacy Policy
-                    </a>
-                    .
-                </p>
             </div>
         </div>
     )

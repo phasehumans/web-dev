@@ -43,6 +43,7 @@ export type Profile = {
     welcomeCardDone?: boolean
     githubCardDone?: boolean
     feedbackCardDone?: boolean
+    canvasWaitlist?: boolean
 }
 
 type BackendProfile = Profile

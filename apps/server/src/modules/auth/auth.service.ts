@@ -554,7 +554,6 @@ const refreshSession = async (data: RefreshSession) => {
     if (isPreviousTokenWithinGrace) {
         return {
             accessToken,
-            refreshToken,
         }
     }
 

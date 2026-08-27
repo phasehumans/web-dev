@@ -18,6 +18,19 @@ const findSessionAccess = async (data: SessionAccessParam) => {
     })
 }
 
+const updateCanvasWaitlist = async (data: { userId: string }) => {
+    const { userId } = data
+    return prisma.user.update({
+        where: { id: userId },
+        data: { canvasWaitlist: true },
+        select: {
+            id: true,
+            canvasWaitlist: true,
+        },
+    })
+}
+
 export const canvasRepository = {
     findSessionAccess,
+    updateCanvasWaitlist,
 }

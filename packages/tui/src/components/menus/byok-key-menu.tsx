@@ -79,7 +79,7 @@ export function ByokKeyMenu(props: any) {
             <Box flexDirection="column" marginBottom={1}>
                 <Text color={THEME.colors.text}>Enter API Key for {formattedProvider}:</Text>
                 {keyUrl && (
-                    <Text italic color={THEME.colors.dim}>
+                    <Text italic color={THEME.colors.text}>
                         {"Don't have an API key? Get one at "}
                         <Text color={THEME.colors.brand}>{keyUrl}</Text>
                     </Text>

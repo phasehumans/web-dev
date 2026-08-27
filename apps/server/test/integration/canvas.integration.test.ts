@@ -149,4 +149,25 @@ describe('Canvas Integration Tests', () => {
         expect(res.body.data.sourceUrl).toBe('https://example.com')
         expect(res.body.data.clips).toBeArray()
     })
+
+    it('POST /api/v1/canvas/waitlist - returns 401 when unauthorized', async () => {
+        const res = await request(app).post('/api/v1/canvas/waitlist')
+        expect(res.status).toBe(401)
+    })
+
+    it('POST /api/v1/canvas/waitlist - marks user canvasWaitlist as true', async () => {
+        const res = await request(app)
+            .post('/api/v1/canvas/waitlist')
+            .set('Authorization', `Bearer ${accessToken}`)
+
+        expect(res.status).toBe(200)
+        expect(res.body.success).toBe(true)
+        expect(res.body.data.canvasWaitlist).toBe(true)
+
+        const user = await prisma.user.findUnique({
+            where: { id: testUserId },
+            select: { canvasWaitlist: true },
+        })
+        expect(user?.canvasWaitlist).toBe(true)
+    })
 })

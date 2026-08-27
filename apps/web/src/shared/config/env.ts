@@ -59,9 +59,8 @@ export const getApiBaseUrl = (): string => {
         if (hostname === 'trydecember.com' || hostname.endsWith('.trydecember.com')) {
             return 'https://api.trydecember.com/api/v1'
         }
-        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-            return `${window.location.origin}/api/v1`
-        }
+        // Always use the same-origin proxy for local development or custom domains
+        return `${window.location.origin}/api/v1`
     }
 
     // 2. Explicit environment overrides
@@ -77,6 +76,24 @@ export const getApiBaseUrl = (): string => {
         : explicitServerUrl
 
     return normalized.endsWith('/api/v1') ? normalized : `${normalized}/api/v1`
+}
+
+export const getWebSocketUrl = (): string => {
+    if (typeof window !== 'undefined' && window.location) {
+        const hostname = window.location.hostname
+        if (hostname === 'trydecember.com' || hostname.endsWith('.trydecember.com')) {
+            return 'https://api.trydecember.com'
+        }
+    }
+
+    const explicitServerUrl =
+        getClientEnv('SERVER_URL') ??
+        getClientEnv('BASE_URL') ??
+        (typeof process !== 'undefined' && process.env.NODE_ENV === 'production'
+            ? 'https://api.trydecember.com'
+            : 'http://localhost:4000')
+
+    return explicitServerUrl.endsWith('/') ? explicitServerUrl.slice(0, -1) : explicitServerUrl
 }
 
 export const getGithubClientId = (): string => {

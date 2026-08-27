@@ -22,7 +22,6 @@ import { useNavigate } from 'react-router-dom'
 import { BadSessionModal } from './BadSessionModal'
 import { ChangesWorkspace } from './ChangesWorkspace'
 import { CodeWorkspace } from './CodeWorkspace'
-import { ExitConfirmModal } from './ExitConfirmModal'
 import { PreviewArea } from './PreviewArea'
 import { TasksWorkspace } from './TasksWorkspace'
 import { TerminalWorkspace } from './TerminalWorkspace'
@@ -235,7 +234,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         previewSession,
     })
 
-    const [showExitModal, setShowExitModal] = React.useState(false)
     const [chatWidth, setChatWidth] = React.useState<number | undefined>(undefined)
     const [isResizingChat, setIsResizingChat] = React.useState(false)
     const [isPreviewPanelCollapsed, setIsPreviewPanelCollapsed] = React.useState(false)
@@ -274,10 +272,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
     }, [])
 
     const handleTriggerExit = React.useCallback(() => {
-        setShowExitModal(true)
-    }, [])
-
-    const handleConfirmExit = React.useCallback(() => {
         if (onBack) onBack()
     }, [onBack])
 
@@ -1227,12 +1221,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                     setShowOutOfCreditsModal(false)
                     handleTriggerExit()
                 }}
-            />
-
-            <ExitConfirmModal
-                isOpen={showExitModal}
-                onClose={() => setShowExitModal(false)}
-                onConfirm={handleConfirmExit}
             />
         </div>
     )

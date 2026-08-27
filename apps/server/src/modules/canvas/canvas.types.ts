@@ -13,6 +13,10 @@ export type CreateWebClips = {
     projectId?: string
 }
 
+export type JoinWaitlist = {
+    userId: string
+}
+
 export type SaveCanvas = {
     sessionId?: string
     projectId?: string

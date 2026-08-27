@@ -38,7 +38,7 @@ describe('Google OAuth Verification, Privacy & Terms', () => {
         render(<PrivacyPolicyContent />)
 
         // App Name and website
-        expect(screen.getAllByText(/December Agent/i).length).toBeGreaterThan(0)
+        expect(screen.getAllByText(/December/i).length).toBeGreaterThan(0)
         expect(screen.getAllByText(/https:\/\/trydecember\.com/i).length).toBeGreaterThan(0)
 
         // Google OAuth & Limited Use compliance statement
@@ -46,23 +46,23 @@ describe('Google OAuth Verification, Privacy & Terms', () => {
         expect(screen.getByText(/Limited Use/i)).toBeDefined()
 
         // Privacy contact email
-        expect(screen.getAllByText(/privacy@trydecember.com/i).length).toBeGreaterThan(0)
+        expect(screen.getAllByText(/team@trydecember.com/i).length).toBeGreaterThan(0)
 
         // No model training on private user data
         expect(screen.getByText(/No Model Training:/i)).toBeDefined()
     })
 
-    test('TermsOfServiceContent contains December Agent terms and code ownership terms', () => {
+    test('TermsOfServiceContent contains December terms and code ownership terms', () => {
         render(<TermsOfServiceContent />)
 
         // App Name and website
-        expect(screen.getAllByText(/December Agent/i).length).toBeGreaterThan(0)
+        expect(screen.getAllByText(/December/i).length).toBeGreaterThan(0)
         expect(screen.getAllByText(/https:\/\/trydecember\.com/i).length).toBeGreaterThan(0)
 
         // Ownership clause
         expect(screen.getByText(/Ownership of Code & Intellectual Property/i)).toBeDefined()
 
         // Support contact email
-        expect(screen.getAllByText(/support@trydecember.com/i).length).toBeGreaterThan(0)
+        expect(screen.getAllByText(/team@trydecember.com/i).length).toBeGreaterThan(0)
     })
 })

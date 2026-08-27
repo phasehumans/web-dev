@@ -35,7 +35,18 @@ const saveCanvas = asyncHandler(async (req: Request, res: Response) => {
     return sendSuccess(res, 'canvas saved successfully', result)
 })
 
+const joinWaitlist = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId as string | undefined
+    if (!userId) {
+        throw new AppError('unauthorized', 400)
+    }
+
+    const result = await canvasService.joinWaitlist({ userId })
+    return sendSuccess(res, 'joined canvas waitlist successfully', result)
+})
+
 export const canvasController = {
     createWebClips,
     saveCanvas,
+    joinWaitlist,
 }

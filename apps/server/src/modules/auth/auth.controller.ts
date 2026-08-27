@@ -247,7 +247,9 @@ const refreshSession = asyncHandler(async (req: Request, res: Response) => {
         })
 
         authCookie.setAccessTokenCookie(res, result.accessToken)
-        authCookie.setRefreshTokenCookie(res, result.refreshToken)
+        if (result.refreshToken) {
+            authCookie.setRefreshTokenCookie(res, result.refreshToken)
+        }
 
         return sendSuccess(res, 'session refreshed successfully', result)
     } catch (error) {

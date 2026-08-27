@@ -103,4 +103,16 @@ describe('Canvas Service - Unit Tests', () => {
             )
         })
     })
+
+    describe('joinWaitlist', () => {
+        it('should update user canvasWaitlist to true and return status', async () => {
+            spyOn(canvasRepository, 'updateCanvasWaitlist').mockImplementation((async () => ({
+                id: 'user-1',
+                canvasWaitlist: true,
+            })) as any)
+
+            const res = await canvasService.joinWaitlist({ userId: 'user-1' })
+            expect(res.canvasWaitlist).toBe(true)
+        })
+    })
 })

@@ -51,6 +51,7 @@ model User {
   welcomeCardDone        Boolean         @default(false)
   githubCardDone         Boolean         @default(false)
   feedbackCardDone       Boolean         @default(false)
+  canvasWaitlist         Boolean         @default(false)
 
   notifications      Notification[]
   imports            SessionImport[]

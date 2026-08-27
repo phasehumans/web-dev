@@ -39,7 +39,14 @@ const saveCanvas = (data: { projectId: string; versionId?: string | null; canvas
     })
 }
 
+const joinWaitlist = () => {
+    return apiRequest<{ canvasWaitlist: boolean }>('/canvas/waitlist', {
+        method: 'POST',
+    })
+}
+
 export const canvasAPI = {
     createWebClips,
     saveCanvas,
+    joinWaitlist,
 }

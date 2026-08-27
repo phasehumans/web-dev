@@ -7,7 +7,8 @@ import type {
 
 import { useAppStore } from '@/app/store'
 import { sessionAPI } from '@/features/sessions/api/session'
-import { ApiError, API_BASE_URL, refreshAuthSession } from '@/shared/api/client'
+import { ApiError, refreshAuthSession } from '@/shared/api/client'
+import { getWebSocketUrl } from '@/shared/config/env'
 
 export type GenerationMessageStatus = 'thinking' | 'building' | 'done' | 'error'
 
@@ -288,7 +289,7 @@ const runOverSocket = async (
 
     return new Promise((resolve, reject) => {
         import('socket.io-client').then(({ io }) => {
-            const baseUrl = API_BASE_URL.replace('/api/v1', '')
+            const baseUrl = getWebSocketUrl()
             const socket = io(baseUrl, { path: '/socket.io/', withCredentials: true })
 
             let hasResolved = false

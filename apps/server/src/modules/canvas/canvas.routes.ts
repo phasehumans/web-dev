@@ -9,5 +9,6 @@ const canvasRouter = Router()
 canvasRouter.use(authMiddleware)
 canvasRouter.post('/web-clips', canvasController.createWebClips)
 canvasRouter.post('/save', canvasController.saveCanvas)
+canvasRouter.post('/waitlist', canvasController.joinWaitlist)
 
 export default canvasRouter

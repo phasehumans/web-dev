@@ -5,21 +5,19 @@ export const PrivacyPolicyContent: React.FC = () => {
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
             {/* Header */}
             <div className="flex flex-col mb-6">
-                <h1 className="text-[16px] font-medium mb-1">Privacy Policy</h1>
-                <p className="text-[13px] text-[#7B7A79]">
-                    Effective Date: July 1, 2026 &bull; Last Updated: August 21, 2026
-                </p>
+                <h1 className="text-[16px] font-medium text-[#EDEDEF] mb-1">Privacy Policy</h1>
             </div>
 
             <div className="flex flex-col gap-6 border-t border-[#242323] pt-5">
                 {/* 1. Introduction & Scope */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">1. Introduction & Scope</h2>
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
+                        1. Introduction & Scope
+                    </h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
                         This Privacy Policy explains how{' '}
-                        <strong className="text-[#D6D5C9]">December Agent</strong>{' '}
-                        (&quot;December&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;),
-                        operated by Phase Humans Inc. and accessible at{' '}
+                        <strong className="text-[#D6D5C9]">December</strong> (&quot;we&quot;,
+                        &quot;us&quot;, or &quot;our&quot;), accessible at{' '}
                         <a
                             href="https://trydecember.com"
                             className="text-[#87B2F4] hover:underline"
@@ -31,20 +29,20 @@ export const PrivacyPolicyContent: React.FC = () => {
                         tools (collectively, the &quot;Service&quot;).
                     </p>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
-                        By accessing or using December Agent, you consent to the practices described
-                        in this Privacy Policy. If you do not agree with this policy, please do not
+                        By accessing or using December, you consent to the practices described in
+                        this Privacy Policy. If you do not agree with this policy, please do not
                         access or use our Service.
                     </p>
                 </section>
 
                 {/* 2. Google OAuth & API Services User Data Policy */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
                         2. Google OAuth & API Services User Data Policy
                     </h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
-                        December Agent&apos;s use and transfer to any other app of information
-                        received from Google APIs will adhere to the{' '}
+                        December&apos;s use and transfer to any other app of information received
+                        from Google APIs will adhere to the{' '}
                         <a
                             href="https://developers.google.com/terms/api-services-user-data-policy"
                             target="_blank"
@@ -53,11 +51,11 @@ export const PrivacyPolicyContent: React.FC = () => {
                         >
                             Google API Services User Data Policy
                         </a>
-                        , including the <strong className="text-white">Limited Use</strong>{' '}
+                        , including the <strong className="text-[#D6D5C9]">Limited Use</strong>{' '}
                         requirements.
                     </p>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
-                        When you sign in to December Agent using Google OAuth, we access:
+                        When you sign in to December using Google OAuth, we access:
                     </p>
                     <ul className="list-disc list-inside space-y-1 text-[13.5px] text-[#9A9998] pl-1">
                         <li>
@@ -81,12 +79,12 @@ export const PrivacyPolicyContent: React.FC = () => {
 
                 {/* 3. Information We Collect */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
                         3. Information We Collect
                     </h2>
                     <div className="space-y-3 text-[13.5px] text-[#9A9998] leading-relaxed">
                         <div>
-                            <h3 className="text-[13.5px] font-medium text-[#D6D5C9] mb-0.5">
+                            <h3 className="text-[13.5px] font-medium text-[#EDEDEF] mb-0.5">
                                 A. Information You Provide
                             </h3>
                             <p>
@@ -96,7 +94,7 @@ export const PrivacyPolicyContent: React.FC = () => {
                             </p>
                         </div>
                         <div>
-                            <h3 className="text-[13.5px] font-medium text-[#D6D5C9] mb-0.5">
+                            <h3 className="text-[13.5px] font-medium text-[#EDEDEF] mb-0.5">
                                 B. Connected Third-Party Integrations
                             </h3>
                             <p>
@@ -107,7 +105,7 @@ export const PrivacyPolicyContent: React.FC = () => {
                             </p>
                         </div>
                         <div>
-                            <h3 className="text-[13.5px] font-medium text-[#D6D5C9] mb-0.5">
+                            <h3 className="text-[13.5px] font-medium text-[#EDEDEF] mb-0.5">
                                 C. Automated Usage & Telemetry
                             </h3>
                             <p>
@@ -121,7 +119,7 @@ export const PrivacyPolicyContent: React.FC = () => {
 
                 {/* 4. Code Privacy & AI Model Isolation */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
                         4. Code Privacy & AI Model Isolation
                     </h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
@@ -148,7 +146,7 @@ export const PrivacyPolicyContent: React.FC = () => {
 
                 {/* 5. How We Share Information */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
                         5. How We Share Information
                     </h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
@@ -176,7 +174,7 @@ export const PrivacyPolicyContent: React.FC = () => {
 
                 {/* 6. Data Retention, Rights & Deletion */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
                         6. Data Retention, Rights & Deletion
                     </h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
@@ -193,10 +191,10 @@ export const PrivacyPolicyContent: React.FC = () => {
                             permanently delete your account directly from Account Settings or by
                             emailing{' '}
                             <a
-                                href="mailto:privacy@trydecember.com"
+                                href="mailto:team@trydecember.com"
                                 className="text-[#87B2F4] hover:underline"
                             >
-                                privacy@trydecember.com
+                                team@trydecember.com
                             </a>
                             . Upon request, personal data and workspace files are permanently purged
                             within 30 days.
@@ -206,7 +204,7 @@ export const PrivacyPolicyContent: React.FC = () => {
 
                 {/* 7. Data Security */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">7. Data Security</h2>
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">7. Data Security</h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
                         We implement modern technical and organizational safeguards including
                         end-to-end TLS 1.3 encryption for data in transit, AES-256 encryption for
@@ -217,41 +215,36 @@ export const PrivacyPolicyContent: React.FC = () => {
 
                 {/* 8. Children's Privacy */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
                         8. Children&apos;s Privacy
                     </h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
-                        December Agent is intended for software developers and is not directed to
-                        children under 13 years of age. We do not knowingly collect personal
-                        information from children under 13.
+                        December is intended for software developers and is not directed to children
+                        under 13 years of age. We do not knowingly collect personal information from
+                        children under 13.
                     </p>
                 </section>
 
                 {/* 9. Changes */}
                 <section className="flex flex-col gap-2">
-                    <h2 className="text-[14px] font-medium text-white">
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">
                         9. Changes to This Policy
                     </h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
                         We may update this Privacy Policy periodically. We will notify you of
-                        material changes by updating the &quot;Last Updated&quot; date and, where
-                        appropriate, through in-app notifications.
+                        material changes by updating this policy and, where appropriate, through
+                        in-app notifications.
                     </p>
                 </section>
 
                 {/* 10. Contact Us */}
                 <section className="flex flex-col gap-2 border-t border-[#242323] pt-5">
-                    <h2 className="text-[14px] font-medium text-white">10. Contact Us</h2>
+                    <h2 className="text-[14px] font-medium text-[#EDEDEF]">10. Contact Us</h2>
                     <p className="text-[13.5px] text-[#9A9998] leading-relaxed">
-                        If you have questions, feedback, or privacy requests regarding December
-                        Agent, contact our Data Protection team at:
+                        If you have questions, feedback, or privacy requests regarding December,
+                        contact us at:
                     </p>
                     <div className="flex flex-col gap-1 text-[13.5px] text-[#9A9998] leading-relaxed">
-                        <p>
-                            <strong className="text-[#D6D5C9]">
-                                December Agent / Phase Humans Inc.
-                            </strong>
-                        </p>
                         <p>
                             Website:{' '}
                             <a
@@ -262,21 +255,12 @@ export const PrivacyPolicyContent: React.FC = () => {
                             </a>
                         </p>
                         <p>
-                            Privacy Email:{' '}
+                            Email:{' '}
                             <a
-                                href="mailto:privacy@trydecember.com"
+                                href="mailto:team@trydecember.com"
                                 className="text-[#87B2F4] hover:underline"
                             >
-                                privacy@trydecember.com
-                            </a>
-                        </p>
-                        <p>
-                            Support Email:{' '}
-                            <a
-                                href="mailto:support@trydecember.com"
-                                className="text-[#87B2F4] hover:underline"
-                            >
-                                support@trydecember.com
+                                team@trydecember.com
                             </a>
                         </p>
                     </div>
