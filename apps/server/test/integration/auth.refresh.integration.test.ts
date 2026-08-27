@@ -96,11 +96,14 @@ describe('Auth Refresh Token & Rotation Integration Tests', () => {
 
         expect(res1.status).toBe(200)
 
-        // Force rotatedAt timestamp to > 30s ago in DB
+        // Force rotatedAt timestamp to > 60s ago in DB (grace period is 60s)
         await prisma.authSession.updateMany({
             where: { userId: testUserId },
-            data: { rotatedAt: new Date(Date.now() - 35 * 1000) },
+            data: { rotatedAt: new Date(Date.now() - 65 * 1000) },
         })
+
+        const { sessionCache } = await import('../../src/modules/auth/auth.cache')
+        sessionCache.clear()
 
         const resExpiredGrace = await request(app)
             .post('/api/v1/auth/refresh')

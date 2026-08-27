@@ -75,7 +75,6 @@ describe('Core Prompt Extensive Integration Tests', () => {
             where: { userId: { in: userIds } },
         })
         await prisma.session.deleteMany({ where: { userId: { in: userIds } } })
-        await prisma.project.deleteMany({ where: { userId: { in: userIds } } })
         await prisma.authSession.deleteMany({ where: { userId: { in: userIds } } })
         await prisma.user.deleteMany({ where: { id: { in: userIds } } })
     })
@@ -144,20 +143,12 @@ describe('Core Prompt Extensive Integration Tests', () => {
 
     describe('Prompt Execution & Session Management', () => {
         it('POST /api/v1/core/prompt - Auto-creates session & initial message when sessionId omitted', async () => {
-            const project = await prisma.project.create({
-                data: {
-                    name: 'Test Project',
-                    userId: userAId,
-                },
-            })
-
             const promptText = 'Create a new dashboard component for analytics'
             const res = await request(app)
                 .post('/api/v1/core/prompt')
                 .set('Authorization', `Bearer ${userAAuthToken}`)
                 .send({
                     prompt: promptText,
-                    projectId: project.id,
                 })
 
             expect(res.status).toBe(200)
@@ -172,7 +163,6 @@ describe('Core Prompt Extensive Integration Tests', () => {
 
             expect(createdSession).not.toBeNull()
             expect(createdSession?.userId).toBe(userAId)
-            expect(createdSession?.projectId).toBe(project.id)
             expect(createdSession?.title).toBe(promptText.slice(0, 50))
             expect(createdSession?.type).toBe('WEB')
             expect(createdSession?.messages.length).toBe(1)

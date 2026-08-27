@@ -4,6 +4,7 @@ import Redis from 'ioredis'
 
 import { env } from './env'
 import { authService } from './modules/auth/auth.service'
+import { createEmailWorker } from './modules/email/email.worker'
 import { fetchLiveModelRates } from './modules/usage/usage.rates'
 import { deletePrefix } from './shared/project-storage'
 
@@ -73,5 +74,8 @@ const sweepWorker = new Worker(
     },
     { connection: redisConnection as any }
 )
+
+// setup email worker
+const emailWorker = createEmailWorker(redisConnection as any)
 
 console.log('[Background] Background workers initialized.')

@@ -2,13 +2,11 @@ import crypto from 'crypto'
 
 import jwt, { type SignOptions } from 'jsonwebtoken'
 
-import resend from '../../config/email'
 import { env } from '../../env'
-
-import { renderOtpEmail, type OtpType } from './templates/otp.template'
-import { renderWelcomeEmail } from './templates/welcome.template'
+import { emailService } from '../email/email.service'
 
 import type { TokenPayload } from './auth.types'
+import type { OtpType } from './templates/otp.template'
 
 export const hashRefreshToken = (token: string): string => {
     return crypto.createHash('sha256').update(token).digest('hex')
@@ -32,53 +30,11 @@ export const generateUserCode = (): string => {
 }
 
 export const sendOTP = async (email: string, otp: string, type: OtpType = 'verification') => {
-    const fromEmail = env.SENDER_EMAIL || 'onboarding@resend.dev'
-    const webUrl = env.WEB_URL || 'https://trydecember.com'
-
-    const { subject, html, text } = renderOtpEmail({
-        otp,
-        type,
-        supportEmail: fromEmail,
-        webUrl,
-    })
-
-    try {
-        await resend.emails.send({
-            from: `December <${fromEmail}>`,
-            to: email,
-            subject,
-            html,
-            text,
-        })
-    } catch (error) {
-        console.error(`[Email Service] Failed to send OTP email to ${email}:`, error)
-        if (env.NODE_ENV === 'development') {
-            console.log(`[DEV OTP Code] Verification code for ${email} is: ${otp}`)
-        }
-    }
+    await emailService.sendOtpEmail({ to: email, otp, type })
 }
 
 export const sendWelcomeEmail = async (email: string, name: string) => {
-    const fromEmail = env.SENDER_EMAIL || 'onboarding@resend.dev'
-    const webUrl = env.WEB_URL || 'https://trydecember.com'
-
-    const { subject, html, text } = renderWelcomeEmail({
-        name,
-        supportEmail: fromEmail,
-        webUrl,
-    })
-
-    try {
-        await resend.emails.send({
-            from: `December <${fromEmail}>`,
-            to: email,
-            subject,
-            html,
-            text,
-        })
-    } catch (error) {
-        console.error(`[Email Service] Failed to send Welcome email to ${email}:`, error)
-    }
+    await emailService.sendWelcomeEmail({ to: email, name })
 }
 
 export const generateAccessToken = (
