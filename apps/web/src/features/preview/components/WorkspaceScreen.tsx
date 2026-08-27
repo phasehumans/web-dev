@@ -23,11 +23,11 @@ import { BadSessionModal } from './BadSessionModal'
 import { ChangesWorkspace } from './ChangesWorkspace'
 import { CodeWorkspace } from './CodeWorkspace'
 import { ExitConfirmModal } from './ExitConfirmModal'
-import { OutputScreenMainContent } from './OutputScreenMainContent'
 import { PreviewArea } from './PreviewArea'
 import { TasksWorkspace } from './TasksWorkspace'
 import { TerminalWorkspace } from './TerminalWorkspace'
 import { WorkspaceHeader } from './WorkspaceHeader'
+import { WorkspaceScreenMainContent } from './WorkspaceScreenMainContent'
 
 import type { WorkspaceScreenProps } from '@/features/preview/types'
 
@@ -35,7 +35,7 @@ import { useAppStore } from '@/app/store'
 import { OutOfCreditsModal } from '@/features/billing/components/OutOfCreditsModal'
 import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
 import { ChatThread as ChatSidebar } from '@/features/chat/components/ChatThread'
-import { useOutputScreenController } from '@/features/preview/hooks/useOutputScreenController'
+import { useWorkspaceScreenController } from '@/features/preview/hooks/useWorkspaceScreenController'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionTagsModal } from '@/features/sessions/components/SessionTagsModal'
 import { Icons } from '@/shared/components/ui/Icons'
@@ -224,7 +224,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         handleClearSelection,
         handleOpenInNewTab,
         handleRefreshPreview,
-    } = useOutputScreenController({
+    } = useWorkspaceScreenController({
         isGenerating,
         generatedFiles,
         activeGeneratedFilePath,
@@ -1169,7 +1169,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                     )}
 
                     {!isPreviewPanelCollapsed && (
-                        <OutputScreenMainContent
+                        <WorkspaceScreenMainContent
                             activeTab={activeTab}
                             setActiveTab={setActiveTab}
                             device={device}

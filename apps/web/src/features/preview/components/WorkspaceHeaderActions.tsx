@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { BadSessionModal } from './BadSessionModal'
 
-import type { BackendProjectVersionSummary } from '@/features/sessions/api/project'
+import type { BackendProjectVersionSummary } from '@/features/sessions/api/session'
 
 import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionInsightsModal } from '@/features/sessions/components/SessionInsightsModal'

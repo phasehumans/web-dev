@@ -12,6 +12,51 @@ export function resolveOpenAIModel(model?: string): string {
     return name
 }
 
+function normalizeErrorResponse(text: string): string {
+    try {
+        const data = JSON.parse(text)
+        if (data && typeof data === 'object') {
+            if (typeof data.error === 'string') {
+                return JSON.stringify({ error: { message: data.error } })
+            }
+            if (!data.error) {
+                const message =
+                    data.message || data.detail || data.msg || data.error_msg || data.title
+                if (message) {
+                    return JSON.stringify({
+                        error: {
+                            message:
+                                typeof message === 'string' ? message : JSON.stringify(message),
+                            type: data.type || 'api_error',
+                            code: data.code,
+                        },
+                    })
+                }
+            }
+        }
+    } catch {
+        // Intentionally swallowed: text is not JSON
+    }
+    return text
+}
+
+async function providerFetch(
+    url: Parameters<typeof fetch>[0],
+    init?: Parameters<typeof fetch>[1]
+): Promise<Response> {
+    const res = await fetch(url, init)
+    if (!res.ok) {
+        const text = await res.text()
+        const normalized = normalizeErrorResponse(text)
+        return new Response(normalized, {
+            status: res.status,
+            statusText: res.statusText,
+            headers: res.headers,
+        })
+    }
+    return res
+}
+
 export function openaiProvider(
     baseURL?: string,
     apiKey?: string,
@@ -24,6 +69,7 @@ export function openaiProvider(
             baseURL,
             apiKey: apiKey || process.env.OPENAI_API_KEY || 'dummy-key',
             defaultHeaders,
+            fetch: providerFetch,
         })
 
     return createProvider(

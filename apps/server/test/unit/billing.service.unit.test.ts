@@ -209,11 +209,16 @@ describe('Billing Service - Unit Tests', () => {
                 .digest('hex')
 
             const originalFindTx = billingRepository.findWalletTransactionByOrderId
+            const originalFindUser = billingRepository.findUserById
             billingRepository.findWalletTransactionByOrderId = (async () => ({
                 id: 'tx-1',
                 userId: 'user-1',
                 status: 'SUCCESS',
                 amountInCents: 2000,
+            })) as any
+            billingRepository.findUserById = (async () => ({
+                id: 'user-1',
+                creditBalance: 5000,
             })) as any
 
             try {
@@ -228,6 +233,7 @@ describe('Billing Service - Unit Tests', () => {
                 expect(res.alreadyProcessed).toBe(true)
             } finally {
                 billingRepository.findWalletTransactionByOrderId = originalFindTx
+                billingRepository.findUserById = originalFindUser
             }
         })
 

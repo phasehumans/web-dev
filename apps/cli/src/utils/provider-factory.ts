@@ -28,13 +28,35 @@ export function instantiateProvider(provider: string, apiKey: string): any {
             return anthropicProvider('https://api.kimi.com/coding', apiKey)
         case 'moonshot':
         case 'moonshoot':
-            return openaiProvider('https://api.moonshot.cn/v1', apiKey)
+            return openaiProvider('https://api.moonshot.ai/v1', apiKey)
         case 'mistral':
             return openaiProvider('https://api.mistral.ai/v1', apiKey)
         case 'xai':
             return openaiProvider('https://api.x.ai/v1', apiKey)
         case 'zai':
-            return openaiProvider('https://api.zai.ai/v1', apiKey)
+            return openaiProvider('https://api.z.ai/api/coding/paas/v4', apiKey)
+        case 'nvidia':
+        case 'nim':
+            return openaiProvider('https://integrate.api.nvidia.com/v1', apiKey)
+        case 'sambanova':
+            return openaiProvider('https://api.sambanova.ai/v1', apiKey)
+        case 'cerebras':
+            return openaiProvider('https://api.cerebras.ai/v1', apiKey)
+        case 'siliconflow':
+        case 'siliconcloud':
+            return openaiProvider('https://api.siliconflow.cn/v1', apiKey)
+        case 'together':
+        case 'togetherai':
+            return openaiProvider('https://api.together.xyz/v1', apiKey)
+        case 'hyperbolic':
+            return openaiProvider('https://api.hyperbolic.xyz/v1', apiKey)
+        case 'fireworks':
+        case 'fireworksai':
+            return openaiProvider('https://api.fireworks.ai/inference/v1', apiKey)
+        case 'perplexity':
+            return openaiProvider('https://api.perplexity.ai', apiKey)
+        case 'cohere':
+            return openaiProvider('https://api.cohere.com/v2', apiKey)
         case 'ollama': {
             let endpoint = 'http://localhost:11434/v1'
             if (apiKey && (apiKey.startsWith('http://') || apiKey.startsWith('https://'))) {

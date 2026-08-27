@@ -24,7 +24,6 @@ export type GetUserSessions = {
 export type CreateSession = {
     userId: string
     title?: string
-    projectId?: string | null
     type?: 'WEB' | 'CLI' | 'SEARCH'
     prompt?: string
 }

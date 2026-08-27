@@ -182,7 +182,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                     <CollapsibleThoughtView
                                         key={bIdx}
                                         content={block.content}
-                                        isStreaming={block.isStreaming}
+                                        isStreaming={block.isStreaming ?? isThinkingPhase}
                                     />
                                 )
                             }
@@ -284,7 +284,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     <>
                         {/* Fallback Unstructured Block View */}
                         {showThinking && activeThoughtsText.trim().length > 0 && (
-                            <CollapsibleThoughtView content={activeThoughtsText} />
+                            <CollapsibleThoughtView
+                                content={activeThoughtsText}
+                                isStreaming={isThinkingPhase}
+                            />
                         )}
 
                         {/* 2. plan of action (normal text, streamed) */}

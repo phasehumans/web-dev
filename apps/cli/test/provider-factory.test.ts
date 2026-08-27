@@ -67,6 +67,94 @@ describe('instantiateProvider', () => {
         )
     })
 
+    it('instantiates moonshot provider via openai compat', () => {
+        instantiateProvider('moonshot', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.moonshot.ai/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates zai provider via openai compat', () => {
+        instantiateProvider('zai', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.z.ai/api/coding/paas/v4',
+            'key-123'
+        )
+    })
+
+    it('instantiates nvidia provider via openai compat', () => {
+        instantiateProvider('nvidia', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://integrate.api.nvidia.com/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates sambanova provider via openai compat', () => {
+        instantiateProvider('sambanova', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.sambanova.ai/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates cerebras provider via openai compat', () => {
+        instantiateProvider('cerebras', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.cerebras.ai/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates siliconflow provider via openai compat', () => {
+        instantiateProvider('siliconflow', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.siliconflow.cn/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates together provider via openai compat', () => {
+        instantiateProvider('together', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.together.xyz/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates hyperbolic provider via openai compat', () => {
+        instantiateProvider('hyperbolic', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.hyperbolic.xyz/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates fireworks provider via openai compat', () => {
+        instantiateProvider('fireworks', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.fireworks.ai/inference/v1',
+            'key-123'
+        )
+    })
+
+    it('instantiates perplexity provider via openai compat', () => {
+        instantiateProvider('perplexity', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.perplexity.ai',
+            'key-123'
+        )
+    })
+
+    it('instantiates cohere provider via openai compat', () => {
+        instantiateProvider('cohere', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.cohere.com/v2',
+            'key-123'
+        )
+    })
+
     it('instantiates ollama provider with default localhost endpoint', () => {
         const p = instantiateProvider('ollama', '')
         expect(p).toBe('mock-ollama')

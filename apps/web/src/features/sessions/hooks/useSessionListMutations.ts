@@ -52,6 +52,13 @@ export const useSessionListMutations = ({
         })
     }
 
+    const invalidateAllSessionQueries = (sessionId?: string) => {
+        queryClient.invalidateQueries({ queryKey: ['sessions'] })
+        if (sessionId) {
+            queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
+        }
+    }
+
     const togglePinMutation = useMutation({
         mutationFn: ({ sessionId, isPinned }: { sessionId: string; isPinned: boolean }) =>
             sessionAPI.updateSessionSettings(sessionId, { isPinned }),
@@ -72,10 +79,7 @@ export const useSessionListMutations = ({
             setActionError(null)
         },
         onSettled: (_data, _error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            if (variables?.sessionId) {
-                queryClient.invalidateQueries({ queryKey: ['session', variables.sessionId] })
-            }
+            invalidateAllSessionQueries(variables?.sessionId)
         },
     })
 
@@ -101,10 +105,7 @@ export const useSessionListMutations = ({
             setActionError(null)
         },
         onSettled: (_data, _error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            if (variables?.sessionId) {
-                queryClient.invalidateQueries({ queryKey: ['session', variables.sessionId] })
-            }
+            invalidateAllSessionQueries(variables?.sessionId)
         },
     })
 
@@ -138,10 +139,7 @@ export const useSessionListMutations = ({
             setActionError(null)
         },
         onSettled: (_data, _error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            if (variables?.sessionId) {
-                queryClient.invalidateQueries({ queryKey: ['session', variables.sessionId] })
-            }
+            invalidateAllSessionQueries(variables?.sessionId)
         },
     })
 
@@ -164,7 +162,7 @@ export const useSessionListMutations = ({
             setActionError(null)
         },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            invalidateAllSessionQueries()
         },
     })
 
@@ -188,10 +186,7 @@ export const useSessionListMutations = ({
             setActionError(null)
         },
         onSettled: (_data, _error, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            if (variables?.sessionId) {
-                queryClient.invalidateQueries({ queryKey: ['session', variables.sessionId] })
-            }
+            invalidateAllSessionQueries(variables?.sessionId)
         },
     })
 

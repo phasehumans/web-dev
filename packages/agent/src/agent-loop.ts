@@ -453,6 +453,9 @@ async function streamAssistantResponse(
                             })
                         }
                         const tc = activeToolCalls.get(chunk.id)!
+                        if (chunk.name && !tc.name) {
+                            tc.name = chunk.name
+                        }
                         if (chunk.inputDelta) {
                             tc.input += chunk.inputDelta
                         }

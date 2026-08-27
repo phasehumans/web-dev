@@ -9,10 +9,8 @@ import { SidebarFooter } from './SidebarFooter'
 
 import type { MobileSidebarProps } from '@/features/navigation/types'
 
-import { projectAPI } from '@/features/sessions/api/project'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionRenameModal } from '@/features/sessions/components/SessionRenameModal'
-import { useProjects } from '@/features/sessions/hooks/useProjects'
 import { useSessions } from '@/features/sessions/hooks/useSessions'
 import { Icons } from '@/shared/components/ui/Icons'
 import { cn } from '@/shared/lib/utils'
@@ -35,7 +33,6 @@ export const MobileSidebar: React.FC<
     user,
 }) => {
     const queryClient = useQueryClient()
-    const { data: projects = [], isLoading: isProjectsLoading } = useProjects()
     const { data: sessionsData, isLoading: isSessionsLoading } = useSessions()
     const sessions = React.useMemo(() => sessionsData?.sessions || [], [sessionsData?.sessions])
     const location = useLocation()
@@ -212,10 +209,6 @@ export const MobileSidebar: React.FC<
             if (!old) return old
             return { ...old, isArchived: nextArchived }
         })
-        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
-            if (!old || !Array.isArray(old)) return old
-            return old.map((p) => (p.id === sessionId ? { ...p, isArchived: nextArchived } : p))
-        })
         setItemMenuState(null)
 
         try {
@@ -228,7 +221,6 @@ export const MobileSidebar: React.FC<
             console.error('Failed to toggle archive:', err)
         } finally {
             queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            queryClient.invalidateQueries({ queryKey: ['projects'] })
         }
     }
 
@@ -247,21 +239,15 @@ export const MobileSidebar: React.FC<
             }
             return old
         })
-        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
-            if (!old || !Array.isArray(old)) return old
-            return old.filter((p) => p.id !== sessionId)
-        })
+        queryClient.removeQueries({ queryKey: ['session', sessionId] })
         setItemMenuState(null)
 
         try {
-            await sessionAPI
-                .deleteSession(sessionId)
-                .catch(() => projectAPI.deleteProject(sessionId))
+            await sessionAPI.deleteSession(sessionId)
         } catch (err) {
             console.error('Failed to delete session:', err)
         } finally {
             queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            queryClient.invalidateQueries({ queryKey: ['projects'] })
         }
     }
 
@@ -287,12 +273,6 @@ export const MobileSidebar: React.FC<
             }
             return old
         })
-        queryClient.setQueriesData({ queryKey: ['projects'] }, (old: any) => {
-            if (!old || !Array.isArray(old)) return old
-            return old.map((p) =>
-                p.id === sessionId ? { ...p, title: newTitle, name: newTitle } : p
-            )
-        })
         setRenameModal({ isOpen: false, sessionId: '', value: '' })
 
         try {
@@ -301,7 +281,6 @@ export const MobileSidebar: React.FC<
             console.error('Failed to rename session:', err)
         } finally {
             queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            queryClient.invalidateQueries({ queryKey: ['projects'] })
         }
     }
 
@@ -333,33 +312,20 @@ export const MobileSidebar: React.FC<
     const recentProjects = React.useMemo(() => {
         if (!isAuthenticated) return []
 
-        const sourceList =
-            sessions && sessions.length > 0
-                ? sessions.map((s) => ({
-                      id: s.id,
-                      title: s.title || s.projectName || 'Untitled Session',
-                      projectName: s.projectName,
-                      updatedAt: s.updatedAt,
-                      createdAt: s.createdAt,
-                      isArchived: Boolean(s.isArchived),
-                      type: s.type || 'WEB',
-                      isSchedule: Boolean(
-                          s.tags?.some((t) => t.toLowerCase().includes('schedule')) ||
-                          s.type === ('SCHEDULE' as any)
-                      ),
-                      prNumber: s.prNumber,
-                  }))
-                : projects.map((p) => ({
-                      id: p.id,
-                      title: p.title || 'Untitled Session',
-                      projectName: p.title,
-                      updatedAt: p.rawUpdatedAt || p.updatedAt,
-                      createdAt: p.createdAt,
-                      isArchived: false,
-                      type: 'WEB',
-                      isSchedule: false,
-                      prNumber: undefined as number | undefined,
-                  }))
+        const sourceList = (sessions || []).map((s) => ({
+            id: s.id,
+            title: s.title || s.projectName || 'Untitled Session',
+            projectName: s.projectName,
+            updatedAt: s.updatedAt,
+            createdAt: s.createdAt,
+            isArchived: Boolean(s.isArchived),
+            type: s.type || 'WEB',
+            isSchedule: Boolean(
+                s.tags?.some((t) => t.toLowerCase().includes('schedule')) ||
+                s.type === ('SCHEDULE' as any)
+            ),
+            prNumber: s.prNumber,
+        }))
 
         return sourceList
             .filter((item) => {
@@ -389,7 +355,7 @@ export const MobileSidebar: React.FC<
                 return updatedB - updatedA
             })
             .slice(0, 10)
-    }, [isAuthenticated, sessions, projects, sortBy, filterSchedules, filterArchived, sessionType])
+    }, [isAuthenticated, sessions, sortBy, filterSchedules, filterArchived, sessionType])
 
     return (
         <>
@@ -635,7 +601,6 @@ export const MobileSidebar: React.FC<
 
                         <div className="flex flex-col gap-[2px] mt-1 overflow-y-auto no-scrollbar flex-1 min-h-0 pb-2">
                             {isAuthenticated ? (
-                                isProjectsLoading &&
                                 isSessionsLoading ? null : recentProjects.length > 0 ? (
                                     recentProjects.map((project) => (
                                         <div

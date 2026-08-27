@@ -61,16 +61,18 @@ export const getProfileTabFromSlug = (slug: string | undefined): ProfileTab =>
 
 export const getSlugForProfileTab = (tab: string): string => profileTabToSlug[tab] || 'account'
 
-export const toProjectSlug = (name: string): string =>
+export const toSessionSlug = (name: string): string =>
     name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '') || 'untitled'
 
+export const toProjectSlug = toSessionSlug
+
 const simpleViewToPath: Record<string, string> = {
     chat: '/',
     search: '/search',
-    'all-projects': '/projects',
+    'all-projects': '/sessions',
     sessions: '/sessions',
     review: '/review',
     canvas: '/canvas',

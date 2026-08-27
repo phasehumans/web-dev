@@ -76,6 +76,12 @@ jobs:
         name: Deploy to EC2
         needs: build-and-push
         runs-on: ubuntu-latest
+        environment:
+            name: Production (API)
+            url: https://api.trydecember.com/health
+        permissions:
+            contents: read
+            deployments: write
 
         steps:
             - name: Deploy to EC2 over SSH

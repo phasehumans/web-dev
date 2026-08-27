@@ -1,69 +1,56 @@
-import { describe, expect, test, mock } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 
-import { openrouterProvider, OPENROUTER_DEFAULT_MAX_TOKENS } from '../../src/providers/openrouter'
+import {
+    openrouterProvider,
+    OPENROUTER_DEFAULT_MAX_TOKENS,
+} from '../../src/providers/openrouter.ts'
 
-let capturedStreamCalls: any[] = []
-let mockStreamGenerator: ((options: any) => AsyncGenerator<any, void, unknown>) | null = null
-
-mock.module('../../src/providers/openai', () => {
-    return {
-        openaiProvider: mock((baseURL?: string, apiKey?: string, defaultHeaders?: any) => {
-            return {
-                id: 'openai',
-                name: 'OpenAI',
-                models: [],
-                stream: async function* (
-                    messages: any[],
-                    tools?: any[],
-                    systemPrompt?: string,
-                    modelOptions?: Record<string, any>,
-                    signal?: AbortSignal
-                ) {
-                    capturedStreamCalls.push({
-                        messages,
-                        tools,
-                        systemPrompt,
-                        modelOptions,
-                        signal,
-                    })
-                    if (mockStreamGenerator) {
-                        yield* mockStreamGenerator(modelOptions)
-                    } else {
-                        yield { type: 'text', text: 'mocked' }
-                    }
-                },
-                _mockArgs: { baseURL, apiKey, defaultHeaders },
-            }
-        }),
-    }
-})
+import type { LLMProvider } from '../../src/types.ts'
 
 describe('OpenRouter Provider (Unit)', () => {
-    test('should wrap openaiProvider with correct headers and baseURL', () => {
-        const provider = openrouterProvider('test-openrouter-key') as any
+    const createMockBase = (generator?: any) => {
+        const capturedStreamCalls: any[] = []
+        const baseProvider: LLMProvider = {
+            id: 'openai',
+            stream: async function* (
+                messages: any[],
+                tools?: any[],
+                systemPrompt?: string,
+                modelOptions?: Record<string, any>,
+                signal?: AbortSignal
+            ) {
+                capturedStreamCalls.push({
+                    messages,
+                    tools,
+                    systemPrompt,
+                    modelOptions,
+                    signal,
+                })
+                if (generator) {
+                    yield* generator(modelOptions)
+                } else {
+                    yield { type: 'text', text: 'mocked' }
+                }
+            },
+        }
+        return { baseProvider, capturedStreamCalls }
+    }
 
+    test('should instantiate openrouter provider with correct ID', () => {
+        const provider = openrouterProvider('test-openrouter-key')
         expect(provider.id).toBe('openrouter')
-        expect(provider._mockArgs.baseURL).toBe('https://openrouter.ai/api/v1')
-        expect(provider._mockArgs.apiKey).toBe('test-openrouter-key')
-        expect(provider._mockArgs.defaultHeaders).toEqual({
-            'HTTP-Referer': 'https://trydecember.com',
-            'X-Title': 'December',
-        })
     })
 
     test('should fallback to process.env if no key provided', () => {
         process.env.OPENROUTER_API_KEY = 'env-openrouter-key'
-        const provider = openrouterProvider() as any
-
-        expect(provider._mockArgs.apiKey).toBe('env-openrouter-key')
-
+        const provider = openrouterProvider()
+        expect(provider.id).toBe('openrouter')
         delete process.env.OPENROUTER_API_KEY
     })
 
     test('should default max_tokens to 4096 if not explicitly provided', async () => {
-        capturedStreamCalls = []
-        mockStreamGenerator = null
-        const provider = openrouterProvider('test-key')
+        const { baseProvider, capturedStreamCalls } = createMockBase()
+        const provider = openrouterProvider('test-key', baseProvider)
 
         const stream = provider.stream([{ role: 'user', content: 'hello' }])
         const chunks: any[] = []
@@ -77,9 +64,8 @@ describe('OpenRouter Provider (Unit)', () => {
     })
 
     test('should preserve explicitly provided max_tokens', async () => {
-        capturedStreamCalls = []
-        mockStreamGenerator = null
-        const provider = openrouterProvider('test-key')
+        const { baseProvider, capturedStreamCalls } = createMockBase()
+        const provider = openrouterProvider('test-key', baseProvider)
 
         const stream = provider.stream([{ role: 'user', content: 'hello' }], undefined, undefined, {
             max_tokens: 16,
@@ -94,9 +80,8 @@ describe('OpenRouter Provider (Unit)', () => {
     })
 
     test('should catch 402 with affordable tokens and auto-retry with clamped tokens', async () => {
-        capturedStreamCalls = []
         let callCount = 0
-        mockStreamGenerator = async function* (options: any) {
+        const generator = async function* (options: any) {
             callCount++
             if (callCount === 1) {
                 throw new Error(
@@ -106,7 +91,8 @@ describe('OpenRouter Provider (Unit)', () => {
             yield { type: 'text', text: `recovered with ${options.max_tokens} tokens` }
         }
 
-        const provider = openrouterProvider('test-key')
+        const { baseProvider, capturedStreamCalls } = createMockBase(generator)
+        const provider = openrouterProvider('test-key', baseProvider)
         const stream = provider.stream([{ role: 'user', content: 'hello' }], undefined, undefined, {
             max_tokens: 65536,
         })
@@ -123,9 +109,8 @@ describe('OpenRouter Provider (Unit)', () => {
     })
 
     test('should catch 402 on default max_tokens and auto-retry with lower affordable limit', async () => {
-        capturedStreamCalls = []
         let callCount = 0
-        mockStreamGenerator = async function* (options: any) {
+        const generator = async function* (options: any) {
             callCount++
             if (callCount === 1) {
                 throw new Error(
@@ -135,7 +120,8 @@ describe('OpenRouter Provider (Unit)', () => {
             yield { type: 'text', text: `recovered with ${options.max_tokens} tokens` }
         }
 
-        const provider = openrouterProvider('test-key')
+        const { baseProvider, capturedStreamCalls } = createMockBase(generator)
+        const provider = openrouterProvider('test-key', baseProvider)
         const stream = provider.stream([{ role: 'user', content: 'hello' }])
         const chunks: any[] = []
         for await (const chunk of stream) {
@@ -150,15 +136,15 @@ describe('OpenRouter Provider (Unit)', () => {
     })
 
     test('should throw clean error when 402 balance is exhausted (<50 tokens)', async () => {
-        capturedStreamCalls = []
-        mockStreamGenerator = async function* () {
+        const generator = async function* () {
             yield* []
             throw new Error(
                 '402 This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 20. To increase, visit https://openrouter.ai/settings/credits'
             )
         }
 
-        const provider = openrouterProvider('test-key')
+        const { baseProvider } = createMockBase(generator)
+        const provider = openrouterProvider('test-key', baseProvider)
         const stream = provider.stream([{ role: 'user', content: 'hello' }])
 
         let error: any

@@ -116,8 +116,6 @@ const getUserSessions = async (data: GetUserSessions) => {
             tags: session.tags,
             createdAt: session.createdAt,
             updatedAt: session.updatedAt,
-            projectId: session.projectId,
-            projectName: session.project?.name,
             lastMessage: session.messages?.[0]?.content || null,
             createdBy: session.user?.username
                 ? `@${session.user.username.toLowerCase()}`
@@ -144,7 +142,7 @@ const getUserSessions = async (data: GetUserSessions) => {
 }
 
 const createSession = async (data: CreateSession) => {
-    const { userId, title, projectId, type, prompt } = data
+    const { userId, title, type, prompt } = data
 
     const minBalance = parseInt(process.env.MIN_SESSION_START_BALANCE_IN_CENTS || '50', 10)
     const hasBalance = await usageService.hasMinimumBalance({
@@ -170,19 +168,9 @@ const createSession = async (data: CreateSession) => {
         throw new AppError('An active session is already running', 409)
     }
 
-    if (projectId) {
-        const project = await prisma.project.findFirst({
-            where: { id: projectId, userId },
-        })
-        if (!project) {
-            throw new AppError('Project not found', 404)
-        }
-    }
-
     const session = await sessionRepository.createSession({
         userId,
         title: title || 'New Session',
-        projectId,
         type: type || 'WEB',
         vmStatus: 'STOPPED',
     })

@@ -51,6 +51,7 @@ export async function processAgentStream({
                     content === 'Analyzing prompt...' ||
                     content === 'Generating questions...' ||
                     content === 'Understanding...' ||
+                    content.startsWith('Preparing') ||
                     content.startsWith('Rate limit') ||
                     content.startsWith('High demand') ||
                     content.startsWith('LLM Provider rate limit') ||
@@ -132,7 +133,15 @@ export async function processAgentStream({
                             // Intentionally suppressed from chat display to optimize UI rendering performance
                             break
                         }
-                        case 'ToolCallStart':
+                        case 'ToolCallStart': {
+                            const lastBlock = blocks[blocks.length - 1]
+                            if (
+                                lastBlock &&
+                                lastBlock.type === 'text' &&
+                                isStatusMessage(lastBlock.content)
+                            ) {
+                                blocks.pop()
+                            }
                             blocks.push({
                                 type: 'command',
                                 toolCallId: event.toolCall.id,
@@ -143,6 +152,7 @@ export async function processAgentStream({
                                 output: '',
                             })
                             break
+                        }
                         case 'ToolExecutionUpdate': {
                             const runningCmd = blocks.find(
                                 (b: any) =>

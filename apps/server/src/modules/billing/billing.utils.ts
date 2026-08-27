@@ -1,7 +1,11 @@
 import crypto from 'crypto'
 
+import { env } from '../../env'
+
 export const getRazorpayKeyId = () => {
-    const keyId = process.env.RAZORPAY_KEY_ID
+    const keyId =
+        process.env.RAZORPAY_KEY_ID ||
+        (process.env.NODE_ENV === 'test' ? undefined : env.RAZORPAY_KEY_ID)
 
     if (!keyId) {
         throw new Error('RAZORPAY_KEY_ID is not configured')
@@ -11,7 +15,9 @@ export const getRazorpayKeyId = () => {
 }
 
 export const getRazorpayKeySecret = () => {
-    const keySecret = process.env.RAZORPAY_KEY_SECRET
+    const keySecret =
+        process.env.RAZORPAY_KEY_SECRET ||
+        (process.env.NODE_ENV === 'test' ? undefined : env.RAZORPAY_KEY_SECRET)
 
     if (!keySecret) {
         throw new Error('RAZORPAY_KEY_SECRET is not configured')
@@ -21,7 +27,9 @@ export const getRazorpayKeySecret = () => {
 }
 
 export const getRazorpayWebhookSecret = () => {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
+    const webhookSecret =
+        process.env.RAZORPAY_WEBHOOK_SECRET ||
+        (process.env.NODE_ENV === 'test' ? undefined : env.RAZORPAY_WEBHOOK_SECRET)
 
     if (!webhookSecret) {
         throw new Error('RAZORPAY_WEBHOOK_SECRET is not configured')

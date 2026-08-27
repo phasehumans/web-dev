@@ -116,18 +116,6 @@ const hasMinimumBalance = async (data: HasMinimumBalance): Promise<boolean> => {
     return user.creditBalance >= minBalanceInCents
 }
 
-const assertProjectOwnership = async (userId: string, projectId?: string) => {
-    if (!projectId) {
-        return
-    }
-
-    const project = await usageRepository.findProject({ projectId, userId })
-
-    if (!project) {
-        throw new AppError('project not found', 404)
-    }
-}
-
 const findExternalUsageEvent = (externalRequestId: string) => {
     return usageRepository.findExternalUsageEvent({ externalRequestId })
 }

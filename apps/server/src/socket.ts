@@ -185,10 +185,16 @@ export function initSocket(httpServer: any) {
 
         socket.on(
             'send_prompt',
-            async (data: { sessionId: string; prompt: string; projectId: string }) => {
+            async (data: { sessionId?: string; prompt: string; projectId?: string }) => {
+                const targetSessionId = data.sessionId || data.projectId
+                if (!targetSessionId) {
+                    socket.emit('error', { message: 'sessionId is required' })
+                    return
+                }
+
                 try {
                     console.log(
-                        `[SERVER CORE] Prompt received for session '${data.sessionId}' (user: ${socket.data.userId || 'anonymous'}): "${data.prompt?.slice(0, 80)}..."`
+                        `[SERVER CORE] Prompt received for session '${targetSessionId}' (user: ${socket.data.userId || 'anonymous'}): "${data.prompt?.slice(0, 80)}..."`
                     )
 
                     const userId = socket.data.userId
@@ -223,15 +229,15 @@ export function initSocket(httpServer: any) {
                         `[SERVER CORE] Enqueuing job 'run_agent' to BullMQ queue 'agent_jobs'...`
                     )
                     const job = await agentJobsQueue.add('run_agent', {
-                        sessionId: data.sessionId,
-                        projectId: data.projectId,
+                        sessionId: targetSessionId,
+                        projectId: targetSessionId,
                         userId: socket.data.userId,
                         prompt: data.prompt,
                         secrets: decryptedSecrets,
                     })
 
                     console.log(
-                        `[SERVER CORE] Job #${job.id} enqueued successfully to Redis for session '${data.sessionId}'`
+                        `[SERVER CORE] Job #${job.id} enqueued successfully to Redis for session '${targetSessionId}'`
                     )
                 } catch (err: any) {
                     console.error('[SERVER CORE] Failed to enqueue agent job:', err)

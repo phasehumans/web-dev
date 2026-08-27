@@ -2,10 +2,10 @@
     "$schema": "https://unpkg.com/knip@5/schema.json",
     "workspaces": {
         ".": {
-            "entry": ["scripts/*.ts", "eslint.config.js"],
+            "entry": ["scripts/*.ts", "eslint.config.ts"],
         },
         "apps/*": {
-            "entry": ["src/index.{ts,tsx}", "src/main.{ts,tsx}"],
+            "entry": ["src/index.{ts,tsx}", "src/main.{ts,tsx}", "src/frontend.tsx"],
         },
         "packages/*": {
             "entry": ["src/index.ts"],

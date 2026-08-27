@@ -53,26 +53,32 @@ describe('Session Service - Unit Tests', () => {
             }
         })
 
-        it('should throw AppError 404 if specified projectId does not exist or belong to user', async () => {
+        it('should create standalone session successfully', async () => {
             const originalBalance = usageService.hasMinimumBalance
             const originalCount = prisma.session.count
-            const originalFindProject = prisma.project.findFirst
+            const originalCreateSession = sessionRepository.createSession
             usageService.hasMinimumBalance = mock(async () => true) as any
             prisma.session.count = mock(async () => 0) as any
-            prisma.project.findFirst = mock(async () => null) as any
+            sessionRepository.createSession = mock(async () => ({
+                id: 'sess-123',
+                userId: testUserId,
+                title: 'Test Session',
+                type: 'WEB',
+                vmStatus: 'STOPPED',
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            })) as any
 
             try {
-                await expect(
-                    sessionService.createSession({
-                        userId: testUserId,
-                        projectId: testProjectId,
-                        title: 'Test Session',
-                    })
-                ).rejects.toThrow(new AppError('Project not found', 404))
+                const res = await sessionService.createSession({
+                    userId: testUserId,
+                    title: 'Test Session',
+                })
+                expect(res.id).toBe('sess-123')
             } finally {
                 usageService.hasMinimumBalance = originalBalance
                 prisma.session.count = originalCount
-                prisma.project.findFirst = originalFindProject
+                sessionRepository.createSession = originalCreateSession
             }
         })
 

@@ -10,7 +10,7 @@ import { useChatController } from '@/features/chat/hooks/useChatController'
 import { useNavigationController } from '@/features/navigation/hooks/useNavigationController'
 import { previewAPI } from '@/features/preview/api'
 import { profileAPI } from '@/features/profile/api/profile'
-import { projectAPI } from '@/features/sessions/api/project'
+import { sessionAPI } from '@/features/sessions/api/session'
 import { useSessionController } from '@/features/sessions/hooks/useSessionController'
 import { refreshAuthSession } from '@/shared/api/client'
 
@@ -65,7 +65,7 @@ export const useAppController = () => {
             if (!isMounted || !refreshed) return
 
             setIsAuthenticated(true)
-            queryClient.invalidateQueries({ queryKey: ['projects'] })
+            queryClient.invalidateQueries({ queryKey: ['sessions'] })
             queryClient.invalidateQueries({ queryKey: ['profile'] })
         }
 
@@ -74,6 +74,20 @@ export const useAppController = () => {
             isMounted = false
         }
     }, [queryClient, setIsAuthenticated])
+
+    // Periodic proactive token refresh (every 10 mins) to prevent session timeouts while tab is open
+    React.useEffect(() => {
+        if (!isAuthenticated) return
+
+        const refreshInterval = setInterval(
+            () => {
+                void refreshAuthSession()
+            },
+            10 * 60 * 1000
+        )
+
+        return () => clearInterval(refreshInterval)
+    }, [isAuthenticated])
 
     const { data: profile } = useQuery({
         queryKey: ['profile'],
@@ -152,7 +166,7 @@ export const useAppController = () => {
         if (!activeProjectId) return
 
         try {
-            const result = await projectAPI.downloadProject(activeProjectId)
+            const result = await sessionAPI.downloadSession(activeProjectId)
             const url = window.URL.createObjectURL(result.blob)
             const anchor = document.createElement('a')
             anchor.href = url
@@ -185,14 +199,6 @@ export const useAppController = () => {
             const parts = location.pathname.split('/')
             const slug = parts[parts.length - 1]
             if (slug && slug !== 'untitled') {
-                const projectsData = queryClient.getQueryData<any>(['projects'])
-                const projects = Array.isArray(projectsData)
-                    ? projectsData
-                    : Array.isArray(projectsData?.projects)
-                      ? projectsData.projects
-                      : Array.isArray(projectsData?.data)
-                        ? projectsData.data
-                        : []
                 const sessionsData = queryClient.getQueryData<any>(['sessions'])
                 const sessions = Array.isArray(sessionsData)
                     ? sessionsData
@@ -202,13 +208,11 @@ export const useAppController = () => {
                         ? sessionsData.data
                         : []
 
-                const matchingItem =
-                    projects.find(
-                        (p: any) => p && (p.id === slug || toProjectSlug(p.name || '') === slug)
-                    ) ||
-                    sessions.find(
-                        (s: any) => s && (s.id === slug || toProjectSlug(s.title || '') === slug)
-                    )
+                const matchingItem = sessions.find(
+                    (s: any) =>
+                        s &&
+                        (s.id === slug || toProjectSlug(s.title || s.projectName || '') === slug)
+                )
                 if (matchingItem) {
                     void openProject({
                         projectId: matchingItem.id,

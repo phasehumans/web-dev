@@ -24,7 +24,6 @@ export const getSessionsSchema = z.object({
 
 export const createSessionSchema = z.object({
     title: z.string().max(100).optional(),
-    projectId: z.string().uuid().optional().nullable(),
     type: z.enum(['WEB', 'CLI', 'SEARCH']).optional(),
     prompt: z.string().min(1, 'prompt is required').optional(),
 })

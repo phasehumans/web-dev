@@ -63,7 +63,8 @@ describe('Models Utility & Context Windows (Unit)', () => {
     it('MODEL_CONTEXT_WINDOWS map contains expected defaults', () => {
         expect(MODEL_CONTEXT_WINDOWS['gemini-3.7-flash']).toBe(1000000)
         expect(MODEL_CONTEXT_WINDOWS['gemini-3.6-flash']).toBe(1000000)
-        expect(MODEL_CONTEXT_WINDOWS['claude-3-5-sonnet-latest']).toBe(200000)
+        expect(MODEL_CONTEXT_WINDOWS['claude-opus-5']).toBe(1000000)
+        expect(MODEL_CONTEXT_WINDOWS['claude-haiku-4.5']).toBe(200000)
         expect(MODEL_CONTEXT_WINDOWS['gpt-4o']).toBe(128000)
     })
 })

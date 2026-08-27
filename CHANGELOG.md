@@ -1,4 +1,4 @@
-## [unreleased]
+## [0.3.18] - 2026-08-26
 
 ### Features
 
@@ -12,6 +12,10 @@
 - _(agent)_ Make telemetry flush detached and document error fallback
 - Fix docker files, exclude tests
 - _(e2b,usage)_ Remove python repl and standardize usage on sessionid
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.18
 
 ## [0.3.17] - 2026-08-25
 

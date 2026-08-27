@@ -18,24 +18,20 @@ export const OFFICIAL_MODEL_RATES: Record<string, ModelRate> = {
     'gemini-3.1-pro': { name: 'gemini-3.1-pro', inputRate: 1.25, outputRate: 5.0 },
 
     // Anthropic Claude
+    'claude-opus-5': { name: 'claude-opus-5', inputRate: 15.0, outputRate: 75.0 },
+    'claude-sonnet-5': { name: 'claude-sonnet-5', inputRate: 3.0, outputRate: 15.0 },
+    'claude-fable-5': { name: 'claude-fable-5', inputRate: 3.0, outputRate: 15.0 },
+    'claude-haiku-4.5': { name: 'claude-haiku-4.5', inputRate: 0.8, outputRate: 4.0 },
     'claude-3-7-sonnet': { name: 'claude-3-7-sonnet', inputRate: 3.0, outputRate: 15.0 },
-    'claude-3-7-sonnet-latest': {
-        name: 'claude-3-7-sonnet-latest',
-        inputRate: 3.0,
-        outputRate: 15.0,
-    },
     'claude-3-5-sonnet': { name: 'claude-3-5-sonnet', inputRate: 3.0, outputRate: 15.0 },
-    'claude-3-5-sonnet-latest': {
-        name: 'claude-3-5-sonnet-latest',
-        inputRate: 3.0,
-        outputRate: 15.0,
-    },
     'claude-3-5-haiku': { name: 'claude-3-5-haiku', inputRate: 0.8, outputRate: 4.0 },
-    'claude-3-5-haiku-latest': { name: 'claude-3-5-haiku-latest', inputRate: 0.8, outputRate: 4.0 },
     'claude-3-opus': { name: 'claude-3-opus', inputRate: 15.0, outputRate: 75.0 },
-    'claude-3-opus-latest': { name: 'claude-3-opus-latest', inputRate: 15.0, outputRate: 75.0 },
 
     // OpenAI
+    'gpt-5.6-sol': { name: 'gpt-5.6-sol', inputRate: 2.5, outputRate: 10.0 },
+    'gpt-5.6-terra': { name: 'gpt-5.6-terra', inputRate: 1.0, outputRate: 4.0 },
+    'gpt-5.6-luna': { name: 'gpt-5.6-luna', inputRate: 0.25, outputRate: 1.0 },
+    'o4-mini': { name: 'o4-mini', inputRate: 1.1, outputRate: 4.4 },
     'gpt-4o': { name: 'gpt-4o', inputRate: 2.5, outputRate: 10.0 },
     'gpt-4o-mini': { name: 'gpt-4o-mini', inputRate: 0.15, outputRate: 0.6 },
     'gpt-4.5-preview': { name: 'gpt-4.5-preview', inputRate: 75.0, outputRate: 150.0 },
@@ -44,10 +40,16 @@ export const OFFICIAL_MODEL_RATES: Record<string, ModelRate> = {
     'o1-mini': { name: 'o1-mini', inputRate: 1.1, outputRate: 4.4 },
 
     // DeepSeek
+    'deepseek-v4-pro': { name: 'deepseek-v4-pro', inputRate: 0.55, outputRate: 2.19 },
+    'deepseek-v4-flash': { name: 'deepseek-v4-flash', inputRate: 0.14, outputRate: 0.28 },
     'deepseek-chat': { name: 'deepseek-chat', inputRate: 0.14, outputRate: 0.28 },
     'deepseek-v3': { name: 'deepseek-v3', inputRate: 0.14, outputRate: 0.28 },
     'deepseek-reasoner': { name: 'deepseek-reasoner', inputRate: 0.55, outputRate: 2.19 },
     'deepseek-r1': { name: 'deepseek-r1', inputRate: 0.55, outputRate: 2.19 },
+
+    // xAI (Grok)
+    'grok-4.6': { name: 'grok-4.6', inputRate: 2.0, outputRate: 10.0 },
+    'grok-4.5': { name: 'grok-4.5', inputRate: 2.0, outputRate: 10.0 },
 
     // Ollama (Local)
     ollama: { name: 'ollama', inputRate: 0.0, outputRate: 0.0 },
@@ -67,6 +69,15 @@ export const PROVIDER_BILLING_LINKS: Record<string, string> = {
     kimi: 'https://platform.moonshot.cn/console/recharge',
     xai: 'https://console.x.ai/',
     zai: 'https://open.bigmodel.cn/usercenter/apikeys',
+    nvidia: 'https://build.nvidia.com/',
+    sambanova: 'https://cloud.sambanova.ai/',
+    cerebras: 'https://cloud.cerebras.ai/',
+    siliconflow: 'https://cloud.siliconflow.cn/account/ak',
+    together: 'https://api.together.ai/settings/billing',
+    hyperbolic: 'https://app.hyperbolic.ai/settings',
+    fireworks: 'https://app.fireworks.ai/settings/billing',
+    perplexity: 'https://www.perplexity.ai/settings/api',
+    cohere: 'https://dashboard.cohere.com/billing',
     huggingface: 'https://huggingface.co/settings/billing',
     ollama: 'http://localhost:11434',
 }
@@ -85,6 +96,15 @@ export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
     kimi: 'Moonshot AI (Kimi)',
     xai: 'xAI Console',
     zai: 'Zhipu AI (GLM)',
+    nvidia: 'NVIDIA NIM',
+    sambanova: 'SambaNova Cloud',
+    cerebras: 'Cerebras Inference',
+    siliconflow: 'SiliconFlow (SiliconCloud)',
+    together: 'Together AI',
+    hyperbolic: 'Hyperbolic',
+    fireworks: 'Fireworks AI',
+    perplexity: 'Perplexity AI',
+    cohere: 'Cohere',
     huggingface: 'Hugging Face',
     ollama: 'Ollama (Local)',
 }
@@ -96,17 +116,34 @@ export function inferProviderFromModel(modelName: string): string {
         lower.startsWith('gpt') ||
         lower.startsWith('o1') ||
         lower.startsWith('o3') ||
+        lower.startsWith('o4') ||
         lower.startsWith('openai/')
     )
         return 'openai'
     if (lower.startsWith('gemini') || lower.startsWith('google/')) return 'google'
+    if (lower.startsWith('sonar') || lower.startsWith('perplexity')) return 'perplexity'
+    if (lower.startsWith('command') || lower.startsWith('cohere')) return 'cohere'
     if (lower.startsWith('deepseek')) return 'deepseek'
     if (lower.startsWith('groq') || lower.includes('llama-3.3-70b-versatile')) return 'groq'
-    if (lower.startsWith('mistral') || lower.startsWith('codestral') || lower.startsWith('pixtral'))
+    if (
+        lower.startsWith('mistral') ||
+        lower.startsWith('codestral') ||
+        lower.startsWith('pixtral') ||
+        lower.startsWith('ministral') ||
+        lower.startsWith('devstral')
+    )
         return 'mistral'
     if (lower.startsWith('moonshot') || lower.startsWith('kimi')) return 'moonshot'
     if (lower.startsWith('grok') || lower.startsWith('xai')) return 'xai'
     if (lower.startsWith('zai') || lower.startsWith('glm')) return 'zai'
+    if (lower.startsWith('nvidia') || lower.startsWith('nim') || lower.includes('nemotron'))
+        return 'nvidia'
+    if (lower.startsWith('sambanova')) return 'sambanova'
+    if (lower.startsWith('cerebras')) return 'cerebras'
+    if (lower.startsWith('siliconflow') || lower.startsWith('siliconcloud')) return 'siliconflow'
+    if (lower.startsWith('together')) return 'together'
+    if (lower.startsWith('hyperbolic')) return 'hyperbolic'
+    if (lower.startsWith('fireworks') || lower.startsWith('accounts/fireworks/')) return 'fireworks'
     if (lower.includes('meta-llama') || lower.includes('qwen/')) return 'huggingface'
     if (lower.includes('ollama') || lower.includes('llama') || lower.includes('qwen'))
         return 'ollama'

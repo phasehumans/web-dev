@@ -7,7 +7,7 @@ import { toProjectSlug, type ViewState } from '@/app/types'
 import { createEmptyCanvasDocument } from '@/features/canvas/types'
 import { mapBackendMessageToUIMessage } from '@/features/chat/utils'
 import { importsAPI, type ProjectImportStatus } from '@/features/home/api'
-import { projectAPI } from '@/features/sessions/api/project'
+import { sessionAPI } from '@/features/sessions/api/session'
 
 const getImportStatusMessage = (status: ProjectImportStatus) => {
     if (status.errorMessage) return status.errorMessage
@@ -64,25 +64,16 @@ export const useSessionController = (
             if (navigator.sendBeacon) {
                 navigator.sendBeacon(url)
             } else {
-                fetch(url, { method: 'POST', keepalive: true }).catch(() => {})
-            }
-        }
-
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'hidden') {
-                const url = `/api/v1/sessions/${activeProjectId}/disconnect`
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon(url)
-                }
+                fetch(url, { method: 'POST', keepalive: true }).catch(() => {
+                    // Intentionally swallowed: Disconnect beacon fallback on window unload
+                })
             }
         }
 
         window.addEventListener('beforeunload', handleBeforeUnload)
-        document.addEventListener('visibilitychange', handleVisibilityChange)
 
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload)
-            document.removeEventListener('visibilitychange', handleVisibilityChange)
         }
     }, [activeProjectId])
 
@@ -220,7 +211,7 @@ export const useSessionController = (
             setProjectLoadError(null)
 
             try {
-                const detail = await projectAPI.getProject(projectId, versionId)
+                const detail = await sessionAPI.getSessionDetail(projectId, versionId)
                 hydrateProjectDetail(detail)
                 // Buffer (1000ms) to allow Workspace DOM, preview iframe, and terminal to fully warm up in background
                 await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -299,7 +290,7 @@ export const useSessionController = (
                             `december_actively_importing_${queuedImport.projectId}`,
                             'true'
                         )
-                        void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                        void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                         await openProject({
                             projectId: queuedImport.projectId,
                             versionId: queuedImport.projectVersionId,
@@ -320,7 +311,7 @@ export const useSessionController = (
                                 (status.status === 'STARTING_RUNTIME' || status.status === 'READY')
                             ) {
                                 hasLoadedFinalFiles = true
-                                void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                                void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                                 await openProject({
                                     projectId: status.projectId,
                                     versionId: status.projectVersionId,
@@ -336,7 +327,7 @@ export const useSessionController = (
                     }
 
                     setImportState({ status: 'ready', message: 'Opening imported project' })
-                    void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                    void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                     await openProject({
                         projectId: completedImport.projectId,
                         versionId: completedImport.projectVersionId,
@@ -393,7 +384,7 @@ export const useSessionController = (
                             `december_actively_importing_${queuedImport.projectId}`,
                             'true'
                         )
-                        void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                        void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                         await openProject({
                             projectId: queuedImport.projectId,
                             versionId: queuedImport.projectVersionId,
@@ -414,7 +405,7 @@ export const useSessionController = (
                                 (status.status === 'STARTING_RUNTIME' || status.status === 'READY')
                             ) {
                                 hasLoadedFinalFiles = true
-                                void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                                void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                                 await openProject({
                                     projectId: status.projectId,
                                     versionId: status.projectVersionId,
@@ -430,7 +421,7 @@ export const useSessionController = (
                     }
 
                     setImportState({ status: 'ready', message: 'Opening imported project' })
-                    void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                    void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                     await openProject({
                         projectId: completedImport.projectId,
                         versionId: completedImport.projectVersionId,

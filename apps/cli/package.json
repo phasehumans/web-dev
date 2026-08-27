@@ -1,6 +1,6 @@
 {
     "name": "@trydecember/cli",
-    "version": "0.3.18",
+    "version": "0.3.19",
     "description": "AI coding agent for terminal and cloud.",
     "homepage": "https://trydecember.com",
     "repository": {
@@ -33,13 +33,12 @@
     },
     "files": [
         "dist",
-        "scripts",
         "README.md",
         "LICENSE"
     ],
     "scripts": {
-        "build": "bun build ./src/index.ts --target=node --outfile=./dist/december.js",
-        "postinstall": "node scripts/postinstall.js",
+        "build": "bun build ./src/index.ts --target=node --outfile=./dist/december.js && bun build ./src/postinstall.ts --target=node --outfile=./dist/postinstall.js",
+        "postinstall": "node dist/postinstall.js",
         "prepublishOnly": "bun run build",
         "typecheck": "tsc --noEmit",
         "test": "bun test",

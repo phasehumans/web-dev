@@ -113,7 +113,7 @@ export const useNavigationController = () => {
     const handleSignOut = React.useCallback(() => {
         void profileAPI.signout().catch(() => {})
         setIsAuthenticated(false)
-        queryClient.removeQueries({ queryKey: ['projects'] })
+        queryClient.removeQueries({ queryKey: ['sessions'] })
         queryClient.removeQueries({ queryKey: ['profile'] })
         navigate('/')
     }, [setIsAuthenticated, queryClient, navigate])

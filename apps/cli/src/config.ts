@@ -15,6 +15,15 @@ export interface ProviderConfig {
         | 'mistral'
         | 'xai'
         | 'zai'
+        | 'nvidia'
+        | 'sambanova'
+        | 'cerebras'
+        | 'siliconflow'
+        | 'together'
+        | 'hyperbolic'
+        | 'fireworks'
+        | 'perplexity'
+        | 'cohere'
         | 'ollama'
         | string
     apiKey: string

@@ -3,11 +3,11 @@ import type {
     BackendProject,
     BackendMessage,
     BackendProjectVersionSummary,
-} from '@/features/sessions/api/project'
+} from '@/features/sessions/api/session'
 
 import { useAppStore } from '@/app/store'
 import { sessionAPI } from '@/features/sessions/api/session'
-import { ApiError, API_BASE_URL } from '@/shared/api/client'
+import { ApiError, API_BASE_URL, refreshAuthSession } from '@/shared/api/client'
 
 export type GenerationMessageStatus = 'thinking' | 'building' | 'done' | 'error'
 
@@ -224,6 +224,7 @@ export type GenerationStreamEvent =
 
 type GenerateProjectInput = {
     prompt: string
+    sessionId?: string | null
     projectId?: string | null
     canvasState?: CanvasDocument
     model?: string
@@ -231,7 +232,8 @@ type GenerateProjectInput = {
     onEvent: (event: GenerationStreamEvent) => void
 }
 type ApplyProjectEditInput = {
-    projectId: string
+    sessionId?: string
+    projectId?: string
     versionId?: string | null
     prompt: string
     selectedElement?: PreviewSelectedElementPayload | null
@@ -241,7 +243,8 @@ type ApplyProjectEditInput = {
     onEvent: (event: GenerationStreamEvent) => void
 }
 type ApplyProjectFixInput = {
-    projectId: string
+    sessionId?: string
+    projectId?: string
     versionId?: string | null
     errorMessage: string
     stack?: string
@@ -278,6 +281,11 @@ const runOverSocket = async (
     onEvent: (event: GenerationStreamEvent) => void,
     signal?: AbortSignal
 ): Promise<any> => {
+    // Proactively refresh auth session before opening websocket to prevent 401 handshake errors
+    await refreshAuthSession().catch(() => {
+        // Intentionally swallowed: fallback to existing cookie credentials if offline or in-flight
+    })
+
     return new Promise((resolve, reject) => {
         import('socket.io-client').then(({ io }) => {
             const baseUrl = API_BASE_URL.replace('/api/v1', '')
@@ -306,6 +314,21 @@ const runOverSocket = async (
                     projectId: sessionId,
                     prompt: prompt,
                 })
+            })
+
+            socket.on('connect_error', async (err: any) => {
+                const errMsg = err?.message || ''
+                if (errMsg.includes('Authentication error') || errMsg.includes('401')) {
+                    const refreshed = await refreshAuthSession()
+                    if (refreshed && !hasResolved) {
+                        socket.connect()
+                        return
+                    }
+                }
+                if (!hasResolved) {
+                    hasResolved = true
+                    reject(new ApiError(err.message || 'Socket connection failed', 500))
+                }
             })
 
             socket.on('agent_event', (event: any) => {
@@ -362,16 +385,17 @@ const runOverSocket = async (
 
 const generateProjectStream = async ({
     prompt,
+    sessionId,
     projectId,
     canvasState,
     model,
     signal,
     onEvent,
 }: GenerateProjectInput) => {
-    let targetSessionId = projectId
+    let targetSessionId = sessionId || projectId
 
     if (!targetSessionId) {
-        // create new session if no projectid provided
+        // create new session if no session id provided
         const newSession = await sessionAPI.createSession({
             prompt,
             type: 'WEB',
@@ -395,15 +419,19 @@ const generateProjectStream = async ({
 }
 
 const applyProjectEdit = async (data: ApplyProjectEditInput) => {
-    // for now, treat edit as a regular prompt in the session
+    const targetSessionId = data.sessionId || data.projectId
+    if (!targetSessionId) throw new Error('sessionId is required for edit')
+    // treat edit as a regular prompt in the session
     const prompt = `[EDIT] ${data.prompt}${data.selectedElement ? ` (Element: ${data.selectedElement.tagName})` : ''}`
-    return await runOverSocket(data.projectId, prompt, data.onEvent, data.signal)
+    return await runOverSocket(targetSessionId, prompt, data.onEvent, data.signal)
 }
 
 const applyProjectFix = async (data: ApplyProjectFixInput) => {
+    const targetSessionId = data.sessionId || data.projectId
+    if (!targetSessionId) throw new Error('sessionId is required for fix')
     // treat fix as a regular prompt in the session
     const prompt = `[FIX ERROR] ${data.errorMessage}\n\nStack:\n${data.stack || ''}`
-    return await runOverSocket(data.projectId, prompt, data.onEvent, data.signal)
+    return await runOverSocket(targetSessionId, prompt, data.onEvent, data.signal)
 }
 
 export const generationAPI = {

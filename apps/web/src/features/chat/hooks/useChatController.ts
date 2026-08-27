@@ -178,7 +178,7 @@ export const useChatController = (
                                     setActiveProjectId(event.data.project.id)
                                     setActiveProjectName(event.data.project.name)
                                     setActiveProjectVersionId(event.data.version.id)
-                                    void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                                    void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                                     return
                                 case 'AgentStart':
                                 case 'TurnStart':
@@ -339,7 +339,7 @@ export const useChatController = (
                                     setActiveProjectId(event.data.project.id)
                                     setActiveProjectName(event.data.project.name)
                                     setActiveProjectVersionId(event.data.version.id)
-                                    void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                                    void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                                     void openProject({
                                         projectId: event.data.project.id,
                                         versionId: event.data.version.id,
@@ -722,7 +722,7 @@ export const useChatController = (
                                         deletedFiles: event.data.deletedFiles,
                                         assistantMessage: event.data.assistantMessage,
                                     })
-                                    void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                                    void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                                 }
                                 return
                             case 'project-created':
@@ -757,7 +757,7 @@ export const useChatController = (
 
                     if (result && !didHydrateStreamResult) {
                         hydrateAppliedProjectChange(result)
-                        void queryClient.invalidateQueries({ queryKey: ['projects'] })
+                        void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                     }
                 } catch (error) {
                     if (abortController.signal.aborted) {

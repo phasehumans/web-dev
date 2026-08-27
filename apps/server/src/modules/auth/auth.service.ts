@@ -479,7 +479,7 @@ const github = async (data: Github) => {
     }
 }
 
-const REFRESH_GRACE_PERIOD_MS = 30 * 1000
+const REFRESH_GRACE_PERIOD_MS = 60 * 1000
 
 const refreshSession = async (data: RefreshSession) => {
     const { refreshToken } = data
@@ -529,8 +529,6 @@ const refreshSession = async (data: RefreshSession) => {
         Date.now() - session.rotatedAt.getTime() <= REFRESH_GRACE_PERIOD_MS
 
     if (!isCurrentToken && !isPreviousTokenWithinGrace) {
-        await authRepository.deleteSessionsBySessionId(session.id)
-        await sessionCache.invalidate(session.id)
         throw new AppError('invalid refresh token', 401)
     }
 

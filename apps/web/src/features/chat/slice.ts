@@ -86,7 +86,12 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
             messages: state.messages.map((msg) => (msg.id === messageId ? updater(msg) : msg)),
         })),
     setAssistantStatus: (messageId, status) => {
-        get().updateAssistantMessage(messageId, (message) => ({ ...message, status }))
+        get().updateAssistantMessage(messageId, (message) => {
+            const blocks = message.blocks?.map((b) =>
+                b.type === 'thinking' ? { ...b, isStreaming: status === 'thinking' } : b
+            )
+            return { ...message, status, blocks: blocks ?? message.blocks }
+        })
     },
     setAssistantStatusMessage: (messageId, statusMessage) => {
         get().updateAssistantMessage(messageId, (message) => ({ ...message, statusMessage }))
@@ -99,11 +104,13 @@ export const createChatSlice: StateCreator<ChatSlice> = (set, get) => ({
                 blocks[blocks.length - 1] = {
                     ...lastBlock,
                     content: `${lastBlock.content}${chunk}`,
+                    isStreaming: true,
                 }
             } else {
                 blocks.push({
                     type: 'thinking',
                     content: chunk,
+                    isStreaming: true,
                 })
             }
             return {

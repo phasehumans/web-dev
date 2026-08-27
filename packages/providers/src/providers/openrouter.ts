@@ -5,13 +5,15 @@ import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '..
 export const OPENROUTER_DEFAULT_MAX_TOKENS = 4096
 export const OPENROUTER_MIN_AFFORDABLE_TOKENS = 50
 
-export function openrouterProvider(apiKey?: string): LLMProvider {
+export function openrouterProvider(apiKey?: string, customBaseProvider?: LLMProvider): LLMProvider {
     const key = apiKey || process.env.OPENROUTER_API_KEY
 
-    const baseProvider = openaiProvider('https://openrouter.ai/api/v1', key, {
-        'HTTP-Referer': 'https://trydecember.com',
-        'X-Title': 'December',
-    })
+    const baseProvider =
+        customBaseProvider ||
+        openaiProvider('https://openrouter.ai/api/v1', key, {
+            'HTTP-Referer': 'https://trydecember.com',
+            'X-Title': 'December',
+        })
 
     return {
         ...baseProvider,

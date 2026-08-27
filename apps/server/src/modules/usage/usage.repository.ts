@@ -51,19 +51,6 @@ export const usageRepository = {
         }
     },
 
-    async findProject(data: { projectId: string; userId: string }) {
-        const { projectId, userId } = data
-        return prisma.project.findFirst({
-            where: {
-                id: projectId,
-                userId,
-            },
-            select: {
-                id: true,
-            },
-        })
-    },
-
     async findExternalUsageEvent(data: { externalRequestId: string }) {
         const { externalRequestId } = data
         return prisma.usageEvent.findFirst({

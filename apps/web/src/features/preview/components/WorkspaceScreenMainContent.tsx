@@ -14,7 +14,7 @@ import type {
     PreviewDevice,
     PreviewSessionStatus,
 } from '@/features/preview/types'
-import type { BackendProjectVersionSummary } from '@/features/sessions/api/project'
+import type { BackendProjectVersionSummary } from '@/features/sessions/api/session'
 
 import { Tooltip } from '@/shared/components/ui/Tooltip'
 import { cn } from '@/shared/lib/utils'

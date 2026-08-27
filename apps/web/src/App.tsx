@@ -82,7 +82,7 @@ const App: React.FC = () => {
                     onAuthSuccess={() => {
                         setIsAuthenticated(true)
                         setShowAuthModal(false)
-                        queryClient.invalidateQueries({ queryKey: ['projects'] })
+                        queryClient.invalidateQueries({ queryKey: ['sessions'] })
                         queryClient.invalidateQueries({ queryKey: ['profile'] })
                     }}
                 />

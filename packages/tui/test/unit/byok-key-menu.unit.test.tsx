@@ -32,6 +32,8 @@ describe('ByokKeyMenu Component (Unit)', () => {
         const output = lastFrame() || ''
 
         expect(output).toContain('Enter API Key for OpenAI:')
+        expect(output).toContain("Don't have an API key? Get one at")
+        expect(output).toContain('https://platform.openai.com/api-keys')
         expect(output).toContain('sk-test-12345')
         expect(output).toContain('Submit')
         expect(output).toContain('Cancel')

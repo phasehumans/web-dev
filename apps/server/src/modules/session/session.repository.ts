@@ -58,12 +58,6 @@ export async function findManySessions(userId: string, filters?: SessionFilters)
                         email: true,
                     },
                 },
-                project: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
                 messages: {
                     orderBy: { sequence: 'desc' },
                     take: 1,
@@ -98,12 +92,6 @@ export async function findSessionById(sessionId: string, userId: string) {
             OR: [{ userId }, { collaborators: { some: { userId } } }],
         },
         include: {
-            project: {
-                select: {
-                    id: true,
-                    name: true,
-                },
-            },
             messages: {
                 orderBy: { sequence: 'asc' },
             },

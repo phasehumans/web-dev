@@ -4,6 +4,23 @@ import type { Response } from 'express'
 
 const isProduction = env.NODE_ENV === 'production'
 
+const getCookieDomain = (): string | undefined => {
+    if (!isProduction) return undefined
+    try {
+        const hostname = new URL(env.WEB_URL).hostname
+        if (hostname === 'localhost' || hostname === '127.0.0.1') return undefined
+        const parts = hostname.split('.')
+        if (parts.length >= 2) {
+            return `.${parts.slice(-2).join('.')}`
+        }
+        return `.${hostname}`
+    } catch {
+        return undefined
+    }
+}
+
+const cookieDomain = getCookieDomain()
+
 const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
     res.cookie('accessToken', accessToken, {
         httpOnly: true,
@@ -11,6 +28,7 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 15 * 60 * 1000, // 15 min
         path: '/',
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 
     res.cookie('refreshToken', refreshToken, {
@@ -19,6 +37,7 @@ const setAuthCookies = (res: Response, accessToken: string, refreshToken: string
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         path: '/',
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 }
 
@@ -29,6 +48,7 @@ const setAccessTokenCookie = (res: Response, accessToken: string) => {
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 15 * 60 * 1000, // 15 min
         path: '/',
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 }
 
@@ -39,6 +59,7 @@ const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         path: '/',
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 }
 
@@ -48,6 +69,7 @@ const clearAuthCookies = (res: Response) => {
         secure: isProduction,
         sameSite: isProduction ? 'none' : 'lax',
         path: '/',
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 
     res.clearCookie('refreshToken', {
@@ -55,6 +77,7 @@ const clearAuthCookies = (res: Response) => {
         secure: isProduction,
         sameSite: isProduction ? 'none' : 'lax',
         path: '/',
+        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 }
 
