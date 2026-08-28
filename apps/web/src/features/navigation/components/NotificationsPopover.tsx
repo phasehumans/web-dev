@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2, ArrowLeft, MoreHorizontal, Settings, Bell } from 'lucide-react'
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
@@ -30,31 +30,28 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
 
     const queryClient = useQueryClient()
 
-    const { data: notifications = [], isLoading } = useQuery({
+    const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
         queryKey: ['notifications'],
-        queryFn: notificationAPI.getNotifications,
+        queryFn: ({ pageParam = 1 }) =>
+            notificationAPI.getNotifications({ page: pageParam, limit: 20 }),
+        getNextPageParam: (lastPage) => {
+            const { page, totalPages } = lastPage.pagination
+            return page < totalPages ? page + 1 : undefined
+        },
+        initialPageParam: 1,
         enabled: isOpen,
     })
 
+    const notifications = React.useMemo(
+        () => data?.pages.flatMap((page) => page.notifications) || [],
+        [data]
+    )
+
     const markAsReadMutation = useMutation({
         mutationFn: notificationAPI.markAsRead,
-        onMutate: async (id) => {
-            await queryClient.cancelQueries({ queryKey: ['notifications'] })
-            const previous = queryClient.getQueryData<Notification[]>(['notifications'])
-            if (previous) {
-                queryClient.setQueryData<Notification[]>(['notifications'], (old) =>
-                    old ? old.map((n) => (n.id === id ? { ...n, isRead: true } : n)) : []
-                )
-            }
-            return { previous }
-        },
-        onError: (err, id, context) => {
-            if (context?.previous) {
-                queryClient.setQueryData(['notifications'], context.previous)
-            }
-        },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
+            queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
         },
     })
 
@@ -356,6 +353,16 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
             <div
                 className="flex-1 overflow-y-auto animate-in fade-in duration-300"
                 style={{ scrollbarWidth: 'none' }}
+                onScroll={(e) => {
+                    const target = e.currentTarget
+                    if (
+                        target.scrollHeight - target.scrollTop - target.clientHeight < 50 &&
+                        hasNextPage &&
+                        !isFetchingNextPage
+                    ) {
+                        fetchNextPage()
+                    }
+                }}
             >
                 {isLoading ? (
                     <div className="flex flex-col gap-3 px-3 py-2">
@@ -441,6 +448,11 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
                                 </button>
                             </div>
                         ))}
+                        {isFetchingNextPage && (
+                            <div className="flex items-center justify-center py-2">
+                                <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -137,7 +137,7 @@ const google = asyncHandler(async (req: Request, res: Response) => {
     const result = await authService.google({ email, name, sub, userAgent, ipAddress })
     authCookie.setAuthCookies(res, result.accessToken, result.refreshToken)
 
-    return sendSuccess(res, 'login successful')
+    return sendSuccess(res, 'login successful', result)
 })
 
 const github = asyncHandler(async (req: Request, res: Response) => {
@@ -236,7 +236,7 @@ const github = asyncHandler(async (req: Request, res: Response) => {
     })
     authCookie.setAuthCookies(res, result.accessToken, result.refreshToken)
 
-    return sendSuccess(res, 'login successful')
+    return sendSuccess(res, 'login successful', result)
 })
 
 const refreshSession = asyncHandler(async (req: Request, res: Response) => {

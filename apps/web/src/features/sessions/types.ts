@@ -8,7 +8,6 @@ export interface Project {
     updatedAt: string
     rawUpdatedAt: string
     isStarred: boolean
-    isSharedAsTemplate: boolean
     versionCount: number
     currentVersionId: string | null
     createdByUsername: string
@@ -31,11 +30,6 @@ export interface DeleteModalState {
     project: Project | null
 }
 
-export interface ShareModalState {
-    isOpen: boolean
-    project: Project | null
-}
-
 export interface ProjectListRowProps {
     project: Project
     isMenuOpen: boolean
@@ -46,7 +40,6 @@ export interface ProjectListRowProps {
     onOpenProjectFromMenu: (projectId: string, event: MouseEvent) => void
     onToggleStarFromMenu: (project: Project, event: MouseEvent) => void
     onOpenRename: (project: Project, event: MouseEvent) => void
-    onOpenShare: (project: Project, event: MouseEvent) => void
     onOpenDelete: (project: Project, event: MouseEvent) => void
 }
 
@@ -67,15 +60,5 @@ export interface ProjectDeleteModalProps {
     onConfirm: () => void
 }
 
-export interface ProjectShareModalProps {
-    isOpen: boolean
-    projectTitle?: string
-    isSharedAsTemplate: boolean
-    isPending: boolean
-    onClose: () => void
-    onConfirm: (category?: string) => void
-}
-
 export type SessionRenameModalProps = ProjectRenameModalProps
 export type SessionDeleteModalProps = ProjectDeleteModalProps
-export type SessionShareModalProps = ProjectShareModalProps

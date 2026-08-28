@@ -375,7 +375,7 @@ const Sidebar: React.FC<
                 }
                 return updatedB - updatedA
             })
-            .slice(0, 10)
+            .slice(0, 5)
     }, [isAuthenticated, sessions, sortBy, filterSchedules, filterArchived, sessionType])
 
     return (
@@ -703,16 +703,7 @@ const Sidebar: React.FC<
                                             </span>
                                             <div className="flex items-center gap-1.5 text-[11px] text-[#8F8E8D] tracking-tight truncate mt-[2px]">
                                                 <span>{formatRelativeTime(project.updatedAt)}</span>
-                                                {project.type === 'SEARCH' ? (
-                                                    <>
-                                                        <span className="text-[#555] select-none">
-                                                            •
-                                                        </span>
-                                                        <span className="text-[#8F8E8D] inline-flex items-center">
-                                                            <Icons.Search className="w-3 h-3 text-[#8F8E8D]" />
-                                                        </span>
-                                                    </>
-                                                ) : project.prNumber ? (
+                                                {project.prNumber ? (
                                                     <>
                                                         <span className="text-[#555] select-none">
                                                             •

@@ -20,9 +20,9 @@ export function calculateThoughtTokens(content: string): number {
 export function parseInlineThoughtBlocks(text: string, isStreaming = false): ThoughtSegment[] {
     if (!text) return []
 
-    // split by <thought> tags (case-insensitive, optional attributes)
+    // split by <thought> or <think> tags (case-insensitive, optional attributes)
     const parts = text.split(
-        /(<thought(?:>| [^>]*>)[\s\S]*?<\/thought>|<thought(?:>| [^>]*>)[\s\S]*)/i
+        /(<(?:thought|think)(?:>| [^>]*>)[\s\S]*?<\/(?:thought|think)>|<(?:thought|think)(?:>| [^>]*>)[\s\S]*)/i
     )
 
     const segments: ThoughtSegment[] = []
@@ -30,14 +30,14 @@ export function parseInlineThoughtBlocks(text: string, isStreaming = false): Tho
     parts.forEach((part, index) => {
         if (!part) return
 
-        if (/^<thought(?:>| [^>]*>)/i.test(part)) {
-            const isClosed = /<\/thought>$/i.test(part)
+        if (/^<(?:thought|think)(?:>| [^>]*>)/i.test(part)) {
+            const isClosed = /<\/(?:thought|think)>$/i.test(part)
             const isLastPart = index === parts.length - 1
             const isPartStreaming = !isClosed && (isStreaming || isLastPart)
 
             const thoughtContent = part
-                .replace(/^<thought(?:>| [^>]*>)/i, '')
-                .replace(/<\/thought>$/i, '')
+                .replace(/^<(?:thought|think)(?:>| [^>]*>)/i, '')
+                .replace(/<\/(?:thought|think)>$/i, '')
                 .trim()
 
             if (thoughtContent || isPartStreaming) {

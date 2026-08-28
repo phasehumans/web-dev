@@ -16,7 +16,7 @@ const startInstall = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError('Unauthorized', 401)
     }
 
-    const appName = env.GITHUB_APP_NAME || 'december-bot'
+    const appName = env.GITHUB_APP_NAME || 'trydecember'
     const returnUrl = (req.query.returnUrl as string) || '/profile/integrations'
     const state = encodeURIComponent(`${userId}|${returnUrl}`)
 
@@ -145,7 +145,11 @@ const getRepos = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError('Unauthorized', 401)
     }
 
-    const repos = await githubAppService.getUserInstallationRepos({ userId })
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : undefined
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined
+    const search = (req.query.search as string) || undefined
+
+    const repos = await githubAppService.getUserInstallationRepos({ userId, page, limit, search })
     return sendSuccess(res, 'repositories retrieved successfully', repos)
 })
 

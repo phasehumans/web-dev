@@ -26,6 +26,7 @@ export const createSessionSchema = z.object({
     title: z.string().max(100).optional(),
     type: z.enum(['WEB', 'CLI', 'SEARCH']).optional(),
     prompt: z.string().min(1, 'prompt is required').optional(),
+    projectId: z.string().uuid().optional(),
 })
 
 export const getSessionByIdSchema = z.object({
@@ -89,4 +90,23 @@ export const rehydrateSessionParamsSchema = z.object({
 export const proxyPreviewParamsSchema = z.object({
     id: z.string().uuid('Invalid session ID'),
     port: z.preprocess((val) => Number(val), z.number().int().min(1).max(65535)),
+})
+
+export const streamSearchResponseParamsSchema = z.object({
+    id: z.string().uuid('Invalid session ID'),
+})
+
+export const streamSearchResponseBodySchema = z.object({
+    prompt: z.string().min(1, 'prompt is required'),
+    messageHistory: z
+        .array(
+            z.object({
+                role: z.preprocess(
+                    (val) => (typeof val === 'string' ? val.toLowerCase() : val),
+                    z.enum(['user', 'assistant', 'system'])
+                ),
+                content: z.string().optional().default(''),
+            })
+        )
+        .optional(),
 })

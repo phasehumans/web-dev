@@ -97,7 +97,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         if (isAuthenticated && profile?.id) {
             window.location.href = profileAPI.getGithubConnectUrl(profile.id)
         } else {
-            const appName = getGithubAppName() || 'december-bot'
+            const appName = getGithubAppName() || 'trydecember'
             window.location.href = `https://github.com/apps/${appName}`
         }
     }
@@ -244,7 +244,15 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                         onChange={setPrompt}
                         onSubmit={(submittedPrompt) => {
                             if (chatMode === 'search') {
-                                navigate('/search')
+                                if (
+                                    isAuthenticated &&
+                                    overview !== undefined &&
+                                    (overview.creditBalance ?? 0) <= 0
+                                ) {
+                                    setShowOutOfCreditsModal(true)
+                                    return
+                                }
+                                navigate(`/search?prompt=${encodeURIComponent(submittedPrompt)}`)
                             } else {
                                 if (
                                     isAuthenticated &&

@@ -94,10 +94,15 @@ const downloadSession = async (data: DownloadSession) => {
 }
 
 const getUserGithubRepos = async (data: ListGithubRepos): Promise<GithubRepo[]> => {
-    const { userId } = data
+    const { userId, page: requestedPage, limit: requestedLimit, search } = data
 
     try {
-        const appRepos = await githubAppService.getUserInstallationRepos({ userId })
+        const appRepos = await githubAppService.getUserInstallationRepos({
+            userId,
+            page: requestedPage,
+            limit: requestedLimit,
+            search,
+        })
         if (appRepos && appRepos.length > 0) {
             return appRepos
         }
@@ -120,12 +125,13 @@ const getUserGithubRepos = async (data: ListGithubRepos): Promise<GithubRepo[]> 
     }
 
     let repos: any[] = []
-    let page = 1
+    let page = requestedPage || 1
+    const perPage = requestedLimit ? Math.min(requestedLimit, 100) : 100
     let hasMore = true
 
     while (hasMore) {
         const response = await fetch(
-            `https://api.github.com/user/repos?sort=updated&per_page=100&page=${page}`,
+            `https://api.github.com/user/repos?sort=updated&per_page=${perPage}&page=${page}`,
             {
                 method: 'GET',
                 headers: {
@@ -142,9 +148,17 @@ const getUserGithubRepos = async (data: ListGithubRepos): Promise<GithubRepo[]> 
         }
 
         const pageRepos = (await response.json()) as any[]
-        repos = repos.concat(pageRepos)
+        const filtered = search
+            ? pageRepos.filter(
+                  (r) =>
+                      r.name?.toLowerCase().includes(search.toLowerCase()) ||
+                      r.full_name?.toLowerCase().includes(search.toLowerCase())
+              )
+            : pageRepos
 
-        if (pageRepos.length < 100) {
+        repos = repos.concat(filtered)
+
+        if (pageRepos.length < perPage || requestedPage !== undefined) {
             hasMore = false
         } else {
             page++

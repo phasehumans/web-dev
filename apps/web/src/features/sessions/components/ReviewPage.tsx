@@ -56,7 +56,10 @@ export const ReviewPage: React.FC<ReviewPageProps> = ({ onNewProject }) => {
 
     const fetchReviews = useCallback(async () => {
         try {
-            const res: any = await reviewAPI.getReviews({ limit: 50 })
+            const res: any = await reviewAPI.getReviews({
+                limit: 50,
+                search: searchQuery.trim() || undefined,
+            })
             const list = res?.data?.reviews || res?.reviews || []
             setReviews(list)
         } catch (err) {
@@ -64,7 +67,7 @@ export const ReviewPage: React.FC<ReviewPageProps> = ({ onNewProject }) => {
         } finally {
             setIsLoading(false)
         }
-    }, [])
+    }, [searchQuery])
 
     useEffect(() => {
         fetchReviews()

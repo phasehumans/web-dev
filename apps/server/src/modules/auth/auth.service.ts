@@ -44,6 +44,9 @@ const signup = async (data: Signup) => {
     const existingUser = await authRepository.findUserByEmail(email)
 
     if (existingUser) {
+        if (existingUser.deletedAt || existingUser.isDeleted) {
+            throw new AppError('account has been deleted', 403)
+        }
         if (!existingUser.password) {
             throw new AppError('account exists with social login', 400)
         }
@@ -321,13 +324,14 @@ const resetPassword = async (data: ResetPassword) => {
 
 const google = async (data: Google) => {
     const { name, email, sub, userAgent, ipAddress } = data
+    const normalizedEmail = email.trim().toLowerCase()
 
-    let user = await authRepository.findUserByEmail(email)
+    let user = await authRepository.findUserByEmail(normalizedEmail)
 
     if (!user) {
         const username = getUsername()
         user = await authRepository.createUser({
-            email: email,
+            email: normalizedEmail,
             username: username,
             emailVerified: true,
             googleId: sub,
@@ -395,13 +399,14 @@ const google = async (data: Google) => {
 
 const github = async (data: Github) => {
     const { name, email, sub, username: ghUsername, userAgent, ipAddress } = data
+    const normalizedEmail = email.trim().toLowerCase()
 
-    let user = await authRepository.findUserByEmail(email)
+    let user = await authRepository.findUserByEmail(normalizedEmail)
 
     if (!user) {
         const username = getUsername()
         user = await authRepository.createUser({
-            email: email,
+            email: normalizedEmail,
             username: username,
             emailVerified: true,
             githubId: sub,

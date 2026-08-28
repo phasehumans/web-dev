@@ -44,6 +44,9 @@ export type GetUserInstallationToken = {
 
 export type GetUserInstallationRepos = {
     userId: string
+    page?: number
+    limit?: number
+    search?: string
 }
 
 export type GetUserInstallationStatus = {

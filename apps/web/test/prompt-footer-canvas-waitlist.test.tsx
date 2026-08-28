@@ -5,8 +5,11 @@ import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
 
 import { canvasAPI } from '../src/features/canvas/api'
+import { PromptInput } from '../src/features/home/components/PromptInput'
+import { MENTION_PROVIDERS } from '../src/features/home/hooks/usePromptInputController'
 import { WorkspaceHeader } from '../src/features/preview/components/WorkspaceHeader'
 import { profileAPI } from '../src/features/profile/api/profile'
+import { secretsAPI } from '../src/features/profile/api/secrets'
 import { sessionAPI } from '../src/features/sessions/api/session'
 import { PromptFooter } from '../src/shared/components/ui/PromptFooter'
 
@@ -230,6 +233,247 @@ describe('PromptFooter & WorkspaceScreen: Canvas Card, Waitlist, Plus Menu & Bac
         const secretsOption = screen.getByText('Secrets')
         fireEvent.click(secretsOption)
         expect(selectedOption).toBe('secrets:')
+    })
+
+    test('@ mention in PromptInput matches + icon dropdown options (Repositories, Sessions, Skills, Secrets)', async () => {
+        let promptValue = '@'
+        const setPromptValue = (val: string) => {
+            promptValue = val
+        }
+
+        // Verify MENTION_PROVIDERS list directly
+        const providerTitles = MENTION_PROVIDERS.map((p) => p.title)
+        expect(providerTitles).toEqual(['Repositories', 'Sessions', 'Skills', 'Secrets'])
+        expect(providerTitles).not.toContain('Codebase files')
+        expect(providerTitles).not.toContain('Send secrets')
+
+        const { rerender } = render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <PromptInput
+                        onSubmit={() => {}}
+                        isLoading={false}
+                        isAuthenticated={true}
+                        value={promptValue}
+                        onChange={setPromptValue}
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        // Dropdown menu should show Repositories, Sessions, Skills, Secrets
+        expect(screen.getByText('Repositories')).not.toBeNull()
+        expect(screen.getByText('Sessions')).not.toBeNull()
+        expect(screen.getByText('Skills')).not.toBeNull()
+        expect(screen.getByText('Secrets')).not.toBeNull()
+
+        // Should NOT show Codebase files or Send secrets
+        expect(screen.queryByText('Codebase files')).toBeNull()
+        expect(screen.queryByText('Send secrets')).toBeNull()
+
+        // Clicking Secrets replaces @ with @secrets:
+        const secretsBtn = screen.getByText('Secrets')
+        fireEvent.click(secretsBtn)
+        expect(promptValue).toBe('@secrets:')
+    })
+
+    test('@ mention in PromptInput filters by search mode', async () => {
+        render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <PromptInput
+                        onSubmit={() => {}}
+                        isLoading={false}
+                        isAuthenticated={true}
+                        value="@"
+                        onChange={() => {}}
+                        mode="search"
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        expect(screen.getByText('Repositories')).not.toBeNull()
+        expect(screen.queryByText('Sessions')).toBeNull()
+        expect(screen.queryByText('Skills')).toBeNull()
+        expect(screen.queryByText('Secrets')).toBeNull()
+        expect(screen.queryByText('Codebase files')).toBeNull()
+        expect(screen.queryByText('Send secrets')).toBeNull()
+    })
+
+    test('@repos: in PromptInput renders Connect GitHub as a hyperlink when GitHub is not connected', async () => {
+        spyOn(profileAPI, 'getProfile').mockImplementation(async () => ({
+            id: 'user-456',
+            name: 'Test',
+            username: 'test',
+            email: 'test@example.com',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            emailVerified: true,
+            receiveNotification: true,
+            googleId: null,
+            githubConnected: false,
+            canvasWaitlist: false,
+        }))
+
+        render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <PromptInput
+                        onSubmit={() => {}}
+                        isLoading={false}
+                        isAuthenticated={true}
+                        value="@repos:"
+                        onChange={() => {}}
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        // "Repositories" header is shown
+        expect(screen.getByText('Repositories')).not.toBeNull()
+
+        // "Connect GitHub" should be rendered as a link with href
+        const connectLink = screen.getByRole('link', { name: /Connect GitHub/i })
+        expect(connectLink).not.toBeNull()
+        expect(connectLink.getAttribute('href')).toContain('github.com/apps')
+        expect(connectLink.getAttribute('href')).toContain('installations/new')
+
+        // Suffix text should be visible
+        expect(screen.getByText(/to see repos\./i)).not.toBeNull()
+    })
+
+    test('@sessions: in PromptInput searches and selects sessions', async () => {
+        let promptValue = '@sessions:'
+        const setPromptValue = (val: string) => {
+            promptValue = val
+        }
+
+        spyOn(sessionAPI, 'getSessions').mockImplementation(async () => ({
+            sessions: [
+                {
+                    id: 'session-101',
+                    title: 'Dashboard Redesign',
+                    type: 'WEB' as const,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    lastMessage: 'Build dashboard widgets',
+                },
+                {
+                    id: 'session-102',
+                    title: 'Authentication Flow',
+                    type: 'WEB' as const,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    lastMessage: 'Add OAuth flow',
+                },
+            ],
+        }))
+
+        render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <PromptInput
+                        onSubmit={() => {}}
+                        isLoading={false}
+                        isAuthenticated={true}
+                        value={promptValue}
+                        onChange={setPromptValue}
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        // Dropdown shows Sessions header and loaded session titles
+        expect(screen.getByText('Sessions')).not.toBeNull()
+        expect(await screen.findByText('Dashboard Redesign')).not.toBeNull()
+        expect(await screen.findByText('Authentication Flow')).not.toBeNull()
+
+        // Clicking a session replaces @sessions: with @session:Title
+        const sessionItem = screen.getByText('Dashboard Redesign')
+        fireEvent.click(sessionItem)
+        expect(promptValue).toBe('@session:Dashboard Redesign ')
+    })
+
+    test('@skills: in PromptInput searches and selects skills', async () => {
+        let promptValue = '@skills:'
+        const setPromptValue = (val: string) => {
+            promptValue = val
+        }
+
+        render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <PromptInput
+                        onSubmit={() => {}}
+                        isLoading={false}
+                        isAuthenticated={true}
+                        value={promptValue}
+                        onChange={setPromptValue}
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        // Dropdown shows Skills header and default skills
+        expect(screen.getByText('Skills')).not.toBeNull()
+        expect(screen.getByText('frontend-design')).not.toBeNull()
+        expect(screen.getByText('tdd')).not.toBeNull()
+
+        // Clicking a skill replaces @skills: with @skill:name
+        const skillItem = screen.getByText('frontend-design')
+        fireEvent.click(skillItem)
+        expect(promptValue).toBe('@skill:frontend-design ')
+    })
+
+    test('@secrets: in PromptInput searches and selects secrets', async () => {
+        let promptValue = '@secrets:'
+        const setPromptValue = (val: string) => {
+            promptValue = val
+        }
+
+        spyOn(secretsAPI, 'getSecrets').mockImplementation(async () => ({
+            secrets: [
+                {
+                    id: 'sec-1',
+                    name: 'OPENAI_API_KEY',
+                    note: 'Production OpenAI key',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                },
+                {
+                    id: 'sec-2',
+                    name: 'DATABASE_URL',
+                    note: 'Postgres DB string',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                },
+            ],
+        }))
+
+        render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <PromptInput
+                        onSubmit={() => {}}
+                        isLoading={false}
+                        isAuthenticated={true}
+                        value={promptValue}
+                        onChange={setPromptValue}
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        // Dropdown shows Secrets header and secrets list
+        expect(screen.getByText('Secrets')).not.toBeNull()
+        expect(await screen.findByText('OPENAI_API_KEY')).not.toBeNull()
+        expect(await screen.findByText('DATABASE_URL')).not.toBeNull()
+
+        // Clicking a secret replaces @secrets: with @secret:name
+        const secretItem = screen.getByText('OPENAI_API_KEY')
+        fireEvent.click(secretItem)
+        expect(promptValue).toBe('@secret:OPENAI_API_KEY ')
     })
 
     test('Workspace header back button calls onBack directly without exit confirmation modal', async () => {

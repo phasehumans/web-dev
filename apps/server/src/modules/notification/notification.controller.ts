@@ -2,7 +2,7 @@ import { AppError } from '../../shared/appError'
 import { asyncHandler } from '../../shared/asyncHandler'
 import { sendSuccess } from '../../shared/response'
 
-import { NotificationParamsSchema } from './notification.schema'
+import { NotificationParamsSchema, GetNotificationsQuerySchema } from './notification.schema'
 import { notificationService } from './notification.service'
 
 import type { Request, Response } from 'express'
@@ -14,8 +14,25 @@ const getNotifications = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError('unauthorized', 401)
     }
 
-    const result = await notificationService.getNotifications({ userId })
+    const query = GetNotificationsQuerySchema.parse(req.query)
+    const result = await notificationService.getNotifications({
+        userId,
+        page: query.page,
+        limit: query.limit,
+        isRead: query.isRead,
+    })
     return sendSuccess(res, 'notifications fetched successfully', result)
+})
+
+const getUnreadCount = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId as string | undefined
+
+    if (!userId) {
+        throw new AppError('unauthorized', 401)
+    }
+
+    const result = await notificationService.getUnreadCount({ userId })
+    return sendSuccess(res, 'unread notification count fetched successfully', result)
 })
 
 const getNotificationById = asyncHandler(async (req: Request, res: Response) => {
@@ -84,6 +101,7 @@ const deleteAllReadNotification = asyncHandler(async (req: Request, res: Respons
 
 export const notificationController = {
     getNotifications,
+    getUnreadCount,
     getNotificationById,
     markAsRead,
     deleteNotification,

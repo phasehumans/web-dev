@@ -43,6 +43,39 @@ export async function enqueueJob(jobName: string, jobData: any) {
     return await getAgentQueue().add(jobName, jobData)
 }
 
+export type EmailJobData =
+    | {
+          type: 'otp'
+          to: string
+          otp: string
+          otpType?: 'signup' | 'verification' | 'password_reset'
+      }
+    | {
+          type: 'welcome'
+          to: string
+          name: string
+      }
+
+let _emailQueue: Queue<EmailJobData> | null = null
+export function getEmailQueue() {
+    if (!_emailQueue) {
+        _emailQueue = new Queue<EmailJobData>('email_jobs', {
+            connection: getRedisClient() as any,
+            defaultJobOptions: {
+                attempts: 3,
+                backoff: { type: 'exponential', delay: 2000 },
+                removeOnComplete: true,
+                removeOnFail: 1000,
+            },
+        })
+    }
+    return _emailQueue
+}
+
+export async function enqueueEmailJob(jobName: string, jobData: EmailJobData, options?: any) {
+    return await getEmailQueue().add(jobName, jobData, options)
+}
+
 export async function publishEvent(channel: string, eventData: any) {
     await getRedisClient().publish(channel, JSON.stringify(eventData))
 }

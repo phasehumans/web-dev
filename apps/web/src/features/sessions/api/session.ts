@@ -85,14 +85,6 @@ export type UpdateGeneralSettingsInput = {
     name?: string
     description?: string | null
     isStarred?: boolean
-    isSharedAsTemplate?: boolean
-    projectCategory?:
-        | 'LANDING_PAGE'
-        | 'DASHBOARD'
-        | 'PORTFOLIO_BLOG'
-        | 'SAAS_APP'
-        | 'ECOMMERCE'
-        | 'NONE'
 }
 
 const buildVersionQuery = (versionId?: string | null) =>
@@ -127,6 +119,21 @@ export const sessionAPI = {
     getSession: async (id: string): Promise<BackendSession> => {
         const data = await apiRequest<{ session: BackendSession }>(`/session/${id}`)
         return data.session
+    },
+
+    getSessionMessages: async (
+        sessionId: string,
+        params?: { beforeSequence?: number; limit?: number }
+    ): Promise<BackendMessage[]> => {
+        const queryParams = new URLSearchParams()
+        if (params?.beforeSequence !== undefined)
+            queryParams.append('beforeSequence', params.beforeSequence.toString())
+        if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString())
+        const qs = queryParams.toString()
+        const data = await apiRequest<{ messages: BackendMessage[] }>(
+            `/session/${sessionId}/messages${qs ? `?${qs}` : ''}`
+        )
+        return data.messages || []
     },
 
     getSessionDetail: (sessionId: string, versionId?: string | null) => {
@@ -188,17 +195,6 @@ export const sessionAPI = {
         return apiRequest<BackendSession>(`/session/${sessionId}/duplicate`, {
             method: 'POST',
             body: JSON.stringify({ name }),
-        })
-    },
-
-    shareSessionAsTemplate: (
-        sessionId: string,
-        isSharedAsTemplate: boolean,
-        projectCategory?: string
-    ) => {
-        return apiRequest<{ message: string }>(`/session/${sessionId}/share`, {
-            method: 'POST',
-            body: JSON.stringify({ isSharedAsTemplate, projectCategory }),
         })
     },
 
@@ -325,6 +321,99 @@ export const sessionAPI = {
     getSessionInsights: async (id: string): Promise<{ insights: any[] }> => {
         return apiRequest<{ insights: any[] }>(`/session/${id}/insights`)
     },
+
+    streamSearch: async (
+        sessionId: string,
+        payload: {
+            prompt: string
+            messageHistory?: Array<{
+                role: 'user' | 'assistant' | 'system'
+                content: string
+            }>
+        },
+        options?: {
+            signal?: AbortSignal
+            onToken?: (token: string) => void
+            onThought?: (thought: string) => void
+            onDone?: (data: {
+                inputTokens: number
+                outputTokens: number
+                totalTokens: number
+                costInCents: number
+            }) => void
+            onError?: (error: string) => void
+        }
+    ): Promise<void> => {
+        const response = await apiFetch(`/session/${sessionId}/search/stream`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+            signal: options?.signal,
+        })
+
+        if (!response.ok) {
+            let errorMsg = 'Failed to stream search response'
+            try {
+                const errorJson = await response.json()
+                errorMsg = errorJson.message || errorJson.error || errorMsg
+            } catch {
+                // Intentionally swallowed: fallback to status text
+            }
+            throw new ApiError(errorMsg, response.status)
+        }
+
+        if (!response.body) return
+
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
+
+                buffer += decoder.decode(value, { stream: true })
+                const parts = buffer.split('\n\n')
+                buffer = parts.pop() || ''
+
+                for (const part of parts) {
+                    const lines = part.split('\n')
+                    let eventName = 'token'
+                    let dataStr = ''
+
+                    for (const line of lines) {
+                        if (line.startsWith('event:')) {
+                            eventName = line.slice('event:'.length).trim()
+                        } else if (line.startsWith('data:')) {
+                            dataStr = line.slice('data:'.length).trim()
+                        }
+                    }
+
+                    if (!dataStr) continue
+
+                    try {
+                        const dataObj = JSON.parse(dataStr)
+                        if (eventName === 'token') {
+                            options?.onToken?.(dataObj.token || dataObj.text || '')
+                        } else if (eventName === 'thought') {
+                            options?.onThought?.(dataObj.thought || dataObj.text || '')
+                        } else if (eventName === 'done') {
+                            options?.onDone?.(dataObj)
+                        } else if (eventName === 'error') {
+                            options?.onError?.(dataObj.message || dataObj.error || 'Stream error')
+                        }
+                    } catch {
+                        // Intentionally swallowed: parsing malformed SSE chunk
+                    }
+                }
+            }
+        } finally {
+            reader.releaseLock()
+        }
+    },
 }
 
 // Backward-compatibility aliases during migration
@@ -332,7 +421,6 @@ export type BackendProject = BackendSession & {
     name?: string
     prompt?: string
     isStarred?: boolean
-    isSharedAsTemplate?: boolean
     projectStatus?: any
 }
 export type BackendProjectVersionSummary = BackendSessionVersionSummary
@@ -354,7 +442,6 @@ export const projectAPI = {
         sessionAPI.renameSession(id, data.rename),
     deleteProject: sessionAPI.deleteSession,
     duplicateProject: sessionAPI.duplicateSession,
-    shareProjectAsTemplate: sessionAPI.shareSessionAsTemplate,
     toggleStarProject: sessionAPI.toggleStarSession,
     downloadProject: sessionAPI.downloadSession,
 }

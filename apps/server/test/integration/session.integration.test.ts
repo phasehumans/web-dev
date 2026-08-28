@@ -126,6 +126,16 @@ describe('Session Integration Tests', () => {
         expect(res.body.data.chatMessages[0].content).toBe('Build a Next.js portfolio website')
     })
 
+    it('4b. GET /api/v1/session/:id/messages - returns paginated session messages', async () => {
+        const res = await request(app)
+            .get(`/api/v1/session/${createdSessionId}/messages?limit=10`)
+            .set('x-forwarded-for', getRandomIP())
+            .set('Authorization', `Bearer ${user1Token}`)
+
+        expect(res.status).toBe(200)
+        expect(res.body.data.messages).toBeArray()
+    })
+
     it('5. PATCH /api/v1/session/:id/rename - renames session', async () => {
         const res = await request(app)
             .patch(`/api/v1/session/${createdSessionId}/rename`)

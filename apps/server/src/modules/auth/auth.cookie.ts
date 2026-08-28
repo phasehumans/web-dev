@@ -9,11 +9,28 @@ const getCookieDomain = (): string | undefined => {
     try {
         const hostname = new URL(env.WEB_URL).hostname
         if (hostname === 'localhost' || hostname === '127.0.0.1') return undefined
-        const parts = hostname.split('.')
-        if (parts.length >= 2) {
-            return `.${parts.slice(-2).join('.')}`
+
+        // Prevent setting domain cookies on Public Suffixes (which browsers reject)
+        if (
+            hostname.endsWith('.vercel.app') ||
+            hostname.endsWith('.pages.dev') ||
+            hostname.endsWith('.onrender.com') ||
+            hostname.endsWith('.railway.app') ||
+            hostname.endsWith('.up.railway.app')
+        ) {
+            return undefined
         }
-        return `.${hostname}`
+
+        if (hostname === 'trydecember.com' || hostname.endsWith('.trydecember.com')) {
+            return '.trydecember.com'
+        }
+
+        const parts = hostname.split('.')
+        if (parts.length === 2) {
+            return `.${parts.join('.')}`
+        }
+
+        return undefined
     } catch {
         return undefined
     }
@@ -21,64 +38,47 @@ const getCookieDomain = (): string | undefined => {
 
 const cookieDomain = getCookieDomain()
 
+const getBaseCookieOptions = () => ({
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax' as const,
+    path: '/',
+    ...(cookieDomain ? { domain: cookieDomain } : {}),
+})
+
 const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+    const base = getBaseCookieOptions()
     res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
+        ...base,
         maxAge: 15 * 60 * 1000, // 15 min
-        path: '/',
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 
     res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
+        ...base,
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        path: '/',
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 }
 
 const setAccessTokenCookie = (res: Response, accessToken: string) => {
+    const base = getBaseCookieOptions()
     res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
+        ...base,
         maxAge: 15 * 60 * 1000, // 15 min
-        path: '/',
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 }
 
 const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
+    const base = getBaseCookieOptions()
     res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
+        ...base,
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        path: '/',
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
     })
 }
 
 const clearAuthCookies = (res: Response) => {
-    res.clearCookie('accessToken', {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        path: '/',
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
-    })
-
-    res.clearCookie('refreshToken', {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        path: '/',
-        ...(cookieDomain ? { domain: cookieDomain } : {}),
-    })
+    const base = getBaseCookieOptions()
+    res.clearCookie('accessToken', base)
+    res.clearCookie('refreshToken', base)
 }
 
 export const authCookie = {

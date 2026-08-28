@@ -4,6 +4,7 @@ import {
     getApiBaseUrl,
     getClientEnv,
     getGithubClientId,
+    getGithubAppName,
     getGoogleClientId,
     getVercelIntegrationSlug,
     getSupabaseClientId,
@@ -95,6 +96,7 @@ describe('API Client Base URL and Environment Configuration', () => {
             }
 
             expect(getGithubClientId()).toBe('Ov23liFGkTAwCW7E8gtk')
+            expect(getGithubAppName()).toBe('trydecember')
             expect(getGoogleClientId()).toBe(
                 '762203307362-qg77ln4ci9eldv3i0q1smv804epsbhk0.apps.googleusercontent.com'
             )

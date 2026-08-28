@@ -128,9 +128,9 @@ describe('Auth Utils - Unit Tests', () => {
 
     describe('sendOTP & sendWelcomeEmail', () => {
         it('should execute sendOTP without throwing', async () => {
-            const resend = (await import('../../src/config/email')).default
-            const originalSend = resend.emails.send
-            resend.emails.send = (async () => ({ data: { id: 'email-123' }, error: null })) as any
+            const { emailService } = await import('../../src/modules/email/email.service')
+            const originalSendOtp = emailService.sendOtpEmail
+            emailService.sendOtpEmail = async () => ({}) as any
 
             try {
                 await expect(sendOTP('test@example.com', '123456')).resolves.toBeUndefined()
@@ -141,21 +141,21 @@ describe('Auth Utils - Unit Tests', () => {
                     sendOTP('test@example.com', '123456', 'password_reset')
                 ).resolves.toBeUndefined()
             } finally {
-                resend.emails.send = originalSend
+                emailService.sendOtpEmail = originalSendOtp
             }
         })
 
         it('should execute sendWelcomeEmail without throwing', async () => {
-            const resend = (await import('../../src/config/email')).default
-            const originalSend = resend.emails.send
-            resend.emails.send = (async () => ({ data: { id: 'email-123' }, error: null })) as any
+            const { emailService } = await import('../../src/modules/email/email.service')
+            const originalSendWelcome = emailService.sendWelcomeEmail
+            emailService.sendWelcomeEmail = async () => ({}) as any
 
             try {
                 await expect(
                     sendWelcomeEmail('test@example.com', 'Test User')
                 ).resolves.toBeUndefined()
             } finally {
-                resend.emails.send = originalSend
+                emailService.sendWelcomeEmail = originalSendWelcome
             }
         })
     })

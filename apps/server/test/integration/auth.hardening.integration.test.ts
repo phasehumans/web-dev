@@ -137,8 +137,11 @@ describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
 
         await prisma.authSession.updateMany({
             where: { userId: testUserId },
-            data: { rotatedAt: new Date(Date.now() - 31 * 1000) },
+            data: { rotatedAt: new Date(Date.now() - 65 * 1000) },
         })
+
+        const { sessionCache } = await import('../../src/modules/auth/auth.cache')
+        sessionCache.clear()
 
         const resExpiredGrace = await request(app)
             .post('/api/v1/auth/refresh')

@@ -59,16 +59,16 @@ export const SidebarFooter: React.FC<
         enabled: isAuthenticated,
     })
 
-    const { data: notifications = [] } = useQuery({
-        queryKey: ['notifications'],
-        queryFn: notificationAPI.getNotifications,
+    const { data: unreadData } = useQuery({
+        queryKey: ['notifications-unread-count'],
+        queryFn: notificationAPI.getUnreadCount,
         enabled: isAuthenticated,
         refetchInterval: 30 * 1000,
     })
 
     const { data: overview } = useBillingOverview(isAuthenticated)
     const isPro = (overview as any)?.plan === 'PRO'
-    const hasUnread = notifications.some((n: any) => !n.isRead)
+    const hasUnread = (unreadData?.count ?? 0) > 0
 
     const handleMouseEnter = () => {
         if (hideTimeoutRef.current) {

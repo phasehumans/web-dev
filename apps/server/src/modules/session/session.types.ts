@@ -26,6 +26,7 @@ export type CreateSession = {
     title?: string
     type?: 'WEB' | 'CLI' | 'SEARCH'
     prompt?: string
+    projectId?: string
 }
 
 export type GetSession = {
@@ -58,6 +59,13 @@ export type UpdateSessionTags = {
 export type GetSessionInsights = {
     userId: string
     sessionId: string
+}
+
+export type GetSessionMessages = {
+    userId: string
+    sessionId: string
+    beforeSequence?: number
+    limit?: number
 }
 
 export type DeleteSession = {
@@ -102,4 +110,16 @@ export type ProxyPreview = {
 export type LoadSessionFiles = {
     sessionId: string
     userId?: string
+}
+
+export type StreamSearchResponse = {
+    userId: string
+    sessionId: string
+    prompt: string
+    messageHistory?: Array<{
+        role: 'user' | 'assistant' | 'system'
+        content: string
+    }>
+    res: import('express').Response
+    signal?: AbortSignal
 }

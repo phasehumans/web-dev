@@ -6,26 +6,48 @@ import { AppError } from '../../src/shared/appError'
 
 describe('Notification Service - Unit Tests', () => {
     describe('getNotifications', () => {
-        it('should return list of notifications for user', async () => {
+        it('should return paginated notifications for user', async () => {
             const original = notificationRepository.findManyNotifications
-            const mockNotifications = [
-                {
-                    id: 'notif-1',
-                    title: 'Welcome',
-                    message: 'Hello world',
-                    isRead: false,
-                    type: 'INFO' as const,
-                    link: null,
-                    createdAt: new Date(),
+            const mockResult = {
+                notifications: [
+                    {
+                        id: 'notif-1',
+                        title: 'Welcome',
+                        message: 'Hello world',
+                        isRead: false,
+                        type: 'INFO' as const,
+                        link: null,
+                        createdAt: new Date(),
+                    },
+                ],
+                pagination: {
+                    total: 1,
+                    page: 1,
+                    limit: 20,
+                    totalPages: 1,
                 },
-            ]
-            notificationRepository.findManyNotifications = (async () => mockNotifications) as any
+            }
+            notificationRepository.findManyNotifications = (async () => mockResult) as any
 
             try {
                 const res = await notificationService.getNotifications({ userId: 'user-1' })
-                expect(res as any).toEqual(mockNotifications)
+                expect(res as any).toEqual(mockResult)
             } finally {
                 notificationRepository.findManyNotifications = original
+            }
+        })
+    })
+
+    describe('getUnreadCount', () => {
+        it('should return unread notification count for user', async () => {
+            const original = notificationRepository.countUnreadNotifications
+            notificationRepository.countUnreadNotifications = (async () => 5) as any
+
+            try {
+                const res = await notificationService.getUnreadCount({ userId: 'user-1' })
+                expect(res).toEqual({ count: 5 })
+            } finally {
+                notificationRepository.countUnreadNotifications = original
             }
         })
     })

@@ -25,7 +25,6 @@ interface SessionListViewProps {
     onToggleStarFromMenu: (project: any, event: React.MouseEvent) => void
     onToggleArchiveFromMenu: (project: any, event: React.MouseEvent) => void
     onOpenRename: (project: any, event: React.MouseEvent) => void
-    onOpenShare: (project: any, event: React.MouseEvent) => void
     onOpenDelete: (project: any, event: React.MouseEvent) => void
     onOpenTags: (project: any, event: React.MouseEvent) => void
     onOpenInsights: (project: any, event: React.MouseEvent) => void
@@ -178,7 +177,6 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
     onToggleArchiveFromMenu,
     onOpenRename,
     onOpenDuplicate,
-    onOpenShare,
     onOpenDelete,
     onOpenTags,
     onOpenInsights,
@@ -332,7 +330,6 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
                                     onToggleStarFromMenu={onToggleStarFromMenu}
                                     onToggleArchiveFromMenu={onToggleArchiveFromMenu}
                                     onOpenRename={onOpenRename}
-                                    onOpenShare={onOpenShare}
                                     onOpenDelete={onOpenDelete}
                                     onOpenTags={onOpenTags}
                                     onOpenInsights={onOpenInsights}

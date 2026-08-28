@@ -107,7 +107,11 @@ const getUserGithubRepos = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError('unauthorized', 401)
     }
 
-    const result = await platformService.getUserGithubRepos({ userId })
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : undefined
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined
+    const search = (req.query.search as string) || undefined
+
+    const result = await platformService.getUserGithubRepos({ userId, page, limit, search })
     return sendSuccess(res, 'repos fetched successfully', result)
 })
 

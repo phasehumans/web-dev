@@ -252,7 +252,7 @@ const getGithubConnectUrl = (userId: string) => {
         typeof window !== 'undefined'
             ? window.location.pathname + window.location.search
             : '/profile/integrations'
-    const appName = getGithubAppName() || 'december-bot'
+    const appName = getGithubAppName() || 'trydecember'
     const stateVal = `${userId}|${redirectPath}`
     return `https://github.com/apps/${appName}/installations/new?state=${encodeURIComponent(stateVal)}`
 }

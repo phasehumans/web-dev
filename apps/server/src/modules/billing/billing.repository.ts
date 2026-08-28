@@ -16,11 +16,16 @@ export const billingRepository = {
                     include: {
                         redeemCode: true,
                     },
+                    orderBy: {
+                        redeemedAt: 'desc',
+                    },
+                    take: 10,
                 },
                 walletTransactions: {
                     orderBy: {
                         createdAt: 'desc',
                     },
+                    take: 10,
                 },
             },
         })

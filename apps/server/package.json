@@ -8,7 +8,7 @@
         "dev": "bun --watch src/server.ts",
         "start": "bun src/server.ts",
         "typecheck": "tsc --noEmit",
-        "test": "bunx --bun dotenv-cli -e ../../.env.test -- bun test",
+        "test": "bun run test:unit && bun run test:integration",
         "test:unit": "bunx --bun dotenv-cli -e ../../.env.test -- bun test test/unit",
         "test:integration": "bunx --bun dotenv-cli -e ../../.env.test -- bun test test/integration"
     },
