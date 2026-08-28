@@ -22,6 +22,7 @@ sessionRouter.post('/:id/collaborators', sessionController.addCollaborator)
 sessionRouter.delete('/:id/collaborators/:email', sessionController.removeCollaborator)
 sessionRouter.get('/:id/rehydrate', sessionController.rehydrateSession)
 sessionRouter.post('/:id/disconnect', sessionController.disconnectSession)
+sessionRouter.post('/:id/search/stream', sessionController.streamSearchResponse)
 sessionRouter.all('/:id/preview/:port', sessionController.proxyPreview)
 
 export default sessionRouter

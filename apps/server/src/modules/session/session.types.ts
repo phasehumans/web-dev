@@ -104,3 +104,15 @@ export type LoadSessionFiles = {
     sessionId: string
     userId?: string
 }
+
+export type StreamSearchResponse = {
+    userId: string
+    sessionId: string
+    prompt: string
+    messageHistory?: Array<{
+        role: 'user' | 'assistant' | 'system'
+        content: string
+    }>
+    res: import('express').Response
+    signal?: AbortSignal
+}

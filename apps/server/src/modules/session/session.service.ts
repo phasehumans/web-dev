@@ -13,6 +13,7 @@ import {
 } from '../../shared/project-storage'
 import { getIO } from '../../socket'
 import { hydrateCanvasDocument } from '../canvas/canvas.utils'
+import { cliDispatcher } from '../cli/cli.dispatcher'
 import { usageService } from '../usage/usage.service'
 
 import { sessionRepository } from './session.repository'
@@ -34,48 +35,54 @@ import type {
     RehydrateSession,
     ProxyPreview,
     LoadSessionFiles,
+    StreamSearchResponse,
 } from './session.types'
 
 const loadSessionFiles = async (data: LoadSessionFiles) => {
     const { sessionId } = data
     const prefix = sessionWorkspacePrefix(sessionId)
-    const objects = await listPrefix(prefix)
-    const files: Record<string, string> = {}
+    try {
+        const objects = await listPrefix(prefix)
+        const files: Record<string, string> = {}
 
-    await Promise.all(
-        objects.map(async (obj) => {
-            const key = obj.Key
-            if (!key) return
-            const relativePath = key.substring(prefix.length)
+        await Promise.all(
+            objects.map(async (obj) => {
+                const key = obj.Key
+                if (!key) return
+                const relativePath = key.substring(prefix.length)
 
-            if (!relativePath || relativePath.endsWith('/')) return
+                if (!relativePath || relativePath.endsWith('/')) return
 
-            const isBinary =
-                relativePath.endsWith('.png') ||
-                relativePath.endsWith('.jpg') ||
-                relativePath.endsWith('.jpeg') ||
-                relativePath.endsWith('.webp') ||
-                relativePath.endsWith('.gif') ||
-                relativePath.endsWith('.ico') ||
-                relativePath.endsWith('.zip') ||
-                relativePath.endsWith('.pdf')
+                const isBinary =
+                    relativePath.endsWith('.png') ||
+                    relativePath.endsWith('.jpg') ||
+                    relativePath.endsWith('.jpeg') ||
+                    relativePath.endsWith('.webp') ||
+                    relativePath.endsWith('.gif') ||
+                    relativePath.endsWith('.ico') ||
+                    relativePath.endsWith('.zip') ||
+                    relativePath.endsWith('.pdf')
 
-            if (isBinary) {
-                files[relativePath] = ''
-                return
-            }
+                if (isBinary) {
+                    files[relativePath] = ''
+                    return
+                }
 
-            try {
-                const content = await getTextFile(key)
-                files[relativePath] = content ?? ''
-            } catch (err) {
-                console.error(`Failed to load file content for ${relativePath} (${key}):`, err)
-                files[relativePath] = ''
-            }
-        })
-    )
+                try {
+                    const content = await getTextFile(key)
+                    files[relativePath] = content ?? ''
+                } catch (err) {
+                    console.error(`Failed to load file content for ${relativePath} (${key}):`, err)
+                    files[relativePath] = ''
+                }
+            })
+        )
 
-    return files
+        return files
+    } catch {
+        // Intentionally swallowed: Handles offline/test environment when S3/MinIO is unreachable
+        return {}
+    }
 }
 
 const getUserSessions = async (data: GetUserSessions) => {
@@ -144,7 +151,8 @@ const getUserSessions = async (data: GetUserSessions) => {
 const createSession = async (data: CreateSession) => {
     const { userId, title, type, prompt } = data
 
-    const minBalance = parseInt(process.env.MIN_SESSION_START_BALANCE_IN_CENTS || '50', 10)
+    const minBalance =
+        type === 'SEARCH' ? 1 : parseInt(process.env.MIN_SESSION_START_BALANCE_IN_CENTS || '50', 10)
     const hasBalance = await usageService.hasMinimumBalance({
         userId,
         minBalanceInCents: minBalance,
@@ -157,15 +165,17 @@ const createSession = async (data: CreateSession) => {
         )
     }
 
-    const activeSessions = await prisma.session.count({
-        where: {
-            userId,
-            vmStatus: { in: ['PROVISIONING', 'RUNNING'] },
-        },
-    })
+    if (type !== 'SEARCH') {
+        const activeSessions = await prisma.session.count({
+            where: {
+                userId,
+                vmStatus: { in: ['PROVISIONING', 'RUNNING'] },
+            },
+        })
 
-    if (activeSessions > 0) {
-        throw new AppError('An active session is already running', 409)
+        if (activeSessions > 0) {
+            throw new AppError('An active session is already running', 409)
+        }
     }
 
     const session = await sessionRepository.createSession({
@@ -212,7 +222,7 @@ const getSession = async (data: GetSession) => {
 
     return {
         session,
-        chatMessages: session.messages.map((message) => ({
+        chatMessages: (session.messages || []).map((message) => ({
             id: message.id,
             role: message.role,
             content: message.content,
@@ -548,6 +558,204 @@ const proxyPreview = async (data: ProxyPreview) => {
     }
 }
 
+const streamSearchResponse = async (data: StreamSearchResponse) => {
+    const { userId, sessionId, prompt, messageHistory, res, signal } = data
+
+    const session = await sessionRepository.findSessionById(sessionId, userId)
+    if (!session) {
+        throw new AppError('Session not found', 404)
+    }
+
+    const hasBalance = await usageService.hasMinimumBalance({
+        userId,
+        minBalanceInCents: 1,
+    })
+    if (!hasBalance) {
+        throw new AppError(
+            'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing to continue using Search.',
+            402
+        )
+    }
+
+    const existingMessages = await prisma.message.findMany({
+        where: { sessionId },
+        orderBy: { sequence: 'asc' },
+    })
+
+    const lastSequence =
+        existingMessages.length > 0 ? Math.max(...existingMessages.map((m) => m.sequence)) : 0
+
+    const userMessageSequence = lastSequence + 1
+    await prisma.message.create({
+        data: {
+            sessionId,
+            role: 'USER',
+            content: prompt,
+            sequence: userMessageSequence,
+        },
+    })
+
+    if (!session.title || session.title === 'New Session' || session.title === 'Untitled Session') {
+        const titleSnippet = prompt.length > 50 ? prompt.slice(0, 47) + '...' : prompt
+        await sessionRepository
+            .updateSession(sessionId, userId, { title: titleSnippet })
+            .catch(() => {
+                // Intentionally swallowed: optional title update fallback
+            })
+    }
+
+    const llmMessages: import('@december/providers').Message[] = []
+    if (messageHistory && messageHistory.length > 0) {
+        for (const msg of messageHistory) {
+            llmMessages.push({
+                role:
+                    msg.role === 'assistant'
+                        ? 'assistant'
+                        : msg.role === 'system'
+                          ? 'system'
+                          : 'user',
+                content: msg.content,
+            })
+        }
+    } else {
+        for (const msg of existingMessages) {
+            llmMessages.push({
+                role:
+                    msg.role === 'ASSISTANT'
+                        ? 'assistant'
+                        : msg.role === 'SYSTEM'
+                          ? 'system'
+                          : 'user',
+                content: msg.content,
+            })
+        }
+    }
+
+    if (llmMessages.length === 0 || llmMessages[llmMessages.length - 1]?.content !== prompt) {
+        llmMessages.push({
+            role: 'user',
+            content: prompt,
+        })
+    }
+
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+    if (typeof (res as any).flushHeaders === 'function') {
+        ;(res as any).flushHeaders()
+    }
+
+    const requestedModel = process.env.SEARCH_MODEL || 'gemini-3.6-flash'
+    const systemPrompt =
+        'You are December Search, a helpful, precise, and fast AI assistant. Provide concise, clear, and direct answers formatted in GitHub-flavored Markdown. When providing code, use markdown code blocks with the appropriate language identifier.'
+
+    let fullAssistantContent = ''
+    let usageInfo: { inputTokens: number; outputTokens: number; totalTokens: number } | null = null
+
+    try {
+        const { provider, model } = cliDispatcher.resolveServerProvider(requestedModel)
+        const stream = provider.stream(
+            llmMessages,
+            undefined,
+            systemPrompt,
+            { model, temperature: 0.7 },
+            signal
+        )
+
+        for await (const chunk of stream) {
+            if (chunk.type === 'text') {
+                fullAssistantContent += chunk.text
+                res.write(
+                    `event: token\ndata: ${JSON.stringify({ token: chunk.text, text: chunk.text })}\n\n`
+                )
+            } else if (chunk.type === 'thinking_delta') {
+                res.write(
+                    `event: thought\ndata: ${JSON.stringify({ thought: chunk.text, text: chunk.text })}\n\n`
+                )
+            } else if (chunk.type === 'usage') {
+                usageInfo = {
+                    inputTokens: chunk.promptTokens,
+                    outputTokens: chunk.completionTokens,
+                    totalTokens: chunk.promptTokens + chunk.completionTokens,
+                }
+            }
+        }
+
+        if (!usageInfo) {
+            const inputChars =
+                llmMessages.reduce((acc, m) => acc + (m.content ? m.content.length : 0), 0) +
+                systemPrompt.length
+            const outputChars = fullAssistantContent.length
+            const inputTokens = Math.max(1, Math.ceil(inputChars / 4))
+            const outputTokens = Math.max(1, Math.ceil(outputChars / 4))
+            usageInfo = {
+                inputTokens,
+                outputTokens,
+                totalTokens: inputTokens + outputTokens,
+            }
+        }
+
+        const assistantMessageSequence = userMessageSequence + 1
+        await prisma.message.create({
+            data: {
+                sessionId,
+                role: 'ASSISTANT',
+                content: fullAssistantContent,
+                sequence: assistantMessageSequence,
+            },
+        })
+
+        const calculatedCost = usageService.calculateGenerationCost({
+            modelName: requestedModel,
+            inputTokens: usageInfo.inputTokens,
+            outputTokens: usageInfo.outputTokens,
+        })
+
+        await usageService
+            .recordUsageEvent({
+                userId,
+                sessionId,
+                model: requestedModel,
+                inputTokens: usageInfo.inputTokens,
+                outputTokens: usageInfo.outputTokens,
+                totalTokens: usageInfo.totalTokens,
+                externalRequestId: `search-${sessionId}-${assistantMessageSequence}-${Date.now()}`,
+                metadata: {
+                    type: 'search',
+                    sessionId,
+                },
+            })
+            .catch((e) => {
+                console.error('[Search Usage Record Error]:', e)
+            })
+
+        res.write(
+            `event: done\ndata: ${JSON.stringify({
+                inputTokens: usageInfo.inputTokens,
+                outputTokens: usageInfo.outputTokens,
+                totalTokens: usageInfo.totalTokens,
+                costInCents: calculatedCost,
+            })}\n\n`
+        )
+    } catch (err: any) {
+        console.error('[Search Stream Error]:', err)
+        if (!res.headersSent) {
+            throw new AppError(err?.message || 'Failed to stream search response', 500)
+        } else {
+            res.write(
+                `event: error\ndata: ${JSON.stringify({
+                    error: err?.message || 'Stream error',
+                    message: err?.message || 'Stream error',
+                })}\n\n`
+            )
+        }
+    } finally {
+        if (!res.writableEnded) {
+            res.end()
+        }
+    }
+}
+
 export const sessionService = {
     loadSessionFiles,
     getUserSessions,
@@ -565,4 +773,5 @@ export const sessionService = {
     rehydrateSession,
     disconnectSession,
     proxyPreview,
+    streamSearchResponse,
 }

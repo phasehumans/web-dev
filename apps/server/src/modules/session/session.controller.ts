@@ -21,6 +21,8 @@ import {
     disconnectSessionParamsSchema,
     rehydrateSessionParamsSchema,
     proxyPreviewParamsSchema,
+    streamSearchResponseParamsSchema,
+    streamSearchResponseBodySchema,
 } from './session.schema'
 import { sessionService } from './session.service'
 
@@ -269,6 +271,21 @@ export const proxyPreview = asyncHandler(async (req: Request, res: Response) => 
     `)
 })
 
+export const streamSearchResponse = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
+    const { id } = streamSearchResponseParamsSchema.parse(req.params)
+    const { prompt, messageHistory } = streamSearchResponseBodySchema.parse(req.body)
+
+    await sessionService.streamSearchResponse({
+        userId,
+        sessionId: id,
+        prompt,
+        messageHistory,
+        res,
+    })
+})
+
 export const sessionController = {
     getSessions,
     createSession,
@@ -285,4 +302,5 @@ export const sessionController = {
     rehydrateSession,
     disconnectSession,
     proxyPreview,
+    streamSearchResponse,
 }

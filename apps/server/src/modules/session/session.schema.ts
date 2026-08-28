@@ -91,3 +91,19 @@ export const proxyPreviewParamsSchema = z.object({
     id: z.string().uuid('Invalid session ID'),
     port: z.preprocess((val) => Number(val), z.number().int().min(1).max(65535)),
 })
+
+export const streamSearchResponseParamsSchema = z.object({
+    id: z.string().uuid('Invalid session ID'),
+})
+
+export const streamSearchResponseBodySchema = z.object({
+    prompt: z.string().min(1, 'prompt is required'),
+    messageHistory: z
+        .array(
+            z.object({
+                role: z.enum(['user', 'assistant', 'system']),
+                content: z.string(),
+            })
+        )
+        .optional(),
+})

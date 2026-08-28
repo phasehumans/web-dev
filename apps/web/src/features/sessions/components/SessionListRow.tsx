@@ -100,6 +100,14 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                         <span className="truncate text-[14px] font-medium text-[#D6D5C9] transition-colors hover:text-white">
                             {session.title || 'Untitled Session'}
                         </span>
+                        {session.type === 'SEARCH' && (
+                            <span
+                                className="flex items-center justify-center rounded bg-[#242323] p-1 shrink-0"
+                                title="Search session"
+                            >
+                                <Icons.Search className="h-3 w-3 text-[#87B2F4]" />
+                            </span>
+                        )}
                         {session.isArchived && (
                             <span className="flex items-center justify-center rounded bg-[#242323] p-1 shrink-0">
                                 <Icons.Archive className="h-3 w-3 text-[#7B7A79]" />
@@ -230,6 +238,13 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                             >
                                 {session.title || 'Untitled Session'}
                             </span>
+                            {session.type === 'SEARCH' && (
+                                <Tooltip position="top" content="Search session">
+                                    <span className="flex items-center justify-center rounded bg-[#242323] p-1">
+                                        <Icons.Search className="h-3 w-3 text-[#87B2F4]" />
+                                    </span>
+                                </Tooltip>
+                            )}
                             {session.isArchived && (
                                 <Tooltip position="top" content="This session is archived">
                                     <span className="flex items-center justify-center rounded bg-[#242323] p-1">

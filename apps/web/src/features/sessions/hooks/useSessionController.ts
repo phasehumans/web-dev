@@ -212,6 +212,11 @@ export const useSessionController = (
 
             try {
                 const detail = await sessionAPI.getSessionDetail(projectId, versionId)
+                const sessionType = (detail as any).session?.type || (detail as any).project?.type
+                if (sessionType === 'SEARCH') {
+                    navigate(`/search?session=${projectId}`)
+                    return
+                }
                 hydrateProjectDetail(detail)
                 // Buffer (1000ms) to allow Workspace DOM, preview iframe, and terminal to fully warm up in background
                 await new Promise((resolve) => setTimeout(resolve, 1000))
