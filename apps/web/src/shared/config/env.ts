@@ -106,7 +106,7 @@ export const getGithubClientId = (): string => {
 
 export const getGithubAppName = (): string => {
     return (
-        getClientEnv('GITHUB_APP_NAME') ?? getClientEnv('PUBLIC_GITHUB_APP_NAME') ?? 'december-bot'
+        getClientEnv('GITHUB_APP_NAME') ?? getClientEnv('PUBLIC_GITHUB_APP_NAME') ?? 'trydecember'
     )
 }
 

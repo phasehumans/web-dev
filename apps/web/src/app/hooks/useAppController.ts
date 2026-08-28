@@ -61,12 +61,16 @@ export const useAppController = () => {
         let isMounted = true
 
         const restoreSession = async () => {
-            const refreshed = await refreshAuthSession()
-            if (!isMounted || !refreshed) return
+            try {
+                await profileAPI.getQuickInfo()
+                if (!isMounted) return
 
-            setIsAuthenticated(true)
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-            queryClient.invalidateQueries({ queryKey: ['profile'] })
+                setIsAuthenticated(true)
+                queryClient.invalidateQueries({ queryKey: ['sessions'] })
+                queryClient.invalidateQueries({ queryKey: ['profile'] })
+            } catch {
+                // Intentionally swallowed: unauthenticated visitor on initial session restore
+            }
         }
 
         void restoreSession()

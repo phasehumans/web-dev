@@ -1,15 +1,33 @@
+export interface FooterLink {
+    label: string
+    url: string
+}
+
 export interface BaseEmailOptions {
     previewText: string
     content: string
     supportEmail: string
     webUrl?: string
+    footerLinks?: FooterLink[]
 }
 
 export const renderBaseEmail = ({
     previewText,
     content,
     supportEmail,
+    footerLinks,
 }: BaseEmailOptions): string => {
+    const footerLinksHtml =
+        footerLinks && footerLinks.length > 0
+            ? `<p class="text-muted" style="margin: 0 0 8px 0; font-size: 11px; line-height: 16px; color: #a8a29e;">
+                  ${footerLinks
+                      .map(
+                          (link) =>
+                              `<a class="link" href="${link.url}" target="_blank" style="color: #78716c; text-decoration: underline;">${link.label}</a>`
+                      )
+                      .join(' &nbsp;•&nbsp; ')}
+                </p>`
+            : ''
     return `<!DOCTYPE html>
 <html>
   <head>
@@ -81,6 +99,7 @@ export const renderBaseEmail = ({
             <!-- Footer -->
             <tr>
               <td style="text-align: center;">
+                ${footerLinksHtml}
                 <p class="text-muted" style="margin: 0 0 6px 0; font-size: 11px; line-height: 16px; color: #a8a29e;">
                   Questions? Reach out to <a class="link" href="mailto:${supportEmail}" style="color: #57534e; text-decoration: underline;">${supportEmail}</a>
                 </p>

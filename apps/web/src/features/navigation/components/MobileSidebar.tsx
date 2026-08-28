@@ -354,7 +354,7 @@ export const MobileSidebar: React.FC<
                 }
                 return updatedB - updatedA
             })
-            .slice(0, 10)
+            .slice(0, 5)
     }, [isAuthenticated, sessions, sortBy, filterSchedules, filterArchived, sessionType])
 
     return (

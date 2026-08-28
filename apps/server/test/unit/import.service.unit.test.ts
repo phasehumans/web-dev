@@ -35,6 +35,9 @@ describe('Import Service - Unit Tests', () => {
             const originalFind = importRepository.findUserForImport
             const originalCreateSession = importRepository.createPlaceholderSession
             const originalCreateImport = importRepository.createImport
+            const originalIncrement = importRepository.incrementAttempts
+            const originalUpdate = importRepository.updateImport
+            const originalFail = importRepository.findImportForFail
 
             importRepository.findUserForImport = (async () => ({
                 id: 'u1',
@@ -49,6 +52,9 @@ describe('Import Service - Unit Tests', () => {
                 sourceUrl: data.sourceUrl,
                 sessionId: data.sessionId,
             })) as any
+            importRepository.incrementAttempts = (async () => ({}) as any) as any
+            importRepository.updateImport = (async () => ({}) as any) as any
+            importRepository.findImportForFail = (async () => null) as any
 
             try {
                 const res = await uploadService.importFromGithub({
@@ -60,6 +66,9 @@ describe('Import Service - Unit Tests', () => {
                 importRepository.findUserForImport = originalFind
                 importRepository.createPlaceholderSession = originalCreateSession
                 importRepository.createImport = originalCreateImport
+                importRepository.incrementAttempts = originalIncrement
+                importRepository.updateImport = originalUpdate
+                importRepository.findImportForFail = originalFail
             }
         })
 
@@ -69,6 +78,7 @@ describe('Import Service - Unit Tests', () => {
             const originalCreateImport = importRepository.createImport
             const originalIncrement = importRepository.incrementAttempts
             const originalUpdate = importRepository.updateImport
+            const originalFail = importRepository.findImportForFail
 
             importRepository.findUserForImport = (async () => ({
                 id: 'u1',
@@ -95,6 +105,7 @@ describe('Import Service - Unit Tests', () => {
 
             importRepository.incrementAttempts = (async () => ({}) as any) as any
             importRepository.updateImport = (async () => ({}) as any) as any
+            importRepository.findImportForFail = (async () => null) as any
 
             try {
                 const res = await uploadService.importFromGithub({
@@ -113,6 +124,7 @@ describe('Import Service - Unit Tests', () => {
                 importRepository.createImport = originalCreateImport
                 importRepository.incrementAttempts = originalIncrement
                 importRepository.updateImport = originalUpdate
+                importRepository.findImportForFail = originalFail
             }
         })
     })

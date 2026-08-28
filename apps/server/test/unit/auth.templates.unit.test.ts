@@ -63,7 +63,7 @@ describe('Auth Email Templates - Unit Tests', () => {
     })
 
     describe('renderWelcomeEmail', () => {
-        it('should render welcome email with user name and simple AI engineer messaging', () => {
+        it('should render welcome email with user name, CLI README messaging, and footer links', () => {
             const { subject, html, text } = renderWelcomeEmail({
                 name: 'Alex Developer',
                 supportEmail: 'support@december.com',
@@ -72,22 +72,28 @@ describe('Auth Email Templates - Unit Tests', () => {
 
             expect(subject).toBe('Welcome to December')
             expect(html).toContain('Hi Alex Developer')
-            expect(html).toContain('AI software engineer')
-            expect(html).toContain('Terminal-Based:')
-            expect(html).toContain('Cloud-Based:')
+            expect(html).toContain('AI coding agent that lives in your terminal')
+            expect(html).toContain('Writes code &amp; runs commands:')
+            expect(html).toContain('Cloud Handoff:')
+            expect(html).toContain('/handoff')
+            expect(html).toContain('Bring your own AI:')
             expect(html).toContain('https://www.npmjs.com/package/@trydecember/cli')
             expect(html).toContain('npm install -g @trydecember/cli')
             expect(html).toContain('Start building now')
             expect(html).toContain('https://trydecember.com')
+            expect(html).toContain('https://github.com/phasehumans/december')
             expect(html).toContain('Chaitanya Sonawane')
 
             expect(text).toContain('Hi Alex Developer')
-            expect(text).toContain('AI software engineer')
-            expect(text).toContain('Terminal-Based:')
-            expect(text).toContain('Cloud-Based:')
+            expect(text).toContain('AI coding agent that lives in your terminal')
+            expect(text).toContain('Writes code & runs commands:')
+            expect(text).toContain('Cloud Handoff:')
+            expect(text).toContain('/handoff')
+            expect(text).toContain('Bring your own AI:')
             expect(text).toContain('https://www.npmjs.com/package/@trydecember/cli')
             expect(text).toContain('npm install -g @trydecember/cli')
             expect(text).toContain('Start building now: https://trydecember.com')
+            expect(text).toContain('GitHub: https://github.com/phasehumans/december')
         })
 
         it('should default to "there" when name is not provided or empty', () => {

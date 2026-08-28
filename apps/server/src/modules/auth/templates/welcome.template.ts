@@ -7,6 +7,7 @@ export interface RenderWelcomeEmailOptions {
     supportEmail: string
     webUrl: string
     npmUrl?: string
+    githubUrl?: string
 }
 
 export const renderWelcomeEmail = ({
@@ -14,11 +15,11 @@ export const renderWelcomeEmail = ({
     supportEmail,
     webUrl,
     npmUrl = 'https://www.npmjs.com/package/@trydecember/cli',
+    githubUrl = 'https://github.com/phasehumans/december',
 }: RenderWelcomeEmailOptions): RenderedEmail => {
     const greetingName = name?.trim() ? name.trim() : 'there'
     const subject = 'Welcome to December'
-    const previewText =
-        'Welcome to December — your AI software engineer for building and fixing code.'
+    const previewText = 'December is an AI coding agent that lives in your terminal.'
 
     const htmlContent = `
       <!-- Heading -->
@@ -36,15 +37,19 @@ export const renderWelcomeEmail = ({
             Hi ${greetingName},
           </p>
           <p class='text-secondary' style='margin: 0 0 16px 0; font-size: 14px; line-height: 22px; color: #57534e;'>
-            We’re thrilled to welcome you to <strong>December</strong>. December is an AI software engineer that helps you plan, build, test, and debug code directly across your projects.
+            December is an AI coding agent that lives in your terminal. It understands your codebase and helps you build faster by writing code, fixing bugs, and running commands.
           </p>
-          <p class='text-secondary' style='margin: 0 0 16px 0; font-size: 14px; line-height: 22px; color: #57534e;'>
-            You can use December in two ways:
+          <p class='text-secondary' style='margin: 0 0 10px 0; font-size: 14px; line-height: 22px; color: #57534e; font-weight: 600;'>
+            Here is what you can do:
           </p>
           <ul class='text-secondary' style='margin: 0 0 16px 0; padding-left: 20px; font-size: 14px; line-height: 22px; color: #57534e;'>
-            <li style='margin-bottom: 8px;'><strong>Terminal-Based:</strong> Install our CLI from npm (<a class='link' href='${npmUrl}' target='_blank' style='color: #1c1917; text-decoration: underline;'>@trydecember/cli</a>) and run tasks directly in your terminal using <code class='otp-box' style='padding: 2px 6px; background-color: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 4px; font-family: Menlo, Monaco, Consolas, monospace; font-size: 13px;'>npm install -g @trydecember/cli</code>.</li>
-            <li style='margin-bottom: 8px;'><strong>Cloud-Based:</strong> Start and manage sessions directly in your browser on the web dashboard.</li>
+            <li style='margin-bottom: 8px;'><strong>Writes code &amp; runs commands:</strong> Ask it to build features, fix bugs, or run tests directly in your terminal or web dashboard.</li>
+            <li style='margin-bottom: 8px;'><strong>Cloud Handoff:</strong> Use <code class='otp-box' style='padding: 2px 6px; background-color: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 4px; font-family: Menlo, Monaco, Consolas, monospace; font-size: 13px;'>/handoff</code> in your terminal to continue your session seamlessly on <a class='link' href='${webUrl}' target='_blank' style='color: #1c1917; text-decoration: underline;'>trydecember.com</a>.</li>
+            <li style='margin-bottom: 8px;'><strong>Bring your own AI:</strong> Plug in API keys for OpenAI, Anthropic, Gemini, and 20+ others, or use December credits.</li>
           </ul>
+          <p class='text-secondary' style='margin: 0 0 16px 0; font-size: 14px; line-height: 22px; color: #57534e;'>
+            Run <code class='otp-box' style='padding: 2px 6px; background-color: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 4px; font-family: Menlo, Monaco, Consolas, monospace; font-size: 13px;'>npm install -g @trydecember/cli</code> to get started locally, or launch a session in your browser:
+          </p>
           
           <!-- CTA Button -->
           <table role='presentation' cellspacing='0' cellpadding='0' border='0' style='margin: 24px 0;'>
@@ -74,17 +79,25 @@ export const renderWelcomeEmail = ({
         content: htmlContent,
         supportEmail,
         webUrl,
+        footerLinks: [
+            { label: 'GitHub', url: githubUrl },
+            { label: 'npm', url: npmUrl },
+            { label: 'Website', url: webUrl },
+        ],
     })
 
     const text = `Welcome to December
 
 Hi ${greetingName},
 
-We’re thrilled to welcome you to December. December is an AI software engineer that helps you plan, build, test, and debug code directly across your projects.
+December is an AI coding agent that lives in your terminal. It understands your codebase and helps you build faster by writing code, fixing bugs, and running commands.
 
-You can use December in two ways:
-- Terminal-Based: Install our CLI from npm (@trydecember/cli at ${npmUrl}) and run tasks directly in your terminal using "npm install -g @trydecember/cli".
-- Cloud-Based: Start and manage sessions directly in your browser on the web dashboard.
+Here is what you can do:
+- Writes code & runs commands: Ask it to build features, fix bugs, or run tests directly in your terminal or web dashboard.
+- Cloud Handoff: Use /handoff in your terminal to continue your session seamlessly on trydecember.com.
+- Bring your own AI: Plug in API keys for OpenAI, Anthropic, Gemini, and 20+ others, or use December credits.
+
+Run "npm install -g @trydecember/cli" to get started locally, or launch a session in your browser.
 
 Start building now: ${webUrl}
 
@@ -94,6 +107,8 @@ Welcome aboard,
 Chaitanya Sonawane
 
 ---
+GitHub: ${githubUrl}
+npm: ${npmUrl}
 December: ${webUrl}
 `
 

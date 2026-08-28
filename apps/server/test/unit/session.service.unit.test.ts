@@ -1,5 +1,5 @@
 import { prisma } from '@december/database'
-import { describe, it, expect, mock } from 'bun:test'
+import { describe, it, expect, mock, afterEach } from 'bun:test'
 
 import { sessionRepository } from '../../src/modules/session/session.repository'
 import { sessionService } from '../../src/modules/session/session.service'
@@ -11,6 +11,34 @@ describe('Session Service - Unit Tests', () => {
     const otherUserId = '22222222-2222-2222-2222-222222222222'
     const testSessionId = '33333333-3333-3333-3333-333333333333'
     const testProjectId = '44444444-4444-4444-4444-444444444444'
+
+    const originalFindSessionById = sessionRepository.findSessionById
+    const originalCreateSession = sessionRepository.createSession
+    const originalUpdateSession = sessionRepository.updateSession
+    const originalFindManySessions = sessionRepository.findManySessions
+    const originalFindSessionOwner = sessionRepository.findSessionOwner
+    const originalFindSessionCollaborator = sessionRepository.findSessionCollaborator
+    const originalAddCollaborator = sessionRepository.addCollaborator
+    const originalRemoveCollaborator = sessionRepository.removeCollaborator
+    const originalFindSessionInsights = sessionRepository.findSessionInsights
+    const originalCountPrismaSession = prisma.session.count
+    const originalCreatePrismaMessage = prisma.message.create
+    const originalBalance = usageService.hasMinimumBalance
+
+    afterEach(() => {
+        sessionRepository.findSessionById = originalFindSessionById
+        sessionRepository.createSession = originalCreateSession
+        sessionRepository.updateSession = originalUpdateSession
+        sessionRepository.findManySessions = originalFindManySessions
+        sessionRepository.findSessionOwner = originalFindSessionOwner
+        sessionRepository.findSessionCollaborator = originalFindSessionCollaborator
+        sessionRepository.addCollaborator = originalAddCollaborator
+        sessionRepository.removeCollaborator = originalRemoveCollaborator
+        sessionRepository.findSessionInsights = originalFindSessionInsights
+        prisma.session.count = originalCountPrismaSession
+        prisma.message.create = originalCreatePrismaMessage
+        usageService.hasMinimumBalance = originalBalance
+    })
 
     describe('createSession', () => {
         it('should throw AppError 402 if user has insufficient balance (< $0.50)', async () => {
@@ -199,7 +227,10 @@ describe('Session Service - Unit Tests', () => {
     describe('getSession', () => {
         it('should throw AppError 404 if session not found', async () => {
             const originalFind = sessionRepository.findSessionById
-            sessionRepository.findSessionById = mock(async () => null) as any
+            sessionRepository.findSessionById = mock(async (sessionId: string, userId: string) => {
+                if (sessionId === 'nonexistent') return null
+                return originalFind(sessionId, userId)
+            }) as any
 
             try {
                 await expect(
@@ -211,32 +242,38 @@ describe('Session Service - Unit Tests', () => {
         })
 
         it('should return session with formatted chatMessages and canvas', async () => {
+            const uniqueSessionId = `unit-test-session-${Date.now()}`
             const originalFind = sessionRepository.findSessionById
-            sessionRepository.findSessionById = mock(async () => ({
-                id: testSessionId,
-                userId: testUserId,
-                title: 'Existing Session',
-                messages: [
-                    {
-                        id: 'msg-1',
-                        role: 'USER',
-                        content: 'test',
-                        status: 'done',
-                        sequence: 1,
-                        blocks: { foo: 'bar' },
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    },
-                ],
-            })) as any
+            sessionRepository.findSessionById = mock(async (sessionId: string, userId: string) => {
+                if (sessionId === uniqueSessionId) {
+                    return {
+                        id: uniqueSessionId,
+                        userId: testUserId,
+                        title: 'Existing Session',
+                        messages: [
+                            {
+                                id: 'msg-1',
+                                role: 'USER',
+                                content: 'test',
+                                status: 'done',
+                                sequence: 1,
+                                blocks: { foo: 'bar' },
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                            },
+                        ],
+                    }
+                }
+                return originalFind(sessionId, userId)
+            }) as any
 
             try {
                 const result = await sessionService.getSession({
                     userId: testUserId,
-                    sessionId: testSessionId,
+                    sessionId: uniqueSessionId,
                 })
 
-                expect(result.session.id).toBe(testSessionId)
+                expect(result.session.id).toBe(uniqueSessionId)
                 expect(result.chatMessages).toHaveLength(1)
                 expect(result.chatMessages[0]?.blocks).toEqual({ foo: 'bar' })
             } finally {

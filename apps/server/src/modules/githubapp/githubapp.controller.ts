@@ -16,7 +16,7 @@ const startInstall = asyncHandler(async (req: Request, res: Response) => {
         throw new AppError('Unauthorized', 401)
     }
 
-    const appName = env.GITHUB_APP_NAME || 'december-bot'
+    const appName = env.GITHUB_APP_NAME || 'trydecember'
     const returnUrl = (req.query.returnUrl as string) || '/profile/integrations'
     const state = encodeURIComponent(`${userId}|${returnUrl}`)
 
