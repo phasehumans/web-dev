@@ -101,8 +101,11 @@ export const streamSearchResponseBodySchema = z.object({
     messageHistory: z
         .array(
             z.object({
-                role: z.enum(['user', 'assistant', 'system']),
-                content: z.string(),
+                role: z.preprocess(
+                    (val) => (typeof val === 'string' ? val.toLowerCase() : val),
+                    z.enum(['user', 'assistant', 'system'])
+                ),
+                content: z.string().optional().default(''),
             })
         )
         .optional(),

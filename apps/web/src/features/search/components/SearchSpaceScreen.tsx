@@ -267,10 +267,12 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                 content: textToSubmit,
             }
 
-            const currentHistory = messages.map((m) => ({
-                role: m.role,
-                content: m.content,
-            }))
+            const currentHistory = messages
+                .filter((m) => !m.error && m.content && m.content.trim().length > 0)
+                .map((m) => ({
+                    role: m.role.toLowerCase() as 'user' | 'assistant' | 'system',
+                    content: m.content,
+                }))
 
             if (!sessionId) {
                 try {
@@ -293,6 +295,16 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     ) {
                         setShowOutOfCreditsModal(true)
                     }
+                    const errorMsg = error?.message || 'Failed to create search session'
+                    setMessages((prev) => [
+                        ...prev,
+                        {
+                            id: `err-${Date.now()}`,
+                            role: 'assistant',
+                            content: errorMsg,
+                            error: errorMsg,
+                        },
+                    ])
                 }
             } else {
                 setMessages((prev) => [...prev, userMsg])
