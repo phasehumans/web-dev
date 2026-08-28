@@ -484,7 +484,7 @@ const github = async (data: Github) => {
     }
 }
 
-const REFRESH_GRACE_PERIOD_MS = 60 * 1000
+const REFRESH_GRACE_PERIOD_MS = 15 * 60 * 1000
 
 const refreshSession = async (data: RefreshSession) => {
     const { refreshToken } = data
@@ -555,12 +555,6 @@ const refreshSession = async (data: RefreshSession) => {
         userId: user.id,
         sessionId: session.id,
     })
-
-    if (isPreviousTokenWithinGrace) {
-        return {
-            accessToken,
-        }
-    }
 
     const newRefreshToken = generateRefreshToken({
         userId: user.id,

@@ -82,8 +82,9 @@ describe('Auth Refresh Token & Rotation Integration Tests', () => {
 
         expect(resGrace.status).toBe(200)
         expect(resGrace.body.data.accessToken).toBeDefined()
+        expect(resGrace.body.data.refreshToken).toBeDefined()
 
-        refreshToken = rotatedToken
+        refreshToken = resGrace.body.data.refreshToken
     })
 
     it('3. POST /api/v1/auth/refresh - rejects token after grace window expires', async () => {
@@ -96,10 +97,10 @@ describe('Auth Refresh Token & Rotation Integration Tests', () => {
 
         expect(res1.status).toBe(200)
 
-        // Force rotatedAt timestamp to > 60s ago in DB (grace period is 60s)
+        // Force rotatedAt timestamp to > 15m ago in DB (grace period is 15m)
         await prisma.authSession.updateMany({
             where: { userId: testUserId },
-            data: { rotatedAt: new Date(Date.now() - 65 * 1000) },
+            data: { rotatedAt: new Date(Date.now() - 16 * 60 * 1000) },
         })
 
         const { sessionCache } = await import('../../src/modules/auth/auth.cache')

@@ -4,6 +4,49 @@ import { createProvider } from '../models.ts'
 
 import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
+export function supportsReasoningEffort(model?: string, baseURL?: string): boolean {
+    const name = (model || '').toLowerCase()
+
+    // Explicit non-reasoning OpenAI models
+    if (
+        name === 'gpt-4o' ||
+        name === 'gpt-4o-mini' ||
+        name.startsWith('gpt-4') ||
+        name.startsWith('gpt-3.5')
+    ) {
+        return false
+    }
+
+    // Mistral, Groq, Llama, Qwen, Devstral models
+    if (
+        name.includes('codestral') ||
+        name.includes('mistral') ||
+        name.includes('devstral') ||
+        name.includes('ministral') ||
+        name.includes('llama') ||
+        name.includes('qwen')
+    ) {
+        return false
+    }
+
+    // If baseURL is explicitly a known non-OpenAI provider URL
+    if (
+        baseURL &&
+        (baseURL.includes('mistral.ai') ||
+            baseURL.includes('groq.com') ||
+            baseURL.includes('deepseek.com') ||
+            baseURL.includes('siliconflow') ||
+            baseURL.includes('together.xyz') ||
+            baseURL.includes('hyperbolic.xyz') ||
+            baseURL.includes('cerebras.ai') ||
+            baseURL.includes('sambanova.ai'))
+    ) {
+        return false
+    }
+
+    return true
+}
+
 export function resolveOpenAIModel(model?: string): string {
     let name = model || 'gpt-4o'
     if (name.startsWith('openai/')) {
@@ -144,19 +187,40 @@ export function openaiProvider(
                 }
             }
 
-            const stream = await client.chat.completions.create(
-                {
-                    model: resolveOpenAIModel(modelOptions?.model),
-                    messages: oaiMessages,
-                    tools: oaiTools,
-                    stream: true,
-                    temperature: modelOptions?.temperature,
-                    max_tokens: modelOptions?.max_tokens,
-                    reasoning_effort: reasoningEffort,
-                    stream_options: { include_usage: true },
-                },
-                { signal }
-            )
+            const resolvedModel = resolveOpenAIModel(modelOptions?.model)
+            const shouldSendReasoningEffort =
+                reasoningEffort && supportsReasoningEffort(modelOptions?.model, baseURL)
+
+            const createParams: any = {
+                model: resolvedModel,
+                messages: oaiMessages,
+                tools: oaiTools,
+                stream: true,
+                temperature: modelOptions?.temperature,
+                max_tokens: modelOptions?.max_tokens,
+                stream_options: { include_usage: true },
+            }
+            if (shouldSendReasoningEffort) {
+                createParams.reasoning_effort = reasoningEffort
+            }
+
+            let stream: any
+            try {
+                stream = await client.chat.completions.create({ ...createParams }, { signal })
+            } catch (err: any) {
+                const errMsg = (err?.message || String(err)).toLowerCase()
+                if (
+                    createParams.reasoning_effort &&
+                    (errMsg.includes('reasoning_effort') ||
+                        errMsg.includes('reasoning effort') ||
+                        errMsg.includes('reasoningeffort'))
+                ) {
+                    delete createParams.reasoning_effort
+                    stream = await client.chat.completions.create({ ...createParams }, { signal })
+                } else {
+                    throw err
+                }
+            }
 
             const activeToolCalls = new Map<number, string>()
 

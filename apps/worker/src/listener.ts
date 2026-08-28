@@ -253,7 +253,7 @@ async function updateCredits(sessionId: string, event: any) {
     try {
         const session = await prisma.session.findUnique({
             where: { id: sessionId },
-            select: { userId: true, projectId: true },
+            select: { userId: true },
         })
         if (!session) return
 

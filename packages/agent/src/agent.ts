@@ -123,7 +123,25 @@ export class Agent {
 
     private defaultConvertToLlm(messages: AgentMessage[]): Message[] {
         const filtered = messages.filter((m) => !m.isUI)
-        return evaporateStaleToolOutputs(filtered, 3)
+        const evaporated = evaporateStaleToolOutputs(filtered, 3)
+
+        // Merge adjacent user messages to preserve alternating dialogue format and prevent provider errors
+        const merged: Message[] = []
+        for (const msg of evaporated) {
+            const prev = merged[merged.length - 1]
+            if (
+                prev &&
+                prev.role === 'user' &&
+                msg.role === 'user' &&
+                !prev.toolCalls &&
+                !msg.toolCalls
+            ) {
+                prev.content = `${prev.content}\n\n${msg.content}`
+            } else {
+                merged.push({ ...msg })
+            }
+        }
+        return merged
     }
 
     public steer(message: AgentMessage) {

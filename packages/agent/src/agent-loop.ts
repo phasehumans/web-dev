@@ -225,6 +225,16 @@ export async function* runAgentLoop(
         } catch (e: any) {
             console.error('Agent Loop Error:', e)
             const errMsg = formatError(e)
+            for (let i = agent.messages.length - 1; i >= 0; i--) {
+                const m = agent.messages[i]
+                if (m && m.role === 'user' && !m.isUI) {
+                    m.isUI = true
+                    break
+                }
+            }
+            await agent.saveContext().catch(() => {
+                // Intentionally swallowed: Context save error fallback on error
+            })
             try {
                 if (abortController.signal.aborted) {
                     agent.tracer?.endSession('ABORTED')
@@ -632,6 +642,15 @@ async function streamAssistantResponse(
 
         if (signal.aborted || (error.name === 'AbortError' && errorMsg === 'Aborted')) {
             eventQueue.push({ type: 'AgentInterrupt' })
+            if (!assistantMessage) {
+                for (let i = agent.messages.length - 1; i >= 0; i--) {
+                    const m = agent.messages[i]
+                    if (m && m.role === 'user' && !m.isUI) {
+                        m.isUI = true
+                        break
+                    }
+                }
+            }
             agent.addMessage({
                 role: 'assistant',
                 content: assistantMessage + `\n\nInterrupted · What should December do instead?`,
@@ -675,6 +694,16 @@ async function streamAssistantResponse(
         }
 
         eventQueue.push({ type: 'AgentError', error: errorMsg })
+
+        if (!assistantMessage) {
+            for (let i = agent.messages.length - 1; i >= 0; i--) {
+                const m = agent.messages[i]
+                if (m && m.role === 'user' && !m.isUI) {
+                    m.isUI = true
+                    break
+                }
+            }
+        }
 
         agent.addMessage({
             role: 'assistant',

@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'bun:test'
 
 import { Agent } from '../../src/agent'
+import { runAgentLoop } from '../../src/agent-loop'
 import { MockLLM } from '../mock-provider'
 
 const mockOperations = {} as any
@@ -188,5 +189,51 @@ describe('Agent core functionality (Unit)', () => {
         expect(abortController.signal.aborted).toBe(false)
         agent.abort()
         expect(abortController.signal.aborted).toBe(true)
+    })
+
+    test('merges adjacent user messages in defaultConvertToLlm', () => {
+        const agent = new Agent({
+            llm: new MockLLM(),
+            tools: [],
+            operations: mockOperations,
+        })
+        agent.addMessage({ role: 'user', content: 'First message' })
+        agent.addMessage({ role: 'user', content: 'Second message' })
+
+        const providerMsgs = agent.convertToLlm(agent.messages)
+        expect(providerMsgs.length).toBe(2) // system prompt + merged user message
+        expect(providerMsgs[1]!.content).toBe('First message\n\nSecond message')
+    })
+
+    test('marks unanswered user message as isUI on turn failure so next turn is not polluted', async () => {
+        let attempts = 0
+        const failingLlm = {
+            id: 'failing-llm',
+            stream: async function* () {
+                attempts++
+                yield* []
+                throw new Error('API Error: reasoning_effort is not enabled for this model')
+            },
+        }
+
+        const agent = new Agent({
+            llm: failingLlm as any,
+            tools: [],
+            operations: mockOperations,
+        })
+
+        // Turn 1 fails
+        for await (const _ of runAgentLoop(agent, 'what is date tday')) {
+            // consume stream
+        }
+
+        // The failed user message should be marked isUI: true
+        const lastUser = agent.messages.filter((m) => m.role === 'user')[0]
+        expect(lastUser?.isUI).toBe(true)
+
+        // For the next turn, convertToLlm should NOT contain the failed user message
+        const nextMsgs = agent.convertToLlm(agent.messages)
+        expect(nextMsgs.length).toBe(1) // only system prompt
+        expect(nextMsgs.some((m) => m.content === 'what is date tday')).toBe(false)
     })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import { openaiProvider, OpenAIProvider } from '../../src/providers/openai'
+import { openaiProvider, OpenAIProvider, supportsReasoningEffort } from '../../src/providers/openai'
 
 describe('OpenAI Provider Adapter (Unit)', () => {
     it('instantiates OpenAIProvider class wrapper correctly', () => {
@@ -217,5 +217,62 @@ describe('OpenAI Provider Adapter (Unit)', () => {
             id: 'call_abc',
             inputDelta: '"foo.txt"}',
         })
+    })
+
+    it('supportsReasoningEffort disables reasoning_effort for Mistral, Groq, and GPT-4o models', () => {
+        expect(supportsReasoningEffort('codestral-latest')).toBe(false)
+        expect(supportsReasoningEffort('mistral-large-latest')).toBe(false)
+        expect(supportsReasoningEffort('gpt-4o')).toBe(false)
+        expect(supportsReasoningEffort('gpt-4o-mini')).toBe(false)
+        expect(supportsReasoningEffort('o3-mini')).toBe(true)
+        expect(supportsReasoningEffort('gpt-5.6-sol')).toBe(true)
+        expect(supportsReasoningEffort('custom-model', 'https://api.mistral.ai/v1')).toBe(false)
+    })
+
+    it('automatically catches reasoning_effort rejection and retries without reasoning_effort', async () => {
+        let attempts = 0
+        const capturedPayloads: any[] = []
+
+        const mockClient: any = {
+            chat: {
+                completions: {
+                    create: async (payload: any) => {
+                        attempts++
+                        capturedPayloads.push(payload)
+                        if (attempts === 1 && payload.reasoning_effort) {
+                            throw new Error(
+                                "reasoning_effort low is not supported for this model, supported values: [<ReasoningEffort.high: 'high'>, <ReasoningEffort.none: 'none'>]"
+                            )
+                        }
+                        return (async function* () {
+                            yield {
+                                choices: [{ delta: { content: 'Recovered response' } }],
+                            }
+                        })()
+                    },
+                },
+            },
+        }
+
+        const provider = openaiProvider(undefined, 'test-key', undefined, mockClient)
+        const stream = provider.stream(
+            [{ role: 'user', content: 'what is date tday' }],
+            undefined,
+            undefined,
+            {
+                model: 'o3-mini',
+                thinkingLevel: 'low',
+            }
+        )
+
+        const chunks: any[] = []
+        for await (const chunk of stream) {
+            chunks.push(chunk)
+        }
+
+        expect(attempts).toBe(2)
+        expect(capturedPayloads[0].reasoning_effort).toBe('low')
+        expect(capturedPayloads[1].reasoning_effort).toBeUndefined()
+        expect(chunks).toEqual([{ type: 'text', text: 'Recovered response' }])
     })
 })

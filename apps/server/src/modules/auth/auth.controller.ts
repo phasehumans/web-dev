@@ -253,7 +253,17 @@ const refreshSession = asyncHandler(async (req: Request, res: Response) => {
 
         return sendSuccess(res, 'session refreshed successfully', result)
     } catch (error) {
-        authCookie.clearAuthCookies(res)
+        if (
+            error instanceof AppError &&
+            (error.message === 'session revoked' ||
+                error.message === 'session expired' ||
+                error.message === 'account no longer exists' ||
+                error.message === 'account has been deleted' ||
+                error.message === 'invalid refresh token' ||
+                error.message === 'session not found')
+        ) {
+            authCookie.clearAuthCookies(res)
+        }
 
         if (error instanceof AppError) {
             throw error
