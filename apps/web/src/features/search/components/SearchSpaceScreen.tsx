@@ -153,11 +153,11 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
     }, [sessionId, initialPrompt])
 
     // Scroll management
-    const scrollToBottom = useCallback((smooth = true) => {
+    const scrollToBottom = useCallback((instant = false) => {
         if (scrollContainerRef.current && !isUserScrolledUpRef.current) {
             scrollContainerRef.current.scrollTo({
                 top: scrollContainerRef.current.scrollHeight,
-                behavior: smooth ? 'smooth' : 'auto',
+                behavior: instant ? 'auto' : 'smooth',
             })
         }
     }, [])
@@ -170,8 +170,8 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
     }, [])
 
     useEffect(() => {
-        scrollToBottom()
-    }, [messages, scrollToBottom])
+        scrollToBottom(isStreaming)
+    }, [messages, isStreaming, scrollToBottom])
 
     const handleCopy = (id: string, text: string) => {
         void navigator.clipboard.writeText(text)
@@ -205,6 +205,38 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                 },
             ])
 
+            let pendingTokenBuffer = ''
+            let pendingThoughtBuffer = ''
+            let frameHandle: number | null = null
+
+            const flushBuffer = () => {
+                if (!pendingTokenBuffer && !pendingThoughtBuffer) return
+                const tokenFlush = pendingTokenBuffer
+                const thoughtFlush = pendingThoughtBuffer
+                pendingTokenBuffer = ''
+                pendingThoughtBuffer = ''
+
+                setMessages((prev) =>
+                    prev.map((m) => {
+                        if (m.id !== assistantMsgId) return m
+                        return {
+                            ...m,
+                            content: m.content + tokenFlush,
+                            thoughts: (m.thoughts || '') + thoughtFlush,
+                            isThinking: Boolean(thoughtFlush) && !tokenFlush ? true : false,
+                        }
+                    })
+                )
+            }
+
+            const scheduleFlush = () => {
+                if (frameHandle !== null) return
+                frameHandle = requestAnimationFrame(() => {
+                    frameHandle = null
+                    flushBuffer()
+                })
+            }
+
             try {
                 await sessionAPI.streamSearch(
                     targetSessionId,
@@ -215,28 +247,19 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     {
                         signal: abortController.signal,
                         onToken: (token) => {
-                            setMessages((prev) =>
-                                prev.map((m) =>
-                                    m.id === assistantMsgId
-                                        ? { ...m, content: m.content + token, isThinking: false }
-                                        : m
-                                )
-                            )
+                            pendingTokenBuffer += token
+                            scheduleFlush()
                         },
                         onThought: (thought) => {
-                            setMessages((prev) =>
-                                prev.map((m) =>
-                                    m.id === assistantMsgId
-                                        ? {
-                                              ...m,
-                                              thoughts: (m.thoughts || '') + thought,
-                                              isThinking: true,
-                                          }
-                                        : m
-                                )
-                            )
+                            pendingThoughtBuffer += thought
+                            scheduleFlush()
                         },
                         onDone: () => {
+                            if (frameHandle !== null) {
+                                cancelAnimationFrame(frameHandle)
+                                frameHandle = null
+                            }
+                            flushBuffer()
                             setMessages((prev) =>
                                 prev.map((m) =>
                                     m.id === assistantMsgId
@@ -247,6 +270,11 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                             void queryClient.invalidateQueries({ queryKey: ['sessions'] })
                         },
                         onError: (errorMsg) => {
+                            if (frameHandle !== null) {
+                                cancelAnimationFrame(frameHandle)
+                                frameHandle = null
+                            }
+                            flushBuffer()
                             setMessages((prev) =>
                                 prev.map((m) =>
                                     m.id === assistantMsgId
@@ -263,6 +291,11 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     }
                 )
             } catch (err: any) {
+                if (frameHandle !== null) {
+                    cancelAnimationFrame(frameHandle)
+                    frameHandle = null
+                }
+                flushBuffer()
                 if (err?.name === 'AbortError') {
                     setMessages((prev) =>
                         prev.map((m) =>

@@ -157,13 +157,8 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
     const hasBlocks = blocks && blocks.length > 0
 
     return (
-        <div className="flex flex-col gap-2 animate-in fade-in duration-500 font-sans w-full">
-            <motion.div
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.06 }}
-                className="pl-1 flex flex-col gap-2"
-            >
+        <div className="flex flex-col gap-2 font-sans w-full">
+            <div className="pl-1 flex flex-col gap-2">
                 {/* Assistant status indicator */}
                 {(isThinkingPhase || isBuildingPhase) &&
                     currentStatusLabel &&
@@ -350,7 +345,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                         )}
                     </>
                 )}
-            </motion.div>
+            </div>
         </div>
     )
 }

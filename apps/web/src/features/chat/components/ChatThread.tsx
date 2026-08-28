@@ -80,34 +80,31 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
     React.useEffect(() => {
         const container = scrollContainerRef.current
         const content = contentRef.current
-
         if (!container || !content) return
 
+        let frameId: number | null = null
+
+        const triggerScroll = () => {
+            if (!shouldAutoScroll) return
+            if (frameId !== null) return
+            frameId = requestAnimationFrame(() => {
+                frameId = null
+                if (container && shouldAutoScroll) {
+                    container.scrollTop = container.scrollHeight
+                }
+            })
+        }
+
         const observer = new ResizeObserver(() => {
-            if (shouldAutoScroll) {
-                container.scrollTo({
-                    top: container.scrollHeight,
-                    behavior: 'auto',
-                })
-            }
+            triggerScroll()
         })
 
         observer.observe(content)
-        return () => observer.disconnect()
-    }, [shouldAutoScroll])
-
-    React.useEffect(() => {
-        const container = scrollContainerRef.current
-
-        if (!container || !shouldAutoScroll) {
-            return
+        return () => {
+            if (frameId !== null) cancelAnimationFrame(frameId)
+            observer.disconnect()
         }
-
-        container.scrollTo({
-            top: container.scrollHeight,
-            behavior: 'auto',
-        })
-    }, [messages, generatedFiles, isGenerating, shouldAutoScroll])
+    }, [shouldAutoScroll])
 
     const handleSubmit = () => {
         const nextPrompt = editPrompt.trim()
