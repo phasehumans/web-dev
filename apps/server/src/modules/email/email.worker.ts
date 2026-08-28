@@ -23,18 +23,46 @@ export const processEmailJob = async (job: Job<EmailJobData>): Promise<ProcessEm
         })
 
         try {
-            const result = await resend.emails.send({
+            let result = await resend.emails.send({
                 from: `December <${fromEmail}>`,
                 to,
                 subject,
                 html,
                 text,
             })
-            return { success: true, messageId: result?.data?.id || 'test-email-id' }
+
+            // If the custom domain is not verified on Resend (403), fallback to onboarding@resend.dev in dev
+            if (
+                result?.error &&
+                fromEmail !== 'onboarding@resend.dev' &&
+                (env.NODE_ENV === 'development' || !env.RESEND_API_KEY)
+            ) {
+                console.warn(
+                    `[Email Worker] Failed with sender ${fromEmail} (${result.error.message}), retrying with onboarding@resend.dev`
+                )
+                result = await resend.emails.send({
+                    from: `December <onboarding@resend.dev>`,
+                    to,
+                    subject,
+                    html,
+                    text,
+                })
+            }
+
+            if (result?.error) {
+                throw new Error(result.error.message || `Resend error: ${result.error.name}`)
+            }
+
+            return { success: true, messageId: result?.data?.id || 'email-delivered' }
         } catch (error: any) {
-            console.error(`[Email Worker] Failed to send OTP email to ${to}:`, error)
+            console.error(
+                `[Email Worker] Failed to send OTP email to ${to}:`,
+                error?.message || error
+            )
             if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test' || !env.RESEND_API_KEY) {
-                console.log(`[DEV OTP Code] Verification code for ${to} is: ${otp}`)
+                console.log(
+                    `\n======================================================\n[DEV OTP Code] Verification code for ${to} is: ${otp}\n======================================================\n`
+                )
                 return { success: true, messageId: 'dev-fallback' }
             }
             throw error
@@ -50,16 +78,41 @@ export const processEmailJob = async (job: Job<EmailJobData>): Promise<ProcessEm
         })
 
         try {
-            const result = await resend.emails.send({
+            let result = await resend.emails.send({
                 from: `December <${fromEmail}>`,
                 to,
                 subject,
                 html,
                 text,
             })
-            return { success: true, messageId: result?.data?.id || 'test-email-id' }
+
+            if (
+                result?.error &&
+                fromEmail !== 'onboarding@resend.dev' &&
+                (env.NODE_ENV === 'development' || !env.RESEND_API_KEY)
+            ) {
+                console.warn(
+                    `[Email Worker] Failed with sender ${fromEmail} (${result.error.message}), retrying with onboarding@resend.dev`
+                )
+                result = await resend.emails.send({
+                    from: `December <onboarding@resend.dev>`,
+                    to,
+                    subject,
+                    html,
+                    text,
+                })
+            }
+
+            if (result?.error) {
+                throw new Error(result.error.message || `Resend error: ${result.error.name}`)
+            }
+
+            return { success: true, messageId: result?.data?.id || 'email-delivered' }
         } catch (error: any) {
-            console.error(`[Email Worker] Failed to send Welcome email to ${to}:`, error)
+            console.error(
+                `[Email Worker] Failed to send Welcome email to ${to}:`,
+                error?.message || error
+            )
             if (env.NODE_ENV === 'development' || env.NODE_ENV === 'test' || !env.RESEND_API_KEY) {
                 return { success: true, messageId: 'dev-fallback' }
             }

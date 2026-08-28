@@ -110,6 +110,63 @@ describe('Email Worker - Unit Tests', () => {
         expect(result.messageId).toBe('dev-fallback')
     })
 
+    it('should handle Resend API error response object in development by returning dev-fallback', async () => {
+        ;(env as any).NODE_ENV = 'development'
+        resend.emails.send = (async () => {
+            return {
+                data: null,
+                error: {
+                    statusCode: 403,
+                    message: 'The trydecember.com domain is not verified.',
+                    name: 'validation_error',
+                },
+            }
+        }) as any
+
+        const mockJob: any = {
+            id: 'job-otp-unverified',
+            data: {
+                type: 'otp',
+                to: 'user@example.com',
+                otp: '654321',
+                otpType: 'signup',
+            },
+        }
+
+        const result = await processEmailJob(mockJob)
+        expect(result.success).toBe(true)
+        expect(result.messageId).toBe('dev-fallback')
+    })
+
+    it('should throw when Resend API returns error object in production', async () => {
+        ;(env as any).NODE_ENV = 'production'
+        ;(env as any).RESEND_API_KEY = 're_live_key'
+        resend.emails.send = (async () => {
+            return {
+                data: null,
+                error: {
+                    statusCode: 403,
+                    message: 'The trydecember.com domain is not verified.',
+                    name: 'validation_error',
+                },
+            }
+        }) as any
+
+        const mockJob: any = {
+            id: 'job-otp-prod-error',
+            data: {
+                type: 'otp',
+                to: 'user@example.com',
+                otp: '654321',
+                otpType: 'signup',
+            },
+        }
+
+        await expect(processEmailJob(mockJob)).rejects.toThrow(
+            'The trydecember.com domain is not verified'
+        )
+    })
+
     it('should throw for unknown email job type', async () => {
         const mockJob: any = {
             id: 'job-unknown',
