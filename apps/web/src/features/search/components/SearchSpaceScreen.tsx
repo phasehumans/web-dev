@@ -1,24 +1,27 @@
 import { useQueryClient } from '@tanstack/react-query'
 import {
-    ChevronLeft,
     ThumbsUp,
     ThumbsDown,
     Copy,
     Check,
-    Settings,
     Flag,
     MoreHorizontal,
-    Search as SearchIcon,
-    AlertCircle,
+    Share2,
+    Archive,
+    ArchiveRestore,
+    Trash2,
 } from 'lucide-react'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 
 import { SearchMarkdown } from './SearchMarkdown'
 
 import { useAppStore } from '@/app/store'
 import { ChatPromptInput } from '@/features/chat/components/ChatPromptInput'
+import { BadSessionModal } from '@/features/preview/components/BadSessionModal'
 import { sessionAPI } from '@/features/sessions/api/session'
+import { SessionDeleteModal } from '@/features/sessions/components/SessionDeleteModal'
+import { Icons } from '@/shared/components/ui/Icons'
 import { cn } from '@/shared/lib/utils'
 
 interface SearchSpaceScreenProps {
@@ -30,28 +33,71 @@ export interface SearchMessage {
     id: string
     role: 'user' | 'assistant'
     content: string
+    thoughts?: string
     isStreaming?: boolean
+    isThinking?: boolean
     error?: string
 }
 
 export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, initialPrompt }) => {
     const [searchParams, setSearchParams] = useSearchParams()
+    const navigate = useNavigate()
     const sessionId = searchParams.get('session')
     const promptParam = searchParams.get('prompt')
     const queryClient = useQueryClient()
-    const { setShowOutOfCreditsModal } = useAppStore()
+    const { setShowOutOfCreditsModal, setIsMobileSidebarOpen } = useAppStore()
 
     const [promptText, setPromptText] = useState('')
     const [sessionTitle, setSessionTitle] = useState<string>('')
+    const [sessionData, setSessionData] = useState<any | null>(null)
     const [messages, setMessages] = useState<SearchMessage[]>([])
     const [isStreaming, setIsStreaming] = useState(false)
     const [copiedId, setCopiedId] = useState<string | null>(null)
     const [feedback, setFeedback] = useState<Record<string, 'like' | 'dislike' | null>>({})
 
+    const [isBadSessionModalOpen, setIsBadSessionModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [isDeletePending, setIsDeletePending] = useState(false)
+    const [isCopiedShare, setIsCopiedShare] = useState(false)
+    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
+    const [isThinkingMode, setIsThinkingMode] = useState(false)
+    const [liveTelemetry, setLiveTelemetry] = useState<any | null>(null)
+    const moreMenuRef = useRef<HTMLDivElement | null>(null)
+
     const scrollContainerRef = useRef<HTMLDivElement | null>(null)
     const isUserScrolledUpRef = useRef(false)
     const abortControllerRef = useRef<AbortController | null>(null)
     const isDispatchedInitialRef = useRef(false)
+
+    // Handle click outside for more options dropdown
+    useEffect(() => {
+        if (!isMoreMenuOpen) return
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+                setIsMoreMenuOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [isMoreMenuOpen])
+
+    // Load insights/telemetry when more menu opens
+    useEffect(() => {
+        if (isMoreMenuOpen && sessionId && !liveTelemetry) {
+            sessionAPI
+                .getSessionInsights(sessionId)
+                .then((res: any) => {
+                    if (res?.telemetry) {
+                        setLiveTelemetry(res.telemetry)
+                    }
+                })
+                .catch(() => {
+                    // Intentionally swallowed: fallback to local telemetry
+                })
+        }
+    }, [isMoreMenuOpen, sessionId, liveTelemetry])
 
     // Load existing session messages if sessionId is present
     useEffect(() => {
@@ -74,11 +120,11 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                 const detail = await sessionAPI.getSessionDetail(sessionId)
                 if (!isMounted) return
 
+                const sessionObj = (detail as any).session || detail.project
+                setSessionData(sessionObj || null)
+
                 const title =
-                    (detail as any).session?.title ||
-                    detail.project?.title ||
-                    detail.project?.name ||
-                    'Search'
+                    sessionObj?.title || detail.project?.title || detail.project?.name || 'Search'
                 setSessionTitle(title)
 
                 if (detail.chatMessages && detail.chatMessages.length > 0) {
@@ -147,7 +193,9 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     id: assistantMsgId,
                     role: 'assistant',
                     content: '',
+                    thoughts: '',
                     isStreaming: true,
+                    isThinking: true,
                 },
             ])
 
@@ -164,42 +212,30 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                             setMessages((prev) =>
                                 prev.map((m) =>
                                     m.id === assistantMsgId
-                                        ? { ...m, content: m.content + token }
+                                        ? { ...m, content: m.content + token, isThinking: false }
                                         : m
                                 )
                             )
                         },
                         onThought: (thought) => {
                             setMessages((prev) =>
-                                prev.map((m) => {
-                                    if (m.id !== assistantMsgId) return m
-                                    if (
-                                        m.content.startsWith('<thought>') &&
-                                        m.content.includes('</thought>')
-                                    ) {
-                                        return {
-                                            ...m,
-                                            content: m.content.replace(
-                                                '</thought>',
-                                                `${thought}</thought>`
-                                            ),
-                                        }
-                                    } else if (m.content.startsWith('<thought>')) {
-                                        return { ...m, content: m.content + thought }
-                                    } else if (m.content === '') {
-                                        return { ...m, content: `<thought>${thought}` }
-                                    }
-                                    return {
-                                        ...m,
-                                        content: `${m.content} <thought>${thought}</thought>`,
-                                    }
-                                })
+                                prev.map((m) =>
+                                    m.id === assistantMsgId
+                                        ? {
+                                              ...m,
+                                              thoughts: (m.thoughts || '') + thought,
+                                              isThinking: true,
+                                          }
+                                        : m
+                                )
                             )
                         },
                         onDone: () => {
                             setMessages((prev) =>
                                 prev.map((m) =>
-                                    m.id === assistantMsgId ? { ...m, isStreaming: false } : m
+                                    m.id === assistantMsgId
+                                        ? { ...m, isStreaming: false, isThinking: false }
+                                        : m
                                 )
                             )
                             void queryClient.invalidateQueries({ queryKey: ['sessions'] })
@@ -208,7 +244,12 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                             setMessages((prev) =>
                                 prev.map((m) =>
                                     m.id === assistantMsgId
-                                        ? { ...m, isStreaming: false, error: errorMsg }
+                                        ? {
+                                              ...m,
+                                              isStreaming: false,
+                                              isThinking: false,
+                                              error: errorMsg,
+                                          }
                                         : m
                                 )
                             )
@@ -219,7 +260,9 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                 if (err?.name === 'AbortError') {
                     setMessages((prev) =>
                         prev.map((m) =>
-                            m.id === assistantMsgId ? { ...m, isStreaming: false } : m
+                            m.id === assistantMsgId
+                                ? { ...m, isStreaming: false, isThinking: false }
+                                : m
                         )
                     )
                     return
@@ -239,6 +282,7 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                             ? {
                                   ...m,
                                   isStreaming: false,
+                                  isThinking: false,
                                   error: errorMessage,
                                   content: m.content || errorMessage,
                               }
@@ -344,53 +388,173 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
         setIsStreaming(false)
     }
 
-    const currentTitle = sessionTitle || initialPrompt || promptParam || 'Search'
+    const handleShare = async () => {
+        try {
+            const url = window.location.href
+            if (navigator.clipboard) {
+                await navigator.clipboard.writeText(url)
+                setIsCopiedShare(true)
+                setTimeout(() => setIsCopiedShare(false), 2000)
+            }
+        } catch (err) {
+            console.error('[Search] Failed to copy share link:', err)
+        }
+    }
+
+    const handleToggleArchive = async () => {
+        if (!sessionId) return
+        setIsMoreMenuOpen(false)
+        try {
+            if (sessionData?.isArchived) {
+                await sessionAPI.unarchiveSession(sessionId)
+                setSessionData((prev: any) => (prev ? { ...prev, isArchived: false } : prev))
+            } else {
+                await sessionAPI.archiveSession(sessionId)
+                setSessionData((prev: any) => (prev ? { ...prev, isArchived: true } : prev))
+            }
+            void queryClient.invalidateQueries({ queryKey: ['sessions'] })
+        } catch (err) {
+            console.error('[Search] Failed to toggle archive:', err)
+        }
+    }
+
+    const handleDeleteConfirm = async () => {
+        if (!sessionId) return
+        setIsDeletePending(true)
+        try {
+            await sessionAPI.deleteSession(sessionId)
+            void queryClient.invalidateQueries({ queryKey: ['sessions'] })
+            setIsDeleteModalOpen(false)
+            navigate('/')
+        } catch (err) {
+            console.error('[Search] Failed to delete session:', err)
+        } finally {
+            setIsDeletePending(false)
+        }
+    }
+
+    const telemetry = liveTelemetry || (sessionData as any)?.telemetry
+    const usage = telemetry?.onDemandUsage || (sessionData as any)?.usage || '$0.00'
+    const totalTokens =
+        telemetry?.totalTokens != null
+            ? telemetry.totalTokens.toLocaleString()
+            : telemetry?.inputTokens != null || telemetry?.outputTokens != null
+              ? ((telemetry.inputTokens || 0) + (telemetry.outputTokens || 0)).toLocaleString()
+              : undefined
+    const duration =
+        telemetry?.durationMinutes != null ? `${telemetry.durationMinutes}m` : undefined
+    const sessionSize = (sessionData as any)?.sessionSize
 
     return (
         <div className="flex-1 flex flex-col h-full bg-[#141414] text-[#EDEDEF] relative overflow-hidden min-h-0 font-sans">
             {/* Top Header */}
-            <div className="h-11 flex items-center justify-between px-4 bg-[#141414] border-b border-[#222225] shrink-0 z-30 select-none">
-                <div className="flex items-center gap-2 min-w-0">
-                    {onBack && (
+            <div className="h-11 flex items-center justify-between px-3 sm:px-4 bg-[#141414] shrink-0 z-30 select-none">
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsMobileSidebarOpen(true)}
+                        className="md:hidden p-1.5 -ml-1 text-[#8F8E8D] hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                        title="Open sidebar"
+                        aria-label="Open sidebar"
+                    >
+                        <Icons.SidebarToggle className="w-[18px] h-[18px]" />
+                    </button>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                    <div className="relative" ref={moreMenuRef}>
                         <button
                             type="button"
-                            onClick={onBack}
-                            className="p-1 text-[#8E8D8C] hover:text-white rounded-md hover:bg-white/5 transition-colors cursor-pointer shrink-0"
-                            title="Back"
+                            onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                            className={cn(
+                                'p-1.5 text-[#91908F] hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer',
+                                isMoreMenuOpen && 'text-white bg-white/5'
+                            )}
+                            title="More options"
+                            aria-label="More options"
                         >
-                            <ChevronLeft size={16} />
+                            <MoreHorizontal size={16} />
                         </button>
-                    )}
-                    <div className="flex items-center gap-2 min-w-0">
-                        <SearchIcon size={14} className="text-[#87B2F4] shrink-0" />
-                        <span className="text-xs font-normal text-[#D6D5D4] lowercase hover:bg-[#222225] hover:text-white px-2 py-1 rounded-md transition-colors cursor-pointer truncate max-w-[280px] md:max-w-md">
-                            {currentTitle.toLowerCase()}
-                        </span>
-                    </div>
-                </div>
 
-                <div className="flex items-center gap-1 shrink-0">
-                    <button
-                        type="button"
-                        className="p-1.5 text-[#91908F] hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                        title="Settings"
-                    >
-                        <Settings size={16} />
-                    </button>
-                    <button
-                        type="button"
-                        className="p-1.5 text-[#91908F] hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                        title="Flag"
-                    >
-                        <Flag size={16} />
-                    </button>
-                    <button
-                        type="button"
-                        className="p-1.5 text-[#91908F] hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-                        title="More options"
-                    >
-                        <MoreHorizontal size={16} />
-                    </button>
+                        {isMoreMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-[180px] bg-[#1E1E1E] border border-[#272727] rounded-xl shadow-2xl z-50 p-1.5 flex flex-col font-sans animate-in fade-in zoom-in-95 duration-100 select-none">
+                                {/* Top Action Items */}
+                                <div className="flex flex-col gap-0.5 relative">
+                                    {/* 1. Share */}
+                                    <button
+                                        type="button"
+                                        onClick={handleShare}
+                                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer text-[#EDEDEF] hover:bg-white/5 hover:text-white"
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <span className="text-[#8E8D8C] shrink-0">
+                                                <Share2 className="w-3.5 h-3.5" />
+                                            </span>
+                                            <span className="truncate">Share</span>
+                                        </div>
+                                        {isCopiedShare && (
+                                            <span className="text-[11px] font-medium text-emerald-400">
+                                                Copied!
+                                            </span>
+                                        )}
+                                    </button>
+
+                                    {/* 2. Archive */}
+                                    <button
+                                        type="button"
+                                        onClick={handleToggleArchive}
+                                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer text-[#EDEDEF] hover:bg-white/5 hover:text-white"
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <span className="text-[#8E8D8C] shrink-0">
+                                                {sessionData?.isArchived ? (
+                                                    <ArchiveRestore className="w-3.5 h-3.5" />
+                                                ) : (
+                                                    <Archive className="w-3.5 h-3.5" />
+                                                )}
+                                            </span>
+                                            <span className="truncate">
+                                                {sessionData?.isArchived ? 'Unarchive' : 'Archive'}
+                                            </span>
+                                        </div>
+                                    </button>
+
+                                    {/* 3. Report issue */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsMoreMenuOpen(false)
+                                            setIsBadSessionModalOpen(true)
+                                        }}
+                                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer text-[#EDEDEF] hover:bg-white/5 hover:text-white"
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <span className="text-[#8E8D8C] shrink-0">
+                                                <Flag className="w-3.5 h-3.5" />
+                                            </span>
+                                            <span className="truncate">Report issue</span>
+                                        </div>
+                                    </button>
+
+                                    {/* 4. Delete */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsMoreMenuOpen(false)
+                                            setIsDeleteModalOpen(true)
+                                        }}
+                                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer text-red-400 hover:bg-white/5 hover:text-red-300"
+                                    >
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <span className="text-red-400 shrink-0">
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </span>
+                                            <span className="truncate">Delete</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -400,14 +564,17 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                 <div
                     ref={scrollContainerRef}
                     onScroll={handleScroll}
-                    className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6 space-y-6 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-thumb]:bg-[#2C2C30]"
+                    className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 md:p-6 space-y-6 sm:space-y-6 chat-scrollbar overscroll-contain"
                 >
-                    <div className="max-w-2xl mx-auto w-full space-y-6">
+                    <div className="max-w-2xl mx-auto w-full space-y-6 sm:space-y-6">
                         {messages.map((msg) => {
                             if (msg.role === 'user') {
                                 return (
-                                    <div key={msg.id} className="flex flex-col items-end w-full">
-                                        <div className="bg-[#1C1C1E] border border-white/5 px-4 py-2.5 rounded-2xl text-[13.5px] leading-relaxed text-[#EDEDED] max-w-[85%] break-words shadow-sm">
+                                    <div
+                                        key={msg.id}
+                                        className="flex flex-col gap-1 items-end w-full font-sans"
+                                    >
+                                        <div className="bg-[#1B1B1B] px-4.5 py-3 sm:px-4 sm:py-2.5 rounded-2xl sm:rounded-xl text-[14.5px] sm:text-[13.5px] leading-relaxed text-[#EDEDED] selection:bg-blue-500/20 shadow-sm max-w-[92%] sm:max-w-[85%] break-words whitespace-pre-wrap border-none">
                                             {msg.content}
                                         </div>
                                     </div>
@@ -420,78 +587,93 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                             return (
                                 <div
                                     key={msg.id}
-                                    className="flex flex-col gap-2 w-full animate-in fade-in duration-300"
+                                    className="flex flex-col gap-2.5 sm:gap-2 w-full animate-in fade-in duration-300 font-sans"
                                 >
-                                    {msg.error && (
-                                        <div className="flex items-center gap-2 p-3 rounded-lg bg-red-950/30 border border-red-800/40 text-xs text-red-300">
-                                            <AlertCircle
-                                                size={14}
-                                                className="shrink-0 text-red-400"
-                                            />
-                                            <span>{msg.error}</span>
-                                        </div>
+                                    {msg.content && msg.content !== msg.error && (
+                                        <SearchMarkdown
+                                            content={msg.content}
+                                            thoughts={msg.thoughts}
+                                            isStreaming={msg.isStreaming}
+                                            isThinking={msg.isThinking}
+                                        />
                                     )}
 
-                                    <SearchMarkdown
-                                        content={msg.content}
-                                        isStreaming={msg.isStreaming}
-                                    />
+                                    {msg.error ? (
+                                        <div className="text-[14.5px] sm:text-[13.5px] text-red-400 leading-relaxed select-text py-0.5">
+                                            {msg.error}
+                                        </div>
+                                    ) : !msg.content ? (
+                                        <SearchMarkdown
+                                            content=""
+                                            thoughts={msg.thoughts}
+                                            isStreaming={msg.isStreaming}
+                                            isThinking={msg.isThinking}
+                                        />
+                                    ) : null}
 
                                     {/* Action Buttons */}
-                                    {!msg.isStreaming && msg.content && (
-                                        <div className="flex items-center gap-1 pt-1">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setFeedback((prev) => ({
-                                                        ...prev,
-                                                        [msg.id]: isLiked ? null : 'like',
-                                                    }))
-                                                }
-                                                className={cn(
-                                                    'p-1.5 rounded-md transition-colors cursor-pointer',
-                                                    isLiked
-                                                        ? 'text-[#87B2F4] bg-[#87B2F4]/10'
-                                                        : 'text-[#8E8D8C] hover:text-white hover:bg-white/5'
-                                                )}
-                                                title="Helpful response"
-                                            >
-                                                <ThumbsUp size={13} />
-                                            </button>
+                                    {!msg.isStreaming &&
+                                        !msg.error &&
+                                        (msg.content || msg.thoughts) && (
+                                            <div className="flex items-center gap-1 sm:gap-0.5 pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setFeedback((prev) => ({
+                                                            ...prev,
+                                                            [msg.id]: isLiked ? null : 'like',
+                                                        }))
+                                                    }
+                                                    className={cn(
+                                                        'p-2 sm:p-1.5 rounded-lg sm:rounded-md transition-colors cursor-pointer touch-manipulation',
+                                                        isLiked
+                                                            ? 'text-[#87B2F4] bg-[#87B2F4]/10'
+                                                            : 'text-[#8E8D8C] hover:text-white hover:bg-white/5 active:bg-white/10'
+                                                    )}
+                                                    title="Helpful response"
+                                                    aria-label="Helpful response"
+                                                >
+                                                    <ThumbsUp size={13.5} />
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setFeedback((prev) => ({
-                                                        ...prev,
-                                                        [msg.id]: isDisliked ? null : 'dislike',
-                                                    }))
-                                                }
-                                                className={cn(
-                                                    'p-1.5 rounded-md transition-colors cursor-pointer',
-                                                    isDisliked
-                                                        ? 'text-red-400 bg-red-400/10'
-                                                        : 'text-[#8E8D8C] hover:text-white hover:bg-white/5'
-                                                )}
-                                                title="Unhelpful response"
-                                            >
-                                                <ThumbsDown size={13} />
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setFeedback((prev) => ({
+                                                            ...prev,
+                                                            [msg.id]: isDisliked ? null : 'dislike',
+                                                        }))
+                                                    }
+                                                    className={cn(
+                                                        'p-2 sm:p-1.5 rounded-lg sm:rounded-md transition-colors cursor-pointer touch-manipulation',
+                                                        isDisliked
+                                                            ? 'text-red-400 bg-red-400/10'
+                                                            : 'text-[#8E8D8C] hover:text-white hover:bg-white/5 active:bg-white/10'
+                                                    )}
+                                                    title="Unhelpful response"
+                                                    aria-label="Unhelpful response"
+                                                >
+                                                    <ThumbsDown size={13.5} />
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => handleCopy(msg.id, msg.content)}
-                                                className="p-1.5 text-[#8E8D8C] hover:text-white rounded-md transition-colors cursor-pointer hover:bg-white/5"
-                                                title="Copy to clipboard"
-                                            >
-                                                {copiedId === msg.id ? (
-                                                    <Check size={13} className="text-emerald-400" />
-                                                ) : (
-                                                    <Copy size={13} />
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCopy(msg.id, msg.content)}
+                                                    className="p-2 sm:p-1.5 text-[#8E8D8C] hover:text-white rounded-lg sm:rounded-md transition-colors cursor-pointer hover:bg-white/5 active:bg-white/10 touch-manipulation"
+                                                    title="Copy to clipboard"
+                                                    aria-label="Copy to clipboard"
+                                                >
+                                                    {copiedId === msg.id ? (
+                                                        <Check
+                                                            size={13.5}
+                                                            className="text-emerald-400"
+                                                        />
+                                                    ) : (
+                                                        <Copy size={13.5} />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        )}
                                 </div>
                             )
                         })}
@@ -499,7 +681,7 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                 </div>
 
                 {/* Bottom Prompt Input */}
-                <div className="shrink-0 bg-[#141414] p-4 border-t border-[#222225]/50">
+                <div className="shrink-0 bg-[#141414] p-3 sm:p-4 pb-[max(12px,env(safe-area-inset-bottom,12px))] sm:pb-4">
                     <div className="max-w-2xl mx-auto w-full">
                         <ChatPromptInput
                             value={promptText}
@@ -511,11 +693,33 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                             setIsVisualMode={() => {}}
                             selectedElement={null}
                             handleClearSelection={() => {}}
-                            isApplyingEdit={false}
+                            isApplyingEdit={isStreaming}
+                            mode="search"
+                            isThinkingMode={isThinkingMode}
+                            onToggleThinking={setIsThinkingMode}
+                            placeholder="Ask anything..."
+                            autoFocus={true}
                         />
                     </div>
                 </div>
             </div>
+
+            {/* Bad Session / Report Issue Feedback Modal */}
+            <BadSessionModal
+                isOpen={isBadSessionModalOpen}
+                onClose={() => setIsBadSessionModalOpen(false)}
+                sessionId={sessionId}
+                projectName={sessionTitle || initialPrompt || 'Search Session'}
+            />
+
+            {/* Session Delete Modal */}
+            <SessionDeleteModal
+                isOpen={isDeleteModalOpen}
+                projectTitle={sessionTitle || initialPrompt || 'Search Session'}
+                isPending={isDeletePending}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteConfirm}
+            />
         </div>
     )
 }

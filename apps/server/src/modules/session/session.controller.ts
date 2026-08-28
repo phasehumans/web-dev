@@ -286,10 +286,31 @@ export const streamSearchResponse = asyncHandler(async (req: Request, res: Respo
     })
 })
 
+export const getSessionMessages = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user?.userId
+    if (!userId) throw new AppError('unauthorized', 401)
+    const { id } = getSessionByIdSchema.parse(req.params)
+
+    const beforeSequence = req.query.beforeSequence
+        ? parseInt(req.query.beforeSequence as string, 10)
+        : undefined
+    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50
+
+    const messages = await sessionService.getSessionMessages({
+        userId,
+        sessionId: id,
+        beforeSequence,
+        limit,
+    })
+
+    return sendSuccess(res, 'messages fetched successfully', { messages })
+})
+
 export const sessionController = {
     getSessions,
     createSession,
     getSessionById,
+    getSessionMessages,
     renameSession,
     archiveSession,
     unarchiveSession,

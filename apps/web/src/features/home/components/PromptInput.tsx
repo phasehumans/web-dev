@@ -1,10 +1,13 @@
+import { Folder, KeyRound, Puzzle } from 'lucide-react'
+import React from 'react'
+
 import type { PromptInputProps } from '@/features/home/types'
 
 import { usePromptInputController } from '@/features/home/hooks/usePromptInputController'
 import { Icons } from '@/shared/components/ui/Icons'
 import { PromptFooter } from '@/shared/components/ui/PromptFooter'
 
-const PromptInput: React.FC<
+export const PromptInput: React.FC<
     PromptInputProps & { onFocus?: () => void; mode?: 'agent' | 'search' }
 > = ({
     onSubmit,
@@ -18,6 +21,8 @@ const PromptInput: React.FC<
     onOpenAuth,
     onFocus,
     mode,
+    isThinkingMode,
+    onToggleThinking,
 }) => {
     const {
         input,
@@ -31,10 +36,23 @@ const PromptInput: React.FC<
         dropdownPosition,
         isAtTriggered,
         isReposTriggered,
+        isSessionsTriggered,
+        isSkillsTriggered,
+        isSecretsTriggered,
         filteredProviders,
         filteredRepos,
+        filteredSessions,
+        filteredSkills,
+        filteredSecrets,
         isGithubConnected,
         isReposLoading,
+        isSessionsLoading,
+        isSecretsLoading,
+        githubConnectUrl,
+        handleSelectRepo,
+        handleSelectSession,
+        handleSelectSkill,
+        handleSelectSecret,
         handleInputChange,
         handleSelect,
         handleSubmit,
@@ -49,6 +67,7 @@ const PromptInput: React.FC<
         isAuthenticated,
         onOpenAuth,
         isLoading,
+        mode,
     })
 
     return (
@@ -94,7 +113,7 @@ const PromptInput: React.FC<
                                     : selectedRepos.length > 0
                                       ? ''
                                       : mode === 'search'
-                                        ? 'Ask about your code...'
+                                        ? 'Ask anything...'
                                         : 'Describe your idea...')
                             }
                             className={`
@@ -109,60 +128,57 @@ const PromptInput: React.FC<
                     {isAuthenticated && isAtTriggered && !isReposTriggered && !forceClose && (
                         <div
                             ref={dropdownRef}
-                            className={`absolute left-5 z-[100] w-[320px] bg-[#1E1E1E] border border-[#2A2928] rounded-xl shadow-lg shadow-black/40 overflow-hidden font-sans flex flex-col max-h-[320px] py-1.5 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
+                            className={`absolute left-5 z-[100] w-[230px] max-w-[calc(100vw-32px)] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 flex flex-col animate-in fade-in zoom-in-95 duration-150 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
                         >
-                            <div
-                                className="flex flex-col overflow-y-auto px-1.5"
-                                style={{ scrollbarWidth: 'none' }}
-                            >
-                                {filteredProviders.length > 0 ? (
-                                    filteredProviders.map((provider, idx) => (
-                                        <button
-                                            key={provider.id}
-                                            onMouseEnter={() => setSelectedIndex(idx)}
-                                            onClick={() => {
-                                                const newValue = (input || '').replace(
-                                                    /@[a-zA-Z0-9_-]*$/,
-                                                    `@${provider.trigger}`
-                                                )
-                                                handleInputChange(newValue)
-                                                textareaRef.current?.focus()
-                                            }}
-                                            className={`flex items-center gap-3 px-2 py-2 rounded-lg transition-colors text-left w-full outline-none ${selectedIndex === idx ? 'bg-[#2A2928] dropdown-item-active' : 'hover:bg-[#2A2928]'}`}
-                                        >
-                                            <provider.icon className="w-[16px] h-[16px] text-[#8F8E8D]" />
-                                            <div className="flex flex-col min-w-0 leading-tight gap-0.5">
-                                                <span className="text-[13px] font-medium text-[#E8E8E8] truncate">
-                                                    {provider.title}
-                                                </span>
-                                                <span className="text-[11.5px] text-[#8F8E8D] truncate">
-                                                    {provider.description}
-                                                </span>
-                                            </div>
-                                        </button>
-                                    ))
-                                ) : (
-                                    <div className="px-3 py-2 text-center text-[12.5px] text-[#8F8E8D]">
-                                        No matching options.
-                                    </div>
-                                )}
-                            </div>
+                            {filteredProviders.length > 0 ? (
+                                filteredProviders.map((provider, idx) => (
+                                    <button
+                                        key={provider.id}
+                                        onMouseEnter={() => setSelectedIndex(idx)}
+                                        onClick={() => {
+                                            const newValue = (input || '').replace(
+                                                /@[a-zA-Z0-9_-]*$/,
+                                                `@${provider.trigger}`
+                                            )
+                                            handleInputChange(newValue)
+                                            textareaRef.current?.focus()
+                                        }}
+                                        className={`flex items-center gap-3 px-3 py-1.5 rounded-xl text-left text-[12.5px] font-medium text-[#EDEDEF] transition-colors outline-none w-full ${selectedIndex === idx ? 'bg-[#252525] dropdown-item-active' : 'hover:bg-[#252525]'}`}
+                                    >
+                                        <provider.icon
+                                            className="w-4 h-4 text-[#8F8E8D]"
+                                            style={(provider as any).iconStyle}
+                                        />
+                                        <span>{provider.title}</span>
+                                    </button>
+                                ))
+                            ) : (
+                                <div className="px-3 py-2 text-center text-[12.5px] text-[#8F8E8D]">
+                                    No matching options.
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {isAuthenticated && isReposTriggered && !forceClose && (
                         <div
                             ref={dropdownRef}
-                            className={`absolute left-5 z-[100] w-[280px] bg-[#1E1E1E] border border-[#2A2928] rounded-xl shadow-lg shadow-black/40 overflow-hidden font-sans flex flex-col max-h-[300px] py-1 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
+                            className={`absolute left-5 z-[100] w-[280px] max-w-[calc(100vw-32px)] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 font-sans flex flex-col max-h-[300px] animate-in fade-in zoom-in-95 duration-150 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
                         >
-                            <div className="px-3 py-1.5 mb-1">
+                            <div className="px-3 py-1.5 mb-0.5">
                                 <span className="text-[11.5px] font-medium text-[#8F8E8D]">
                                     Repositories
                                 </span>
                             </div>
                             {!isGithubConnected && !isReposLoading ? (
-                                <div className="px-3 py-2 text-[12.5px] text-[#8F8E8D]">
-                                    Connect GitHub to see repos.
+                                <div className="px-3 py-2 text-[12.5px] text-[#8F8E8D] leading-relaxed">
+                                    <a
+                                        href={githubConnectUrl}
+                                        className="text-[#87B2F4] hover:text-[#A4C8FF] hover:underline underline-offset-2 transition-colors cursor-pointer font-medium"
+                                    >
+                                        Connect GitHub
+                                    </a>{' '}
+                                    to see repos.
                                 </div>
                             ) : isReposLoading ? (
                                 <div className="px-3 py-2 text-[12.5px] text-[#8F8E8D]">
@@ -170,7 +186,7 @@ const PromptInput: React.FC<
                                 </div>
                             ) : (
                                 <div
-                                    className="flex flex-col overflow-y-auto px-1.5 pb-1"
+                                    className="flex flex-col overflow-y-auto px-0.5 pb-0.5"
                                     style={{ scrollbarWidth: 'none' }}
                                 >
                                     {filteredRepos.length > 0 ? (
@@ -178,29 +194,17 @@ const PromptInput: React.FC<
                                             <button
                                                 key={repo.id}
                                                 onMouseEnter={() => setSelectedIndex(idx)}
-                                                onClick={() => {
-                                                    const newValue = (input || '').replace(
-                                                        /@repos:[^\s]*$/,
-                                                        ''
-                                                    )
-                                                    handleInputChange(newValue)
-                                                    if (
-                                                        !selectedRepos.some((r) => r.id === repo.id)
-                                                    ) {
-                                                        setSelectedRepos((prev) => [...prev, repo])
-                                                    }
-                                                    textareaRef.current?.focus()
-                                                }}
-                                                className={`flex items-start gap-3 px-2.5 py-2 rounded-lg transition-all duration-150 text-left w-full outline-none ${selectedIndex === idx ? 'bg-[#2A2928] dropdown-item-active' : 'hover:bg-[#252424]'}`}
+                                                onClick={() => handleSelectRepo(repo)}
+                                                className={`flex items-start gap-3 px-3 py-1.5 rounded-xl transition-colors text-left w-full outline-none ${selectedIndex === idx ? 'bg-[#252525] dropdown-item-active' : 'hover:bg-[#252525]'}`}
                                             >
                                                 <Icons.Github
-                                                    className={`w-[15px] h-[15px] mt-[2px] ${selectedIndex === idx ? 'text-[#E8E8E8]' : 'text-[#8F8E8D]'}`}
+                                                    className={`w-4 h-4 mt-[2px] ${selectedIndex === idx ? 'text-[#EDEDEF]' : 'text-[#8F8E8D]'}`}
                                                 />
-                                                <div className="flex flex-col min-w-0 leading-tight gap-1">
-                                                    <span className="text-[13.5px] font-medium text-[#E8E8E8] truncate">
+                                                <div className="flex flex-col min-w-0 leading-tight gap-0.5">
+                                                    <span className="text-[12.5px] font-medium text-[#EDEDEF] truncate">
                                                         {repo.name}
                                                     </span>
-                                                    <span className="text-[12px] text-[#8F8E8D] truncate">
+                                                    <span className="text-[11.5px] text-[#8F8E8D] truncate">
                                                         {repo.owner.login}
                                                     </span>
                                                 </div>
@@ -209,6 +213,156 @@ const PromptInput: React.FC<
                                     ) : (
                                         <div className="px-3 py-2 text-center text-[12.5px] text-[#8F8E8D]">
                                             No repos found.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {isAuthenticated && isSessionsTriggered && !forceClose && (
+                        <div
+                            ref={dropdownRef}
+                            className={`absolute left-5 z-[100] w-[280px] max-w-[calc(100vw-32px)] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 font-sans flex flex-col max-h-[300px] animate-in fade-in zoom-in-95 duration-150 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
+                        >
+                            <div className="px-3 py-1.5 mb-0.5">
+                                <span className="text-[11.5px] font-medium text-[#8F8E8D]">
+                                    Sessions
+                                </span>
+                            </div>
+                            {isSessionsLoading ? (
+                                <div className="px-3 py-2 text-[12.5px] text-[#8F8E8D]">
+                                    Loading...
+                                </div>
+                            ) : (
+                                <div
+                                    className="flex flex-col overflow-y-auto px-0.5 pb-0.5"
+                                    style={{ scrollbarWidth: 'none' }}
+                                >
+                                    {filteredSessions.length > 0 ? (
+                                        filteredSessions.slice(0, 10).map((session, idx) => (
+                                            <button
+                                                key={session.id}
+                                                onMouseEnter={() => setSelectedIndex(idx)}
+                                                onClick={() => handleSelectSession(session)}
+                                                className={`flex items-start gap-3 px-3 py-1.5 rounded-xl transition-colors text-left w-full outline-none ${selectedIndex === idx ? 'bg-[#252525] dropdown-item-active' : 'hover:bg-[#252525]'}`}
+                                            >
+                                                <Folder
+                                                    className={`w-4 h-4 mt-[2px] ${selectedIndex === idx ? 'text-[#EDEDEF]' : 'text-[#8F8E8D]'}`}
+                                                />
+                                                <div className="flex flex-col min-w-0 leading-tight gap-0.5">
+                                                    <span className="text-[12.5px] font-medium text-[#EDEDEF] truncate">
+                                                        {session.title || 'Untitled Session'}
+                                                    </span>
+                                                    <span className="text-[11.5px] text-[#8F8E8D] truncate">
+                                                        {session.lastMessage ||
+                                                            new Date(
+                                                                session.updatedAt
+                                                            ).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-3 py-2 text-center text-[12.5px] text-[#8F8E8D]">
+                                            No sessions found.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {isAuthenticated && isSkillsTriggered && !forceClose && (
+                        <div
+                            ref={dropdownRef}
+                            className={`absolute left-5 z-[100] w-[280px] max-w-[calc(100vw-32px)] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 font-sans flex flex-col max-h-[300px] animate-in fade-in zoom-in-95 duration-150 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
+                        >
+                            <div className="px-3 py-1.5 mb-0.5">
+                                <span className="text-[11.5px] font-medium text-[#8F8E8D]">
+                                    Skills
+                                </span>
+                            </div>
+                            <div
+                                className="flex flex-col overflow-y-auto px-0.5 pb-0.5"
+                                style={{ scrollbarWidth: 'none' }}
+                            >
+                                {filteredSkills.length > 0 ? (
+                                    filteredSkills.slice(0, 10).map((skill, idx) => (
+                                        <button
+                                            key={skill.id}
+                                            onMouseEnter={() => setSelectedIndex(idx)}
+                                            onClick={() => handleSelectSkill(skill)}
+                                            className={`flex items-start gap-3 px-3 py-1.5 rounded-xl transition-colors text-left w-full outline-none ${selectedIndex === idx ? 'bg-[#252525] dropdown-item-active' : 'hover:bg-[#252525]'}`}
+                                        >
+                                            <Puzzle
+                                                className={`w-4 h-4 mt-[2px] ${selectedIndex === idx ? 'text-[#EDEDEF]' : 'text-[#8F8E8D]'}`}
+                                            />
+                                            <div className="flex flex-col min-w-0 leading-tight gap-0.5">
+                                                <span className="text-[12.5px] font-medium text-[#EDEDEF] truncate">
+                                                    {skill.name}
+                                                </span>
+                                                <span className="text-[11.5px] text-[#8F8E8D] truncate">
+                                                    {skill.description}
+                                                </span>
+                                            </div>
+                                        </button>
+                                    ))
+                                ) : (
+                                    <div className="px-3 py-2 text-center text-[12.5px] text-[#8F8E8D]">
+                                        No skills found.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {isAuthenticated && isSecretsTriggered && !forceClose && (
+                        <div
+                            ref={dropdownRef}
+                            className={`absolute left-5 z-[100] w-[280px] max-w-[calc(100vw-32px)] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 font-sans flex flex-col max-h-[300px] animate-in fade-in zoom-in-95 duration-150 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
+                        >
+                            <div className="px-3 py-1.5 mb-0.5">
+                                <span className="text-[11.5px] font-medium text-[#8F8E8D]">
+                                    Secrets
+                                </span>
+                            </div>
+                            {isSecretsLoading ? (
+                                <div className="px-3 py-2 text-[12.5px] text-[#8F8E8D]">
+                                    Loading...
+                                </div>
+                            ) : (
+                                <div
+                                    className="flex flex-col overflow-y-auto px-0.5 pb-0.5"
+                                    style={{ scrollbarWidth: 'none' }}
+                                >
+                                    {filteredSecrets.length > 0 ? (
+                                        filteredSecrets.slice(0, 10).map((secret, idx) => (
+                                            <button
+                                                key={secret.id}
+                                                onMouseEnter={() => setSelectedIndex(idx)}
+                                                onClick={() => handleSelectSecret(secret)}
+                                                className={`flex items-start gap-3 px-3 py-1.5 rounded-xl transition-colors text-left w-full outline-none ${selectedIndex === idx ? 'bg-[#252525] dropdown-item-active' : 'hover:bg-[#252525]'}`}
+                                            >
+                                                <KeyRound
+                                                    className={`w-4 h-4 mt-[2px] ${selectedIndex === idx ? 'text-[#EDEDEF]' : 'text-[#8F8E8D]'}`}
+                                                    style={{
+                                                        transform: 'scaleY(-1) rotate(-135deg)',
+                                                    }}
+                                                />
+                                                <div className="flex flex-col min-w-0 leading-tight gap-0.5">
+                                                    <span className="text-[12.5px] font-medium text-[#EDEDEF] truncate">
+                                                        {secret.name}
+                                                    </span>
+                                                    <span className="text-[11.5px] text-[#8F8E8D] truncate">
+                                                        {secret.note || 'Stored secret'}
+                                                    </span>
+                                                </div>
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="px-3 py-2 text-center text-[12.5px] text-[#8F8E8D]">
+                                            No secrets found.
                                         </div>
                                     )}
                                 </div>
@@ -232,6 +386,8 @@ const PromptInput: React.FC<
                         textareaRef.current?.focus()
                     }}
                     mode={mode}
+                    isThinkingMode={isThinkingMode}
+                    onToggleThinking={onToggleThinking}
                 />
             </div>
         </div>

@@ -27,6 +27,7 @@ import type {
     UnarchiveSession,
     UpdateSessionTags,
     GetSessionInsights,
+    GetSessionMessages,
     DeleteSession,
     GetCollaborators,
     AddCollaborator,
@@ -647,7 +648,7 @@ const streamSearchResponse = async (data: StreamSearchResponse) => {
 
     const requestedModel = process.env.SEARCH_MODEL || 'gemini-3.6-flash'
     const systemPrompt =
-        'You are December Search, a helpful, precise, and fast AI assistant. Provide concise, clear, and direct answers formatted in GitHub-flavored Markdown. When providing code, use markdown code blocks with the appropriate language identifier.'
+        'You are December Search, a helpful, precise, and fast AI assistant. First, briefly reason inside <thought>...</thought> tags about what the user is asking and how best to answer. Then, provide concise, clear, and direct answers formatted in GitHub-flavored Markdown without horizontal divider lines (do not use ---). When providing code, use markdown code blocks with the appropriate language identifier.'
 
     let fullAssistantContent = ''
     let usageInfo: { inputTokens: number; outputTokens: number; totalTokens: number } | null = null
@@ -756,11 +757,26 @@ const streamSearchResponse = async (data: StreamSearchResponse) => {
     }
 }
 
+const getSessionMessages = async (data: GetSessionMessages) => {
+    const { userId, sessionId, beforeSequence, limit } = data
+    const session = await sessionRepository.findSessionById(sessionId, userId)
+    if (!session) {
+        throw new AppError('Session not found', 404)
+    }
+
+    return sessionRepository.findMessagesBySessionId({
+        sessionId,
+        beforeSequence,
+        limit,
+    })
+}
+
 export const sessionService = {
     loadSessionFiles,
     getUserSessions,
     createSession,
     getSession,
+    getSessionMessages,
     renameSession,
     archiveSession,
     unarchiveSession,

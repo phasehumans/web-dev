@@ -84,49 +84,42 @@ export const ProfileUsageSettings: React.FC = () => {
         }
     }, [timeRange])
 
-    // fetch credits history
+    // fetch credits history with server-side pagination
     const {
         data: history,
         isLoading: isHistoryLoading,
         error,
     } = useCreditsHistory({
-        limit: 100,
-        offset: 0,
+        limit,
+        offset,
         periodStart: activeDateRange.start,
         periodEnd: activeDateRange.end,
     })
 
-    // reset offset when filters change
+    // reset offset when date filters change
     useEffect(() => {
         setOffset(0)
-    }, [activeDateRange.start, activeDateRange.end, limit])
+    }, [activeDateRange.start, activeDateRange.end])
 
-    // use real data. apply date filtering on frontend.
     const displayEvents = React.useMemo(() => {
-        const events = history?.events ?? []
-
-        const startTime = new Date(activeDateRange.start).getTime()
-        const endTime = new Date(activeDateRange.end).getTime()
-
-        return events.filter((event) => {
-            const eventTime = new Date(event.createdAt).getTime()
-            return eventTime >= startTime && eventTime <= endTime
-        })
-    }, [history, activeDateRange])
+        return history?.events ?? []
+    }, [history?.events])
 
     // compute metrics stats
     const stats = React.useMemo(() => {
-        const totalCost = displayEvents.reduce((sum, e) => sum + e.costInCents, 0) / 100
+        const totalCost =
+            (history?.periods ?? []).reduce((sum, p) => sum + p.costInCents, 0) / 100 ||
+            displayEvents.reduce((sum, e) => sum + e.costInCents, 0) / 100
         const totalTokens = displayEvents.reduce((sum, e) => sum + e.totalTokens, 0)
 
         return {
             totalCost,
             totalTokens,
         }
-    }, [displayEvents])
+    }, [displayEvents, history?.periods])
 
-    const paginatedEvents = displayEvents.slice(offset, offset + limit)
-    const totalEvents = displayEvents.length
+    const paginatedEvents = displayEvents
+    const totalEvents = history?.total ?? 0
     const currentPage = Math.floor(offset / limit) + 1
     const totalPages = Math.max(Math.ceil(totalEvents / limit), 1)
 

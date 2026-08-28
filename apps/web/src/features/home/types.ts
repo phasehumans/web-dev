@@ -25,6 +25,8 @@ export interface PromptInputProps {
     onChange?: (value: string) => void
     isAuthenticated?: boolean
     onOpenAuth?: () => void
+    isThinkingMode?: boolean
+    onToggleThinking?: (enabled: boolean) => void
 }
 
 export interface SuggestionButtonProps {

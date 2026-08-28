@@ -53,6 +53,9 @@ export type StreamBuildLogs = {
 
 export type ListGithubRepos = {
     userId: string
+    page?: number
+    limit?: number
+    search?: string
 }
 
 export type GithubRepo = {

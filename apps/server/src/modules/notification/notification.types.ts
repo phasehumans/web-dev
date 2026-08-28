@@ -1,5 +1,12 @@
 export type GetNotifications = {
     userId: string
+    page?: number
+    limit?: number
+    isRead?: boolean
+}
+
+export type GetUnreadCount = {
+    userId: string
 }
 
 export type GetNotificationById = {

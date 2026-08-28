@@ -11,8 +11,27 @@ export interface Notification {
     createdAt: string
 }
 
-const getNotifications = () => {
-    return apiRequest<Notification[]>('/notification')
+export interface PaginatedNotificationsResponse {
+    notifications: Notification[]
+    pagination: {
+        total: number
+        page: number
+        limit: number
+        totalPages: number
+    }
+}
+
+const getNotifications = (params?: { page?: number; limit?: number; isRead?: boolean }) => {
+    const query = new URLSearchParams()
+    if (params?.page) query.set('page', params.page.toString())
+    if (params?.limit) query.set('limit', params.limit.toString())
+    if (params?.isRead !== undefined) query.set('isRead', params.isRead.toString())
+    const qs = query.toString()
+    return apiRequest<PaginatedNotificationsResponse>(`/notification${qs ? `?${qs}` : ''}`)
+}
+
+const getUnreadCount = () => {
+    return apiRequest<{ count: number }>('/notification/unread-count')
 }
 
 const getNotificationById = (id: string) => {
@@ -45,6 +64,7 @@ const deleteAll = () => {
 
 export const notificationAPI = {
     getNotifications,
+    getUnreadCount,
     getNotificationById,
     markAsRead,
     deleteNotification,

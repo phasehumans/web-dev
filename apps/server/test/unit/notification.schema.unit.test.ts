@@ -3,6 +3,7 @@ import { describe, it, expect } from 'bun:test'
 import {
     NotificationSchema,
     NotificationParamsSchema,
+    GetNotificationsQuerySchema,
 } from '../../src/modules/notification/notification.schema'
 
 describe('Notification Schema - Unit Tests', () => {
@@ -77,6 +78,31 @@ describe('Notification Schema - Unit Tests', () => {
             const invalid = { id: 'invalid-id' }
             const result = NotificationParamsSchema.safeParse(invalid)
             expect(result.success).toBe(false)
+        })
+    })
+
+    describe('GetNotificationsQuerySchema', () => {
+        it('should default page=1 and limit=20', () => {
+            const parsed = GetNotificationsQuerySchema.parse({})
+            expect(parsed.page).toBe(1)
+            expect(parsed.limit).toBe(20)
+            expect(parsed.isRead).toBeUndefined()
+        })
+
+        it('should coerce string numbers for page and limit', () => {
+            const parsed = GetNotificationsQuerySchema.parse({
+                page: '2',
+                limit: '50',
+                isRead: 'true',
+            })
+            expect(parsed.page).toBe(2)
+            expect(parsed.limit).toBe(50)
+            expect(parsed.isRead).toBe(true)
+        })
+
+        it('should reject non-positive page or limit', () => {
+            expect(() => GetNotificationsQuerySchema.parse({ page: '0' })).toThrow()
+            expect(() => GetNotificationsQuerySchema.parse({ limit: '101' })).toThrow()
         })
     })
 })

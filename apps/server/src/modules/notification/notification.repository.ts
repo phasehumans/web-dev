@@ -2,13 +2,40 @@ import { prisma } from '@december/database'
 
 import type { Prisma } from '@december/database'
 
-async function findManyNotifications(data: { userId: string; select: Prisma.NotificationSelect }) {
-    const { userId, select } = data
-    return prisma.notification.findMany({
-        where: { userId },
-        select,
-        orderBy: { createdAt: 'desc' },
-    })
+async function findManyNotifications(data: {
+    userId: string
+    select: Prisma.NotificationSelect
+    page?: number
+    limit?: number
+    isRead?: boolean
+}) {
+    const { userId, select, page = 1, limit = 20, isRead } = data
+    const skip = (page - 1) * limit
+    const where: Prisma.NotificationWhereInput = {
+        userId,
+        ...(isRead !== undefined ? { isRead } : {}),
+    }
+
+    const [total, notifications] = await Promise.all([
+        prisma.notification.count({ where }),
+        prisma.notification.findMany({
+            where,
+            select,
+            skip,
+            take: limit,
+            orderBy: { createdAt: 'desc' },
+        }),
+    ])
+
+    return {
+        notifications,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    }
 }
 
 async function findNotificationById(data: {
@@ -104,8 +131,18 @@ async function deleteManyReadNotifications(userId: string) {
     })
 }
 
+async function countUnreadNotifications(userId: string) {
+    return prisma.notification.count({
+        where: {
+            userId,
+            isRead: false,
+        },
+    })
+}
+
 export const notificationRepository = {
     findManyNotifications,
+    countUnreadNotifications,
     findNotificationById,
     findFirstNotification,
     updateNotificationRead,

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 
 import { useSessionListMutations } from '../hooks/useSessionListMutations'
-import { useSessions } from '../hooks/useSessions'
+import { useInfiniteSessions } from '../hooks/useSessions'
 
 import { type SessionFilterState, DEFAULT_FILTERS } from './SessionFilterDropdown'
 import { SessionListModals } from './SessionListModals'
@@ -40,8 +40,9 @@ export const SessionList: React.FC<{
         }
     }, [searchQuery, typeFilter, sortOption, advancedFilters])
 
-    const { data, isLoading, isFetching, error } = useSessions(queryFilters)
-    const sessions = useMemo(() => data?.sessions || [], [data?.sessions])
+    const { data, isLoading, isFetching, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+        useInfiniteSessions(queryFilters)
+    const sessions = useMemo(() => data?.pages.flatMap((page) => page.sessions) || [], [data])
     const errorMessage = error instanceof Error ? error.message : null
     const [renameModal, setRenameModal] = useState<RenameModalState>({
         isOpen: false,
@@ -252,7 +253,19 @@ export const SessionList: React.FC<{
     const shareModal = { isOpen: false, project: null }
 
     return (
-        <div className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar">
+        <div
+            className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar"
+            onScroll={(e) => {
+                const target = e.currentTarget
+                if (
+                    target.scrollHeight - target.scrollTop - target.clientHeight < 150 &&
+                    hasNextPage &&
+                    !isFetchingNextPage
+                ) {
+                    fetchNextPage()
+                }
+            }}
+        >
             <MobileBreadcrumbsHeader currentPage="Sessions" onHomeClick={onNewProject} />
             <div className="relative z-10 mx-auto max-w-6xl px-3.5 sm:px-6 pb-8 pt-4 md:p-16">
                 <SessionListView
@@ -271,7 +284,6 @@ export const SessionList: React.FC<{
                     onToggleStarFromMenu={toggleStarFromMenu}
                     onToggleArchiveFromMenu={toggleArchiveFromMenu}
                     onOpenRename={openRenameModal}
-                    onOpenShare={() => {}}
                     onOpenDelete={openDeleteModal}
                     onOpenTags={openTagsModal}
                     onOpenInsights={openInsightsModal}
@@ -290,13 +302,11 @@ export const SessionList: React.FC<{
 
             <SessionListModals
                 renameModal={renameModal}
-                shareModal={shareModal}
                 deleteModal={deleteModal}
                 openConfirmModal={openConfirmModal}
                 tagsModal={tagsModal}
                 insightsModal={insightsModal}
                 isRenamePending={renameMutation.isPending}
-                isSharePending={false}
                 isDeletePending={deleteMutation.isPending}
                 isTagsPending={updateTagsMutation.isPending}
                 onCloseRename={() => setRenameModal((prev) => ({ ...prev, isOpen: false }))}
@@ -304,8 +314,6 @@ export const SessionList: React.FC<{
                     setRenameModal((prev) => ({ ...prev, value: nextValue }))
                 }
                 onRenameSubmit={handleRename}
-                onCloseShare={() => {}}
-                onShareConfirm={() => {}}
                 onCloseDelete={() => setDeleteModal((prev) => ({ ...prev, isOpen: false }))}
                 onDeleteConfirm={handleDelete}
                 onCloseOpenConfirm={() => setOpenConfirmModal({ isOpen: false, project: null })}

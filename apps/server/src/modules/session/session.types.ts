@@ -61,6 +61,13 @@ export type GetSessionInsights = {
     sessionId: string
 }
 
+export type GetSessionMessages = {
+    userId: string
+    sessionId: string
+    beforeSequence?: number
+    limit?: number
+}
+
 export type DeleteSession = {
     userId: string
     sessionId: string

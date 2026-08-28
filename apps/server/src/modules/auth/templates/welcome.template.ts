@@ -44,11 +44,11 @@ export const renderWelcomeEmail = ({
           </p>
           <ul class='text-secondary' style='margin: 0 0 16px 0; padding-left: 20px; font-size: 14px; line-height: 22px; color: #57534e;'>
             <li style='margin-bottom: 8px;'><strong>Writes code &amp; runs commands:</strong> Ask it to build features, fix bugs, or run tests directly in your terminal or web dashboard.</li>
-            <li style='margin-bottom: 8px;'><strong>Cloud Handoff:</strong> Use <code class='otp-box' style='padding: 2px 6px; background-color: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 4px; font-family: Menlo, Monaco, Consolas, monospace; font-size: 13px;'>/handoff</code> in your terminal to continue your session seamlessly on <a class='link' href='${webUrl}' target='_blank' style='color: #1c1917; text-decoration: underline;'>trydecember.com</a>.</li>
+            <li style='margin-bottom: 8px;'><strong>Cloud Handoff:</strong> Use <code style='font-family: Menlo, Monaco, Consolas, monospace; font-size: 13px;'>/handoff</code> in your terminal to continue your session seamlessly on <a class='link' href='${webUrl}' target='_blank' style='color: #1c1917; text-decoration: underline;'>trydecember.com</a>.</li>
             <li style='margin-bottom: 8px;'><strong>Bring your own AI:</strong> Plug in API keys for OpenAI, Anthropic, Gemini, and 20+ others, or use December credits.</li>
           </ul>
           <p class='text-secondary' style='margin: 0 0 16px 0; font-size: 14px; line-height: 22px; color: #57534e;'>
-            Run <code class='otp-box' style='padding: 2px 6px; background-color: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 4px; font-family: Menlo, Monaco, Consolas, monospace; font-size: 13px;'>npm install -g @trydecember/cli</code> to get started locally, or launch a session in your browser:
+            Run <code style='font-family: Menlo, Monaco, Consolas, monospace; font-size: 13px;'>npm install -g @trydecember/cli</code> to get started locally, or launch a session in your browser:
           </p>
           
           <!-- CTA Button -->

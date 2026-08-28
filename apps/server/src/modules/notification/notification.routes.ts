@@ -8,6 +8,7 @@ const notificationRouter = Router()
 
 notificationRouter.use(authMiddleware)
 
+notificationRouter.get('/unread-count', notificationController.getUnreadCount)
 notificationRouter.get('/', notificationController.getNotifications)
 notificationRouter.get('/:id', notificationController.getNotificationById)
 notificationRouter.patch('/:id/read', notificationController.markAsRead)

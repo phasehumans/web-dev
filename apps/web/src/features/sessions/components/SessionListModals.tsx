@@ -4,32 +4,22 @@ import { SessionDeleteModal } from './SessionDeleteModal'
 import { SessionInsightsModal } from './SessionInsightsModal'
 import { SessionOpenConfirmModal } from './SessionOpenConfirmModal'
 import { SessionRenameModal } from './SessionRenameModal'
-import { SessionShareModal } from './SessionShareModal'
 import { SessionTagsModal } from './SessionTagsModal'
 
-import type {
-    DeleteModalState,
-    RenameModalState,
-    ShareModalState,
-    Project,
-} from '@/features/sessions/types'
+import type { DeleteModalState, RenameModalState, Project } from '@/features/sessions/types'
 
 interface SessionListModalsProps {
     renameModal: RenameModalState
-    shareModal: ShareModalState
     deleteModal: DeleteModalState
     openConfirmModal: { isOpen: boolean; project: Project | null }
     tagsModal: { isOpen: boolean; project: any | null }
     insightsModal: { isOpen: boolean; project: any | null }
     isRenamePending: boolean
-    isSharePending: boolean
     isDeletePending: boolean
     isTagsPending: boolean
     onCloseRename: () => void
     onRenameChange: (nextValue: string) => void
     onRenameSubmit: (event: React.FormEvent) => void
-    onCloseShare: () => void
-    onShareConfirm: (category?: string) => void
     onCloseDelete: () => void
     onDeleteConfirm: () => void
     onCloseOpenConfirm: () => void
@@ -41,20 +31,16 @@ interface SessionListModalsProps {
 
 export const SessionListModals: React.FC<SessionListModalsProps> = ({
     renameModal,
-    shareModal,
     deleteModal,
     openConfirmModal,
     tagsModal,
     insightsModal,
     isRenamePending,
-    isSharePending,
     isDeletePending,
     isTagsPending,
     onCloseRename,
     onRenameChange,
     onRenameSubmit,
-    onCloseShare,
-    onShareConfirm,
     onCloseDelete,
     onDeleteConfirm,
     onCloseOpenConfirm,
@@ -72,15 +58,6 @@ export const SessionListModals: React.FC<SessionListModalsProps> = ({
                 onClose={onCloseRename}
                 onChange={onRenameChange}
                 onSubmit={onRenameSubmit}
-            />
-
-            <SessionShareModal
-                isOpen={shareModal.isOpen}
-                projectTitle={shareModal.project?.title}
-                isSharedAsTemplate={shareModal.project?.isSharedAsTemplate ?? false}
-                isPending={isSharePending}
-                onClose={onCloseShare}
-                onConfirm={onShareConfirm}
             />
 
             <SessionDeleteModal

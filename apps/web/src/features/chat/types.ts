@@ -77,6 +77,8 @@ export interface ChatPromptInputProps {
     isApplyingEdit: boolean
     isAuthenticated?: boolean
     onOpenAuth?: () => void
+    isThinkingMode?: boolean
+    onToggleThinking?: (enabled: boolean) => void
 }
 
 export interface ChatSidebarProps {

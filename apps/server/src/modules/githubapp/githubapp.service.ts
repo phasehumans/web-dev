@@ -108,7 +108,7 @@ const getUserInstallationToken = async (data: GetUserInstallationToken): Promise
 const getUserInstallationRepos = async (
     data: GetUserInstallationRepos
 ): Promise<GithubInstallationRepo[]> => {
-    const { userId } = data
+    const { userId, page: requestedPage, limit: requestedLimit, search } = data
     let installations = await githubAppRepository.findAllByUserId(userId)
 
     if (!installations || installations.length === 0) {
@@ -129,12 +129,13 @@ const getUserInstallationRepos = async (
                 installationId: installation.installationId,
             })
 
-            let page = 1
+            let page = requestedPage || 1
+            const perPage = requestedLimit ? Math.min(requestedLimit, 100) : 100
             let hasMore = true
 
             while (hasMore) {
                 const response = await fetch(
-                    `https://api.github.com/installation/repositories?per_page=100&page=${page}`,
+                    `https://api.github.com/installation/repositories?per_page=${perPage}&page=${page}`,
                     {
                         method: 'GET',
                         headers: {
@@ -153,6 +154,14 @@ const getUserInstallationRepos = async (
                 const repositories = json.repositories || []
 
                 for (const repo of repositories) {
+                    if (
+                        search &&
+                        !repo.name.toLowerCase().includes(search.toLowerCase()) &&
+                        !repo.full_name?.toLowerCase().includes(search.toLowerCase())
+                    ) {
+                        continue
+                    }
+
                     if (!seenRepoIds.has(repo.id)) {
                         seenRepoIds.add(repo.id)
                         allRepos.push({
@@ -174,7 +183,7 @@ const getUserInstallationRepos = async (
                     }
                 }
 
-                if (repositories.length < 100) {
+                if (repositories.length < perPage || requestedPage !== undefined) {
                     hasMore = false
                 } else {
                     page++

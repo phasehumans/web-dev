@@ -24,6 +24,8 @@ interface PromptFooterProps {
     onOpenAuth?: () => void
     onOptionSelect?: (trigger: string) => void
     mode?: 'agent' | 'search' | 'chat'
+    isThinkingMode?: boolean
+    onToggleThinking?: (enabled: boolean) => void
 }
 
 export const PromptFooter: React.FC<PromptFooterProps> = ({
@@ -37,12 +39,22 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
     onOpenAuth,
     onOptionSelect,
     mode = 'agent',
+    isThinkingMode: propThinkingMode,
+    onToggleThinking,
 }) => {
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const [isPlusMenuOpen, setIsPlusMenuOpen] = useState(false)
     const [plusMenuPosition, setPlusMenuPosition] = useState<'top' | 'bottom'>('bottom')
     const [selectedPlusIndex, setSelectedPlusIndex] = useState(0)
+    const [internalThinkingMode, setInternalThinkingMode] = useState(false)
+    const isThinkingMode = propThinkingMode !== undefined ? propThinkingMode : internalThinkingMode
+
+    const handleToggleThinking = () => {
+        const next = !isThinkingMode
+        setInternalThinkingMode(next)
+        onToggleThinking?.(next)
+    }
     const plusRef = useRef<HTMLDivElement>(null)
     const canvasRef = useRef<HTMLDivElement>(null)
 
@@ -221,6 +233,10 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                     <div className="relative group/btn" ref={plusRef}>
                         <button
                             onClick={(e) => {
+                                if (mode === 'search') {
+                                    handleUploadClick()
+                                    return
+                                }
                                 if (!isPlusMenuOpen) {
                                     const rect = e.currentTarget.getBoundingClientRect()
                                     const spaceBelow = window.innerHeight - rect.bottom
@@ -232,21 +248,21 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                 }
                                 setIsPlusMenuOpen(!isPlusMenuOpen)
                             }}
-                            className="flex items-center justify-center w-8 h-8 rounded-full text-[#8E8E8E] transition-all hover:bg-white/5 hover:text-white outline-none"
+                            className="flex items-center justify-center w-8 h-8 rounded-full text-[#8E8E8E] transition-all hover:bg-white/5 hover:text-white outline-none cursor-pointer touch-manipulation"
                         >
                             <Icons.Plus className="w-[18px] h-[18px] stroke-[2.5px]" />
                         </button>
                         {!isPlusMenuOpen && (
                             <div className="absolute bottom-[calc(100%+6px)] left-0 z-50 hidden group-hover/btn:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
                                 <span className="text-[12px] font-medium text-[#EDEDEF]">
-                                    Attach or mention
+                                    {mode === 'search' ? 'Upload attachment' : 'Attach or mention'}
                                 </span>
                             </div>
                         )}
 
-                        {isPlusMenuOpen && (
+                        {isPlusMenuOpen && mode !== 'search' && (
                             <div
-                                className={`absolute ${plusMenuPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} left-0 w-[230px] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-150`}
+                                className={`absolute ${plusMenuPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'} left-0 w-[230px] max-w-[calc(100vw-32px)] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 z-50 flex flex-col animate-in fade-in zoom-in-95 duration-150`}
                             >
                                 {plusMenuItems.map((item, idx) => (
                                     <button
@@ -270,7 +286,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                         )}
                     </div>
 
-                    {mode !== 'chat' && (
+                    {mode !== 'chat' && mode !== 'search' && (
                         <div className="relative group/btn -ml-0.5">
                             <button
                                 onClick={() => {
@@ -280,7 +296,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                     }
                                     onOptionSelect?.('repos:')
                                 }}
-                                className="flex items-center justify-center w-8 h-8 rounded-full text-[#8E8E8E] transition-all hover:bg-white/5 hover:text-white outline-none"
+                                className="flex items-center justify-center w-8 h-8 rounded-full text-[#8E8E8E] transition-all hover:bg-white/5 hover:text-white outline-none cursor-pointer touch-manipulation"
                             >
                                 <Icons.Github className="w-[16px] h-[16px]" />
                             </button>
@@ -292,6 +308,35 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                         </div>
                     )}
                 </div>
+
+                {mode === 'search' && (
+                    <div className="relative group/btn">
+                        <button
+                            type="button"
+                            onClick={handleToggleThinking}
+                            className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full transition-all duration-200 outline-none cursor-pointer bg-transparent border border-dashed hover:bg-[#27272A] touch-manipulation ${
+                                isThinkingMode
+                                    ? 'border-[#87B2F4]/30 hover:border-[#87B2F4]/50'
+                                    : 'border-white/20 hover:border-white/40'
+                            }`}
+                        >
+                            <span
+                                className={`text-[12px] font-medium transition-colors ${
+                                    isThinkingMode
+                                        ? 'text-[#87B2F4]'
+                                        : 'text-[#8E8E8E] hover:text-white'
+                                }`}
+                            >
+                                Thinking
+                            </span>
+                        </button>
+                        <div className="absolute bottom-[calc(100%+6px)] left-1/2 -translate-x-1/2 z-50 hidden group-hover/btn:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
+                            <span className="text-[12px] font-medium text-[#EDEDEF]">
+                                {isThinkingMode ? 'Thinking mode: On' : 'Thinking mode: Off'}
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 {mode !== 'search' && (
                     <div
@@ -395,7 +440,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                 toggleListening()
                             }}
                             className={cn(
-                                'flex items-center justify-center w-8 h-8 rounded-full transition-all outline-none',
+                                'flex items-center justify-center w-8 h-8 rounded-full transition-all outline-none touch-manipulation',
                                 isListening
                                     ? 'bg-white/10 text-white'
                                     : 'text-[#8E8E8E] hover:bg-white/5 hover:text-white'
@@ -415,7 +460,7 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                         onClick={onSubmit}
                         disabled={!hasInput || isLoading}
                         className={`
-                            flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-200 outline-none
+                            flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-200 outline-none touch-manipulation
                             ${
                                 hasInput && !isLoading
                                     ? 'bg-[#D6D5D4] text-black hover:bg-white'

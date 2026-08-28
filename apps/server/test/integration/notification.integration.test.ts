@@ -71,18 +71,31 @@ describe('Notification Integration Tests', () => {
         expect(res.status).toBe(401)
     })
 
-    it('2. GET /api/v1/notification - returns list of notifications for user', async () => {
+    it('2. GET /api/v1/notification - returns paginated notifications for user', async () => {
         const res = await request(app)
-            .get('/api/v1/notification')
+            .get('/api/v1/notification?page=1&limit=10')
             .set('x-forwarded-for', getRandomIP())
             .set('Authorization', `Bearer ${accessToken}`)
 
         expect(res.status).toBe(200)
-        expect(res.body.data).toBeArray()
-        expect(res.body.data.length).toBeGreaterThanOrEqual(2)
-        const ids = res.body.data.map((n: any) => n.id)
+        expect(res.body.data.notifications).toBeArray()
+        expect(res.body.data.pagination).toBeDefined()
+        expect(res.body.data.pagination.page).toBe(1)
+        expect(res.body.data.pagination.limit).toBe(10)
+        expect(res.body.data.notifications.length).toBeGreaterThanOrEqual(2)
+        const ids = res.body.data.notifications.map((n: any) => n.id)
         expect(ids).toContain(notif1Id)
         expect(ids).toContain(notif2Id)
+    })
+
+    it('2b. GET /api/v1/notification/unread-count - returns unread count', async () => {
+        const res = await request(app)
+            .get('/api/v1/notification/unread-count')
+            .set('x-forwarded-for', getRandomIP())
+            .set('Authorization', `Bearer ${accessToken}`)
+
+        expect(res.status).toBe(200)
+        expect(res.body.data.count).toBeGreaterThanOrEqual(2)
     })
 
     it('3. GET /api/v1/notification/:id - fetches detail and auto-marks as read', async () => {

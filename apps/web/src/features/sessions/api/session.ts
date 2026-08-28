@@ -85,14 +85,6 @@ export type UpdateGeneralSettingsInput = {
     name?: string
     description?: string | null
     isStarred?: boolean
-    isSharedAsTemplate?: boolean
-    projectCategory?:
-        | 'LANDING_PAGE'
-        | 'DASHBOARD'
-        | 'PORTFOLIO_BLOG'
-        | 'SAAS_APP'
-        | 'ECOMMERCE'
-        | 'NONE'
 }
 
 const buildVersionQuery = (versionId?: string | null) =>
@@ -127,6 +119,21 @@ export const sessionAPI = {
     getSession: async (id: string): Promise<BackendSession> => {
         const data = await apiRequest<{ session: BackendSession }>(`/session/${id}`)
         return data.session
+    },
+
+    getSessionMessages: async (
+        sessionId: string,
+        params?: { beforeSequence?: number; limit?: number }
+    ): Promise<BackendMessage[]> => {
+        const queryParams = new URLSearchParams()
+        if (params?.beforeSequence !== undefined)
+            queryParams.append('beforeSequence', params.beforeSequence.toString())
+        if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString())
+        const qs = queryParams.toString()
+        const data = await apiRequest<{ messages: BackendMessage[] }>(
+            `/session/${sessionId}/messages${qs ? `?${qs}` : ''}`
+        )
+        return data.messages || []
     },
 
     getSessionDetail: (sessionId: string, versionId?: string | null) => {
@@ -188,17 +195,6 @@ export const sessionAPI = {
         return apiRequest<BackendSession>(`/session/${sessionId}/duplicate`, {
             method: 'POST',
             body: JSON.stringify({ name }),
-        })
-    },
-
-    shareSessionAsTemplate: (
-        sessionId: string,
-        isSharedAsTemplate: boolean,
-        projectCategory?: string
-    ) => {
-        return apiRequest<{ message: string }>(`/session/${sessionId}/share`, {
-            method: 'POST',
-            body: JSON.stringify({ isSharedAsTemplate, projectCategory }),
         })
     },
 
@@ -425,7 +421,6 @@ export type BackendProject = BackendSession & {
     name?: string
     prompt?: string
     isStarred?: boolean
-    isSharedAsTemplate?: boolean
     projectStatus?: any
 }
 export type BackendProjectVersionSummary = BackendSessionVersionSummary
@@ -447,7 +442,6 @@ export const projectAPI = {
         sessionAPI.renameSession(id, data.rename),
     deleteProject: sessionAPI.deleteSession,
     duplicateProject: sessionAPI.duplicateSession,
-    shareProjectAsTemplate: sessionAPI.shareSessionAsTemplate,
     toggleStarProject: sessionAPI.toggleStarSession,
     downloadProject: sessionAPI.downloadSession,
 }

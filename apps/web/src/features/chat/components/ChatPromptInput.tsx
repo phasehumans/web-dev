@@ -20,6 +20,26 @@ export const ChatPromptInput: React.FC<Partial<ChatPromptInputProps> & Record<st
     const textareaRef = useRef<HTMLTextAreaElement>(null)
     const voiceBaseRef = useRef('')
     const isVoiceActiveRef = useRef(false)
+    const isGenerating = props.isGenerating ?? props.isApplyingEdit ?? false
+    const prevGeneratingRef = useRef(isGenerating)
+
+    // Auto-focus on mount and when mode or selected element changes
+    useEffect(() => {
+        if (props.autoFocus !== false) {
+            textareaRef.current?.focus()
+        }
+    }, [props.autoFocus, props.mode, selectedElement])
+
+    // Auto-focus when streaming/generation completes for follow-up prompts
+    useEffect(() => {
+        if (prevGeneratingRef.current && !isGenerating) {
+            const timer = setTimeout(() => {
+                textareaRef.current?.focus()
+            }, 50)
+            return () => clearTimeout(timer)
+        }
+        prevGeneratingRef.current = isGenerating
+    }, [isGenerating])
 
     const handleVoiceTranscript = useCallback(
         (text: string) => {
@@ -51,9 +71,27 @@ export const ChatPromptInput: React.FC<Partial<ChatPromptInputProps> & Record<st
         }
     }
 
+    const handleContainerClick = (e: React.MouseEvent) => {
+        const target = e.target as HTMLElement
+        if (!target.closest('button') && !target.closest('a') && !target.closest('input')) {
+            textareaRef.current?.focus()
+        }
+    }
+
+    const placeholderText =
+        props.placeholder ||
+        (selectedElement
+            ? 'Describe changes...'
+            : props.mode === 'search'
+              ? 'Ask anything...'
+              : 'Ask December...')
+
     return (
         <div className="w-full bg-[#141414] shrink-0 z-30">
-            <div className="relative group rounded-[17px] bg-[#1F1F1F] border border-[#313131] focus-within:border-white/10 transition-all duration-300 ease-out flex flex-col">
+            <div
+                onClick={handleContainerClick}
+                className="relative group rounded-[17px] bg-[#1F1F1F] border border-[#313131] focus-within:border-white/10 transition-all duration-300 ease-out flex flex-col cursor-text"
+            >
                 {/* integrated selected element display */}
                 <AnimatePresence>
                     {selectedElement && (
@@ -87,23 +125,26 @@ export const ChatPromptInput: React.FC<Partial<ChatPromptInputProps> & Record<st
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder={selectedElement ? 'Describe changes...' : 'Ask December...'}
+                        placeholder={placeholderText}
+                        autoFocus={props.autoFocus !== false}
                         className="w-full bg-transparent text-[#D6D5D4] placeholder-[#949494] caret-white resize-none focus:outline-none z-10 font-sans font-medium leading-relaxed p-0 m-0 border-none text-[14.5px] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 hover:[&::-webkit-scrollbar-thumb]:bg-white/20"
                         rows={1}
                     />
                 </div>
 
                 <PromptFooter
-                    onUpload={() => {}}
+                    onUpload={props.onUpload || (() => {})}
                     onSubmit={() => {
                         if (value.trim()) onSubmit()
                     }}
                     hasInput={!!value.trim()}
-                    isLoading={!!isApplyingEdit}
+                    isLoading={!!isApplyingEdit || !!props.isGenerating || !!props.isLoading}
                     onVoiceTranscript={handleVoiceTranscript}
                     isAuthenticated={isAuthenticated}
                     onOpenAuth={onOpenAuth}
-                    mode="chat"
+                    mode={props.mode || 'chat'}
+                    isThinkingMode={props.isThinkingMode}
+                    onToggleThinking={props.onToggleThinking}
                     onOptionSelect={(trigger) => {
                         const separator = value && !value.endsWith(' ') ? ' ' : ''
                         onChange((value || '') + separator + '@' + trigger)

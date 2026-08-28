@@ -239,10 +239,31 @@ export async function removeCollaborator(sessionId: string, email: string) {
     })
 }
 
+export async function findMessagesBySessionId(data: {
+    sessionId: string
+    beforeSequence?: number
+    limit?: number
+}) {
+    const { sessionId, beforeSequence, limit = 50 } = data
+    const where: Prisma.MessageWhereInput = {
+        sessionId,
+        ...(beforeSequence !== undefined ? { sequence: { lt: beforeSequence } } : {}),
+    }
+
+    const messages = await prisma.message.findMany({
+        where,
+        orderBy: { sequence: 'desc' },
+        take: limit,
+    })
+
+    return messages.reverse()
+}
+
 export const sessionRepository = {
     findManySessions,
     createSession,
     findSessionById,
+    findMessagesBySessionId,
     updateSession,
     findSessionOwner,
     deleteSession,

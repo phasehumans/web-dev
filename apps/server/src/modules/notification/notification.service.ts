@@ -14,6 +14,7 @@ export const notificationSelect = {
 
 import type {
     GetNotifications,
+    GetUnreadCount,
     GetNotificationById,
     MarkAsRead,
     DeleteNotification,
@@ -22,11 +23,20 @@ import type {
 } from './notification.types'
 
 const getNotifications = async (data: GetNotifications) => {
-    const { userId } = data
+    const { userId, page, limit, isRead } = data
     return notificationRepository.findManyNotifications({
         userId,
+        page,
+        limit,
+        isRead,
         select: notificationSelect,
     })
+}
+
+const getUnreadCount = async (data: GetUnreadCount) => {
+    const { userId } = data
+    const count = await notificationRepository.countUnreadNotifications(userId)
+    return { count }
 }
 
 const getNotificationById = async (data: GetNotificationById) => {
@@ -99,6 +109,7 @@ const deleteAllReadNotification = async (data: DeleteAllReadNotification) => {
 
 export const notificationService = {
     getNotifications,
+    getUnreadCount,
     getNotificationById,
     markAsRead,
     deleteNotification,
