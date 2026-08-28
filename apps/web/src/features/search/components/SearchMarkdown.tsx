@@ -1,80 +1,87 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Copy, ChevronDown } from 'lucide-react'
-import mermaid from 'mermaid/dist/mermaid.esm.min.mjs'
 import React, { useState, useEffect, useRef } from 'react'
 
 import { CliSpinner } from '@/features/chat/components/CliSpinner'
 import { parseInlineThoughtBlocks } from '@/features/chat/utils/thoughtParser'
 import { cn } from '@/shared/lib/utils'
 
+let mermaidInstance: any = null
 let mermaidInitialized = false
 
-const initMermaid = () => {
-    if (typeof window === 'undefined' || mermaidInitialized) return
-    try {
-        mermaid.initialize({
-            startOnLoad: false,
-            theme: 'base',
-            themeVariables: {
-                darkMode: true,
-                background: 'transparent',
-                mainBkg: '#27272A',
-                nodeBorder: '#52525B',
-                nodeTextColor: '#EDEDEF',
-                textColor: '#EDEDEF',
-                lineColor: '#71717A',
-                arrowheadColor: '#A1A1AA',
-                primaryColor: '#27272A',
-                primaryTextColor: '#EDEDEF',
-                primaryBorderColor: '#52525B',
-                secondaryColor: '#222226',
-                secondaryTextColor: '#EDEDEF',
-                secondaryBorderColor: '#52525B',
-                tertiaryColor: '#1E1E22',
-                tertiaryTextColor: '#D4D4D8',
-                tertiaryBorderColor: '#3F3F46',
-
-                // Sequence Diagram variables
-                actorBkg: '#27272A',
-                actorBorder: '#52525B',
-                actorTextColor: '#EDEDEF',
-                actorLineColor: '#52525B',
-                signalColor: '#A1A1AA',
-                signalTextColor: '#EDEDEF',
-                labelBoxBkgColor: '#27272A',
-                labelBoxBorderColor: '#52525B',
-                labelTextColor: '#EDEDEF',
-                loopTextColor: '#EDEDEF',
-                noteBorderColor: '#52525B',
-                noteBkgColor: '#222226',
-                noteTextColor: '#EDEDEF',
-                activationBorderColor: '#71717A',
-                activationBkgColor: '#3F3F46',
-                sequenceNumberColor: '#FFFFFF',
-
-                fontFamily:
-                    'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                fontSize: '13px',
-            },
-            sequence: {
-                diagramMarginX: 10,
-                diagramMarginY: 10,
-                actorMargin: 45,
-                width: 150,
-                height: 40,
-                boxMargin: 10,
-                boxTextMargin: 5,
-                noteMargin: 10,
-                messageMargin: 35,
-                mirrorActors: false,
-                useMaxWidth: true,
-            },
-            securityLevel: 'loose',
-        })
-        mermaidInitialized = true
-    } catch {
-        // Intentionally swallowed: optional mermaid init fallback
+const getMermaid = async () => {
+    if (typeof window === 'undefined') return null
+    if (!mermaidInstance) {
+        const m = await import('mermaid/dist/mermaid.esm.min.mjs')
+        mermaidInstance = m.default || m
     }
+    if (!mermaidInitialized && mermaidInstance) {
+        try {
+            mermaidInstance.initialize({
+                startOnLoad: false,
+                theme: 'base',
+                themeVariables: {
+                    darkMode: true,
+                    background: 'transparent',
+                    mainBkg: '#27272A',
+                    nodeBorder: '#52525B',
+                    nodeTextColor: '#EDEDEF',
+                    textColor: '#EDEDEF',
+                    lineColor: '#71717A',
+                    arrowheadColor: '#A1A1AA',
+                    primaryColor: '#27272A',
+                    primaryTextColor: '#EDEDEF',
+                    primaryBorderColor: '#52525B',
+                    secondaryColor: '#222226',
+                    secondaryTextColor: '#EDEDEF',
+                    secondaryBorderColor: '#52525B',
+                    tertiaryColor: '#1E1E22',
+                    tertiaryTextColor: '#D4D4D8',
+                    tertiaryBorderColor: '#3F3F46',
+
+                    // Sequence Diagram variables
+                    actorBkg: '#27272A',
+                    actorBorder: '#52525B',
+                    actorTextColor: '#EDEDEF',
+                    actorLineColor: '#52525B',
+                    signalColor: '#A1A1AA',
+                    signalTextColor: '#EDEDEF',
+                    labelBoxBkgColor: '#27272A',
+                    labelBoxBorderColor: '#52525B',
+                    labelTextColor: '#EDEDEF',
+                    loopTextColor: '#EDEDEF',
+                    noteBorderColor: '#52525B',
+                    noteBkgColor: '#222226',
+                    noteTextColor: '#EDEDEF',
+                    activationBorderColor: '#71717A',
+                    activationBkgColor: '#3F3F46',
+                    sequenceNumberColor: '#FFFFFF',
+
+                    fontFamily:
+                        'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    fontSize: '13px',
+                },
+                sequence: {
+                    diagramMarginX: 10,
+                    diagramMarginY: 10,
+                    actorMargin: 45,
+                    width: 150,
+                    height: 40,
+                    boxMargin: 10,
+                    boxTextMargin: 5,
+                    noteMargin: 10,
+                    messageMargin: 35,
+                    mirrorActors: false,
+                    useMaxWidth: true,
+                },
+                securityLevel: 'loose',
+            })
+            mermaidInitialized = true
+        } catch {
+            // Intentionally swallowed: optional mermaid init fallback
+        }
+    }
+    return mermaidInstance
 }
 
 export const MermaidDiagram: React.FC<{ code: string }> = ({ code }) => {
@@ -85,11 +92,12 @@ export const MermaidDiagram: React.FC<{ code: string }> = ({ code }) => {
 
     useEffect(() => {
         let isMounted = true
-        initMermaid()
 
         const renderDiagram = async () => {
             if (!code || !code.trim()) return
             try {
+                const mermaid = await getMermaid()
+                if (!mermaid || !isMounted) return
                 const uniqueId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
                 const result = await mermaid.render(uniqueId, code.trim())
                 if (isMounted) {

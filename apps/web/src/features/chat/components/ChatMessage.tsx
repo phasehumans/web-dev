@@ -65,7 +65,7 @@ const CollapsibleThoughtView: React.FC<{
     )
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({
+const ChatMessageComponent: React.FC<ChatMessageProps> = ({
     id,
     role,
     content,
@@ -354,3 +354,5 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         </div>
     )
 }
+
+export const ChatMessage = React.memo(ChatMessageComponent)

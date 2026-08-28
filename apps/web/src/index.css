@@ -150,7 +150,15 @@ body.feedback-modal-open .canvas-toolbar-container {
     visibility: hidden !important;
 }
 
-/* Custom resets to override Tailwind defaults and prevent focus/border flickers */
+/* Custom resets to override Tailwind defaults and prevent focus/border/white-ring flickers */
+*:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-shadow: 0 0 #0000 !important;
+}
+
 button:focus,
 button:active,
 button:focus-visible,

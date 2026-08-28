@@ -1,17 +1,35 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import React from 'react'
 
-import { CanvasPage } from '../../features/canvas/components/CanvasPage'
-import { ReviewPage } from '../../features/sessions/components/ReviewPage'
-
 import type { ViewState } from '@/app/types'
 import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/preview/types'
 
 import { HomeHero } from '@/features/home/components/HomeHero'
-import { WorkspaceScreen } from '@/features/preview/components/WorkspaceScreen'
-import { ProfileSettings } from '@/features/profile/components/ProfileSettings'
-import { SearchSpaceScreen } from '@/features/search/components/SearchSpaceScreen'
-import { SessionList } from '@/features/sessions/components/SessionList'
+
+const CanvasPage = React.lazy(() =>
+    import('../../features/canvas/components/CanvasPage').then((m) => ({ default: m.CanvasPage }))
+)
+const ReviewPage = React.lazy(() =>
+    import('../../features/sessions/components/ReviewPage').then((m) => ({ default: m.ReviewPage }))
+)
+const WorkspaceScreen = React.lazy(() =>
+    import('@/features/preview/components/WorkspaceScreen').then((m) => ({
+        default: m.WorkspaceScreen,
+    }))
+)
+const ProfileSettings = React.lazy(() =>
+    import('@/features/profile/components/ProfileSettings').then((m) => ({
+        default: m.ProfileSettings,
+    }))
+)
+const SearchSpaceScreen = React.lazy(() =>
+    import('@/features/search/components/SearchSpaceScreen').then((m) => ({
+        default: m.SearchSpaceScreen,
+    }))
+)
+const SessionList = React.lazy(() =>
+    import('@/features/sessions/components/SessionList').then((m) => ({ default: m.SessionList }))
+)
 
 interface AppContentViewProps {
     view: ViewState
@@ -84,63 +102,65 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
     onResetImportState,
 }) => {
     return (
-        <AnimatePresence mode="wait" initial={false}>
-            {view === 'sessions' && (
-                <AnimatedPage pageKey="sessions">
-                    <SessionList onNewProject={onNewProject} onOpenProject={onOpenProject} />
-                </AnimatedPage>
-            )}
-
-            {view === 'review' && (
-                <AnimatedPage pageKey="review">
-                    <ReviewPage onNewProject={onNewProject} />
-                </AnimatedPage>
-            )}
-
-            {view === 'profile' && (
-                <AnimatedPage pageKey="profile">
-                    <ProfileSettings onSignOut={onSignOut} onBack={onNewProject} />
-                </AnimatedPage>
-            )}
-
-            {view === 'canvas' && (
-                <AnimatedPage pageKey="canvas">
-                    <CanvasPage onBack={onNewProject} onOpenAuth={onOpenAuth} />
-                </AnimatedPage>
-            )}
-
-            {view === 'search' && (
-                <AnimatedPage pageKey="search">
-                    <SearchSpaceScreen onBack={onNewProject} />
-                </AnimatedPage>
-            )}
-
-            {(view === 'chat' || view === 'project') &&
-                (isHome ? (
-                    <AnimatedPage pageKey="chat-home">
-                        <HomeHero
-                            onPromptSubmit={onHomePromptSubmit}
-                            onOpenAuth={onOpenAuth}
-                            onOpenProject={onOpenProject}
-                            onImportGithub={onImportGithub}
-                            onImportZip={onImportZip}
-                            onResetImportState={onResetImportState}
-                        />
+        <React.Suspense fallback={<div className="h-full w-full bg-background" />}>
+            <AnimatePresence mode="wait" initial={false}>
+                {view === 'sessions' && (
+                    <AnimatedPage pageKey="sessions">
+                        <SessionList onNewProject={onNewProject} onOpenProject={onOpenProject} />
                     </AnimatedPage>
-                ) : (
-                    <AnimatedPage pageKey="chat-output">
-                        <WorkspaceScreen
-                            onBack={onBackFromOutput}
-                            onPromptSubmit={(prompt, options) =>
-                                onOutputPromptSubmit(prompt, options?.selectedElement)
-                            }
-                            onRuntimeError={onPreviewRuntimeError}
-                            onSelectVersion={onSelectVersion}
-                            onDownload={onDownloadProject}
-                            onOpenFile={onOpenFile}
-                        />
+                )}
+
+                {view === 'review' && (
+                    <AnimatedPage pageKey="review">
+                        <ReviewPage onNewProject={onNewProject} />
                     </AnimatedPage>
-                ))}
-        </AnimatePresence>
+                )}
+
+                {view === 'profile' && (
+                    <AnimatedPage pageKey="profile">
+                        <ProfileSettings onSignOut={onSignOut} onBack={onNewProject} />
+                    </AnimatedPage>
+                )}
+
+                {view === 'canvas' && (
+                    <AnimatedPage pageKey="canvas">
+                        <CanvasPage onBack={onNewProject} onOpenAuth={onOpenAuth} />
+                    </AnimatedPage>
+                )}
+
+                {view === 'search' && (
+                    <AnimatedPage pageKey="search">
+                        <SearchSpaceScreen onBack={onNewProject} />
+                    </AnimatedPage>
+                )}
+
+                {(view === 'chat' || view === 'project') &&
+                    (isHome ? (
+                        <AnimatedPage pageKey="chat-home">
+                            <HomeHero
+                                onPromptSubmit={onHomePromptSubmit}
+                                onOpenAuth={onOpenAuth}
+                                onOpenProject={onOpenProject}
+                                onImportGithub={onImportGithub}
+                                onImportZip={onImportZip}
+                                onResetImportState={onResetImportState}
+                            />
+                        </AnimatedPage>
+                    ) : (
+                        <AnimatedPage pageKey="chat-output">
+                            <WorkspaceScreen
+                                onBack={onBackFromOutput}
+                                onPromptSubmit={(prompt, options) =>
+                                    onOutputPromptSubmit(prompt, options?.selectedElement)
+                                }
+                                onRuntimeError={onPreviewRuntimeError}
+                                onSelectVersion={onSelectVersion}
+                                onDownload={onDownloadProject}
+                                onOpenFile={onOpenFile}
+                            />
+                        </AnimatedPage>
+                    ))}
+            </AnimatePresence>
+        </React.Suspense>
     )
 }
