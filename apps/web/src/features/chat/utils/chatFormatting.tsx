@@ -1,10 +1,17 @@
 import React from 'react'
 
+const inlineFormattingCache = new Map<string, React.ReactNode[]>()
+const MAX_CACHE_SIZE = 2000
+
 export const parseInlineFormatting = (text: string): React.ReactNode[] => {
+    if (!text) return []
+    const cached = inlineFormattingCache.get(text)
+    if (cached) return cached
+
     const regex = /(\[.*?\]\(.*?\)|\*\*.*?\*\*|\*.*?\*|`.*?`|https?:\/\/[^\s]+)/g
     const matches = text.split(regex)
 
-    return matches.map((part, idx) => {
+    const result = matches.map((part, idx) => {
         const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/)
         if (linkMatch) {
             return (
@@ -58,6 +65,12 @@ export const parseInlineFormatting = (text: string): React.ReactNode[] => {
         }
         return part
     })
+
+    if (inlineFormattingCache.size >= MAX_CACHE_SIZE) {
+        inlineFormattingCache.clear()
+    }
+    inlineFormattingCache.set(text, result)
+    return result
 }
 
 export const renderRichContent = (text: string, isThoughts = false) => {

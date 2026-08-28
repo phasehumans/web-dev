@@ -278,6 +278,23 @@ const sanitizeCanvasStateForRequest = (canvasState?: CanvasDocument) => {
     }
 }
 
+let sharedSocket: ReturnType<typeof io> | null = null
+
+export const getSharedSocket = (): ReturnType<typeof io> => {
+    if (!sharedSocket || sharedSocket.disconnected) {
+        const baseUrl = getWebSocketUrl()
+        sharedSocket = io(baseUrl, {
+            path: '/socket.io/',
+            withCredentials: true,
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+            transports: ['websocket', 'polling'],
+        })
+    }
+    return sharedSocket
+}
+
 const runOverSocket = async (
     sessionId: string,
     prompt: string,
@@ -285,30 +302,20 @@ const runOverSocket = async (
     signal?: AbortSignal
 ): Promise<any> => {
     return new Promise((resolve, reject) => {
-        const baseUrl = getWebSocketUrl()
-        const socket = io(baseUrl, { path: '/socket.io/', withCredentials: true })
+        const socket = getSharedSocket()
 
         let hasResolved = false
         let resultData: any = null
 
         const cleanup = () => {
-            if (!socket.disconnected) {
-                socket.disconnect()
-            }
+            socket.off('connect', handleConnect)
+            socket.off('connect_error', handleConnectError)
+            socket.off('agent_event', handleAgentEvent)
+            socket.off('error', handleError)
+            socket.off('disconnect', handleDisconnect)
         }
 
-        if (signal) {
-            signal.addEventListener('abort', () => {
-                if (!hasResolved) {
-                    hasResolved = true
-                    socket.emit('stop_session', { sessionId })
-                    cleanup()
-                    reject(new Error('Aborted'))
-                }
-            })
-        }
-
-        socket.on('connect', () => {
+        const handleConnect = () => {
             onEvent({ type: 'connected', data: { ok: true } })
 
             socket.emit('join_session', sessionId)
@@ -318,9 +325,9 @@ const runOverSocket = async (
                 projectId: sessionId,
                 prompt: prompt,
             })
-        })
+        }
 
-        socket.on('connect_error', async (err: any) => {
+        const handleConnectError = async (err: any) => {
             const errMsg = err?.message || ''
             if (errMsg.includes('Authentication error') || errMsg.includes('401')) {
                 const refreshed = await refreshAuthSession()
@@ -334,9 +341,9 @@ const runOverSocket = async (
                 cleanup()
                 reject(new ApiError(err.message || 'Socket connection failed', 500))
             }
-        })
+        }
 
-        socket.on('agent_event', (event: any) => {
+        const handleAgentEvent = (event: any) => {
             let parsedData = event.data !== undefined ? event.data : event
             if (typeof parsedData === 'string') {
                 try {
@@ -370,22 +377,48 @@ const runOverSocket = async (
                     )
                 )
             }
-        })
+        }
 
-        socket.on('error', (err: any) => {
+        const handleError = (err: any) => {
             if (!hasResolved) {
                 hasResolved = true
                 cleanup()
                 reject(new ApiError(err.message || 'Socket error', 500))
             }
-        })
+        }
 
-        socket.on('disconnect', () => {
+        const handleDisconnect = () => {
             if (!hasResolved) {
                 hasResolved = true
+                cleanup()
                 reject(new Error('Socket disconnected prematurely'))
             }
-        })
+        }
+
+        if (signal) {
+            signal.addEventListener('abort', () => {
+                if (!hasResolved) {
+                    hasResolved = true
+                    socket.emit('stop_session', { sessionId })
+                    cleanup()
+                    reject(new Error('Aborted'))
+                }
+            })
+        }
+
+        socket.on('connect_error', handleConnectError)
+        socket.on('agent_event', handleAgentEvent)
+        socket.on('error', handleError)
+        socket.on('disconnect', handleDisconnect)
+
+        if (socket.connected) {
+            handleConnect()
+        } else {
+            socket.on('connect', handleConnect)
+            if (socket.disconnected) {
+                socket.connect()
+            }
+        }
     })
 }
 

@@ -158,6 +158,47 @@ export const useChatController = (
             generationAbortControllerRef.current = abortController
 
             void (async () => {
+                let pendingThinking = ''
+                let pendingStream = ''
+                let pendingToolOutputs: Record<string, string> = {}
+                let streamFrameHandle: number | null = null
+
+                const flushStreamBuffers = () => {
+                    const activeMsgId = activeAssistantMessageIdRef.current
+                    if (!activeMsgId) return
+
+                    if (pendingThinking) {
+                        const chunk = pendingThinking
+                        pendingThinking = ''
+                        appendThinkingChunk(activeMsgId, chunk)
+                    }
+
+                    if (pendingStream) {
+                        const chunk = pendingStream
+                        pendingStream = ''
+                        appendStreamChunk(activeMsgId, chunk)
+                    }
+
+                    const toolKeys = Object.keys(pendingToolOutputs)
+                    if (toolKeys.length > 0) {
+                        const snapshot = { ...pendingToolOutputs }
+                        pendingToolOutputs = {}
+                        for (const toolId of toolKeys) {
+                            if (snapshot[toolId]) {
+                                appendToolCallOutput(activeMsgId, toolId, snapshot[toolId])
+                            }
+                        }
+                    }
+                }
+
+                const scheduleStreamFlush = () => {
+                    if (streamFrameHandle !== null) return
+                    streamFrameHandle = requestAnimationFrame(() => {
+                        streamFrameHandle = null
+                        flushStreamBuffers()
+                    })
+                }
+
                 try {
                     await generationAPI.generateProjectStream({
                         prompt,
@@ -182,6 +223,11 @@ export const useChatController = (
                                     return
                                 case 'AgentStart':
                                 case 'TurnStart':
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     setGenerationPhase('thinking')
                                     setAssistantStatus(activeMessageId, 'thinking')
                                     return
@@ -196,17 +242,24 @@ export const useChatController = (
                                 case 'ThinkingChunk':
                                     if (event.data?.content) {
                                         setGenerationPhase('thinking')
-                                        appendThinkingChunk(activeMessageId, event.data.content)
+                                        pendingThinking += event.data.content
+                                        scheduleStreamFlush()
                                     }
                                     return
                                 case 'StreamChunk':
                                     if (event.data?.content) {
                                         setGenerationPhase('building')
                                         setAssistantStatus(activeMessageId, 'building')
-                                        appendStreamChunk(activeMessageId, event.data.content)
+                                        pendingStream += event.data.content
+                                        scheduleStreamFlush()
                                     }
                                     return
                                 case 'ToolCallStart':
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     setGenerationPhase('building')
                                     setAssistantStatus(activeMessageId, 'building')
                                     if (event.data?.toolCall) {
@@ -225,14 +278,18 @@ export const useChatController = (
                                     return
                                 case 'ToolExecutionUpdate':
                                     if (event.data?.toolCallId && event.data?.chunk) {
-                                        appendToolCallOutput(
-                                            activeMessageId,
-                                            event.data.toolCallId,
+                                        pendingToolOutputs[event.data.toolCallId] =
+                                            (pendingToolOutputs[event.data.toolCallId] || '') +
                                             event.data.chunk
-                                        )
+                                        scheduleStreamFlush()
                                     }
                                     return
                                 case 'ToolCallResult':
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     if (event.data?.result) {
                                         updateToolCallResult(activeMessageId, {
                                             toolCallId:
@@ -250,16 +307,31 @@ export const useChatController = (
                                     }
                                     return
                                 case 'ContextCompacted':
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     if (event.data?.summary) {
                                         addCompactionBlock(activeMessageId, event.data.summary)
                                     }
                                     return
                                 case 'AgentInterrupt':
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     addInterruptBlock(activeMessageId)
                                     setIsGenerating(false)
                                     return
                                 case 'TurnEnd':
                                 case 'AgentEnd': {
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     setGenerationPhase('done')
                                     setAssistantStatus(activeMessageId, 'done')
                                     setIsGenerating(false)

@@ -157,7 +157,7 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
     const hasBlocks = blocks && blocks.length > 0
 
     return (
-        <div className="flex flex-col gap-2 font-sans w-full">
+        <div className="flex flex-col gap-2 font-sans w-full [contain:layout_style]">
             <div className="pl-1 flex flex-col gap-2">
                 {/* Assistant status indicator */}
                 {(isThinkingPhase || isBuildingPhase) &&
