@@ -1,3 +1,32 @@
+## [unreleased]
+
+### Features
+
+- _(server)_ Implement redis bullmq email queue and worker for asynchronous dispatch
+- _(search)_ Implement lightweight streaming conversational search mode (#453)
+- _(worker)_ Asynchronous redis-backed email queue worker with bullmq
+- Enhance search space, notifications, prompt inputs, and session management
+- Enhance search space, notifications, prompt inputs, and session management (#463)
+- _(web)_ Redesign minimal borderless skeleton ui across sessions, review, and settings subpages
+
+### Bug Fixes
+
+- _(email)_ Handle resend error response object and enable dev otp fallback
+- _(search)_ Add missing json header to streaming search api and sanitize history schema
+- _(web)_ Optimize ui latency, fix search streaming race conditions and real-time cache sync
+
+### Performance
+
+- _(web)_ Implement dynamic code-splitting, lazy engines, chat memoization, and immutable caching
+- _(stream)_ Implement 60fps raf batching and instant scroll anchoring in workspace and search
+- _(stream)_ Add warm socket, raf batching, format cache, and containment
+
+## [0.3.20] - 2026-08-27
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.20
+
 ## [0.3.19] - 2026-08-27
 
 ### Bug Fixes
