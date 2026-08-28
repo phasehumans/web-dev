@@ -172,49 +172,49 @@ export const ProfileUsageSettings: React.FC = () => {
                     {isLoading ? (
                         <div className="flex flex-col gap-6">
                             {/* Mobile skeleton */}
-                            <div className="flex md:hidden flex-col gap-3">
+                            <div className="flex md:hidden flex-col gap-2.5">
                                 {Array.from({ length: 4 }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className="p-4 bg-[#191919] border border-[#242323] rounded-xl flex flex-col gap-2.5"
+                                        className="p-3 bg-white/[0.02] rounded-xl flex flex-col gap-2"
                                     >
                                         <div className="flex items-center justify-between">
-                                            <Skeleton className="h-4 w-28 bg-white/[0.06] rounded" />
-                                            <Skeleton className="h-4 w-14 bg-white/[0.06] rounded" />
+                                            <Skeleton className="h-4 w-28 bg-white/[0.05] rounded" />
+                                            <Skeleton className="h-3.5 w-12 bg-white/[0.03] rounded" />
                                         </div>
-                                        <Skeleton className="h-3 w-40 bg-white/[0.04] rounded" />
+                                        <Skeleton className="h-3 w-40 bg-white/[0.03] rounded" />
                                     </div>
                                 ))}
                             </div>
 
                             {/* Desktop table skeleton */}
-                            <div className="hidden md:flex flex-col border border-[#242323] rounded-xl overflow-hidden bg-[#100E12] shadow-sm">
-                                <div className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-3.5 px-5 border-b border-[#242323] bg-[#141414] text-[12px] text-[#7B7A79] font-medium">
+                            <div className="hidden md:flex flex-col rounded-xl overflow-hidden bg-white/[0.015]">
+                                <div className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-3 px-5 text-[12px] text-[#7B7A79] font-medium">
                                     <div>Date</div>
                                     <div>Project</div>
                                     <div>Model</div>
                                     <div>Token Usage</div>
                                     <div className="text-right">Cost</div>
                                 </div>
-                                {Array.from({ length: 8 }).map((_, i) => (
+                                {Array.from({ length: 6 }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-5 px-5 border-b border-[#242323]/50 last:border-b-0"
+                                        className="grid grid-cols-[130px_200px_1fr_100px_70px] items-center py-4 px-5"
                                     >
                                         <div className="pr-4">
-                                            <Skeleton className="h-4 w-24 bg-white/[0.06] rounded" />
+                                            <Skeleton className="h-3.5 w-20 bg-white/[0.05] rounded" />
                                         </div>
                                         <div className="pr-4">
-                                            <Skeleton className="h-4 w-20 bg-white/[0.04] rounded" />
+                                            <Skeleton className="h-3.5 w-24 bg-white/[0.03] rounded" />
                                         </div>
                                         <div className="pr-4">
-                                            <Skeleton className="h-4 w-24 bg-white/[0.04] rounded" />
+                                            <Skeleton className="h-3.5 w-20 bg-white/[0.03] rounded" />
                                         </div>
                                         <div className="pr-4">
-                                            <Skeleton className="h-4 w-14 bg-white/[0.04] rounded" />
+                                            <Skeleton className="h-3.5 w-14 bg-white/[0.03] rounded" />
                                         </div>
                                         <div className="flex justify-end pr-1">
-                                            <Skeleton className="h-4 w-10 bg-white/[0.06] rounded" />
+                                            <Skeleton className="h-3.5 w-10 bg-white/[0.05] rounded" />
                                         </div>
                                     </div>
                                 ))}

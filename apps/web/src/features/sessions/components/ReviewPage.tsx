@@ -290,36 +290,36 @@ export const ReviewPage: React.FC<ReviewPageProps> = ({ onNewProject }) => {
                     <div className="min-h-[420px] flex flex-col gap-2 pb-4">
                         {Array.from({ length: 6 }).map((_, index) => (
                             <React.Fragment key={`review-skeleton-${index}`}>
-                                {/* Mobile skeleton row (< md) */}
-                                <div className="md:hidden flex flex-col p-2.5 bg-[#191919]/60 rounded-lg border border-transparent gap-1.5">
+                                {/* Mobile skeleton row (< md): borderless, minimal */}
+                                <div className="md:hidden flex flex-col p-3 bg-white/[0.02] rounded-xl gap-2">
                                     <div className="flex items-center justify-between">
-                                        <Skeleton className="h-4 w-[60%] bg-white/[0.06] rounded" />
-                                        <Skeleton className="h-4 w-12 bg-white/[0.04] rounded" />
+                                        <Skeleton className="h-4 w-[55%] bg-white/[0.05] rounded" />
+                                        <Skeleton className="h-3.5 w-12 bg-white/[0.03] rounded" />
                                     </div>
-                                    <Skeleton className="h-3 w-[80%] bg-white/[0.04] rounded" />
-                                    <div className="flex items-center justify-between pt-0.5">
-                                        <Skeleton className="h-3 w-20 bg-white/[0.04] rounded" />
-                                        <Skeleton className="h-3 w-16 bg-white/[0.04] rounded" />
+                                    <Skeleton className="h-3 w-[75%] bg-white/[0.03] rounded" />
+                                    <div className="flex items-center justify-between pt-1">
+                                        <Skeleton className="h-3 w-16 bg-white/[0.03] rounded" />
+                                        <Skeleton className="h-3 w-14 bg-white/[0.03] rounded" />
                                     </div>
                                 </div>
 
-                                {/* Desktop skeleton grid (>= md) */}
-                                <div className="hidden md:grid grid-cols-[minmax(0,1fr)_minmax(85px,auto)_minmax(100px,auto)_minmax(100px,auto)_minmax(100px,auto)] items-center gap-3 md:gap-5 rounded-lg border border-transparent bg-[#191919]/40 px-3 py-2.5">
+                                {/* Desktop skeleton grid (>= md): borderless, matching exact row layout */}
+                                <div className="hidden md:grid grid-cols-[minmax(0,1fr)_minmax(85px,auto)_minmax(100px,auto)_minmax(100px,auto)_minmax(100px,auto)] items-center gap-3 md:gap-5 rounded-lg bg-white/[0.015] px-3 py-2.5">
                                     <div className="flex flex-col gap-1.5 w-full pr-4 min-w-0 justify-center">
-                                        <Skeleton className="h-4 w-[60%] bg-white/[0.06]" />
-                                        <Skeleton className="h-3 w-[85%] bg-white/[0.04]" />
+                                        <Skeleton className="h-4 w-[60%] bg-white/[0.05]" />
+                                        <Skeleton className="h-3 w-[80%] bg-white/[0.03]" />
                                     </div>
                                     <div className="truncate">
-                                        <Skeleton className="h-3.5 w-14 bg-white/[0.04]" />
+                                        <Skeleton className="h-3.5 w-12 bg-white/[0.03]" />
                                     </div>
                                     <div className="flex items-center gap-1.5 min-w-0">
-                                        <Skeleton className="h-5 w-20 rounded-md bg-white/[0.04]" />
+                                        <Skeleton className="h-4 w-16 rounded bg-white/[0.03]" />
                                     </div>
                                     <div className="flex items-center">
-                                        <Skeleton className="h-5 w-16 rounded-md bg-white/[0.04]" />
+                                        <Skeleton className="h-4 w-14 rounded bg-white/[0.03]" />
                                     </div>
                                     <div className="flex items-center justify-end">
-                                        <Skeleton className="h-5 w-20 rounded-md bg-white/[0.04]" />
+                                        <Skeleton className="h-4 w-16 rounded bg-white/[0.03]" />
                                     </div>
                                 </div>
                             </React.Fragment>
