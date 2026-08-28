@@ -34,9 +34,11 @@ describe('parseCliArgs', () => {
         expect(parsed.command).toBeUndefined()
     })
 
-    it('identifies known commands like login and init, while handoff is treated as a prompt', () => {
+    it('identifies known commands like login, init, and doctor, while handoff is treated as a prompt', () => {
         expect(parseCliArgs(['login']).command).toBe('login')
         expect(parseCliArgs(['init']).command).toBe('init')
+        expect(parseCliArgs(['doctor']).command).toBe('doctor')
+        expect(parseCliArgs(['doctor', '--fix']).fix).toBe(true)
         expect(parseCliArgs(['handoff']).command).toBeUndefined()
         expect(parseCliArgs(['handoff']).prompt).toBe('handoff')
     })
@@ -49,7 +51,7 @@ describe('parseCliArgs', () => {
 
     it('returns formatted help text', () => {
         const help = getHelpText('0.2.20')
-        expect(help).toContain('AI coding assistant that lives in your terminal.')
+        expect(help).toContain('AI coding agent that lives in your terminal.')
         expect(help).toContain('Usage:')
         expect(help).toContain('december')
         expect(help).toContain('--help')

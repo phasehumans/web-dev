@@ -24,9 +24,9 @@ describe('TUI Dialogs, Modals & Menu Flows E2E Tests', () => {
         expect(frame).toContain('Tool Permission Required:')
         expect(frame).toContain('write_file: /src/auth/service.ts')
         expect(frame).toContain('export const superadmin = true;')
-        expect(frame).toContain('[y] Approve')
-        expect(frame).toContain('[a] Always allow in session')
-        expect(frame).toContain('[d] Deny')
+        expect(frame).toContain('Approve')
+        expect(frame).toContain('Always allow in session')
+        expect(frame).toContain('Deny')
 
         // Instant approve via 'y' key
         stdin.write('y')

@@ -40,6 +40,24 @@ export const useSessionListMutations = ({
                     sessions: old.sessions.map(updater).filter(Boolean),
                 }
             }
+            if (Array.isArray(old.pages)) {
+                return {
+                    ...old,
+                    pages: old.pages.map((page: any) => {
+                        if (!page) return page
+                        if (Array.isArray(page.sessions)) {
+                            return {
+                                ...page,
+                                sessions: page.sessions.map(updater).filter(Boolean),
+                            }
+                        }
+                        if (Array.isArray(page)) {
+                            return page.map(updater).filter(Boolean)
+                        }
+                        return page
+                    }),
+                }
+            }
             return old
         })
     }

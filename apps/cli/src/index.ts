@@ -7,7 +7,12 @@ import pkg from '../package.json' with { type: 'json' }
 import { parseCliArgs, getHelpText } from './args'
 
 export { parseCliArgs, getHelpText } from './args'
-export { handleLogoutCommand, handleInitCommand, handleUpdateCommand } from './commands'
+export {
+    handleLogoutCommand,
+    handleInitCommand,
+    handleUpdateCommand,
+    handleDoctorCommand,
+} from './commands'
 export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
 export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 
@@ -79,6 +84,12 @@ async function main() {
         const { handleUpdateCommand } = await import('./commands')
         await handleUpdateCommand()
         process.exit(process.exitCode || 0)
+    }
+
+    if (parsedArgs.command === 'doctor') {
+        const { handleDoctorCommand } = await import('./commands')
+        await handleDoctorCommand({ fix: parsedArgs.fix })
+        process.exit(0)
     }
 
     if (parsedArgs.command === 'login') {

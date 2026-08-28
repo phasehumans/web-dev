@@ -122,8 +122,13 @@ export const getViewForPath = (pathname: string): ViewState => {
     )
         return 'review'
 
-    // /session/* or /project/* → project (workspace screen)
-    if (pathname.startsWith('/session/') || pathname.startsWith('/project/')) return 'project'
+    // /sessions/*, /session/* or /project/* → project (workspace screen)
+    if (
+        pathname.startsWith('/sessions/') ||
+        pathname.startsWith('/session/') ||
+        pathname.startsWith('/project/')
+    )
+        return 'project'
 
     return 'chat'
 }

@@ -68,6 +68,7 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
     const isUserScrolledUpRef = useRef(false)
     const abortControllerRef = useRef<AbortController | null>(null)
     const isDispatchedInitialRef = useRef(false)
+    const isLocallyCreatedSessionRef = useRef<string | null>(null)
 
     // Handle click outside for more options dropdown
     useEffect(() => {
@@ -111,6 +112,11 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     },
                 ])
             }
+            return
+        }
+
+        // If this session was created locally during active stream interaction, skip clobbering local messages
+        if (isLocallyCreatedSessionRef.current === sessionId) {
             return
         }
 
@@ -326,6 +332,7 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                         title: textToSubmit.slice(0, 50),
                     })
 
+                    isLocallyCreatedSessionRef.current = createdSession.id
                     setSessionTitle(createdSession.title || textToSubmit.slice(0, 50))
                     setSearchParams({ session: createdSession.id }, { replace: true })
                     void queryClient.invalidateQueries({ queryKey: ['sessions'] })

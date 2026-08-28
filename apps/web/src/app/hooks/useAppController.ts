@@ -21,37 +21,28 @@ export const useAppController = () => {
 
     const view = getViewForPath(location.pathname)
 
-    const {
-        messages,
-        generatedFiles,
-        activeGeneratedFilePath,
-        setActiveGeneratedFilePath,
-        generationPhase,
-        activeOperation,
-        currentGenerationFilePaths,
-        projectType,
-        isGenerating,
-        isAuthenticated,
-        setIsAuthenticated,
-        showAuthModal,
-        setShowAuthModal,
-        isMobileSidebarOpen,
-        setIsMobileSidebarOpen,
-        activeProjectId,
-        activeProjectName,
-        canvasState,
-        setCanvasState,
-        projectVersions,
-        activeProjectVersionId,
-        isProjectOpening,
-        projectLoadError,
-        setProjectLoadError,
-        previewSession,
-        setPreviewSession,
-        previewSessionError,
-        setPreviewSessionError,
-        importState,
-    } = useAppStore()
+    const hasMessages = useAppStore((s) => s.messages.length > 0)
+    const activeProjectId = useAppStore((s) => s.activeProjectId)
+    const activeProjectName = useAppStore((s) => s.activeProjectName)
+    const activeProjectVersionId = useAppStore((s) => s.activeProjectVersionId)
+    const isGenerating = useAppStore((s) => s.isGenerating)
+    const isAuthenticated = useAppStore((s) => s.isAuthenticated)
+    const setIsAuthenticated = useAppStore((s) => s.setIsAuthenticated)
+    const showAuthModal = useAppStore((s) => s.showAuthModal)
+    const setShowAuthModal = useAppStore((s) => s.setShowAuthModal)
+    const isMobileSidebarOpen = useAppStore((s) => s.isMobileSidebarOpen)
+    const setIsMobileSidebarOpen = useAppStore((s) => s.setIsMobileSidebarOpen)
+    const canvasState = useAppStore((s) => s.canvasState)
+    const setCanvasState = useAppStore((s) => s.setCanvasState)
+    const isProjectOpening = useAppStore((s) => s.isProjectOpening)
+    const projectLoadError = useAppStore((s) => s.projectLoadError)
+    const setProjectLoadError = useAppStore((s) => s.setProjectLoadError)
+    const previewSession = useAppStore((s) => s.previewSession)
+    const setPreviewSession = useAppStore((s) => s.setPreviewSession)
+    const previewSessionError = useAppStore((s) => s.previewSessionError)
+    const setPreviewSessionError = useAppStore((s) => s.setPreviewSessionError)
+    const importState = useAppStore((s) => s.importState)
+    const setActiveGeneratedFilePath = useAppStore((s) => s.setActiveGeneratedFilePath)
 
     const generationAbortControllerRef = React.useRef<AbortController | null>(null)
     const activeAssistantMessageIdRef = React.useRef<string | null>(null)
@@ -99,7 +90,7 @@ export const useAppController = () => {
         enabled: isAuthenticated,
     })
 
-    const isHome = view === 'chat' && !activeProjectId && messages.length === 0
+    const isHome = view === 'chat' && !activeProjectId && !hasMessages
     const showSidebar = view !== 'profile' && view !== 'canvas'
     const { handleNewThread, handleHomeClick, handleNavigate, handleSignOut } =
         useNavigationController()
@@ -203,25 +194,83 @@ export const useAppController = () => {
             const parts = location.pathname.split('/')
             const slug = parts[parts.length - 1]
             if (slug && slug !== 'untitled') {
-                const sessionsData = queryClient.getQueryData<any>(['sessions'])
-                const sessions = Array.isArray(sessionsData)
-                    ? sessionsData
-                    : Array.isArray(sessionsData?.sessions)
-                      ? sessionsData.sessions
-                      : Array.isArray(sessionsData?.data)
-                        ? sessionsData.data
-                        : []
+                let isMounted = true
 
-                const matchingItem = sessions.find(
-                    (s: any) =>
-                        s &&
-                        (s.id === slug || toProjectSlug(s.title || s.projectName || '') === slug)
-                )
-                if (matchingItem) {
-                    void openProject({
-                        projectId: matchingItem.id,
-                        originView: 'all-projects',
+                const resolveSession = async () => {
+                    // 1. Try finding in any cached queries
+                    const matchingQueries = queryClient.getQueriesData<any>({
+                        queryKey: ['sessions'],
                     })
+                    for (const [, sessionsData] of matchingQueries) {
+                        const sessions = Array.isArray(sessionsData)
+                            ? sessionsData
+                            : Array.isArray(sessionsData?.sessions)
+                              ? sessionsData.sessions
+                              : Array.isArray(sessionsData?.data)
+                                ? sessionsData.data
+                                : Array.isArray(sessionsData?.pages)
+                                  ? sessionsData.pages.flatMap((p: any) => p?.sessions || [])
+                                  : []
+
+                        const matchingItem = sessions.find(
+                            (s: any) =>
+                                s &&
+                                (s.id === slug ||
+                                    toProjectSlug(s.title || s.projectName || '') === slug)
+                        )
+                        if (matchingItem && isMounted) {
+                            void openProject({
+                                projectId: matchingItem.id,
+                                originView: 'all-projects',
+                            })
+                            return
+                        }
+                    }
+
+                    // 2. Direct API resolution fallback (either direct ID or slug match via getSessions)
+                    try {
+                        try {
+                            const detail = await sessionAPI.getSessionDetail(slug)
+                            const sessionOrProject = (detail as any).session || detail.project
+                            if (sessionOrProject?.id && isMounted) {
+                                void openProject({
+                                    projectId: sessionOrProject.id,
+                                    originView: 'all-projects',
+                                })
+                                return
+                            }
+                        } catch {
+                            // Intentionally swallowed: slug may not be an ID, try lookup in getSessions list below
+                        }
+
+                        const sessionsRes = await sessionAPI.getSessions()
+                        if (!isMounted) return
+                        const sessionList = Array.isArray(sessionsRes)
+                            ? sessionsRes
+                            : Array.isArray(sessionsRes?.sessions)
+                              ? sessionsRes.sessions
+                              : []
+
+                        const found = sessionList.find(
+                            (s: any) =>
+                                s &&
+                                (s.id === slug ||
+                                    toProjectSlug(s.title || s.projectName || '') === slug)
+                        )
+                        if (found && isMounted) {
+                            void openProject({
+                                projectId: found.id,
+                                originView: 'all-projects',
+                            })
+                        }
+                    } catch (err) {
+                        console.error('[deep-link] failed to resolve session:', err)
+                    }
+                }
+
+                void resolveSession()
+                return () => {
+                    isMounted = false
                 }
             }
         }
@@ -321,24 +370,9 @@ export const useAppController = () => {
         setPreviewSessionError,
     ])
 
-    const activeFilesToDisplay = React.useMemo(() => {
-        if (currentGenerationFilePaths.length === 0) return generatedFiles
-        const filtered: Record<string, any> = {}
-        for (const path of currentGenerationFilePaths) {
-            if (generatedFiles[path]) filtered[path] = generatedFiles[path]
-        }
-        return filtered
-    }, [generatedFiles, currentGenerationFilePaths])
-
     return {
         queryClient,
         view,
-        messages,
-        generatedFiles,
-        activeFilesToDisplay,
-        activeGeneratedFilePath,
-        generationPhase,
-        activeOperation,
         isGenerating,
         setIsAuthenticated,
         showAuthModal,
@@ -352,14 +386,12 @@ export const useAppController = () => {
         activeProjectName,
         canvasState,
         setCanvasState,
-        projectVersions,
         activeProjectVersionId,
         isProjectOpening,
         projectLoadError,
         previewSession,
         previewSessionError,
         importState,
-        projectType,
         handleNewThread,
         handleHomeClick,
         handleNavigate,

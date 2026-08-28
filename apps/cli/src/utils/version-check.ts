@@ -55,7 +55,7 @@ export async function checkForLatestVersion(currentVersion: string): Promise<str
     return null
 }
 
-function fetchLatestFromNpm(): Promise<string | null> {
+export function fetchLatestFromNpm(): Promise<string | null> {
     return new Promise((resolve) => {
         const req = https.get(
             'https://registry.npmjs.org/@trydecember/cli/latest',

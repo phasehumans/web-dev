@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 
 import { AppContentView } from './app/components/AppContentView'
 import { AppSideNavigation } from './app/components/AppSideNavigation'
@@ -8,15 +8,6 @@ import { AuthModal } from './features/auth/components/AuthModal'
 import { Icons } from '@/shared/components/ui/Icons'
 
 const App: React.FC = () => {
-    const [showLoader, setShowLoader] = useState(true)
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setShowLoader(false)
-        }, 1000) // 1.0s loader
-        return () => clearTimeout(timer)
-    }, [])
-
     const {
         queryClient,
         view,
@@ -48,7 +39,7 @@ const App: React.FC = () => {
 
     return (
         <>
-            {(showLoader || isProjectOpening) && (
+            {isProjectOpening && (
                 <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#141414] animate-in fade-in duration-150 select-none">
                     <div className="flex flex-col items-center justify-center gap-3">
                         <div className="flex items-center justify-center animate-pulse">

@@ -7,19 +7,9 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
         test('respects explicit config installMethod if valid', () => {
             expect(detectInstallMethod({ configInstallMethod: 'bun' })).toBe('bun')
             expect(detectInstallMethod({ configInstallMethod: 'pnpm' })).toBe('pnpm')
-            expect(detectInstallMethod({ configInstallMethod: 'yarn' })).toBe('yarn')
-            expect(detectInstallMethod({ configInstallMethod: 'brew' })).toBe('brew')
             expect(detectInstallMethod({ configInstallMethod: 'npm' })).toBe('npm')
             expect(detectInstallMethod({ configInstallMethod: 'npx' })).toBe('npx')
             expect(detectInstallMethod({ configInstallMethod: 'source' })).toBe('source')
-        })
-
-        test('detects homebrew installation', () => {
-            const method = detectInstallMethod({
-                execPath: '/opt/homebrew/Cellar/december/0.3.13/bin/december',
-                argv1: '/opt/homebrew/bin/december',
-            })
-            expect(method).toBe('brew')
         })
 
         test('detects bun global installation', () => {
@@ -36,14 +26,6 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
                 argv1: '/home/user/.local/share/pnpm/global/5/node_modules/@trydecember/cli/dist/december.js',
             })
             expect(method).toBe('pnpm')
-        })
-
-        test('detects yarn global installation', () => {
-            const method = detectInstallMethod({
-                execPath: '/usr/local/bin/node',
-                argv1: '/home/user/.yarn/bin/december',
-            })
-            expect(method).toBe('yarn')
         })
 
         test('detects npx ephemeral execution', () => {
@@ -85,16 +67,6 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
         test('returns pnpm update command', () => {
             const info = getUpdateCommand('pnpm')
             expect(info.command).toBe('pnpm add -g @trydecember/cli@latest')
-        })
-
-        test('returns yarn update command', () => {
-            const info = getUpdateCommand('yarn')
-            expect(info.command).toBe('yarn global add @trydecember/cli@latest')
-        })
-
-        test('returns brew update command', () => {
-            const info = getUpdateCommand('brew')
-            expect(info.command).toBe('brew upgrade december')
         })
 
         test('returns npx command for npx mode', () => {
@@ -152,6 +124,7 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             const result = await performCliUpdate({
                 configInstallMethod: 'bun',
                 execFn: mockExec,
+                skipVerification: true,
                 onProgress: () => {
                     progressCalled = true
                 },
@@ -178,6 +151,7 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             const result = await performCliUpdate({
                 configInstallMethod: 'npm',
                 execFn: mockExec,
+                skipVerification: true,
                 onError: (err, manualCmd) => {
                     errorCalled = true
                     reportedManualCmd = manualCmd

@@ -50,7 +50,7 @@ export const ChatThread: React.FC<ChatSidebarProps> = ({
     React.useEffect(() => {
         const timer = setTimeout(() => {
             setIsMounted(true)
-        }, 500)
+        }, 50)
         return () => clearTimeout(timer)
     }, [])
 

@@ -259,11 +259,19 @@ export const useChatController = (
                                     setIsGenerating(false)
                                     return
                                 case 'TurnEnd':
-                                case 'AgentEnd':
+                                case 'AgentEnd': {
                                     setGenerationPhase('done')
                                     setAssistantStatus(activeMessageId, 'done')
                                     setIsGenerating(false)
+                                    void queryClient.invalidateQueries({ queryKey: ['sessions'] })
+                                    const currentPid = useAppStore.getState().activeProjectId
+                                    if (currentPid) {
+                                        void queryClient.invalidateQueries({
+                                            queryKey: ['session', currentPid],
+                                        })
+                                    }
                                     return
+                                }
                                 case 'AgentError': {
                                     setGenerationPhase(null)
                                     const errText =
@@ -633,11 +641,19 @@ export const useChatController = (
                                 setIsGenerating(false)
                                 return
                             case 'TurnEnd':
-                            case 'AgentEnd':
+                            case 'AgentEnd': {
                                 setGenerationPhase('done')
                                 setAssistantStatus(activeMessageId, 'done')
                                 setIsGenerating(false)
+                                void queryClient.invalidateQueries({ queryKey: ['sessions'] })
+                                const currentPid = useAppStore.getState().activeProjectId
+                                if (currentPid) {
+                                    void queryClient.invalidateQueries({
+                                        queryKey: ['session', currentPid],
+                                    })
+                                }
                                 return
+                            }
                             case 'AgentError':
                                 setGenerationPhase(null)
                                 setAssistantError(

@@ -203,6 +203,23 @@ export const MobileSidebar: React.FC<
                     ),
                 }
             }
+            if (Array.isArray(old.pages)) {
+                return {
+                    ...old,
+                    pages: old.pages.map((page: any) => {
+                        if (!page) return page
+                        if (Array.isArray(page.sessions)) {
+                            return {
+                                ...page,
+                                sessions: page.sessions.map((s: any) =>
+                                    s.id === sessionId ? { ...s, isArchived: nextArchived } : s
+                                ),
+                            }
+                        }
+                        return page
+                    }),
+                }
+            }
             return old
         })
         queryClient.setQueryData(['session', sessionId], (old: any) => {
@@ -237,6 +254,21 @@ export const MobileSidebar: React.FC<
                     sessions: old.sessions.filter((s: any) => s.id !== sessionId),
                 }
             }
+            if (Array.isArray(old.pages)) {
+                return {
+                    ...old,
+                    pages: old.pages.map((page: any) => {
+                        if (!page) return page
+                        if (Array.isArray(page.sessions)) {
+                            return {
+                                ...page,
+                                sessions: page.sessions.filter((s: any) => s.id !== sessionId),
+                            }
+                        }
+                        return page
+                    }),
+                }
+            }
             return old
         })
         queryClient.removeQueries({ queryKey: ['session', sessionId] })
@@ -269,6 +301,23 @@ export const MobileSidebar: React.FC<
                     sessions: old.sessions.map((s: any) =>
                         s.id === sessionId ? { ...s, title: newTitle } : s
                     ),
+                }
+            }
+            if (Array.isArray(old.pages)) {
+                return {
+                    ...old,
+                    pages: old.pages.map((page: any) => {
+                        if (!page) return page
+                        if (Array.isArray(page.sessions)) {
+                            return {
+                                ...page,
+                                sessions: page.sessions.map((s: any) =>
+                                    s.id === sessionId ? { ...s, title: newTitle } : s
+                                ),
+                            }
+                        }
+                        return page
+                    }),
                 }
             }
             return old

@@ -2,7 +2,7 @@
   <img src="./apps/web/assets/logo.svg" alt="december" width="100" height="100" />
 </p>
 
-December is an open-source AI coding assistant that helps you build faster by writing code, fixing bugs, and running commands across your entire workflow.
+December is an open-source AI coding agent that helps you build faster by writing code, fixing bugs, and running commands across your entire workflow.
 
 [npmjs.com/package/@trydecember/cli](https://www.npmjs.com/package/@trydecember/cli?activeTab=readme)
 
@@ -31,9 +31,6 @@ bun add -g @trydecember/cli
 
 # pnpm
 pnpm add -g @trydecember/cli
-
-# yarn
-yarn global add @trydecember/cli
 ```
 
 #### Instant Run (No Install Required)
@@ -42,6 +39,8 @@ yarn global add @trydecember/cli
 npx @trydecember/cli
 # or
 bunx @trydecember/cli
+# or
+pnpm dlx @trydecember/cli
 ```
 
 ## Contributing & Setup

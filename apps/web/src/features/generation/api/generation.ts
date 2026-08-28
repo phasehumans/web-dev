@@ -1,3 +1,5 @@
+import { io } from 'socket.io-client'
+
 import type { CanvasDocument, CanvasItem } from '@/features/canvas/types'
 import type {
     BackendProject,
@@ -282,104 +284,107 @@ const runOverSocket = async (
     onEvent: (event: GenerationStreamEvent) => void,
     signal?: AbortSignal
 ): Promise<any> => {
-    // Proactively refresh auth session before opening websocket to prevent 401 handshake errors
-    await refreshAuthSession().catch(() => {
-        // Intentionally swallowed: fallback to existing cookie credentials if offline or in-flight
-    })
-
     return new Promise((resolve, reject) => {
-        import('socket.io-client').then(({ io }) => {
-            const baseUrl = getWebSocketUrl()
-            const socket = io(baseUrl, { path: '/socket.io/', withCredentials: true })
+        const baseUrl = getWebSocketUrl()
+        const socket = io(baseUrl, { path: '/socket.io/', withCredentials: true })
 
-            let hasResolved = false
-            let resultData: any = null
+        let hasResolved = false
+        let resultData: any = null
 
-            if (signal) {
-                signal.addEventListener('abort', () => {
-                    if (!hasResolved) {
-                        hasResolved = true
-                        socket.emit('stop_session', { sessionId })
-                        reject(new Error('Aborted'))
-                    }
-                })
+        const cleanup = () => {
+            if (!socket.disconnected) {
+                socket.disconnect()
+            }
+        }
+
+        if (signal) {
+            signal.addEventListener('abort', () => {
+                if (!hasResolved) {
+                    hasResolved = true
+                    socket.emit('stop_session', { sessionId })
+                    cleanup()
+                    reject(new Error('Aborted'))
+                }
+            })
+        }
+
+        socket.on('connect', () => {
+            onEvent({ type: 'connected', data: { ok: true } })
+
+            socket.emit('join_session', sessionId)
+
+            socket.emit('send_prompt', {
+                sessionId: sessionId,
+                projectId: sessionId,
+                prompt: prompt,
+            })
+        })
+
+        socket.on('connect_error', async (err: any) => {
+            const errMsg = err?.message || ''
+            if (errMsg.includes('Authentication error') || errMsg.includes('401')) {
+                const refreshed = await refreshAuthSession()
+                if (refreshed && !hasResolved) {
+                    socket.connect()
+                    return
+                }
+            }
+            if (!hasResolved) {
+                hasResolved = true
+                cleanup()
+                reject(new ApiError(err.message || 'Socket connection failed', 500))
+            }
+        })
+
+        socket.on('agent_event', (event: any) => {
+            let parsedData = event.data !== undefined ? event.data : event
+            if (typeof parsedData === 'string') {
+                try {
+                    parsedData = JSON.parse(parsedData)
+                } catch {
+                    // Intentionally swallowed: Keep as raw string if JSON parsing fails
+                }
             }
 
-            socket.on('connect', () => {
-                onEvent({ type: 'connected', data: { ok: true } })
+            const eventType = event.type || parsedData?.type || 'StreamChunk'
+            const streamEvent = { type: eventType, data: parsedData } as GenerationStreamEvent
+            onEvent(streamEvent)
 
-                socket.emit('join_session', sessionId)
+            if (parsedData?.generatedFiles) {
+                useAppStore.getState().replaceGeneratedOutput(parsedData.generatedFiles)
+            }
 
-                socket.emit('send_prompt', {
-                    sessionId: sessionId,
-                    projectId: sessionId,
-                    prompt: prompt,
-                })
-            })
-
-            socket.on('connect_error', async (err: any) => {
-                const errMsg = err?.message || ''
-                if (errMsg.includes('Authentication error') || errMsg.includes('401')) {
-                    const refreshed = await refreshAuthSession()
-                    if (refreshed && !hasResolved) {
-                        socket.connect()
-                        return
-                    }
-                }
-                if (!hasResolved) {
-                    hasResolved = true
-                    reject(new ApiError(err.message || 'Socket connection failed', 500))
-                }
-            })
-
-            socket.on('agent_event', (event: any) => {
-                console.log(`[Web Socket] Received agent_event:`, event)
-                let parsedData = event.data !== undefined ? event.data : event
-                if (typeof parsedData === 'string') {
-                    try {
-                        parsedData = JSON.parse(parsedData)
-                    } catch {
-                        // Intentionally swallowed: Keep as raw string if JSON parsing fails
-                    }
-                }
-
-                const eventType = event.type || parsedData?.type || 'StreamChunk'
-                const streamEvent = { type: eventType, data: parsedData } as GenerationStreamEvent
-                onEvent(streamEvent)
-
-                if (parsedData?.generatedFiles) {
-                    useAppStore.getState().replaceGeneratedOutput(parsedData.generatedFiles)
-                }
-
-                if (eventType === 'result' || eventType === 'AgentEnd') {
-                    resultData = parsedData
-                    hasResolved = true
-                    resolve(resultData)
-                }
-                if (eventType === 'error' || eventType === 'AgentError') {
-                    hasResolved = true
-                    reject(
-                        new ApiError(
-                            parsedData?.error || parsedData?.message || 'Agent Execution Error',
-                            500
-                        )
+            if (eventType === 'result' || eventType === 'AgentEnd') {
+                resultData = parsedData
+                hasResolved = true
+                cleanup()
+                resolve(resultData)
+            }
+            if (eventType === 'error' || eventType === 'AgentError') {
+                hasResolved = true
+                cleanup()
+                reject(
+                    new ApiError(
+                        parsedData?.error || parsedData?.message || 'Agent Execution Error',
+                        500
                     )
-                }
-            })
+                )
+            }
+        })
 
-            socket.on('error', (err: any) => {
-                if (!hasResolved) {
-                    hasResolved = true
-                    reject(new ApiError(err.message || 'Socket error', 500))
-                }
-            })
+        socket.on('error', (err: any) => {
+            if (!hasResolved) {
+                hasResolved = true
+                cleanup()
+                reject(new ApiError(err.message || 'Socket error', 500))
+            }
+        })
 
-            socket.on('disconnect', () => {
-                if (!hasResolved) {
-                    hasResolved = true
-                    reject(new Error('Socket disconnected prematurely'))
-                }
-            })
+        socket.on('disconnect', () => {
+            if (!hasResolved) {
+                hasResolved = true
+                reject(new Error('Socket disconnected prematurely'))
+            }
         })
     })
 }

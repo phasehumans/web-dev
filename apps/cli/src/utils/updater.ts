@@ -2,9 +2,14 @@ import { exec } from 'node:child_process'
 
 import { loadConfig } from '../config'
 
-import { clearVersionCheckCache } from './version-check'
+import {
+    compareVersions,
+    diagnoseBinaryCollisions,
+    resolveAndCleanStaleBinaries,
+} from './bin-discovery'
+import { clearVersionCheckCache, fetchLatestFromNpm } from './version-check'
 
-export type InstallMethod = 'npm' | 'bun' | 'pnpm' | 'yarn' | 'brew' | 'npx' | 'source'
+export type InstallMethod = 'npm' | 'bun' | 'pnpm' | 'npx' | 'source'
 
 export interface UpdateCommandInfo {
     command: string
@@ -17,6 +22,12 @@ export interface UpdateResult {
     method: InstallMethod
     command: string
     manualCmd: string
+    targetVersion?: string
+    installedVersion?: string
+    verified: boolean
+    collisionFixed?: boolean
+    cleanedBinaries?: string[]
+    shellHashNotice?: boolean
     error?: string
     output?: string
 }
@@ -30,7 +41,7 @@ export interface DetectOptions {
 
 export function detectInstallMethod(options?: DetectOptions): InstallMethod {
     const configMethod = options?.configInstallMethod
-    const validMethods: InstallMethod[] = ['npm', 'bun', 'pnpm', 'yarn', 'brew', 'npx', 'source']
+    const validMethods: InstallMethod[] = ['npm', 'bun', 'pnpm', 'npx', 'source']
     if (configMethod && validMethods.includes(configMethod as InstallMethod)) {
         return configMethod as InstallMethod
     }
@@ -62,17 +73,7 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
         return 'npx'
     }
 
-    // 3. Homebrew
-    if (
-        execPath.includes('/Cellar/december') ||
-        execPath.includes('/opt/homebrew/Cellar/december') ||
-        argv1.includes('/Cellar/december') ||
-        argv1.includes('/opt/homebrew/bin/december')
-    ) {
-        return 'brew'
-    }
-
-    // 4. Bun global
+    // 3. Bun global
     if (
         argv1.includes('.bun/bin') ||
         argv1.includes('/.bun/') ||
@@ -81,7 +82,7 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
         return 'bun'
     }
 
-    // 5. PNPM global
+    // 4. PNPM global
     if (
         argv1.includes('pnpm') ||
         argv1.includes('.pnpm') ||
@@ -90,12 +91,7 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
         return 'pnpm'
     }
 
-    // 6. Yarn global
-    if (argv1.includes('.yarn/bin') || argv1.includes('/yarn/') || argv1.includes('\\yarn\\')) {
-        return 'yarn'
-    }
-
-    // 7. NPM global or standard Node module (default)
+    // 5. NPM global (default)
     return 'npm'
 }
 
@@ -116,20 +112,6 @@ export function getUpdateCommand(
                 command: 'pnpm add -g @trydecember/cli@latest',
                 manualCmd: 'pnpm add -g @trydecember/cli@latest',
                 description: 'PNPM global package',
-            }
-        }
-        case 'yarn': {
-            return {
-                command: 'yarn global add @trydecember/cli@latest',
-                manualCmd: 'yarn global add @trydecember/cli@latest',
-                description: 'Yarn global package',
-            }
-        }
-        case 'brew': {
-            return {
-                command: 'brew upgrade december',
-                manualCmd: 'brew upgrade december',
-                description: 'Homebrew package',
             }
         }
         case 'npx': {
@@ -164,6 +146,7 @@ export interface PerformUpdateOptions {
     execFn?: typeof exec
     configInstallMethod?: string
     platform?: string
+    skipVerification?: boolean
 }
 
 export async function performCliUpdate(options?: PerformUpdateOptions): Promise<UpdateResult> {
@@ -189,6 +172,7 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
             method: 'source',
             command,
             manualCmd,
+            verified: true,
             output: msg,
         }
     }
@@ -202,11 +186,25 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
             method: 'npx',
             command,
             manualCmd,
+            verified: true,
             output: msg,
         }
     }
 
-    options?.onProgress?.(`Updating December CLI via ${description}...`)
+    // 1. Pre-flight check: query target version and check for collisions
+    let targetVersion: string | undefined
+    try {
+        const remoteVersion = await fetchLatestFromNpm()
+        if (remoteVersion) {
+            targetVersion = remoteVersion
+        }
+    } catch {
+        // Intentionally swallowed: offline or network timeout during version query
+    }
+
+    options?.onProgress?.(
+        `Updating December CLI${targetVersion ? ` to v${targetVersion}` : ''} via ${description}...`
+    )
 
     const execCommand = options?.execFn ?? exec
 
@@ -220,6 +218,8 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
                     method,
                     command,
                     manualCmd,
+                    targetVersion,
+                    verified: false,
                     error: errMessage,
                 })
                 return
@@ -229,6 +229,64 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
                 await clearVersionCheckCache()
             } catch {
                 // Intentionally swallowed: version check cache clearing failure should not block success
+            }
+
+            let verified = true
+            let installedVersion = targetVersion
+            let collisionFixed = false
+            let cleanedBinaries: string[] = []
+            let shellHashNotice = false
+
+            // 2. Post-Update Verification & Collision Resolution
+            if (!options?.skipVerification) {
+                try {
+                    options?.onProgress?.('Verifying updated binary and PATH resolution...')
+                    const postDiagnosis = await diagnoseBinaryCollisions()
+                    const allFound = postDiagnosis.allBinaries
+
+                    // Find the binary with the highest version
+                    let highestVersionBin = allFound[0]
+                    for (const b of allFound) {
+                        if (
+                            b.version &&
+                            (!highestVersionBin?.version ||
+                                compareVersions(b.version, highestVersionBin.version) > 0)
+                        ) {
+                            highestVersionBin = b
+                        }
+                    }
+
+                    if (highestVersionBin?.version) {
+                        installedVersion = highestVersionBin.version
+                    }
+
+                    // Check if multiple binaries exist or if active binary is shadowed/stale
+                    if (allFound.length > 1 && highestVersionBin) {
+                        options?.onProgress?.(
+                            'Resolving multiple installation paths to ensure active terminal uses latest version...'
+                        )
+                        cleanedBinaries = await resolveAndCleanStaleBinaries(
+                            highestVersionBin,
+                            allFound
+                        )
+                        if (cleanedBinaries.length > 0) {
+                            collisionFixed = true
+                            shellHashNotice = true
+                        }
+                    }
+
+                    // Re-check post-cleanup
+                    const reCheck = await diagnoseBinaryCollisions()
+                    if (
+                        targetVersion &&
+                        reCheck.activeBinary?.version &&
+                        compareVersions(reCheck.activeBinary.version, targetVersion) < 0
+                    ) {
+                        verified = false
+                    }
+                } catch {
+                    // Intentionally swallowed: verification fallback should not fail the overall update
+                }
             }
 
             if (options?.onSuccess) {
@@ -244,6 +302,12 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
                 method,
                 command,
                 manualCmd,
+                targetVersion,
+                installedVersion,
+                verified,
+                collisionFixed,
+                cleanedBinaries,
+                shellHashNotice,
                 output: (stdout || 'Update completed successfully.').trim(),
             })
         })

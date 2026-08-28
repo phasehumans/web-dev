@@ -30,6 +30,8 @@ describe('CLI Args Parser (Unit)', () => {
         expect(parseCliArgs(['logout']).command).toBe('logout')
         expect(parseCliArgs(['init']).command).toBe('init')
         expect(parseCliArgs(['update']).command).toBe('update')
+        expect(parseCliArgs(['doctor']).command).toBe('doctor')
+        expect(parseCliArgs(['doctor', '--fix']).fix).toBe(true)
     })
 
     it('parses --scope and --cwd flags', () => {

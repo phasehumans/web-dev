@@ -1018,10 +1018,23 @@ export function useAgentSession({
                         'info'
                     )
                 } else if (result.success) {
+                    const verStr = result.installedVersion ? ` to v${result.installedVersion}` : ''
+                    if (result.collisionFixed) {
+                        addToast(
+                            'Aligned multiple installation paths so your terminal runs the latest version.',
+                            'info'
+                        )
+                    }
                     addToast(
-                        `December CLI updated successfully via ${result.method}! Please restart the CLI in your terminal.`,
+                        `December CLI updated successfully${verStr} via ${result.method}! Restart via "december" to run the latest version.`,
                         'success'
                     )
+                    if (result.shellHashNotice) {
+                        addToast(
+                            'Tip: If your terminal tab still executes an older path, run "hash -r" (bash) or restart your terminal.',
+                            'info'
+                        )
+                    }
                 } else {
                     addToast(
                         `Update failed (${result.method}): ${result.error || 'Unknown error'}. Try running: ${result.manualCmd}`,

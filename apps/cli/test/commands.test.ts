@@ -119,4 +119,20 @@ describe('CLI Standalone Commands', () => {
             console.log = originalLog
         }
     })
+
+    it('handleDoctorCommand runs environment checks and outputs diagnostics', async () => {
+        let loggedOutput = ''
+        const originalLog = console.log
+        console.log = (...args: any[]) => {
+            loggedOutput += args.join(' ') + '\n'
+        }
+        try {
+            const { handleDoctorCommand } = await import('../src/commands')
+            await handleDoctorCommand({ fix: false })
+            expect(loggedOutput).toContain('December CLI Health & Environment Doctor')
+            expect(loggedOutput).toContain('Environment & Runtime')
+        } finally {
+            console.log = originalLog
+        }
+    })
 })
