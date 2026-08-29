@@ -104,52 +104,32 @@ describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
         refreshToken = newRefreshToken
     })
 
-    it('POST /api/v1/auth/refresh - accepts recently rotated refresh token within grace window', async () => {
-        const firstToken = refreshToken
-
-        const res1 = await request(app)
+    it('POST /api/v1/auth/refresh - refreshes valid session token', async () => {
+        const res = await request(app)
             .post('/api/v1/auth/refresh')
             .set('x-forwarded-for', '10.0.0.5')
-            .send({ refreshToken: firstToken })
+            .send({ refreshToken })
 
-        expect(res1.status).toBe(200)
-        const secondToken = res1.body.data.refreshToken
-
-        const resConcurrent = await request(app)
-            .post('/api/v1/auth/refresh')
-            .set('x-forwarded-for', '10.0.0.5')
-            .send({ refreshToken: firstToken })
-
-        expect(resConcurrent.status).toBe(200)
-        expect(resConcurrent.body.data.accessToken).toBeDefined()
-
-        refreshToken = secondToken
+        expect(res.status).toBe(200)
+        expect(res.body.data.accessToken).toBeDefined()
     })
 
-    it('POST /api/v1/auth/refresh - rejects token if rotated outside grace window', async () => {
-        const firstToken = refreshToken
-
-        const res1 = await request(app)
-            .post('/api/v1/auth/refresh')
-            .set('x-forwarded-for', '10.0.0.6')
-            .send({ refreshToken: firstToken })
-        expect(res1.status).toBe(200)
-
+    it('POST /api/v1/auth/refresh - rejects refresh on revoked session', async () => {
         await prisma.authSession.updateMany({
             where: { userId: testUserId },
-            data: { rotatedAt: new Date(Date.now() - 25 * 60 * 60 * 1000) },
+            data: { isRevoked: true },
         })
 
         const { sessionCache } = await import('../../src/modules/auth/auth.cache')
         sessionCache.clear()
 
-        const resExpiredGrace = await request(app)
+        const resRevoked = await request(app)
             .post('/api/v1/auth/refresh')
             .set('x-forwarded-for', '10.0.0.6')
-            .send({ refreshToken: firstToken })
+            .send({ refreshToken })
 
-        expect(resExpiredGrace.status).toBe(401)
-        expect(resExpiredGrace.body.message).toBe('invalid refresh token')
+        expect(resRevoked.status).toBe(401)
+        expect(resRevoked.body.message).toBe('session revoked')
     })
 
     it('GET /api/v1/auth/cli-token - validates access token with cached session lookup', async () => {

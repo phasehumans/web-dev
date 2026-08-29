@@ -203,6 +203,15 @@ export const getProviderModels = (provider: string) => {
                 { label: 'Command R+', value: 'command-r-plus-08-2024' },
                 { label: 'Command R', value: 'command-r-08-2024' },
             ]
+        case 'agentrouter':
+        case 'agentrouter.org':
+            return [
+                { label: 'GLM 5.3 (Recommended)', value: 'glm-5.3' },
+                { label: 'GPT-5.6 Sol', value: 'gpt-5.6-sol' },
+                { label: 'DeepSeek V4 Flash', value: 'deepseek-v4-flash' },
+                { label: 'Claude Opus 4.8', value: 'claude-opus-4-8' },
+                { label: 'Claude Opus 5', value: 'claude-opus-5' },
+            ]
         case 'december':
         case 'december_proxy':
             return [
@@ -335,6 +344,7 @@ export const getModelLabel = (value: string) => {
         'fireworks',
         'perplexity',
         'cohere',
+        'agentrouter',
         'ollama',
         'december_proxy',
     ]
@@ -349,6 +359,7 @@ export const getModelLabel = (value: string) => {
 export const isValidModelForProvider = (provider: string, model?: string): boolean => {
     if (!model) return false
     if (provider === 'openrouter' && (model.includes('/') || model.includes(':'))) return true
+    if (provider === 'agentrouter' && (model.includes('/') || model.includes(':'))) return true
     if (provider === 'ollama') return isToolCompatibleOllamaModel(model)
     const models = getProviderModels(provider)
     return models.some((m) => m.value === model)

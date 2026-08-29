@@ -551,6 +551,9 @@ const getLlmProvider = (providerName?: string, apiKey?: string) => {
     if (name === 'anthropic' || (key && key.startsWith('sk-ant-'))) {
         return anthropicProvider(undefined, key)
     }
+    if (name === 'agentrouter') {
+        return openaiProvider('https://agentrouter.org/v1', key)
+    }
     return geminiProvider(key)
 }
 

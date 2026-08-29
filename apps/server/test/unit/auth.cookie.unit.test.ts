@@ -4,9 +4,9 @@ import { authCookie } from '../../src/modules/auth/auth.cookie'
 import { createMockResponse } from '../helpers'
 
 describe('Auth Cookie - Unit Tests', () => {
-    it('setAuthCookies should set both accessToken and refreshToken cookies on response', () => {
+    it('setAuthCookies should set accessToken cookie on response', () => {
         const res = createMockResponse()
-        authCookie.setAuthCookies(res, 'access-token-val', 'refresh-token-val')
+        authCookie.setAuthCookies(res, 'access-token-val')
 
         const cookies = (res as any).cookies
         expect(cookies.accessToken).toBeDefined()
@@ -14,12 +14,6 @@ describe('Auth Cookie - Unit Tests', () => {
         expect(cookies.accessToken.options.httpOnly).toBe(true)
         expect(cookies.accessToken.options.sameSite).toBe('lax')
         expect(cookies.accessToken.options.maxAge).toBe(30 * 24 * 60 * 60 * 1000)
-
-        expect(cookies.refreshToken).toBeDefined()
-        expect(cookies.refreshToken.value).toBe('refresh-token-val')
-        expect(cookies.refreshToken.options.httpOnly).toBe(true)
-        expect(cookies.refreshToken.options.sameSite).toBe('lax')
-        expect(cookies.refreshToken.options.maxAge).toBe(30 * 24 * 60 * 60 * 1000)
     })
 
     it('setAccessTokenCookie should set only accessToken cookie', () => {

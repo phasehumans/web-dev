@@ -40,7 +40,7 @@ const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
         'unknown'
 
     const result = await authService.verifyOtp({ email, otp, userAgent, ipAddress })
-    authCookie.setAuthCookies(res, result.accessToken, result.refreshToken)
+    authCookie.setAuthCookies(res, result.accessToken)
 
     return sendSuccess(res, 'email verified successfully', result)
 })
@@ -55,7 +55,7 @@ const login = asyncHandler(async (req: Request, res: Response) => {
         'unknown'
 
     const result = await authService.login({ ...parseData, userAgent, ipAddress })
-    authCookie.setAuthCookies(res, result.accessToken, result.refreshToken)
+    authCookie.setAuthCookies(res, result.accessToken)
 
     return sendSuccess(res, 'login successful', result)
 })
@@ -135,7 +135,7 @@ const google = asyncHandler(async (req: Request, res: Response) => {
         'unknown'
 
     const result = await authService.google({ email, name, sub, userAgent, ipAddress })
-    authCookie.setAuthCookies(res, result.accessToken, result.refreshToken)
+    authCookie.setAuthCookies(res, result.accessToken)
 
     return sendSuccess(res, 'login successful', result)
 })
@@ -234,22 +234,23 @@ const github = asyncHandler(async (req: Request, res: Response) => {
         userAgent,
         ipAddress,
     })
-    authCookie.setAuthCookies(res, result.accessToken, result.refreshToken)
+    authCookie.setAuthCookies(res, result.accessToken)
 
     return sendSuccess(res, 'login successful', result)
 })
 
 const refreshSession = asyncHandler(async (req: Request, res: Response) => {
     try {
-        const refreshToken = req.body?.refreshToken || req.cookies?.refreshToken
+        const token =
+            req.body?.refreshToken ||
+            req.body?.token ||
+            req.cookies?.accessToken ||
+            req.cookies?.refreshToken
         const result = await authService.refreshSession({
-            refreshToken,
+            refreshToken: token,
         })
 
         authCookie.setAccessTokenCookie(res, result.accessToken)
-        if (result.refreshToken) {
-            authCookie.setRefreshTokenCookie(res, result.refreshToken)
-        }
 
         return sendSuccess(res, 'session refreshed successfully', result)
     } catch (error) {

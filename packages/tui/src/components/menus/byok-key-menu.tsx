@@ -8,6 +8,8 @@ import { Spinner } from '../spinner'
 import { MenuFooter } from './menu-footer'
 
 export const PROVIDER_NAMES: Record<string, string> = {
+    agentrouter: 'AgentRouter',
+    'agentrouter.org': 'AgentRouter',
     anthropic: 'Anthropic',
     cerebras: 'Cerebras',
     cohere: 'Cohere',
@@ -35,6 +37,8 @@ export const PROVIDER_NAMES: Record<string, string> = {
 }
 
 export const PROVIDER_KEY_URLS: Record<string, string> = {
+    agentrouter: 'https://agentrouter.org/console/token',
+    'agentrouter.org': 'https://agentrouter.org/console/token',
     anthropic: 'https://console.anthropic.com/settings/keys',
     cerebras: 'https://cloud.cerebras.ai/',
     cohere: 'https://dashboard.cohere.com/api-keys',

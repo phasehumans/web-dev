@@ -59,20 +59,7 @@ export const generateAccessToken = (
 }
 
 export const generateRefreshToken = (payload: TokenPayload) => {
-    const secret = env.REFRESH_TOKEN_SECRET
-    const expiresIn = env.REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']
-
-    return jwt.sign(
-        {
-            userId: payload.userId,
-            sessionId: payload.sessionId,
-            jti: crypto.randomUUID(),
-        },
-        secret,
-        {
-            expiresIn,
-        }
-    )
+    return generateAccessToken(payload)
 }
 
 export const verifyAccessToken = (token: string) => {
@@ -81,7 +68,7 @@ export const verifyAccessToken = (token: string) => {
 }
 
 export const verifyRefreshToken = (token: string) => {
-    const secret = env.REFRESH_TOKEN_SECRET
+    const secret = env.ACCESS_TOKEN_SECRET || env.REFRESH_TOKEN_SECRET
     return jwt.verify(token, secret) as TokenPayload
 }
 

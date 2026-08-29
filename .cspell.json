@@ -55,6 +55,7 @@
         "evals",
         "trydecember",
         "autonumber",
-        "ollama"
+        "ollama",
+        "agentrouter"
     ]
 }

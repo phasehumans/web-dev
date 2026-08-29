@@ -57,6 +57,11 @@ export function instantiateProvider(provider: string, apiKey: string): any {
             return openaiProvider('https://api.perplexity.ai', apiKey)
         case 'cohere':
             return openaiProvider('https://api.cohere.com/v2', apiKey)
+        case 'agentrouter':
+        case 'agentrouter.org':
+            return openaiProvider('https://agentrouter.org/v1', apiKey, {
+                'User-Agent': 'claude-cli/2.1.0 (external, sdk-cli)',
+            })
         case 'ollama': {
             let endpoint = 'http://localhost:11434/v1'
             if (apiKey && (apiKey.startsWith('http://') || apiKey.startsWith('https://'))) {

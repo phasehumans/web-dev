@@ -266,35 +266,59 @@ export function useAuthHandlers(
         try {
             testProvider = instantiateProvider(selectedProvider, trimmedKey)
             const providerModels = getProviderModels(selectedProvider)
-            if (providerModels && providerModels.length > 0) {
-                testModel = providerModels[0].value
-            } else {
-                testModel = 'gpt-4o'
+            const candidateModels =
+                providerModels && providerModels.length > 0
+                    ? providerModels.map((m) => m.value)
+                    : ['gpt-4o']
+
+            let lastProbeErr: any
+            let probeSuccess = false
+
+            for (const modelToTest of candidateModels.slice(0, 4)) {
+                testModel = modelToTest
+                const probeAbortController = new AbortController()
+                const probeTimeout = setTimeout(() => {
+                    probeAbortController.abort(
+                        new Error('Connection timed out while verifying API key.')
+                    )
+                }, 10000)
+
+                try {
+                    const stream = testProvider.stream(
+                        [{ role: 'user', content: 'Hi' }],
+                        [],
+                        undefined,
+                        {
+                            model: testModel,
+                            max_tokens: 16,
+                        },
+                        probeAbortController.signal
+                    )
+                    try {
+                        await stream.next()
+                        probeSuccess = true
+                        break
+                    } finally {
+                        clearTimeout(probeTimeout)
+                        probeAbortController.abort()
+                        await stream.return?.()
+                    }
+                } catch (probeErr: any) {
+                    lastProbeErr = probeErr
+                    const errText = (probeErr?.message || String(probeErr)).toLowerCase()
+                    if (
+                        errText.includes('401') ||
+                        errText.includes('unauthorized') ||
+                        errText.includes('invalid api key') ||
+                        errText.includes('incorrect api key')
+                    ) {
+                        throw probeErr
+                    }
+                }
             }
 
-            const probeAbortController = new AbortController()
-            const probeTimeout = setTimeout(() => {
-                probeAbortController.abort(
-                    new Error('Connection timed out while verifying API key.')
-                )
-            }, 10000)
-
-            const stream = testProvider.stream(
-                [{ role: 'user', content: 'Hi' }],
-                [],
-                undefined,
-                {
-                    model: testModel,
-                    max_tokens: 16,
-                },
-                probeAbortController.signal
-            )
-            try {
-                await stream.next()
-            } finally {
-                clearTimeout(probeTimeout)
-                probeAbortController.abort()
-                await stream.return?.()
+            if (!probeSuccess && lastProbeErr) {
+                throw lastProbeErr
             }
 
             const config = await loadConfig()
@@ -341,6 +365,9 @@ export function useAuthHandlers(
                 errStr.includes('rate limit') ||
                 errStr.includes('404') ||
                 errStr.includes('not found') ||
+                errStr.includes('503') ||
+                errStr.includes('无可用渠道') ||
+                errStr.includes('no available channel') ||
                 isLowCredit
             ) {
                 const config = await loadConfig()

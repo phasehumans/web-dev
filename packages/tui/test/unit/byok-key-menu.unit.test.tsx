@@ -10,6 +10,7 @@ describe('ByokKeyMenu Component (Unit)', () => {
         expect(formatProviderName('anthropic')).toBe('Anthropic')
         expect(formatProviderName('google')).toBe('Google')
         expect(formatProviderName('openrouter')).toBe('OpenRouter')
+        expect(formatProviderName('agentrouter')).toBe('AgentRouter')
         expect(formatProviderName('deepseek')).toBe('DeepSeek')
         expect(formatProviderName('groq')).toBe('Groq')
         expect(formatProviderName('ollama')).toBe('Ollama')
@@ -38,6 +39,28 @@ describe('ByokKeyMenu Component (Unit)', () => {
         expect(output).toContain('Submit')
         expect(output).toContain('Cancel')
         expect(output).not.toContain('Verifying and saving API key')
+    })
+
+    it('renders AgentRouter provider state with correct URL and API key placeholder', () => {
+        const handleKeySubmit = mock()
+        const setApiKey = mock()
+        const { lastFrame } = render(
+            <ByokKeyMenu
+                selectedProvider="agentrouter"
+                apiKey="sk-ar-test"
+                setApiKey={setApiKey}
+                handleKeySubmit={handleKeySubmit}
+                isStreaming={false}
+            />
+        )
+        const output = lastFrame() || ''
+
+        expect(output).toContain('Enter API Key for AgentRouter:')
+        expect(output).toContain("Don't have an API key? Get one at")
+        expect(output).toContain('https://agentrouter.org/console/token')
+        expect(output).toContain('sk-ar-test')
+        expect(output).toContain('Submit')
+        expect(output).toContain('Cancel')
     })
 
     it('renders saving loader spinner mid-step and hides footer when isStreaming is true', () => {

@@ -14,7 +14,6 @@ import {
     sendWelcomeEmail,
     generateUserCode,
     generateAccessToken,
-    generateRefreshToken,
     verifyRefreshToken,
     hashRefreshToken,
 } from './auth.utils'
@@ -144,17 +143,12 @@ const verifyOtp = async (data: VerifyOtp) => {
         sessionId,
     })
 
-    const refreshToken = generateRefreshToken({
-        userId: user.id,
-        sessionId,
-    })
-
-    const refreshTokenHash = hashRefreshToken(refreshToken)
+    const tokenHash = hashRefreshToken(accessToken)
 
     await authRepository.createSession({
         id: sessionId,
         userId: user.id,
-        refreshTokenHash: refreshTokenHash,
+        refreshTokenHash: tokenHash,
         userAgent: userAgent,
         ipAddress: ipAddress,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -179,7 +173,7 @@ const verifyOtp = async (data: VerifyOtp) => {
     }
     return {
         accessToken,
-        refreshToken,
+        token: accessToken,
     }
 }
 
@@ -217,17 +211,12 @@ const login = async (data: Login) => {
         sessionId,
     })
 
-    const refreshToken = generateRefreshToken({
-        userId: existingUser.id,
-        sessionId,
-    })
-
-    const refreshTokenHash = hashRefreshToken(refreshToken)
+    const tokenHash = hashRefreshToken(accessToken)
 
     await authRepository.createSession({
         id: sessionId,
         userId: existingUser.id,
-        refreshTokenHash: refreshTokenHash,
+        refreshTokenHash: tokenHash,
         userAgent: userAgent,
         ipAddress: ipAddress,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -235,7 +224,7 @@ const login = async (data: Login) => {
 
     return {
         accessToken,
-        refreshToken,
+        token: accessToken,
     }
 }
 
@@ -375,17 +364,12 @@ const google = async (data: Google) => {
         sessionId,
     })
 
-    const refreshToken = generateRefreshToken({
-        userId: user.id,
-        sessionId,
-    })
-
-    const refreshTokenHash = hashRefreshToken(refreshToken)
+    const tokenHash = hashRefreshToken(accessToken)
 
     await authRepository.createSession({
         id: sessionId,
         userId: user.id,
-        refreshTokenHash,
+        refreshTokenHash: tokenHash,
         userAgent: userAgent,
         ipAddress: ipAddress,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -393,7 +377,7 @@ const google = async (data: Google) => {
 
     return {
         accessToken,
-        refreshToken,
+        token: accessToken,
     }
 }
 
@@ -461,17 +445,12 @@ const github = async (data: Github) => {
         sessionId,
     })
 
-    const refreshToken = generateRefreshToken({
-        userId: user.id,
-        sessionId,
-    })
-
-    const refreshTokenHash = hashRefreshToken(refreshToken)
+    const tokenHash = hashRefreshToken(accessToken)
 
     await authRepository.createSession({
         id: sessionId,
         userId: user.id,
-        refreshTokenHash,
+        refreshTokenHash: tokenHash,
         userAgent: userAgent,
         ipAddress: ipAddress,
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -479,7 +458,7 @@ const github = async (data: Github) => {
 
     return {
         accessToken,
-        refreshToken,
+        token: accessToken,
         user,
     }
 }
@@ -488,17 +467,22 @@ const REFRESH_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000 // 24 hours grace window
 
 const refreshSession = async (data: RefreshSession) => {
     const { refreshToken } = data
+    const token = refreshToken
 
-    if (!refreshToken) {
-        throw new AppError('refresh token is required', 401)
+    if (!token) {
+        throw new AppError('token is required', 401)
     }
 
     let payload: { userId: string; sessionId: string }
 
     try {
-        payload = verifyRefreshToken(refreshToken)
+        payload = verifyAccessToken(token)
     } catch {
-        throw new AppError('invalid or expired refresh token', 401)
+        try {
+            payload = verifyRefreshToken(token)
+        } catch {
+            throw new AppError('invalid or expired token', 401)
+        }
     }
 
     const { userId, sessionId } = payload
@@ -525,18 +509,6 @@ const refreshSession = async (data: RefreshSession) => {
         throw new AppError('session expired', 401)
     }
 
-    const incomingHash = hashRefreshToken(refreshToken)
-    const isCurrentToken = session.refreshTokenHash === incomingHash
-
-    const isPreviousTokenWithinGrace =
-        session.previousRefreshTokenHash === incomingHash &&
-        session.rotatedAt &&
-        Date.now() - session.rotatedAt.getTime() <= REFRESH_GRACE_PERIOD_MS
-
-    if (!isCurrentToken && !isPreviousTokenWithinGrace) {
-        throw new AppError('invalid refresh token', 401)
-    }
-
     const user = await authRepository.findUserById(userId)
 
     if (!user) {
@@ -556,33 +528,17 @@ const refreshSession = async (data: RefreshSession) => {
         sessionId: session.id,
     })
 
-    // If caller uses the previous token within the grace period (e.g. concurrent tabs or network retry),
-    // return a fresh access token without destroying the active refreshTokenHash chain.
-    if (isPreviousTokenWithinGrace && !isCurrentToken) {
-        return {
-            accessToken,
-        }
-    }
-
-    const newRefreshToken = generateRefreshToken({
-        userId: user.id,
-        sessionId: session.id,
-    })
-
-    const newRefreshTokenHash = hashRefreshToken(newRefreshToken)
+    const newExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
 
     await authRepository.updateSession(session.id, {
-        previousRefreshTokenHash: incomingHash,
-        rotatedAt: new Date(),
-        refreshTokenHash: newRefreshTokenHash,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        expiresAt: newExpiresAt,
     })
 
     await sessionCache.invalidate(session.id)
 
     return {
         accessToken,
-        refreshToken: newRefreshToken,
+        token: accessToken,
     }
 }
 
@@ -609,18 +565,22 @@ const signoutAll = async (data: SignoutAll) => {
 const deleteAccount = async (data: DeleteAccount) => {
     const { userId } = data
 
-    const existingUser = await authRepository.findUserByIdForDeleteCheck(userId)
+    const user = await authRepository.findUserByIdForDeleteCheck(userId)
 
-    if (!existingUser) {
+    if (!user) {
         throw new AppError('user not found', 404)
     }
 
-    if (existingUser.isDeleted) {
+    if (user.deletedAt || user.isDeleted) {
         throw new AppError('user account is already deleted', 409)
     }
 
-    await authRepository.deleteAccount(userId)
+    await authRepository.markUserAsDeleted(userId)
     await sessionCache.invalidateUser(userId)
+}
+
+const purgeSessions = async (_data: PurgeSessions) => {
+    return await authRepository.deleteExpiredSessions()
 }
 
 const getCliToken = async (data: GetCliToken) => {
@@ -632,19 +592,17 @@ const getCliToken = async (data: GetCliToken) => {
     }
 
     const sessionId = crypto.randomUUID()
-    const refreshToken = generateRefreshToken({ userId: user.id, sessionId })
-    const refreshTokenHash = hashRefreshToken(refreshToken)
+    const token = generateAccessToken({ userId: user.id, sessionId }, { expiresIn: '30d' })
+    const tokenHash = hashRefreshToken(token)
 
     await authRepository.createSession({
         id: sessionId,
         userId: user.id,
-        refreshTokenHash,
+        refreshTokenHash: tokenHash,
         userAgent: 'cli-token',
         ipAddress: 'unknown',
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     })
-
-    const token = generateAccessToken({ userId: user.id, sessionId }, { expiresIn: '30d' })
 
     return { token, email: user.email }
 }
@@ -710,22 +668,20 @@ const pollDeviceToken = async (data: PollDeviceToken) => {
         }
 
         const sessionId = crypto.randomUUID()
-        const refreshToken = generateRefreshToken({ userId: user.id, sessionId })
-        const refreshTokenHash = hashRefreshToken(refreshToken)
-
-        await authRepository.createSession({
-            id: sessionId,
-            userId: user.id,
-            refreshTokenHash,
-            userAgent: userAgent || 'device-cli',
-            ipAddress: ipAddress || 'unknown',
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-        })
-
         const accessToken = generateAccessToken(
             { userId: user.id, sessionId },
             { expiresIn: '30d' }
         )
+        const tokenHash = hashRefreshToken(accessToken)
+
+        await authRepository.createSession({
+            id: sessionId,
+            userId: user.id,
+            refreshTokenHash: tokenHash,
+            userAgent: userAgent || 'device-cli',
+            ipAddress: ipAddress || 'unknown',
+            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        })
 
         await authRepository.deleteDeviceCode(codeRecord.id)
 

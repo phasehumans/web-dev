@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 
+import { AgentRouterProvider } from '../../src/providers/agentrouter'
 import { CerebrasProvider } from '../../src/providers/cerebras'
 import { CohereProvider } from '../../src/providers/cohere'
 import { DeepSeekProvider } from '../../src/providers/deepseek'
@@ -102,5 +103,10 @@ describe('OpenAI-compatible Subproviders (Unit)', () => {
     test('instantiates CohereProvider with correct ID', () => {
         const provider = new CohereProvider('dummy-key')
         expect(provider.id).toBe('cohere')
+    })
+
+    test('instantiates AgentRouterProvider with correct ID', () => {
+        const provider = new AgentRouterProvider('dummy-key')
+        expect(provider.id).toBe('agentrouter')
     })
 })

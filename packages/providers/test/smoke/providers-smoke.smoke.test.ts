@@ -17,6 +17,7 @@ describe('Providers Subsystem Smoke Tests', () => {
         expect(providersModule.XAIProvider).toBeDefined()
         expect(providersModule.ZAIProvider).toBeDefined()
         expect(providersModule.HuggingFaceProvider).toBeDefined()
+        expect(providersModule.AgentRouterProvider).toBeDefined()
 
         const openai = new providersModule.OpenAIProvider('test-key')
         expect(openai.id).toBe('openai')

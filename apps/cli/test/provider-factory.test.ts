@@ -155,6 +155,22 @@ describe('instantiateProvider', () => {
         )
     })
 
+    it('instantiates agentrouter provider via openai compat', () => {
+        instantiateProvider('agentrouter', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://agentrouter.org/v1',
+            'key-123',
+            { 'User-Agent': 'claude-cli/2.1.0 (external, sdk-cli)' }
+        )
+
+        instantiateProvider('agentrouter.org', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://agentrouter.org/v1',
+            'key-123',
+            { 'User-Agent': 'claude-cli/2.1.0 (external, sdk-cli)' }
+        )
+    })
+
     it('instantiates ollama provider with default localhost endpoint', () => {
         const p = instantiateProvider('ollama', '')
         expect(p).toBe('mock-ollama')

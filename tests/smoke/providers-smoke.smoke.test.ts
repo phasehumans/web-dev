@@ -12,6 +12,7 @@ import {
     KimiProvider,
     MoonshotProvider,
     HuggingFaceProvider,
+    AgentRouterProvider,
     getModelContextWindow,
     getAllProviders,
 } from '@december/providers'
@@ -32,6 +33,7 @@ describe('Providers Subsystem Monorepo Smoke Tests', () => {
         expect(new KimiProvider({ apiKey: 'kimi-test' })).toBeDefined()
         expect(new MoonshotProvider({ apiKey: 'moonshot-test' })).toBeDefined()
         expect(new HuggingFaceProvider({ apiKey: 'hf-test' })).toBeDefined()
+        expect(new AgentRouterProvider('sk-ar-test')).toBeDefined()
     })
 
     it('verifies context window mappings for major standard models', () => {

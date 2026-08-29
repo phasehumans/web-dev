@@ -170,7 +170,7 @@ export function TextArea({
     // 3. Direct shell command at start (e.g. !git status, !ping, or standalone !)
     const isDirectShell = value.startsWith('!')
 
-    const getCharColor = (index: number): string => {
+    const getCharColor = (index: number): string | undefined => {
         if (isDirectShell) {
             return THEME.colors.brand
         }
@@ -185,7 +185,7 @@ export function TextArea({
                 return THEME.colors.brand
             }
         }
-        return THEME.colors.text
+        return undefined
     }
 
     const chars = value.split('')

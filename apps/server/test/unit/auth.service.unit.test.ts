@@ -149,16 +149,16 @@ describe('Auth Service - Unit Tests', () => {
     })
 
     describe('refreshSession', () => {
-        it('should throw AppError 401 if refresh token is missing', async () => {
+        it('should throw AppError 401 if token is missing', async () => {
             await expect(authService.refreshSession({})).rejects.toThrow(
-                new AppError('refresh token is required', 401)
+                new AppError('token is required', 401)
             )
         })
 
-        it('should throw AppError 401 if refresh token is invalid JWT', async () => {
+        it('should throw AppError 401 if token is invalid JWT', async () => {
             await expect(
                 authService.refreshSession({ refreshToken: 'invalid-jwt' })
-            ).rejects.toThrow(new AppError('invalid or expired refresh token', 401))
+            ).rejects.toThrow(new AppError('invalid or expired token', 401))
         })
     })
 

@@ -16,6 +16,7 @@ export function ByokProviderMenu(props: any) {
             </Box>
             <SelectInput
                 items={[
+                    { label: 'AgentRouter', value: 'agentrouter' },
                     { label: 'Anthropic', value: 'anthropic' },
                     { label: 'Cerebras', value: 'cerebras' },
                     { label: 'Cohere', value: 'cohere' },

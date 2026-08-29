@@ -665,6 +665,14 @@ async function streamAssistantResponse(
                 'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing or configure Bring Your Own Key (BYOK) via `/login` to continue using December.\n' +
                 errorMsg
         } else if (
+            errorMsg.includes('无可用渠道') ||
+            errorMsg.toLowerCase().includes('no available channel') ||
+            errorMsg.toLowerCase().includes('channel not found')
+        ) {
+            errorMsg =
+                'The selected model is not available or not enabled for your token group on this provider. Please switch models using `/model` (e.g. glm-5.2, gpt-5.5, claude-opus-4-6, glm-4-plus).\n' +
+                errorMsg
+        } else if (
             errorMsg.includes('401') ||
             errorMsg.toLowerCase().includes('unauthorized') ||
             errorMsg.toLowerCase().includes('session expired') ||

@@ -283,8 +283,8 @@ export class OpenAIProvider implements LLMProvider {
     public id = 'openai'
     private provider: LLMProvider
 
-    constructor(baseURL?: string, apiKey?: string) {
-        this.provider = openaiProvider(baseURL, apiKey)
+    constructor(baseURL?: string, apiKey?: string, defaultHeaders?: Record<string, string>) {
+        this.provider = openaiProvider(baseURL, apiKey, defaultHeaders)
     }
 
     stream(

@@ -146,6 +146,18 @@ export function parseErrorMessage(err: any): string {
         return openRouterCreditsNotice + finalResult
     }
 
+    const isChannelError =
+        lowerStr.includes('无可用渠道') ||
+        lowerStr.includes('no available channel') ||
+        lowerStr.includes('channel not found')
+
+    if (isChannelError) {
+        return (
+            'The selected model is not available or not enabled for your token group on this provider. Please switch models using `/model` (e.g. glm-5.2, gpt-5.5, claude-opus-4-6, glm-4-plus).\n' +
+            finalResult
+        )
+    }
+
     const isAuthError =
         lowerStr.includes('401') ||
         lowerStr.includes('unauthorized') ||

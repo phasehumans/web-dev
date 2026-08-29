@@ -79,6 +79,7 @@ export const PROVIDER_BILLING_LINKS: Record<string, string> = {
     perplexity: 'https://www.perplexity.ai/settings/api',
     cohere: 'https://dashboard.cohere.com/billing',
     huggingface: 'https://huggingface.co/settings/billing',
+    agentrouter: 'https://agentrouter.org/console/token',
     ollama: 'http://localhost:11434',
 }
 
@@ -106,6 +107,7 @@ export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
     perplexity: 'Perplexity AI',
     cohere: 'Cohere',
     huggingface: 'Hugging Face',
+    agentrouter: 'AgentRouter',
     ollama: 'Ollama (Local)',
 }
 
@@ -144,6 +146,7 @@ export function inferProviderFromModel(modelName: string): string {
     if (lower.startsWith('together')) return 'together'
     if (lower.startsWith('hyperbolic')) return 'hyperbolic'
     if (lower.startsWith('fireworks') || lower.startsWith('accounts/fireworks/')) return 'fireworks'
+    if (lower.startsWith('agentrouter') || lower.startsWith('agentrouter/')) return 'agentrouter'
     if (lower.includes('meta-llama') || lower.includes('qwen/')) return 'huggingface'
     if (lower.includes('ollama') || lower.includes('llama') || lower.includes('qwen'))
         return 'ollama'

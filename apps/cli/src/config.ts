@@ -25,6 +25,7 @@ export interface ProviderConfig {
         | 'perplexity'
         | 'cohere'
         | 'ollama'
+        | 'agentrouter'
         | string
     apiKey: string
     model?: string
