@@ -12,7 +12,6 @@ import { previewAPI } from '@/features/preview/api'
 import { profileAPI } from '@/features/profile/api/profile'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { useSessionController } from '@/features/sessions/hooks/useSessionController'
-import { refreshAuthSession } from '@/shared/api/client'
 
 export const useAppController = () => {
     const queryClient = useQueryClient()
@@ -69,20 +68,6 @@ export const useAppController = () => {
             isMounted = false
         }
     }, [queryClient, setIsAuthenticated])
-
-    // Periodic proactive token refresh (every 10 mins) to prevent session timeouts while tab is open
-    React.useEffect(() => {
-        if (!isAuthenticated) return
-
-        const refreshInterval = setInterval(
-            () => {
-                void refreshAuthSession()
-            },
-            10 * 60 * 1000
-        )
-
-        return () => clearInterval(refreshInterval)
-    }, [isAuthenticated])
 
     const { data: profile } = useQuery({
         queryKey: ['profile'],

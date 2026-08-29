@@ -46,7 +46,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const isTransientError = (status?: number) => {
     if (!status) return true // Network failure or connection refused
-    return status === 502 || status === 503 || status === 504 || status === 500
+    return status === 429 || status === 502 || status === 503 || status === 504 || status === 500
 }
 
 let activeRefreshPromise: Promise<boolean> | null = null

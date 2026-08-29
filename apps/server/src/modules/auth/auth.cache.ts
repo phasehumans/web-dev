@@ -19,7 +19,7 @@ class SessionCache {
             return entry.data
         }
 
-        if (redisClient) {
+        if (redisClient && redisClient.status === 'ready') {
             try {
                 const dataStr = await redisClient.get(`sess:cache:${sessionId}`)
                 if (dataStr) {
@@ -47,7 +47,7 @@ class SessionCache {
             expiresAt: Date.now() + DEFAULT_TTL_MS,
         })
 
-        if (redisClient) {
+        if (redisClient && redisClient.status === 'ready') {
             try {
                 const ttlSec = Math.max(1, Math.ceil(ttlMs / 1000))
                 await redisClient.set(`sess:cache:${sessionId}`, JSON.stringify(data), 'EX', ttlSec)
@@ -63,7 +63,7 @@ class SessionCache {
 
     async invalidate(sessionId: string): Promise<void> {
         this.cache.delete(sessionId)
-        if (redisClient) {
+        if (redisClient && redisClient.status === 'ready') {
             try {
                 await redisClient.del(`sess:cache:${sessionId}`)
             } catch (err) {
@@ -78,7 +78,7 @@ class SessionCache {
                 this.cache.delete(sessionId)
             }
         }
-        if (redisClient) {
+        if (redisClient && redisClient.status === 'ready') {
             try {
                 const sessionIds = await redisClient.smembers(`user:sessions:${userId}`)
                 if (sessionIds.length > 0) {

@@ -46,24 +46,28 @@ const getBaseCookieOptions = () => ({
     ...(cookieDomain ? { domain: cookieDomain } : {}),
 })
 
-const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+const SESSION_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000 // 30 days
+
+const setAuthCookies = (res: Response, accessToken: string, refreshToken?: string) => {
     const base = getBaseCookieOptions()
     res.cookie('accessToken', accessToken, {
         ...base,
-        maxAge: 15 * 60 * 1000, // 15 min
+        maxAge: SESSION_COOKIE_MAX_AGE,
     })
 
-    res.cookie('refreshToken', refreshToken, {
-        ...base,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    })
+    if (refreshToken) {
+        res.cookie('refreshToken', refreshToken, {
+            ...base,
+            maxAge: SESSION_COOKIE_MAX_AGE,
+        })
+    }
 }
 
 const setAccessTokenCookie = (res: Response, accessToken: string) => {
     const base = getBaseCookieOptions()
     res.cookie('accessToken', accessToken, {
         ...base,
-        maxAge: 15 * 60 * 1000, // 15 min
+        maxAge: SESSION_COOKIE_MAX_AGE,
     })
 }
 
@@ -71,7 +75,7 @@ const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
     const base = getBaseCookieOptions()
     res.cookie('refreshToken', refreshToken, {
         ...base,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: SESSION_COOKIE_MAX_AGE,
     })
 }
 

@@ -13,7 +13,7 @@ describe('Auth Cookie - Unit Tests', () => {
         expect(cookies.accessToken.value).toBe('access-token-val')
         expect(cookies.accessToken.options.httpOnly).toBe(true)
         expect(cookies.accessToken.options.sameSite).toBe('lax')
-        expect(cookies.accessToken.options.maxAge).toBe(15 * 60 * 1000)
+        expect(cookies.accessToken.options.maxAge).toBe(30 * 24 * 60 * 60 * 1000)
 
         expect(cookies.refreshToken).toBeDefined()
         expect(cookies.refreshToken.value).toBe('refresh-token-val')

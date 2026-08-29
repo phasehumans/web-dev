@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken'
 import RedisStore from 'rate-limit-redis'
 
 import { redisClient } from '../config/redis'
-import { env } from '../env'
 import { extractToken } from '../modules/auth/auth.utils'
 
 export interface RateLimiterOptions {
@@ -41,17 +40,17 @@ export const createRateLimiter = (options: RateLimiterOptions = {}) => {
                 return `user:${user.userId}`
             }
 
-            const token = extractToken(req)
+            const token = extractToken(req) || req.cookies?.refreshToken
             if (token) {
                 try {
-                    const decoded = jwt.verify(token, env.ACCESS_TOKEN_SECRET) as {
+                    const decoded = jwt.decode(token) as {
                         userId?: string
                     } | null
                     if (decoded?.userId) {
                         return `user:${decoded.userId}`
                     }
                 } catch {
-                    // Invalid/expired signature - fall through to API key / IP keying
+                    // Invalid format - fall through to API key / IP keying
                 }
             }
 

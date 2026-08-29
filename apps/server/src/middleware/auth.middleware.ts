@@ -112,6 +112,23 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
             return sendAuthError(401, 'Session expired')
         }
 
+        // Sliding session extension: If session has less than 25 days remaining, extend in background
+        if (sessionExpiresAt.getTime() - Date.now() < 25 * 24 * 60 * 60 * 1000) {
+            const newExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            prisma.authSession
+                .update({
+                    where: { id: session.id },
+                    data: { expiresAt: newExpiresAt },
+                })
+                .catch(() => {
+                    // Intentionally swallowed: async sliding session extension
+                })
+            session.expiresAt = newExpiresAt
+            sessionCache.set(session.id, session).catch(() => {
+                // Intentionally swallowed: async session cache update
+            })
+        }
+
         req.user = {
             userId: decoded.userId,
             sessionId: decoded.sessionId,

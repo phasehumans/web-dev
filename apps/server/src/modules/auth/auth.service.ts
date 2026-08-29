@@ -484,7 +484,7 @@ const github = async (data: Github) => {
     }
 }
 
-const REFRESH_GRACE_PERIOD_MS = 15 * 60 * 1000
+const REFRESH_GRACE_PERIOD_MS = 24 * 60 * 60 * 1000 // 24 hours grace window
 
 const refreshSession = async (data: RefreshSession) => {
     const { refreshToken } = data
@@ -555,6 +555,14 @@ const refreshSession = async (data: RefreshSession) => {
         userId: user.id,
         sessionId: session.id,
     })
+
+    // If caller uses the previous token within the grace period (e.g. concurrent tabs or network retry),
+    // return a fresh access token without destroying the active refreshTokenHash chain.
+    if (isPreviousTokenWithinGrace && !isCurrentToken) {
+        return {
+            accessToken,
+        }
+    }
 
     const newRefreshToken = generateRefreshToken({
         userId: user.id,

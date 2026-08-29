@@ -97,10 +97,10 @@ describe('Auth Refresh Token & Rotation Integration Tests', () => {
 
         expect(res1.status).toBe(200)
 
-        // Force rotatedAt timestamp to > 15m ago in DB (grace period is 15m)
+        // Force rotatedAt timestamp to > 24h ago in DB (grace period is 24h)
         await prisma.authSession.updateMany({
             where: { userId: testUserId },
-            data: { rotatedAt: new Date(Date.now() - 16 * 60 * 1000) },
+            data: { rotatedAt: new Date(Date.now() - 25 * 60 * 60 * 1000) },
         })
 
         const { sessionCache } = await import('../../src/modules/auth/auth.cache')
