@@ -77,7 +77,7 @@ jobs:
         needs: build-and-push
         runs-on: ubuntu-latest
         environment:
-            name: Production (API)
+            name: Production (EC2)
             url: https://api.trydecember.com/health
         permissions:
             contents: read
