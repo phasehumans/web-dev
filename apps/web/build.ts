@@ -190,6 +190,16 @@ if (existsSync(sitemapPath)) {
     await Bun.write(path.join(outdir, 'sitemap.xml'), Bun.file(sitemapPath))
 }
 
+const redirectsPath = path.resolve('assets', '_redirects')
+if (existsSync(redirectsPath)) {
+    await Bun.write(path.join(outdir, '_redirects'), Bun.file(redirectsPath))
+}
+
+const headersPath = path.resolve('assets', '_headers')
+if (existsSync(headersPath)) {
+    await Bun.write(path.join(outdir, '_headers'), Bun.file(headersPath))
+}
+
 const end = performance.now()
 
 const outputTable = result.outputs.map((output) => ({
