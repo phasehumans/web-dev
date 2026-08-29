@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import { Server, Socket } from 'socket.io'
 
 import { env } from './env'
+import { secretsService } from './modules/secrets/secrets.service'
 import { usageService } from './modules/usage/usage.service'
 
 const pubClient = new Redis(env.REDIS_URL || 'redis://localhost:6379', {
@@ -218,11 +219,16 @@ export function initSocket(httpServer: any) {
                     }
 
                     // fetch user secrets (phase 3.6 secrets management)
-                    const secrets: any[] = []
-                    const decryptedSecrets = secrets.map((s: any) => ({
-                        key: s.key,
-                        value: s.value,
-                    }))
+                    let decryptedSecrets: Array<{ key: string; value: string }> = []
+                    if (socket.data.userId) {
+                        try {
+                            decryptedSecrets = await secretsService.getAllDecryptedSecrets({
+                                userId: socket.data.userId,
+                            })
+                        } catch (secErr) {
+                            console.warn('[Socket] Failed to fetch secrets for user:', secErr)
+                        }
+                    }
 
                     // enqueue to worker
                     console.log(

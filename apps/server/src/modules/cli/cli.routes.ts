@@ -10,7 +10,7 @@ const cliRouter = Router()
 cliRouter.use(authMiddleware)
 cliRouter.use(apiRateLimiter)
 cliRouter.post('/chat/completions', cliController.chatCompletions)
-cliRouter.get('/handoff/upload-url', cliController.getHandoffUploadUrl) // stub for 3.2
+cliRouter.get('/handoff/upload-url', cliController.getHandoffUploadUrl)
 cliRouter.post('/handoff/complete', cliController.completeHandoff)
 
 export default cliRouter

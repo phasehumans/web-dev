@@ -54,3 +54,12 @@ export type DeleteSecret = {
     userId: string
     name: string
 }
+
+export type DecryptedSecretItem = {
+    key: string
+    value: string
+}
+
+export type GetAllDecryptedSecrets = {
+    userId: string
+}

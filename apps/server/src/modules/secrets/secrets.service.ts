@@ -13,6 +13,8 @@ import type {
     GetSecrets,
     GetSecretValue,
     DeleteSecret,
+    GetAllDecryptedSecrets,
+    DecryptedSecretItem,
 } from './secrets.types'
 
 const ALGORITHM = 'aes-256-gcm'
@@ -84,6 +86,28 @@ const deleteSecret = async (data: DeleteSecret) => {
     return secretsRepository.deleteSecret(userId, name)
 }
 
+const getAllDecryptedSecrets = async (
+    data: GetAllDecryptedSecrets
+): Promise<DecryptedSecretItem[]> => {
+    const { userId } = data
+    const secrets = await secretsRepository.findSecretsWithValuesByUser(userId)
+    const result: DecryptedSecretItem[] = []
+
+    for (const item of secrets) {
+        try {
+            const decryptedValue = decrypt({ encryptedText: item.value })
+            result.push({
+                key: item.name,
+                value: decryptedValue,
+            })
+        } catch {
+            // Intentionally swallowed: Skip un-decryptable or corrupted secret
+        }
+    }
+
+    return result
+}
+
 export const secretsService = {
     encrypt,
     decrypt,
@@ -92,4 +116,5 @@ export const secretsService = {
     getSecrets,
     getSecretValue,
     deleteSecret,
+    getAllDecryptedSecrets,
 }

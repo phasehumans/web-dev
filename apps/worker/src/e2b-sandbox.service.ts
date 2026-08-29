@@ -124,9 +124,22 @@ const enforceUserLruLimit = async (userId: string): Promise<void> => {
 }
 
 const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionSandboxResult> => {
-    const { sessionId, userId, apiKey, template, timeoutMs, backoffDelays } = data
+    const { sessionId, userId, apiKey, template, timeoutMs, backoffDelays, secrets, envs } = data
     const delays = backoffDelays || [1000, 3000, 7000]
     let lastError: any = null
+
+    // Construct unified environment variable map
+    const envsMap: Record<string, string> = {}
+    if (envs) {
+        Object.assign(envsMap, envs)
+    }
+    if (Array.isArray(secrets)) {
+        for (const s of secrets) {
+            if (s?.key && s?.value) {
+                envsMap[s.key] = s.value
+            }
+        }
+    }
 
     // Enforce 3 active sandboxes max per user with LRU auto-pause
     if (userId) {
@@ -144,6 +157,7 @@ const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionS
                     sessionId,
                     template,
                     timeoutMs,
+                    envs: Object.keys(envsMap).length > 0 ? envsMap : undefined,
                 })
                 const sId = mockSandbox.sandboxId || `mock-sandbox-${sessionId}`
                 activeSandboxes.set(sessionId, mockSandbox)
@@ -219,6 +233,7 @@ const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionS
                 apiKey: effectiveApiKey,
                 template: template || 'base',
                 timeoutMs: timeoutMs || 1800000,
+                envs: Object.keys(envsMap).length > 0 ? envsMap : undefined,
             })
 
             // Ensure /workspace exists and has correct permissions in E2B microVM
@@ -228,6 +243,19 @@ const provisionSandbox = async (data: ProvisionSandboxInput): Promise<ProvisionS
                         'sudo mkdir -p /workspace && sudo chown -R user:user /workspace',
                         { cwd: '/home/user' }
                     )
+
+                    if (Object.keys(envsMap).length > 0) {
+                        const exportStatements = Object.entries(envsMap)
+                            .map(([k, v]) => `export ${k}=${JSON.stringify(v)}`)
+                            .join('\n')
+                        await sandbox.commands
+                            .run(`cat << 'EOF' >> /home/user/.bashrc\n${exportStatements}\nEOF`, {
+                                cwd: '/home/user',
+                            })
+                            .catch(() => {
+                                // Intentionally swallowed: Shell environment export fallback
+                            })
+                    }
                 }
             } catch (initErr) {
                 console.warn(

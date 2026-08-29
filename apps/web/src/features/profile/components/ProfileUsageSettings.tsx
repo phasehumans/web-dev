@@ -251,7 +251,8 @@ export const ProfileUsageSettings: React.FC = () => {
                                                     >
                                                         <div className="flex items-center justify-between">
                                                             <span className="font-medium text-white truncate max-w-[65%]">
-                                                                {row.project?.name ||
+                                                                {row.session?.title ||
+                                                                    row.project?.name ||
                                                                     'Workspace Event'}
                                                             </span>
                                                             <span className="font-mono text-emerald-400 font-semibold">
@@ -350,7 +351,9 @@ export const ProfileUsageSettings: React.FC = () => {
                                                                 {formatRowDate(row.createdAt)}
                                                             </div>
                                                             <div className="text-[#D6D5C9] truncate pr-2 font-medium">
-                                                                {row.project?.name || '-'}
+                                                                {row.session?.title ||
+                                                                    row.project?.name ||
+                                                                    '-'}
                                                             </div>
                                                             <div className="text-[#7B7A79] truncate pr-2">
                                                                 {formatModelName(row.model)}

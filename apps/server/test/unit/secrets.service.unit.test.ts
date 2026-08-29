@@ -211,4 +211,55 @@ describe('Secrets Service - Unit Tests', () => {
             }
         })
     })
+
+    describe('getAllDecryptedSecrets', () => {
+        it('should fetch all secrets for user and return decrypted key-value pairs', async () => {
+            const originalFind = secretsRepository.findSecretsWithValuesByUser
+            const plainVal1 = 'secret-val-1'
+            const plainVal2 = 'secret-val-2'
+            const encVal1 = secretsService.encrypt({ text: plainVal1 })
+            const encVal2 = secretsService.encrypt({ text: plainVal2 })
+
+            secretsRepository.findSecretsWithValuesByUser = (async () => [
+                {
+                    id: 's1',
+                    userId: 'user-1',
+                    name: 'SECRET_ONE',
+                    value: encVal1,
+                    note: null,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+                {
+                    id: 's2',
+                    userId: 'user-1',
+                    name: 'SECRET_TWO',
+                    value: encVal2,
+                    note: 'note 2',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+                {
+                    id: 's3',
+                    userId: 'user-1',
+                    name: 'CORRUPTED_SECRET',
+                    value: 'invalid:corrupted:text',
+                    note: null,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                },
+            ]) as any
+
+            try {
+                const res = await secretsService.getAllDecryptedSecrets({ userId: 'user-1' })
+                expect(res.length).toBe(2)
+                expect(res).toEqual([
+                    { key: 'SECRET_ONE', value: plainVal1 },
+                    { key: 'SECRET_TWO', value: plainVal2 },
+                ])
+            } finally {
+                secretsRepository.findSecretsWithValuesByUser = originalFind
+            }
+        })
+    })
 })

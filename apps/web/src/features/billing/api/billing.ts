@@ -68,6 +68,7 @@ export interface UsageEvent {
     metadata: any
     createdAt: string
     project?: { name: string } | null
+    session?: { title: string | null } | null
 }
 
 export interface CreditsHistoryResponse {

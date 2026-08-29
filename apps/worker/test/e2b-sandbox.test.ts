@@ -36,6 +36,38 @@ describe('E2BSandboxService (Unit & Integration)', () => {
         })
     })
 
+    it('should pass secrets and envs into sandbox creation', async () => {
+        let createdOptions: any = null
+        const mockClient = {
+            create: async (opts: any) => {
+                createdOptions = opts
+                return { sandboxId: 'sb-secrets-test' }
+            },
+        }
+
+        E2BSandboxService.setMockClient(mockClient)
+
+        const result = await E2BSandboxService.provisionSandbox({
+            sessionId: 'sess-secrets',
+            secrets: [
+                { key: 'API_KEY', value: 'secret-123' },
+                { key: 'DB_URL', value: 'postgres://localhost/db' },
+            ],
+            envs: {
+                CUSTOM_FLAG: 'true',
+            },
+            backoffDelays: [1, 1, 1],
+        })
+
+        expect(result.sandboxId).toBe('sb-secrets-test')
+        expect(createdOptions).not.toBeNull()
+        expect(createdOptions.envs).toEqual({
+            CUSTOM_FLAG: 'true',
+            API_KEY: 'secret-123',
+            DB_URL: 'postgres://localhost/db',
+        })
+    })
+
     it('should retry sandbox provisioning up to 3 times on transient errors', async () => {
         let createCalls = 0
         const mockClient = {

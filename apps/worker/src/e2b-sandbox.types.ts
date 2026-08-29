@@ -5,6 +5,8 @@ export interface ProvisionSandboxInput {
     template?: string
     timeoutMs?: number
     backoffDelays?: number[]
+    secrets?: Array<{ key: string; value: string }>
+    envs?: Record<string, string>
 }
 
 export interface ProvisionSandboxResult {
@@ -33,6 +35,8 @@ export interface RunAgentSessionInput {
     workspaceDir?: string
     token?: string
     apiHostUrl?: string
+    secrets?: Array<{ key: string; value: string }>
+    envs?: Record<string, string>
 }
 
 export interface DestroySandboxInput {

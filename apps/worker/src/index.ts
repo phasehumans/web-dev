@@ -25,8 +25,9 @@ console.log("Worker started, waiting for jobs on 'agent_jobs'...")
 export const worker = new Worker(
     'agent_jobs',
     async (job: Job) => {
-        const { sessionId, userId, taskType, prUrl, gitToken, reviewId } = job.data
+        const { sessionId, userId, taskType, prUrl, gitToken, reviewId, secrets } = job.data
         const effectiveTaskType = taskType || job.name
+
         console.log(
             `Processing job ${job.id} (type: ${effectiveTaskType}) for session ${sessionId || reviewId}`
         )
@@ -174,11 +175,15 @@ export const worker = new Worker(
                 expiresIn: '15m',
             })
 
-            // Provision E2B microVM sandbox with 3x retry backoff and user LRU limit
+            // Provision E2B microVM container with 3x retry backoff and user LRU limit
             console.log(
                 `[WORKER ENGINE] Provisioning E2B microVM container for session '${sessionId}' (userId: '${userId || 'anonymous'}')...`
             )
-            const provisionResult = await E2BSandboxService.provisionSandbox({ sessionId, userId })
+            const provisionResult = await E2BSandboxService.provisionSandbox({
+                sessionId,
+                userId,
+                secrets,
+            })
             console.log(
                 `[WORKER ENGINE] E2B Sandbox container '${provisionResult.sandboxId}' is RUNNING (isMock: ${provisionResult.isMock}). Initializing agent session...`
             )
@@ -199,6 +204,7 @@ export const worker = new Worker(
                 workspaceDir: '/workspace',
                 token,
                 apiHostUrl,
+                secrets,
             })
 
             console.log(

@@ -84,10 +84,17 @@ export async function deleteSecret(userId: string, name: string) {
     })
 }
 
+export async function findSecretsWithValuesByUser(userId: string) {
+    return prisma.secret.findMany({
+        where: { userId },
+    })
+}
+
 export const secretsRepository = {
     upsertSecret,
     bulkUpsertSecrets,
     findSecretsByUser,
     findSecretByName,
     deleteSecret,
+    findSecretsWithValuesByUser,
 }
