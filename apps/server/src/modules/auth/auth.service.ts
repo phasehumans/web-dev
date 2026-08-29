@@ -14,6 +14,7 @@ import {
     sendWelcomeEmail,
     generateUserCode,
     generateAccessToken,
+    verifyAccessToken,
     verifyRefreshToken,
     hashRefreshToken,
 } from './auth.utils'
@@ -571,16 +572,16 @@ const deleteAccount = async (data: DeleteAccount) => {
         throw new AppError('user not found', 404)
     }
 
-    if (user.deletedAt || user.isDeleted) {
+    if (user.isDeleted) {
         throw new AppError('user account is already deleted', 409)
     }
 
-    await authRepository.markUserAsDeleted(userId)
+    await authRepository.deleteAccount(userId)
     await sessionCache.invalidateUser(userId)
 }
 
 const purgeSessions = async (_data: PurgeSessions) => {
-    return await authRepository.deleteExpiredSessions()
+    return await authRepository.purgeExpiredAndRevokedSessions()
 }
 
 const getCliToken = async (data: GetCliToken) => {

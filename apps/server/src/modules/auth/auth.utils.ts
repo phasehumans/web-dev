@@ -64,12 +64,12 @@ export const generateRefreshToken = (payload: TokenPayload) => {
 
 export const verifyAccessToken = (token: string) => {
     const secret = env.ACCESS_TOKEN_SECRET
-    return jwt.verify(token, secret) as TokenPayload
+    return jwt.verify(token, secret) as unknown as TokenPayload
 }
 
 export const verifyRefreshToken = (token: string) => {
-    const secret = env.ACCESS_TOKEN_SECRET || env.REFRESH_TOKEN_SECRET
-    return jwt.verify(token, secret) as TokenPayload
+    const secret = env.ACCESS_TOKEN_SECRET || env.REFRESH_TOKEN_SECRET || ''
+    return jwt.verify(token, secret) as unknown as TokenPayload
 }
 
 export const extractToken = (req: {
