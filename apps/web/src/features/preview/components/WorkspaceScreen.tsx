@@ -2,16 +2,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     Archive,
     ArchiveRestore,
-    Check,
-    ChevronRight,
     ExternalLink,
-    Flag,
-    Folder,
     MessageSquare,
     MoreHorizontal,
     Pencil,
-    Pin,
-    Plus,
     RotateCw,
     Tag,
     TrendingUp,
@@ -19,9 +13,7 @@ import {
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { BadSessionModal } from './BadSessionModal'
 import { ChangesWorkspace } from './ChangesWorkspace'
-import { CodeWorkspace } from './CodeWorkspace'
 import { PreviewArea } from './PreviewArea'
 import { TasksWorkspace } from './TasksWorkspace'
 import { TerminalWorkspace } from './TerminalWorkspace'
@@ -38,9 +30,8 @@ import { useWorkspaceScreenController } from '@/features/preview/hooks/useWorksp
 import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionTagsModal } from '@/features/sessions/components/SessionTagsModal'
 import { Icons } from '@/shared/components/ui/Icons'
-import { cn } from '@/shared/lib/utils'
 
-type MobileWorkspaceTab = 'chat' | 'changes' | 'desktop' | 'editor' | 'shell' | 'tasks'
+type MobileWorkspaceTab = 'chat' | 'changes' | 'desktop' | 'shell' | 'tasks'
 
 const ChangesTabIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
     <svg
@@ -290,67 +281,7 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
     const [mobileTitleInput, setMobileTitleInput] = React.useState('')
     const [isMobileTagModalOpen, setIsMobileTagModalOpen] = React.useState(false)
     const [isMobileUpdatingTag, setIsMobileUpdatingTag] = React.useState(false)
-    const [isMobileBadSessionModalOpen, setIsMobileBadSessionModalOpen] = React.useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
-    const [isMobileFolderSubmenuOpen, setIsMobileFolderSubmenuOpen] = React.useState(false)
-    const [mobileFolders, setMobileFolders] = React.useState<string[]>(() => {
-        try {
-            const saved = localStorage.getItem('workspace_project_folders')
-            return saved ? JSON.parse(saved) : ['project1']
-        } catch {
-            return ['project1']
-        }
-    })
-    const [assignedMobileFolder, setAssignedMobileFolder] = React.useState<string | null>(() => {
-        if (!projectId) return 'project1'
-        const saved = localStorage.getItem(`session_folder_${projectId}`)
-        return saved === '' ? null : (saved ?? 'project1')
-    })
-    const [isMobileCreatingFolder, setIsMobileCreatingFolder] = React.useState(false)
-    const [newMobileFolderName, setNewMobileFolderName] = React.useState('')
-
-    React.useEffect(() => {
-        if (projectId) {
-            const saved = localStorage.getItem(`session_folder_${projectId}`)
-            if (saved !== null) {
-                setAssignedMobileFolder(saved === '' ? null : saved)
-            } else {
-                setAssignedMobileFolder('project1')
-            }
-        }
-    }, [projectId])
-
-    const handleAssignMobileFolder = (folderName: string | null) => {
-        setAssignedMobileFolder(folderName)
-        if (projectId) {
-            if (folderName) {
-                localStorage.setItem(`session_folder_${projectId}`, folderName)
-            } else {
-                localStorage.setItem(`session_folder_${projectId}`, '')
-            }
-        }
-        setIsMobileMenuOpen(false)
-        setIsMobileFolderSubmenuOpen(false)
-    }
-
-    const handleCreateMobileFolder = (e: React.FormEvent) => {
-        e.preventDefault()
-        const trimmed = newMobileFolderName.trim()
-        if (trimmed) {
-            if (!mobileFolders.includes(trimmed)) {
-                const next = [...mobileFolders, trimmed]
-                setMobileFolders(next)
-                try {
-                    localStorage.setItem('workspace_project_folders', JSON.stringify(next))
-                } catch (err) {
-                    console.error(err)
-                }
-            }
-            handleAssignMobileFolder(trimmed)
-        }
-        setNewMobileFolderName('')
-        setIsMobileCreatingFolder(false)
-    }
 
     const isMobileArchived = Boolean(currentSession?.isArchived)
 
@@ -394,91 +325,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
         }
     }, [isMobileArchived, projectId, queryClient])
 
-    const renderMobileFolderContent = () => (
-        <>
-            {mobileFolders.map((f) => (
-                <button
-                    key={f}
-                    type="button"
-                    onClick={() => {
-                        handleAssignMobileFolder(assignedMobileFolder === f ? null : f)
-                    }}
-                    className={cn(
-                        'flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer',
-                        assignedMobileFolder === f
-                            ? 'bg-white/10 text-white'
-                            : 'text-[#EDEDEF] hover:bg-white/5 hover:text-white'
-                    )}
-                >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                        <Folder className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                        <span className="truncate">{f}</span>
-                    </div>
-                    {assignedMobileFolder === f && (
-                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    )}
-                </button>
-            ))}
-
-            <button
-                type="button"
-                onClick={() => {
-                    handleAssignMobileFolder(assignedMobileFolder === 'Pinned' ? null : 'Pinned')
-                }}
-                className={cn(
-                    'flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer',
-                    assignedMobileFolder === 'Pinned'
-                        ? 'bg-white/10 text-white'
-                        : 'text-[#EDEDEF] hover:bg-white/5 hover:text-white'
-                )}
-            >
-                <div className="flex items-center gap-2.5 min-w-0">
-                    <Pin className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                    <span className="truncate">Pinned</span>
-                </div>
-                {assignedMobileFolder === 'Pinned' && (
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                )}
-            </button>
-
-            <div className="h-[1px] bg-[#272727] my-1" />
-
-            {isMobileCreatingFolder ? (
-                <form onSubmit={handleCreateMobileFolder} className="px-1 py-0.5">
-                    <input
-                        type="text"
-                        autoFocus
-                        value={newMobileFolderName}
-                        onChange={(e) => setNewMobileFolderName(e.target.value)}
-                        placeholder="Folder name..."
-                        className="w-full bg-[#141414] border border-[#87B2F4] rounded-md px-2 py-1 text-xs text-white placeholder-[#71717A] outline-none"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Escape') setIsMobileCreatingFolder(false)
-                        }}
-                    />
-                </form>
-            ) : (
-                <button
-                    type="button"
-                    onClick={() => setIsMobileCreatingFolder(true)}
-                    className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#EDEDEF] hover:bg-white/5 hover:text-white transition-colors text-left outline-none cursor-pointer"
-                >
-                    <Plus className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                    <span>New folder</span>
-                </button>
-            )}
-
-            <button
-                type="button"
-                onClick={() => handleAssignMobileFolder(null)}
-                disabled={!assignedMobileFolder}
-                className="flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#71717A] hover:text-[#EDEDEF] disabled:opacity-40 disabled:pointer-events-none hover:bg-white/5 transition-colors text-left outline-none cursor-pointer"
-            >
-                <span>Remove from folder</span>
-            </button>
-        </>
-    )
-
     const mobileMenuRef = React.useRef<HTMLDivElement | null>(null)
     const [mobileActiveTab, setMobileActiveTab] = React.useState<MobileWorkspaceTab>('chat')
 
@@ -487,8 +333,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
             const target = event.target as Node
             if (mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
                 setIsMobileMenuOpen(false)
-                setIsMobileFolderSubmenuOpen(false)
-                setIsMobileCreatingFolder(false)
             }
         }
         if (isMobileMenuOpen) {
@@ -637,37 +481,8 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                         )}
                     </div>
 
-                    {/* Right Action Items: Folder Pill, PR Tag, Flag, 3 Dots */}
+                    {/* Right Action Items: PR Tag, 3 Dots */}
                     <div className="flex items-center gap-1 shrink-0">
-                        {/* Folder Pill */}
-                        {assignedMobileFolder && (
-                            <div
-                                onClick={() => {
-                                    setIsMobileFolderSubmenuOpen(true)
-                                    setIsMobileMenuOpen(true)
-                                }}
-                                className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-white/5 text-[11px] font-medium bg-[#202020] hover:bg-[#282828] text-[#EDEDED] cursor-pointer select-none shrink-0"
-                                title={`Folder: ${assignedMobileFolder}`}
-                            >
-                                <svg
-                                    viewBox="0 0 16 16"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.3"
-                                    className="w-3 h-3 text-[#EDEDED] shrink-0"
-                                >
-                                    <path
-                                        d="M2 4.5A1.5 1.5 0 0 1 3.5 3h2.879a1.5 1.5 0 0 1 1.06.44l1.122 1.12A1.5 1.5 0 0 0 9.62 5H12.5A1.5 1.5 0 0 1 14 6.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-8z"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                </svg>
-                                <span className="truncate max-w-[65px] xs:max-w-[90px]">
-                                    {assignedMobileFolder}
-                                </span>
-                            </div>
-                        )}
-
                         {/* PR Tag Badge */}
                         <div
                             onClick={() => {
@@ -705,18 +520,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                             </span>
                         </div>
 
-                        {/* Report Issue Flag Button */}
-                        <button
-                            type="button"
-                            onClick={() => setIsMobileBadSessionModalOpen(true)}
-                            className={`p-1.5 rounded-md text-[#91908F] hover:text-white hover:bg-white/5 transition-colors outline-none cursor-pointer flex items-center justify-center ${
-                                isMobileBadSessionModalOpen ? 'text-white bg-white/5' : ''
-                            }`}
-                            title="Report issue"
-                        >
-                            <Flag className="w-4 h-4" />
-                        </button>
-
                         {/* 3 Dots Menu Button */}
                         <div className="relative shrink-0" ref={mobileMenuRef}>
                             <button
@@ -749,42 +552,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                                                 <span className="truncate">Rename</span>
                                             </div>
                                         </button>
-
-                                        {/* Folder */}
-                                        <div className="flex flex-col">
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setIsMobileFolderSubmenuOpen(
-                                                        !isMobileFolderSubmenuOpen
-                                                    )
-                                                }
-                                                className={cn(
-                                                    'flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer',
-                                                    isMobileFolderSubmenuOpen
-                                                        ? 'bg-white/10 text-white'
-                                                        : 'text-[#EDEDEF] hover:bg-white/5 hover:text-white'
-                                                )}
-                                            >
-                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                    <Folder className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                                                    <span className="truncate">Folder</span>
-                                                </div>
-                                                <ChevronRight
-                                                    className={cn(
-                                                        'w-3.5 h-3.5 text-[#71717A] shrink-0 transition-transform',
-                                                        isMobileFolderSubmenuOpen
-                                                            ? 'rotate-90 text-white'
-                                                            : ''
-                                                    )}
-                                                />
-                                            </button>
-                                            {isMobileFolderSubmenuOpen && (
-                                                <div className="pl-3 py-1 flex flex-col gap-0.5 border-l border-[#333333] ml-3 my-1">
-                                                    {renderMobileFolderContent()}
-                                                </div>
-                                            )}
-                                        </div>
 
                                         {/* Edit tags */}
                                         <button
@@ -819,40 +586,23 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                                             </div>
                                         </button>
 
-                                        {/* More */}
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (onDownload) {
+                                        {/* Download */}
+                                        {onDownload && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
                                                     setIsMobileMenuOpen(false)
                                                     onDownload()
-                                                }
-                                            }}
-                                            className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#EDEDEF] hover:bg-white/5 hover:text-white transition-colors text-left outline-none cursor-pointer"
-                                        >
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <MoreHorizontal className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                                                <span className="truncate">More</span>
-                                            </div>
-                                            <ChevronRight className="w-3.5 h-3.5 text-[#71717A] shrink-0" />
-                                        </button>
+                                                }}
+                                                className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#EDEDEF] hover:bg-white/5 hover:text-white transition-colors text-left outline-none cursor-pointer"
+                                            >
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <Icons.Download className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
+                                                    <span className="truncate">Download ZIP</span>
+                                                </div>
+                                            </button>
+                                        )}
                                     </div>
-
-                                    {/* Divider */}
-                                    <div className="h-[1px] bg-[#272727] my-1.5" />
-
-                                    {/* Feedback Section */}
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsMobileMenuOpen(false)
-                                            setIsMobileBadSessionModalOpen(true)
-                                        }}
-                                        className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#EDEDEF] hover:bg-white/5 hover:text-white transition-colors text-left outline-none cursor-pointer"
-                                    >
-                                        <MessageSquare className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                                        <span>Give feedback</span>
-                                    </button>
 
                                     {/* Divider */}
                                     <div className="h-[1px] bg-[#272727] my-1.5" />
@@ -1037,18 +787,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                         </div>
                     </div>
 
-                    {/* Editor Tab */}
-                    {mobileActiveTab === 'editor' && (
-                        <div className="h-full min-h-0 flex flex-col">
-                            <CodeWorkspace
-                                html={previewHtml}
-                                generatedFiles={activeFilesToDisplay}
-                                activeFilePath={activeGeneratedFilePath}
-                                onHtmlChange={setPreviewHtml}
-                            />
-                        </div>
-                    )}
-
                     {/* Shell Tab */}
                     <div
                         className={
@@ -1082,14 +820,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                     isPending={isMobileUpdatingTag}
                     onClose={() => setIsMobileTagModalOpen(false)}
                     onSave={handleSaveMobileTag}
-                />
-
-                {/* Bad Session Modal for Mobile */}
-                <BadSessionModal
-                    isOpen={isMobileBadSessionModalOpen}
-                    onClose={() => setIsMobileBadSessionModalOpen(false)}
-                    sessionId={projectId}
-                    projectName={displayProjectName}
                 />
             </div>
 

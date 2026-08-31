@@ -146,22 +146,27 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 },
             },
             {
-                id: 'go-settings-integrations',
-                label: 'Integrations & Connections',
-                subtitle: 'Settings / Integrations',
-                category: 'Settings Subpages',
-                icon: <Icons.Globe className="w-4 h-4 text-neutral-400" />,
+                id: 'go-connectors',
+                label: 'Connectors',
+                subtitle: 'Ecosystem / Connectors',
+                category: 'Navigation',
+                icon: <Icons.Connectors className="w-4 h-4 text-neutral-400" />,
                 keywords: [
+                    'connectors',
                     'integrations',
                     'connections',
                     'github',
+                    'vercel',
+                    'supabase',
+                    'notion',
+                    'figma',
                     'oauth',
                     'services',
                     'third party',
                 ],
                 action: () => {
                     onClose()
-                    navigate('/settings/integrations')
+                    navigate('/connectors')
                 },
             },
             {
@@ -182,26 +187,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 action: () => {
                     onClose()
                     navigate('/settings/repositories')
-                },
-            },
-            {
-                id: 'go-settings-skills',
-                label: 'Agent Skills',
-                subtitle: 'Settings / Skills',
-                category: 'Settings Subpages',
-                icon: <Icons.Skills className="w-4 h-4 text-neutral-400" />,
-                keywords: [
-                    'skills',
-                    'agent',
-                    'bot',
-                    'tools',
-                    'capabilities',
-                    'custom skills',
-                    'prompts',
-                ],
-                action: () => {
-                    onClose()
-                    navigate('/settings/skills')
                 },
             },
             {

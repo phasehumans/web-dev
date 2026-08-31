@@ -5,10 +5,8 @@ import {
     CreditCard,
     FileClock,
     ArrowUpRight,
-    Link2,
     KeyRound,
     FileText,
-    Puzzle,
     Clock,
     Activity,
 } from 'lucide-react'
@@ -22,7 +20,6 @@ import { ProfileApiKeysSettings } from './ProfileApiKeysSettings'
 import { ProfileBillingSettings } from './ProfileBillingSettings'
 import { ProfileDeleteAccountModal } from './ProfileDeleteAccountModal'
 import { ProfileGeneralSettings } from './ProfileGeneralSettings'
-import { ProfileIntegrationsSettings } from './ProfileIntegrationsSettings'
 import { ProfileNameModal } from './ProfileNameModal'
 import { ProfilePasswordModal } from './ProfilePasswordModal'
 import { ProfilePrivacySettings } from './ProfilePrivacySettings'
@@ -32,7 +29,6 @@ import { ProfileSecretsSettings } from './ProfileSecretsSettings'
 import { ProfileSettingsContent } from './ProfileSettingsContent'
 import { ProfileSettingsSkeleton } from './ProfileSettingsSkeleton'
 import { ProfileSignOutAllSessionsModal } from './ProfileSignOutAllSessionsModal'
-import { ProfileSkillsSettings } from './ProfileSkillsSettings'
 import { ProfileTermsSettings } from './ProfileTermsSettings'
 import { ProfileUsageSettings } from './ProfileUsageSettings'
 
@@ -61,22 +57,10 @@ const SETTINGS_NAV_GROUPS = [
                 icon: Sliders,
             },
             {
-                tab: 'Integrations',
-                slug: 'integrations',
-                label: 'Integrations',
-                icon: Link2,
-            },
-            {
                 tab: 'Repositories',
                 slug: 'repositories',
                 label: 'Repositories',
                 icon: Icons.Github,
-            },
-            {
-                tab: 'Skills',
-                slug: 'skills',
-                label: 'Skills',
-                icon: Puzzle,
             },
             {
                 tab: 'Secrets',
@@ -133,10 +117,7 @@ const SETTINGS_NAV_GROUPS = [
 const TAB_LABEL_MAP: Record<string, string> = {
     Account: 'Account',
     Preferences: 'Preferences',
-    Integrations: 'Integrations',
-    Connections: 'Integrations',
     Repositories: 'Repositories',
-    Skills: 'Skills',
     Secrets: 'Secrets',
     Schedules: 'Schedules',
     Billing: 'Billing',
@@ -273,20 +254,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                 return <ProfileUsageSettings />
             case 'API Keys':
                 return <ProfileApiKeysSettings />
-            case 'Integrations':
-            case 'Connections':
-                return (
-                    <ProfileIntegrationsSettings
-                        isGithubConnected={isGithubConnected}
-                        isVercelConnected={isVercelConnected}
-                        isSupabaseConnected={isSupabaseConnected}
-                        isNotionConnected={isNotionConnected}
-                        onConnectGithub={connectGithub}
-                        onConnectVercel={connectVercel}
-                        onConnectSupabase={connectSupabase}
-                        onConnectNotion={connectNotion}
-                    />
-                )
             case 'Repositories':
                 return (
                     <ProfileRepositoriesSettings
@@ -294,8 +261,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         onConnectGithub={connectGithub}
                     />
                 )
-            case 'Skills':
-                return <ProfileSkillsSettings />
             case 'Secrets':
                 return <ProfileSecretsSettings />
             case 'Schedules':
@@ -556,19 +521,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         </button>
                         <button
                             onClick={() =>
-                                navigate(`/settings/${getSlugForProfileTab('Integrations')}`)
-                            }
-                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                                activeTab === 'Connections' || activeTab === 'Integrations'
-                                    ? 'bg-[#242323] text-[#D6D5C9]'
-                                    : 'text-[#D6D5C9] hover:bg-[#191919]'
-                            }`}
-                        >
-                            <Link2 className="w-[18px] h-[18px]" strokeWidth={1.5} />
-                            Integrations
-                        </button>
-                        <button
-                            onClick={() =>
                                 navigate(`/settings/${getSlugForProfileTab('Repositories')}`)
                             }
                             className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
@@ -579,17 +531,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         >
                             <Icons.Github className="w-[18px] h-[18px]" />
                             Repositories
-                        </button>
-                        <button
-                            onClick={() => navigate(`/settings/${getSlugForProfileTab('Skills')}`)}
-                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                                activeTab === 'Skills'
-                                    ? 'bg-[#242323] text-[#D6D5C9]'
-                                    : 'text-[#D6D5C9] hover:bg-[#191919]'
-                            }`}
-                        >
-                            <Puzzle className="w-[16px] h-[16px] mx-[1px]" strokeWidth={1.75} />
-                            Skills
                         </button>
                         <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Secrets')}`)}

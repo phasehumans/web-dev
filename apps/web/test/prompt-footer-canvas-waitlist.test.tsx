@@ -1,10 +1,10 @@
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { expect, test, describe, spyOn, afterEach, beforeEach, mock } from 'bun:test'
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
 
-import { canvasAPI } from '../src/features/canvas/api'
 import { PromptInput } from '../src/features/home/components/PromptInput'
 import { MENTION_PROVIDERS } from '../src/features/home/hooks/usePromptInputController'
 import { WorkspaceHeader } from '../src/features/preview/components/WorkspaceHeader'
@@ -17,9 +17,7 @@ if (!globalThis.document) {
     GlobalRegistrator.register()
 }
 
-const { render, screen, fireEvent, cleanup, waitFor } = await import('@testing-library/react')
-
-describe('PromptFooter & WorkspaceScreen: Canvas Card, Waitlist, Plus Menu & Back Navigation', () => {
+describe('PromptFooter & PromptInput: Mention Dropdown & Back Navigation', () => {
     let queryClient: QueryClient
 
     beforeEach(() => {
@@ -32,170 +30,6 @@ describe('PromptFooter & WorkspaceScreen: Canvas Card, Waitlist, Plus Menu & Bac
 
     afterEach(() => {
         cleanup()
-    })
-
-    test('Canvas button toggles preview card on click without opening a new tab', async () => {
-        const mockOpen = spyOn(window, 'open').mockImplementation(() => null as any)
-
-        spyOn(profileAPI, 'getProfile').mockImplementation(async () => ({
-            id: 'test-user',
-            name: 'Test',
-            username: 'test',
-            email: 'test@example.com',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            emailVerified: true,
-            receiveNotification: true,
-            googleId: null,
-            githubConnected: false,
-            canvasWaitlist: false,
-        }))
-
-        render(
-            <QueryClientProvider client={queryClient}>
-                <MemoryRouter>
-                    <PromptFooter
-                        onUpload={() => {}}
-                        onSubmit={() => {}}
-                        hasInput={false}
-                        isLoading={false}
-                        isAuthenticated={true}
-                    />
-                </MemoryRouter>
-            </QueryClientProvider>
-        )
-
-        const canvasButton = screen.getByRole('button', { name: 'Canvas' })
-        expect(canvasButton).not.toBeNull()
-
-        // Card should initially be closed
-        expect(screen.queryByText('Introducing Context Canvas')).toBeNull()
-
-        // Click canvas button to toggle card open
-        fireEvent.click(canvasButton)
-        expect(screen.getByText('Introducing Context Canvas')).not.toBeNull()
-        expect(mockOpen).not.toHaveBeenCalled()
-
-        // Click canvas button again to toggle card closed
-        fireEvent.click(canvasButton)
-        expect(screen.queryByText('Introducing Context Canvas')).toBeNull()
-    })
-
-    test('Join waitlist button calls onOpenAuth when user is unauthenticated', async () => {
-        let authOpened = false
-        const onOpenAuth = () => {
-            authOpened = true
-        }
-
-        render(
-            <QueryClientProvider client={queryClient}>
-                <MemoryRouter>
-                    <PromptFooter
-                        onUpload={() => {}}
-                        onSubmit={() => {}}
-                        hasInput={false}
-                        isLoading={false}
-                        isAuthenticated={false}
-                        onOpenAuth={onOpenAuth}
-                    />
-                </MemoryRouter>
-            </QueryClientProvider>
-        )
-
-        const canvasButton = screen.getByRole('button', { name: 'Canvas' })
-        fireEvent.click(canvasButton)
-
-        const joinWaitlistBtn = screen.getByRole('button', { name: 'Join waitlist' })
-        fireEvent.click(joinWaitlistBtn)
-
-        expect(authOpened).toBe(true)
-    })
-
-    test('Join waitlist button calls canvasAPI.joinWaitlist and updates to Joined waitlist', async () => {
-        spyOn(profileAPI, 'getProfile').mockImplementation(async () => ({
-            id: 'test-user',
-            name: 'Test',
-            username: 'test',
-            email: 'test@example.com',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            emailVerified: true,
-            receiveNotification: true,
-            googleId: null,
-            githubConnected: false,
-            canvasWaitlist: false,
-        }))
-
-        let waitlistJoined = false
-        spyOn(canvasAPI, 'joinWaitlist').mockImplementation(async () => {
-            waitlistJoined = true
-            return { canvasWaitlist: true }
-        })
-
-        render(
-            <QueryClientProvider client={queryClient}>
-                <MemoryRouter>
-                    <PromptFooter
-                        onUpload={() => {}}
-                        onSubmit={() => {}}
-                        hasInput={false}
-                        isLoading={false}
-                        isAuthenticated={true}
-                    />
-                </MemoryRouter>
-            </QueryClientProvider>
-        )
-
-        const canvasButton = screen.getByRole('button', { name: 'Canvas' })
-        fireEvent.click(canvasButton)
-
-        const joinWaitlistBtn = screen.getByRole('button', { name: 'Join waitlist' })
-        expect(joinWaitlistBtn).not.toBeNull()
-
-        fireEvent.click(joinWaitlistBtn)
-
-        await waitFor(() => {
-            expect(waitlistJoined).toBe(true)
-        })
-    })
-
-    test('Join waitlist button renders disabled as "Joined waitlist" if user already joined', async () => {
-        spyOn(profileAPI, 'getProfile').mockImplementation(async () => ({
-            id: 'test-user',
-            name: 'Test',
-            username: 'test',
-            email: 'test@example.com',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            emailVerified: true,
-            receiveNotification: true,
-            googleId: null,
-            githubConnected: false,
-            canvasWaitlist: true,
-        }))
-
-        render(
-            <QueryClientProvider client={queryClient}>
-                <MemoryRouter>
-                    <PromptFooter
-                        onUpload={() => {}}
-                        onSubmit={() => {}}
-                        hasInput={false}
-                        isLoading={false}
-                        isAuthenticated={true}
-                    />
-                </MemoryRouter>
-            </QueryClientProvider>
-        )
-
-        const canvasButton = screen.getByRole('button', { name: 'Canvas' })
-        fireEvent.click(canvasButton)
-
-        await waitFor(() => {
-            const joinedBtn = screen.getByRole('button', { name: 'Joined waitlist' })
-            expect(joinedBtn).not.toBeNull()
-            expect(joinedBtn.hasAttribute('disabled')).toBe(true)
-        })
     })
 
     test('+ icon dropdown has Secrets, no Send secrets, and no Codebase files', async () => {
@@ -235,7 +69,7 @@ describe('PromptFooter & WorkspaceScreen: Canvas Card, Waitlist, Plus Menu & Bac
         expect(selectedOption).toBe('secrets:')
     })
 
-    test('@ mention in PromptInput matches + icon dropdown options (Repositories, Sessions, Skills, Secrets)', async () => {
+    test('@ mention in PromptInput matches + icon dropdown options (Repositories, Sessions, Secrets)', async () => {
         let promptValue = '@'
         const setPromptValue = (val: string) => {
             promptValue = val
@@ -243,9 +77,10 @@ describe('PromptFooter & WorkspaceScreen: Canvas Card, Waitlist, Plus Menu & Bac
 
         // Verify MENTION_PROVIDERS list directly
         const providerTitles = MENTION_PROVIDERS.map((p) => p.title)
-        expect(providerTitles).toEqual(['Repositories', 'Sessions', 'Skills', 'Secrets'])
+        expect(providerTitles).toEqual(['Repositories', 'Sessions', 'Secrets'])
         expect(providerTitles).not.toContain('Codebase files')
         expect(providerTitles).not.toContain('Send secrets')
+        expect(providerTitles).not.toContain('Skills')
 
         const { rerender } = render(
             <QueryClientProvider client={queryClient}>
@@ -261,11 +96,11 @@ describe('PromptFooter & WorkspaceScreen: Canvas Card, Waitlist, Plus Menu & Bac
             </QueryClientProvider>
         )
 
-        // Dropdown menu should show Repositories, Sessions, Skills, Secrets
+        // Dropdown menu should show Repositories, Sessions, Secrets
         expect(screen.getByText('Repositories')).not.toBeNull()
         expect(screen.getByText('Sessions')).not.toBeNull()
-        expect(screen.getByText('Skills')).not.toBeNull()
         expect(screen.getByText('Secrets')).not.toBeNull()
+        expect(screen.queryByText('Skills')).toBeNull()
 
         // Should NOT show Codebase files or Send secrets
         expect(screen.queryByText('Codebase files')).toBeNull()
@@ -393,37 +228,6 @@ describe('PromptFooter & WorkspaceScreen: Canvas Card, Waitlist, Plus Menu & Bac
         const sessionItem = screen.getByText('Dashboard Redesign')
         fireEvent.click(sessionItem)
         expect(promptValue).toBe('@session:Dashboard Redesign ')
-    })
-
-    test('@skills: in PromptInput searches and selects skills', async () => {
-        let promptValue = '@skills:'
-        const setPromptValue = (val: string) => {
-            promptValue = val
-        }
-
-        render(
-            <QueryClientProvider client={queryClient}>
-                <MemoryRouter>
-                    <PromptInput
-                        onSubmit={() => {}}
-                        isLoading={false}
-                        isAuthenticated={true}
-                        value={promptValue}
-                        onChange={setPromptValue}
-                    />
-                </MemoryRouter>
-            </QueryClientProvider>
-        )
-
-        // Dropdown shows Skills header and default skills
-        expect(screen.getByText('Skills')).not.toBeNull()
-        expect(screen.getByText('frontend-design')).not.toBeNull()
-        expect(screen.getByText('tdd')).not.toBeNull()
-
-        // Clicking a skill replaces @skills: with @skill:name
-        const skillItem = screen.getByText('frontend-design')
-        fireEvent.click(skillItem)
-        expect(promptValue).toBe('@skill:frontend-design ')
     })
 
     test('@secrets: in PromptInput searches and selects secrets', async () => {

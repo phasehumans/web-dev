@@ -4,8 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useAppStore } from '@/app/store'
 import { getViewForPath, toProjectSlug, type ViewState } from '@/app/types'
-import { canvasAPI } from '@/features/canvas/api'
-import { createEmptyCanvasDocument } from '@/features/canvas/types'
 import { useChatController } from '@/features/chat/hooks/useChatController'
 import { useNavigationController } from '@/features/navigation/hooks/useNavigationController'
 import { previewAPI } from '@/features/preview/api'
@@ -24,6 +22,8 @@ export const useAppController = () => {
     const activeProjectId = useAppStore((s) => s.activeProjectId)
     const activeProjectName = useAppStore((s) => s.activeProjectName)
     const activeProjectVersionId = useAppStore((s) => s.activeProjectVersionId)
+    const canvasState = useAppStore((s) => s.canvasState)
+    const setCanvasState = useAppStore((s) => s.setCanvasState)
     const isGenerating = useAppStore((s) => s.isGenerating)
     const isAuthenticated = useAppStore((s) => s.isAuthenticated)
     const setIsAuthenticated = useAppStore((s) => s.setIsAuthenticated)
@@ -31,8 +31,6 @@ export const useAppController = () => {
     const setShowAuthModal = useAppStore((s) => s.setShowAuthModal)
     const isMobileSidebarOpen = useAppStore((s) => s.isMobileSidebarOpen)
     const setIsMobileSidebarOpen = useAppStore((s) => s.setIsMobileSidebarOpen)
-    const canvasState = useAppStore((s) => s.canvasState)
-    const setCanvasState = useAppStore((s) => s.setCanvasState)
     const isProjectOpening = useAppStore((s) => s.isProjectOpening)
     const projectLoadError = useAppStore((s) => s.projectLoadError)
     const setProjectLoadError = useAppStore((s) => s.setProjectLoadError)
@@ -76,7 +74,7 @@ export const useAppController = () => {
     })
 
     const isHome = view === 'chat' && !activeProjectId && !hasMessages
-    const showSidebar = view !== 'profile' && view !== 'canvas'
+    const showSidebar = view !== 'profile'
     const { handleNewThread, handleHomeClick, handleNavigate, handleSignOut } =
         useNavigationController()
 
@@ -86,7 +84,6 @@ export const useAppController = () => {
         handleSelectVersion,
         handleImportGithub,
         handleImportZip,
-        lastSavedCanvasRef,
         lastAutoFixSignatureRef,
     } = useSessionController(
         view,
@@ -133,7 +130,6 @@ export const useAppController = () => {
         useAppStore.getState().setActiveProjectVersionId(null)
         useAppStore.getState().setProjectVersions([])
         useAppStore.getState().setMessages([])
-        useAppStore.getState().setCanvasState(createEmptyCanvasDocument())
         useAppStore.getState().setGeneratedFiles({})
         useAppStore.getState().setImportState({ status: 'idle', message: null })
         useAppStore.getState().setPreviewSession(null)
@@ -268,28 +264,6 @@ export const useAppController = () => {
         queryClient,
     ])
 
-    // auto-save canvas state
-    React.useEffect(() => {
-        if (!isAuthenticated || !activeProjectId) return
-        const serialized = JSON.stringify(canvasState)
-        if (serialized === lastSavedCanvasRef.current) return
-        if (canvasState.items.length === 0 && !canvasState.hasInteracted) return
-
-        const timer = setTimeout(async () => {
-            try {
-                lastSavedCanvasRef.current = serialized
-                await canvasAPI.saveCanvas({
-                    projectId: activeProjectId,
-                    versionId: activeProjectVersionId,
-                    canvasState,
-                })
-            } catch (err) {
-                console.error('[canvas] failed to auto-save:', err)
-            }
-        }, 1500)
-        return () => clearTimeout(timer)
-    }, [canvasState, activeProjectId, activeProjectVersionId, isAuthenticated, lastSavedCanvasRef])
-
     // poll preview session
     React.useEffect(() => {
         if (!isAuthenticated || !activeProjectId || !activeProjectVersionId) {
@@ -369,8 +343,6 @@ export const useAppController = () => {
         showSidebar,
         activeProjectId,
         activeProjectName,
-        canvasState,
-        setCanvasState,
         activeProjectVersionId,
         isProjectOpening,
         projectLoadError,

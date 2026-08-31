@@ -248,7 +248,6 @@ This is clean content without divider lines.
             selectedVersionId: null,
             activeVersion: null,
             generatedFiles: {},
-            canvasState: {} as any,
         }
 
         const originalGetSessionDetail = sessionAPI.getSessionDetail

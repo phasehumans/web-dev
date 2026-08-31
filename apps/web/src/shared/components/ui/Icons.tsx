@@ -1444,4 +1444,27 @@ export const Icons = {
             <rect x="15" y="3" width="6" height="6" rx="1.5" />
         </svg>
     ),
+    Connectors: (props: any) => (
+        <svg
+            {...props}
+            width={props.width || '18'}
+            height={props.height || '18'}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <path d="M12 2v6" />
+            <path d="M12 16v6" />
+            <path d="M4.93 4.93l4.24 4.24" />
+            <path d="M14.83 14.83l4.24 4.24" />
+            <path d="M2 12h6" />
+            <path d="M16 12h6" />
+            <path d="M4.93 19.07l4.24-4.24" />
+            <path d="M14.83 9.17l4.24-4.24" />
+            <circle cx="12" cy="12" r="3" />
+        </svg>
+    ),
 }

@@ -22,7 +22,8 @@ export const MobileSidebar: React.FC<
     onClose,
     onNewThread,
     onAllProjects,
-    onSessions,
+    onSessions = () => {},
+    onConnectors = () => {},
     onProfile,
     onOpenProject,
     isAuthenticated,
@@ -38,7 +39,11 @@ export const MobileSidebar: React.FC<
     const path = location.pathname
 
     const isHomeActive = path === '/'
-    const isProjectsActive = path.startsWith('/projects')
+    const isProjectsActive =
+        path.startsWith('/projects') ||
+        path.startsWith('/all-projects') ||
+        path.startsWith('/sessions')
+    const isConnectorsActive = path.startsWith('/connectors')
     const isSettingsActive = path.startsWith('/settings') || path.startsWith('/profile')
 
     const [isSearchOpen, setIsSearchOpen] = React.useState(false)
@@ -80,7 +85,8 @@ export const MobileSidebar: React.FC<
         activeIndex = 1
     } else if (!isHomeActive) {
         if (isProjectsActive) activeIndex = 2
-        else if (isSettingsActive) activeIndex = 3
+        else if (isConnectorsActive) activeIndex = 3
+        else if (isSettingsActive) activeIndex = 4
     } else {
         activeIndex = 0
     }
@@ -124,6 +130,15 @@ export const MobileSidebar: React.FC<
             icon: <Icons.Folder className="w-[18px] h-[18px]" />,
             onClick: () => {
                 onSessions()
+                onClose()
+            },
+        },
+        {
+            id: 'connectors',
+            label: 'Connectors',
+            icon: <Icons.Connectors className="w-[18px] h-[18px]" />,
+            onClick: () => {
+                onConnectors()
                 onClose()
             },
         },

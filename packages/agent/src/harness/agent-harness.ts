@@ -94,6 +94,9 @@ export class AgentHarness {
     }
 
     public async initMCP(config?: McpConfigFile): Promise<Tool[]> {
+        if (this.config.skipMcp || this.config.runtime === 'cloud') {
+            return []
+        }
         await this.mcpPool.initialize(config || this.config.mcpConfig)
         const tools = this.mcpPool.getTools()
         this.agent.syncMcpTools(tools)
@@ -101,6 +104,9 @@ export class AgentHarness {
     }
 
     public async reloadMCP(config?: McpConfigFile): Promise<{ tools: Tool[]; serverInfos: any[] }> {
+        if (this.config.skipMcp || this.config.runtime === 'cloud') {
+            return { tools: [], serverInfos: [] }
+        }
         const result = await this.mcpPool.reload(config)
         this.agent.syncMcpTools(result.tools)
         return result

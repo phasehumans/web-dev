@@ -27,6 +27,7 @@ const Sidebar: React.FC<
     onNewThread,
     onAllProjects,
     onSessions,
+    onConnectors,
     onProfile,
     onOpenProject,
     isAuthenticated,
@@ -298,6 +299,7 @@ const Sidebar: React.FC<
         path.startsWith('/projects') ||
         path.startsWith('/all-projects') ||
         path.startsWith('/sessions')
+    const isConnectorsActive = path.startsWith('/connectors')
     const isSettingsActive = path.startsWith('/settings') || path.startsWith('/profile')
 
     let activeIndex = 0
@@ -305,7 +307,8 @@ const Sidebar: React.FC<
         activeIndex = 1
     } else if (!isHomeActive) {
         if (isProjectsActive) activeIndex = 2
-        else if (isSettingsActive) activeIndex = 3
+        else if (isConnectorsActive) activeIndex = 3
+        else if (isSettingsActive) activeIndex = 4
     } else {
         activeIndex = 0
     }
@@ -346,6 +349,18 @@ const Sidebar: React.FC<
             label: 'Sessions',
             icon: <Icons.Folder className="w-[17px] h-[17px]" />,
             onClick: onSessions,
+        },
+        {
+            id: 'connectors',
+            label: 'Connectors',
+            icon: <Icons.Connectors className="w-[17px] h-[17px]" />,
+            onClick: () => {
+                if (onConnectors) {
+                    onConnectors()
+                } else {
+                    navigate('/connectors')
+                }
+            },
         },
         {
             id: 'settings',

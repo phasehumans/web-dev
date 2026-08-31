@@ -6,8 +6,10 @@ import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/pre
 
 import { HomeHero } from '@/features/home/components/HomeHero'
 
-const CanvasPage = React.lazy(() =>
-    import('../../features/canvas/components/CanvasPage').then((m) => ({ default: m.CanvasPage }))
+const ConnectorsPage = React.lazy(() =>
+    import('@/features/connectors/components/ConnectorsPage').then((m) => ({
+        default: m.ConnectorsPage,
+    }))
 )
 const WorkspaceScreen = React.lazy(() =>
     import('@/features/preview/components/WorkspaceScreen').then((m) => ({
@@ -113,9 +115,9 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
                     </AnimatedPage>
                 )}
 
-                {view === 'canvas' && (
-                    <AnimatedPage pageKey="canvas">
-                        <CanvasPage onBack={onNewProject} onOpenAuth={onOpenAuth} />
+                {view === 'connectors' && (
+                    <AnimatedPage pageKey="connectors">
+                        <ConnectorsPage />
                     </AnimatedPage>
                 )}
 

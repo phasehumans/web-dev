@@ -8,9 +8,7 @@ Allow: /terms
 Disallow: /api/
 Disallow: /auth/
 Disallow: /sessions
-Disallow: /review
 Disallow: /profile
-Disallow: /canvas
 Disallow: /search
 
 Sitemap: https://trydecember.com/sitemap.xml

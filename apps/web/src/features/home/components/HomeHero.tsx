@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { MessageSquare, Laptop, Star } from 'lucide-react'
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { HomeHeader } from './HomeHeader'
@@ -12,7 +12,6 @@ import type { HomeHeroProps } from '@/features/home/types'
 import { useAppStore } from '@/app/store'
 import { OutOfCreditsModal } from '@/features/billing/components/OutOfCreditsModal'
 import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
-import { type CanvasRef } from '@/features/canvas/components/Canvas'
 import { profileAPI } from '@/features/profile/api/profile'
 import { ProfileFeedbackModal } from '@/features/profile/components/ProfileFeedbackModal'
 import { Icons } from '@/shared/components/ui/Icons'
@@ -29,8 +28,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     const {
         isGenerating,
         isAuthenticated,
-        canvasState,
-        setCanvasState: onCanvasStateChange,
         activeProjectId: projectId,
         importState,
         showOutOfCreditsModal,
@@ -38,7 +35,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     } = useAppStore()
     const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
     const navigate = useNavigate()
-    const canvasRef = useRef<CanvasRef>(null)
     const [prompt, setPrompt] = React.useState('')
     const [activeImportForm, setActiveImportForm] = useState<'github' | null>(null)
     const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -118,21 +114,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         }
     }, [isAuthenticated, profile])
     */
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                const event = new CustomEvent('hero-canvas-intersect', {
-                    detail: entry?.isIntersecting,
-                })
-                window.dispatchEvent(event)
-            },
-            { threshold: 0.3 }
-        )
-        const canvasEl = document.getElementById('hero-canvas-container')
-        if (canvasEl) observer.observe(canvasEl)
-        return () => observer.disconnect()
-    }, [isAuthenticated])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -266,7 +247,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                             }
                         }}
                         isLoading={isGenerating}
-                        onUpload={() => canvasRef.current?.triggerImageUpload()}
+                        onUpload={() => {}}
                         isAuthenticated={isAuthenticated}
                         onOpenAuth={onOpenAuth}
                         onFocus={() => {

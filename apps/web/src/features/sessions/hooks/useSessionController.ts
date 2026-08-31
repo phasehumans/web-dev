@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAppStore } from '@/app/store'
 import { toProjectSlug, type ViewState } from '@/app/types'
-import { createEmptyCanvasDocument } from '@/features/canvas/types'
 import { mapBackendMessageToUIMessage } from '@/features/chat/utils'
 import { importsAPI, type ProjectImportStatus } from '@/features/home/api'
 import { sessionAPI } from '@/features/sessions/api/session'
@@ -39,7 +38,6 @@ export const useSessionController = (
         setProjectLoadError,
         setMessages,
         setProjectType,
-        setCanvasState,
         replaceGeneratedOutput,
         setGenerationPhase,
         setActiveOperation,
@@ -53,7 +51,6 @@ export const useSessionController = (
         resetGeneratedOutput,
     } = useAppStore()
 
-    const lastSavedCanvasRef = React.useRef<string | null>(null)
     const lastAutoFixSignatureRef = React.useRef<string | null>(null)
 
     React.useEffect(() => {
@@ -158,10 +155,6 @@ export const useSessionController = (
 
             setProjectType(resolvedType)
 
-            setCanvasState(detail.canvasState ?? createEmptyCanvasDocument())
-            lastSavedCanvasRef.current = JSON.stringify(
-                detail.canvasState ?? createEmptyCanvasDocument()
-            )
             replaceGeneratedOutput(detail.generatedFiles || {})
             setGenerationPhase(null)
             setActiveOperation(null)
@@ -178,7 +171,6 @@ export const useSessionController = (
             setProjectLoadError,
             setMessages,
             setProjectType,
-            setCanvasState,
             setGenerationPhase,
             setActiveOperation,
         ]
@@ -499,7 +491,6 @@ export const useSessionController = (
         handleSelectVersion,
         handleImportGithub,
         handleImportZip,
-        lastSavedCanvasRef,
         lastAutoFixSignatureRef,
     }
 }

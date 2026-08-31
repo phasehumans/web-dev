@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 
 import { useAppStore } from '@/app/store'
 import { getPathForView, type ViewState } from '@/app/types'
-import { createEmptyCanvasDocument } from '@/features/canvas/types'
 import { previewAPI } from '@/features/preview/api'
 import { profileAPI } from '@/features/profile/api/profile'
 
@@ -17,7 +16,6 @@ export const useNavigationController = () => {
         setActiveProjectName,
         setActiveProjectVersionId,
         setMessages,
-        setCanvasState,
         setGeneratedFiles,
         setCurrentGenerationFilePaths,
         setGenerationPhase,
@@ -37,18 +35,11 @@ export const useNavigationController = () => {
     }, [setActiveProjectId, setActiveProjectName, setActiveProjectVersionId, setProjectVersions])
 
     const resetGenerationFlow = React.useCallback(() => {
-        setCanvasState(createEmptyCanvasDocument())
         setGeneratedFiles({})
         setCurrentGenerationFilePaths([])
         setGenerationPhase(null)
         setActiveOperation(null)
-    }, [
-        setCanvasState,
-        setGeneratedFiles,
-        setCurrentGenerationFilePaths,
-        setGenerationPhase,
-        setActiveOperation,
-    ])
+    }, [setGeneratedFiles, setCurrentGenerationFilePaths, setGenerationPhase, setActiveOperation])
 
     const requireAuthOr = React.useCallback(
         (action: () => void) => {

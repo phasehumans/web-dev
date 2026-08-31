@@ -21,7 +21,6 @@ import runtimeRouter from './modules/runtime/runtime.routes'
 import secretsRouter from './modules/secrets/secrets.routes'
 import sessionRouter from './modules/session/session.routes'
 import settingRouter from './modules/setting/setting.routes'
-import skillsRouter from './modules/skills/skills.routes'
 import usageRouter from './modules/usage/usage.routes'
 
 const app = express()
@@ -102,7 +101,6 @@ app.use('/api/v1/notification', notificationRouter)
 app.use('/api/v1/billing', billingRouter)
 app.use('/api/v1/platform', platformRouter)
 app.use('/api/v1/cli', cliRateLimiter, cliRouter)
-app.use('/api/v1/skills', skillsRouter)
 app.use('/api/v1/session', sessionRouter)
 app.use('/api/v1/sessions', sessionRouter)
 app.use('/api/v1/secrets', secretsRouter)

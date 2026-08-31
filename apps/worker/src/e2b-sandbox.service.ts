@@ -16,7 +16,6 @@ import {
     GrepSearchTool,
     LsTool,
     ManageTaskTool,
-    MCPTool,
     ReadFileTool,
     WebSearchTool,
     WriteFileTool,
@@ -642,7 +641,6 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         ManageTaskTool,
         BrowserTool,
         WebSearchTool,
-        MCPTool,
     ]
 
     const harness = new AgentHarness({
@@ -653,6 +651,7 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
         sessionId,
         userId,
         runtime: 'cloud',
+        skipMcp: true,
         modelOptions: {
             model: process.env.DEFAULT_MODEL || 'gemini-3.6-flash',
             thinkingLevel: 'auto',
@@ -725,7 +724,6 @@ const runAgentSession = async (data: RunAgentSessionInput) => {
 
     const streamGenerator = (async function* () {
         try {
-            await harness.initMCP().catch(() => {})
             console.log(
                 `[AGENT EXECUTION] Agent loop started for session '${sessionId}'. Running AgentHarness loop...`
             )

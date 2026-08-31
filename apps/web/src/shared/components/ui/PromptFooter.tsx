@@ -1,15 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Paperclip, KeyRound, Puzzle, Folder } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Paperclip, KeyRound, Folder } from 'lucide-react'
 import React, { useRef, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-import sidebarPng from '../../../../assets/sidebar.png'
 
 import { Icons } from './Icons'
 
 import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
-import { canvasAPI } from '@/features/canvas/api'
-import { profileAPI } from '@/features/profile/api/profile'
 import { useVoiceToText } from '@/shared/lib/useVoiceToText'
 import { cn } from '@/shared/lib/utils'
 
@@ -56,51 +52,12 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         onToggleThinking?.(next)
     }
     const plusRef = useRef<HTMLDivElement>(null)
-    const canvasRef = useRef<HTMLDivElement>(null)
-
-    const [showCanvasCard, setShowCanvasCard] = useState(false)
-    const canvasHideTimeoutRef = useRef<any>(null)
-
-    const { data: profile } = useQuery({
-        queryKey: ['profile'],
-        queryFn: profileAPI.getProfile,
-        enabled: Boolean(isAuthenticated),
-    })
-
-    const joinWaitlistMutation = useMutation({
-        mutationFn: canvasAPI.joinWaitlist,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['profile'] })
-        },
-    })
-
-    const isCanvasWaitlistJoined = Boolean(profile?.canvasWaitlist)
-
-    const handleCanvasMouseEnter = () => {
-        if (canvasHideTimeoutRef.current) {
-            clearTimeout(canvasHideTimeoutRef.current)
-            canvasHideTimeoutRef.current = null
-        }
-        setShowCanvasCard(true)
-    }
-
-    const handleCanvasMouseLeave = () => {
-        canvasHideTimeoutRef.current = setTimeout(() => {
-            setShowCanvasCard(false)
-            canvasHideTimeoutRef.current = null
-        }, 300)
-    }
 
     const { isListening, isSupported, volume, toggleListening } = useVoiceToText({
         onTranscript: (text) => {
             onVoiceTranscript?.(text)
         },
     })
-
-    useEffect(() => {
-        const img = new Image()
-        img.src = sidebarPng
-    }, [])
 
     useEffect(() => {
         onVoiceStateChange?.(isListening)
@@ -132,11 +89,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
             label: 'Sessions',
             icon: <Folder className="w-4 h-4 text-[#8F8E8D]" />,
             action: () => onOptionSelect?.('sessions:'),
-        },
-        {
-            label: 'Skills',
-            icon: <Puzzle className="w-4 h-4 text-[#8F8E8D]" />,
-            action: () => onOptionSelect?.('skills:'),
         },
         {
             label: 'Secrets',
@@ -198,9 +150,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
         const handleClickOutside = (e: MouseEvent) => {
             if (plusRef.current && !plusRef.current.contains(e.target as Node)) {
                 setIsPlusMenuOpen(false)
-            }
-            if (canvasRef.current && !canvasRef.current.contains(e.target as Node)) {
-                setShowCanvasCard(false)
             }
         }
         document.addEventListener('mousedown', handleClickOutside)
@@ -335,94 +284,6 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                                 {isThinkingMode ? 'Thinking mode: On' : 'Thinking mode: Off'}
                             </span>
                         </div>
-                    </div>
-                )}
-
-                {mode !== 'search' && (
-                    <div
-                        className="relative group/btn"
-                        ref={canvasRef}
-                        onMouseEnter={handleCanvasMouseEnter}
-                        onMouseLeave={handleCanvasMouseLeave}
-                    >
-                        <button
-                            type="button"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                if (canvasHideTimeoutRef.current) {
-                                    clearTimeout(canvasHideTimeoutRef.current)
-                                    canvasHideTimeoutRef.current = null
-                                }
-                                setShowCanvasCard((prev) => !prev)
-                            }}
-                            className="flex items-center gap-1.5 text-[#8E8E8E] hover:text-white hover:bg-[#27272A] px-2 py-0.5 rounded-full transition-all duration-200 outline-none cursor-pointer bg-transparent border border-dashed border-white/20 hover:border-white/40"
-                        >
-                            <span className="text-[12px] font-medium">Canvas</span>
-                        </button>
-                        {showCanvasCard && (
-                            <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 flex flex-col bg-[#1E1E1E] border border-[#2A2928] rounded-2xl shadow-lg shadow-black/40 overflow-hidden w-[260px] animate-in fade-in zoom-in-95 duration-200 cursor-default">
-                                <div className="w-full h-[140px] bg-[#1E1E1E] relative overflow-hidden flex items-center justify-center p-1.5 pb-0 pointer-events-none">
-                                    <div className="w-full h-full relative overflow-hidden rounded-xl border border-[#2A2928]">
-                                        <img
-                                            src={sidebarPng}
-                                            alt="Context Canvas"
-                                            decoding="async"
-                                            className="w-full h-full object-cover object-center absolute inset-0 opacity-80"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex flex-col px-2 pt-2.5 pb-2.5 bg-[#1E1E1E] gap-3">
-                                    <div className="flex flex-col px-1 w-full text-left">
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <span className="text-[13px] font-semibold text-[#E8E8E8]">
-                                                Introducing Context Canvas
-                                            </span>
-                                        </div>
-                                        <span className="text-[12px] text-[#8F8E8D] mt-1 leading-relaxed">
-                                            A freeform visual workspace to express your ideas far
-                                            more freely than simple text prompts.
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-end mx-1 mt-1">
-                                        <button
-                                            type="button"
-                                            disabled={
-                                                isCanvasWaitlistJoined ||
-                                                joinWaitlistMutation.isPending
-                                            }
-                                            className={`px-2.5 py-1 text-[11px] font-medium rounded-md transition-colors border ${
-                                                isCanvasWaitlistJoined
-                                                    ? 'bg-[#2B2A29]/50 text-[#8F8E8D] border-white/5 cursor-default'
-                                                    : joinWaitlistMutation.isPending
-                                                      ? 'bg-[#2B2A29] text-[#8F8E8D] border-white/10 cursor-not-allowed'
-                                                      : 'bg-[#2B2A29] hover:bg-[#343331] text-[#E8E8E8] border-white/10 cursor-pointer'
-                                            }`}
-                                            onClick={(e) => {
-                                                e.preventDefault()
-                                                e.stopPropagation()
-                                                if (!isAuthenticated) {
-                                                    setShowCanvasCard(false)
-                                                    onOpenAuth?.()
-                                                    return
-                                                }
-                                                if (
-                                                    isCanvasWaitlistJoined ||
-                                                    joinWaitlistMutation.isPending
-                                                )
-                                                    return
-                                                joinWaitlistMutation.mutate()
-                                            }}
-                                        >
-                                            {isCanvasWaitlistJoined
-                                                ? 'Joined waitlist'
-                                                : joinWaitlistMutation.isPending
-                                                  ? 'Joining...'
-                                                  : 'Join waitlist'}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>

@@ -6,8 +6,9 @@ export interface NavigationState {
 
 export interface SidebarProps {
     onNewThread: () => void
-    onAllProjects: () => void
+    onAllProjects?: () => void
     onSessions?: () => void
+    onConnectors?: () => void
     onProfile: () => void
     onOpenProject: (projectId: string) => void
     isAuthenticated: boolean
@@ -20,8 +21,9 @@ export interface MobileSidebarProps {
     isOpen: boolean
     onClose: () => void
     onNewThread: () => void
-    onAllProjects: () => void
+    onAllProjects?: () => void
     onSessions?: () => void
+    onConnectors?: () => void
     onProfile: () => void
     onOpenProject: (projectId: string) => void
     isAuthenticated: boolean

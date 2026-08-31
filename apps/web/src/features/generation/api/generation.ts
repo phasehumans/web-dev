@@ -1,6 +1,5 @@
 import { io } from 'socket.io-client'
 
-import type { CanvasDocument, CanvasItem } from '@/features/canvas/types'
 import type {
     BackendProject,
     BackendMessage,
@@ -229,7 +228,7 @@ type GenerateProjectInput = {
     prompt: string
     sessionId?: string | null
     projectId?: string | null
-    canvasState?: CanvasDocument
+    canvasState?: any
     model?: string
     signal?: AbortSignal
     onEvent: (event: GenerationStreamEvent) => void
@@ -240,7 +239,6 @@ type ApplyProjectEditInput = {
     versionId?: string | null
     prompt: string
     selectedElement?: PreviewSelectedElementPayload | null
-    canvasState?: CanvasDocument
     model?: string
     signal?: AbortSignal
     onEvent: (event: GenerationStreamEvent) => void
@@ -254,28 +252,6 @@ type ApplyProjectFixInput = {
     model?: string
     signal?: AbortSignal
     onEvent: (event: GenerationStreamEvent) => void
-}
-
-const stripSerializableCanvasItemContent = (item: CanvasItem): CanvasItem => {
-    if (item.type !== 'image' || !item.assetKey) {
-        return item
-    }
-
-    return {
-        ...item,
-        content: undefined,
-    }
-}
-
-const sanitizeCanvasStateForRequest = (canvasState?: CanvasDocument) => {
-    if (!canvasState) {
-        return undefined
-    }
-
-    return {
-        ...canvasState,
-        items: canvasState.items.map(stripSerializableCanvasItemContent),
-    }
 }
 
 let sharedSocket: ReturnType<typeof io> | null = null
@@ -426,7 +402,6 @@ const generateProjectStream = async ({
     prompt,
     sessionId,
     projectId,
-    canvasState,
     model,
     signal,
     onEvent,

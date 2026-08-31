@@ -3,6 +3,7 @@ export type ViewState =
     | 'search'
     | 'all-projects'
     | 'sessions'
+    | 'connectors'
     | 'profile'
     | 'project'
     | 'canvas'
@@ -11,11 +12,7 @@ export type ViewState =
 export type ProfileTab =
     | 'Account'
     | 'Preferences'
-    | 'Integrations'
-    | 'Connections'
-    | 'MCP Server'
     | 'Repositories'
-    | 'Skills'
     | 'Billing'
     | 'Analytics'
     | 'Usage'
@@ -29,11 +26,7 @@ export type ProfileTab =
 const profileTabToSlug: Record<string, string> = {
     Account: 'account',
     Preferences: 'preferences',
-    Integrations: 'integrations',
-    Connections: 'integrations',
-    'MCP Server': 'mcp-server',
     Repositories: 'repositories',
-    Skills: 'skills',
     Billing: 'billing',
     Analytics: 'usage',
     Usage: 'usage',
@@ -71,6 +64,7 @@ const simpleViewToPath: Record<string, string> = {
     search: '/search',
     'all-projects': '/sessions',
     sessions: '/sessions',
+    connectors: '/connectors',
     canvas: '/canvas',
     automations: '/automations',
 }
@@ -97,6 +91,17 @@ export const getViewForPath = (pathname: string): ViewState => {
     // exact simple matches
     const simple = simplePathToView[pathname]
     if (simple) return simple
+
+    // /connectors or legacy integrations / mcp settings → connectors
+    if (
+        pathname === '/connectors' ||
+        pathname === '/settings/integrations' ||
+        pathname === '/profile/integrations' ||
+        pathname === '/settings/mcp-server' ||
+        pathname.startsWith('/connectors/')
+    ) {
+        return 'connectors'
+    }
 
     // /settings or /settings/*, /profile, /privacy, /terms → profile
     if (

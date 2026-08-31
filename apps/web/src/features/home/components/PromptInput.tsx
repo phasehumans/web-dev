@@ -1,4 +1,4 @@
-import { Folder, KeyRound, Puzzle } from 'lucide-react'
+import { Folder, KeyRound } from 'lucide-react'
 import React from 'react'
 
 import type { PromptInputProps } from '@/features/home/types'
@@ -37,12 +37,10 @@ export const PromptInput: React.FC<
         isAtTriggered,
         isReposTriggered,
         isSessionsTriggered,
-        isSkillsTriggered,
         isSecretsTriggered,
         filteredProviders,
         filteredRepos,
         filteredSessions,
-        filteredSkills,
         filteredSecrets,
         isGithubConnected,
         isReposLoading,
@@ -51,7 +49,6 @@ export const PromptInput: React.FC<
         githubConnectUrl,
         handleSelectRepo,
         handleSelectSession,
-        handleSelectSkill,
         handleSelectSecret,
         handleInputChange,
         handleSelect,
@@ -270,50 +267,6 @@ export const PromptInput: React.FC<
                                     )}
                                 </div>
                             )}
-                        </div>
-                    )}
-
-                    {isAuthenticated && isSkillsTriggered && !forceClose && (
-                        <div
-                            ref={dropdownRef}
-                            className={`absolute left-5 z-[100] w-[280px] max-w-[calc(100vw-32px)] bg-[#1E1E1E] border border-[#2A2928] rounded-2xl p-1 shadow-lg shadow-black/40 font-sans flex flex-col max-h-[300px] animate-in fade-in zoom-in-95 duration-150 ${dropdownPosition === 'top' ? 'bottom-[calc(100%+8px)]' : 'top-[48px]'}`}
-                        >
-                            <div className="px-3 py-1.5 mb-0.5">
-                                <span className="text-[11.5px] font-medium text-[#8F8E8D]">
-                                    Skills
-                                </span>
-                            </div>
-                            <div
-                                className="flex flex-col overflow-y-auto px-0.5 pb-0.5"
-                                style={{ scrollbarWidth: 'none' }}
-                            >
-                                {filteredSkills.length > 0 ? (
-                                    filteredSkills.slice(0, 10).map((skill, idx) => (
-                                        <button
-                                            key={skill.id}
-                                            onMouseEnter={() => setSelectedIndex(idx)}
-                                            onClick={() => handleSelectSkill(skill)}
-                                            className={`flex items-start gap-3 px-3 py-1.5 rounded-xl transition-colors text-left w-full outline-none ${selectedIndex === idx ? 'bg-[#252525] dropdown-item-active' : 'hover:bg-[#252525]'}`}
-                                        >
-                                            <Puzzle
-                                                className={`w-4 h-4 mt-[2px] ${selectedIndex === idx ? 'text-[#EDEDEF]' : 'text-[#8F8E8D]'}`}
-                                            />
-                                            <div className="flex flex-col min-w-0 leading-tight gap-0.5">
-                                                <span className="text-[12.5px] font-medium text-[#EDEDEF] truncate">
-                                                    {skill.name}
-                                                </span>
-                                                <span className="text-[11.5px] text-[#8F8E8D] truncate">
-                                                    {skill.description}
-                                                </span>
-                                            </div>
-                                        </button>
-                                    ))
-                                ) : (
-                                    <div className="px-3 py-2 text-center text-[12.5px] text-[#8F8E8D]">
-                                        No skills found.
-                                    </div>
-                                )}
-                            </div>
                         </div>
                     )}
 

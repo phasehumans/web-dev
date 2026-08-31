@@ -11,7 +11,6 @@ describe('UI Performance and Routing Fixes', () => {
             expect(getViewForPath('/session/sess-12345')).toBe('project')
             expect(getViewForPath('/project/proj-67890')).toBe('project')
             expect(getViewForPath('/search')).toBe('search')
-            expect(getViewForPath('/canvas')).toBe('canvas')
             expect(getViewForPath('/')).toBe('chat')
         })
     })

@@ -143,8 +143,7 @@ input:-webkit-autofill:active {
     -webkit-text-fill-color: #ffffff !important;
     transition: background-color 5000s ease-in-out 0s;
 }
-body.feedback-modal-open .home-header-badge,
-body.feedback-modal-open .canvas-toolbar-container {
+body.feedback-modal-open .home-header-badge {
     opacity: 0 !important;
     pointer-events: none !important;
     visibility: hidden !important;

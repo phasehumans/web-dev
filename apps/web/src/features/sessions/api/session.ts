@@ -1,5 +1,3 @@
-import type { CanvasDocument } from '@/features/canvas/types'
-
 import { ApiError, apiFetch, apiRequest } from '@/shared/api/client'
 
 export type BackendSession = {
@@ -56,7 +54,7 @@ export type BackendSessionDetail = {
         | null
     chatMessages: BackendMessage[]
     generatedFiles: Record<string, string>
-    canvasState: CanvasDocument
+    canvasState?: unknown
 }
 
 export type SessionFilters = {

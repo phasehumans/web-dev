@@ -2,7 +2,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import React from 'react'
 
 import type { ViewState } from '@/app/types'
-import type { CanvasDocument } from '@/features/canvas/types'
 import type { Message } from '@/features/chat/types'
 import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/preview/types'
 
@@ -63,7 +62,6 @@ export const useChatController = (
         markGeneratedFileError,
         replaceGeneratedOutput,
         resetGeneratedOutput,
-        canvasState,
         isAuthenticated,
         setShowAuthModal,
         setShowOutOfCreditsModal,
@@ -138,12 +136,7 @@ export const useChatController = (
     )
 
     const startGeneration = React.useCallback(
-        (
-            prompt: string,
-            assistantMessageId: string,
-            projectId?: string | null,
-            nextCanvasState?: CanvasDocument
-        ) => {
+        (prompt: string, assistantMessageId: string, projectId?: string | null) => {
             abortGenerationRequest()
             resetGeneratedOutput()
             activeAssistantMessageIdRef.current = assistantMessageId
@@ -203,7 +196,6 @@ export const useChatController = (
                     await generationAPI.generateProjectStream({
                         prompt,
                         projectId,
-                        canvasState: nextCanvasState,
                         signal: abortController.signal,
                         onEvent: (event) => {
                             const activeMessageId = activeAssistantMessageIdRef.current
@@ -557,12 +549,11 @@ export const useChatController = (
                 }
 
                 setMessages([userMsg, assistantMsg])
-                startGeneration(normalizedPrompt, assistantMessageId, activeProjectId, canvasState)
+                startGeneration(normalizedPrompt, assistantMessageId, activeProjectId)
             })
         },
         [
             activeProjectId,
-            canvasState,
             startGeneration,
             view,
             requireAuthOr,
@@ -583,7 +574,6 @@ export const useChatController = (
             errorMessage,
             stack,
             visibleUserMessage,
-            canvasState,
         }: {
             kind: 'edit' | 'fix'
             prompt?: string
@@ -591,7 +581,6 @@ export const useChatController = (
             errorMessage?: string
             stack?: string | null
             visibleUserMessage: string
-            canvasState?: CanvasDocument
         }) => {
             if (!activeProjectId) {
                 return
@@ -826,7 +815,6 @@ export const useChatController = (
                                   versionId: activeProjectVersionId,
                                   prompt: prompt ?? '',
                                   ...(selectedElement ? { selectedElement } : {}),
-                                  ...(canvasState ? { canvasState } : {}),
                                   signal: abortController.signal,
                                   onEvent: handleStreamEvent,
                               })
@@ -852,64 +840,59 @@ export const useChatController = (
                         return
                     }
 
-                    const activeMessageId = activeAssistantMessageIdRef.current
                     const message =
-                        error instanceof Error
-                            ? error.message
-                            : 'Project update failed unexpectedly.'
-
-                    if (activeMessageId) {
-                        setAssistantError(activeMessageId, message)
-                    }
+                        error instanceof Error ? error.message : 'Failed to update project'
+                    setProjectLoadError(message)
+                    setAssistantError(assistantMessageId, message)
                 } finally {
-                    if (generationAbortControllerRef.current === abortController) {
-                        generationAbortControllerRef.current = null
-                        resetGenerationRefs()
+                    if (!abortController.signal.aborted) {
                         setIsGenerating(false)
+                        setGenerationPhase(null)
+                        setActiveOperation(null)
+                        setCurrentGenerationFilePaths([])
+                        activeAssistantMessageIdRef.current = null
                     }
                 }
             })()
         },
         [
+            abortGenerationRequest,
             activeProjectId,
             activeProjectVersionId,
-            abortGenerationRequest,
+            generationAbortControllerRef,
+            hydrateAppliedProjectChange,
+            queryClient,
+            replaceGeneratedOutput,
+            setAssistantError,
+            setAssistantStatus,
+            setAssistantStatusMessage,
+            setGenerationPhase,
+            setActiveOperation,
+            setIsGenerating,
+            setMessages,
+            setProjectLoadError,
+            setProjectType,
+            setCurrentGenerationFilePaths,
             appendAssistantChunk,
             appendThinkingChunk,
             appendStreamChunk,
-            addCompactionBlock,
-            addInterruptBlock,
             addToolCallBlock,
             appendToolCallOutput,
             updateToolCallResult,
-            setAssistantStatusMessage,
+            addFileChangeBlock,
+            addCompactionBlock,
+            addInterruptBlock,
+            startGeneratedFile,
             appendGeneratedFileChunk,
             completeGeneratedFile,
-            hydrateAppliedProjectChange,
             markGeneratedFileError,
-            queryClient,
-            resetGenerationRefs,
-            setAssistantError,
-            setAssistantAppliedFiles,
-            setAssistantStatus,
-            startGeneratedFile,
-            setProjectLoadError,
-            setMessages,
-            activeAssistantMessageIdRef,
-            setGenerationPhase,
-            setActiveOperation,
-            setCurrentGenerationFilePaths,
-            setIsGenerating,
-            setProjectType,
-            generationAbortControllerRef,
         ]
     )
 
     const handleOutputPromptSubmit = React.useCallback(
-        (prompt: string, selectedElement?: PreviewSelectedElement) => {
+        (promptText: string, selectedElement?: PreviewSelectedElement) => {
             requireAuthOr(() => {
-                const normalizedPrompt = prompt.trim()
-
+                const normalizedPrompt = promptText.trim()
                 if (!normalizedPrompt) {
                     return
                 }
@@ -925,14 +908,12 @@ export const useChatController = (
                     prompt: normalizedPrompt,
                     selectedElement,
                     visibleUserMessage: normalizedPrompt,
-                    canvasState,
                 })
             })
         },
         [
             activeProjectId,
             applyProjectChange,
-            canvasState,
             handlePromptSubmit,
             view,
             requireAuthOr,

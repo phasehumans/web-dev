@@ -1,81 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { Puzzle, KeyRound, Folder } from 'lucide-react'
+import { KeyRound, Folder } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 import { profileAPI } from '@/features/profile/api/profile'
 import { secretsAPI } from '@/features/profile/api/secrets'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { Icons } from '@/shared/components/ui/Icons'
-
-export const DEFAULT_SKILLS = [
-    {
-        id: 'frontend-design',
-        name: 'frontend-design',
-        description:
-            'Create distinctive, production-grade frontend interfaces with high design quality.',
-        repo: 'anthropics/skills',
-    },
-    {
-        id: 'react-best-practices',
-        name: 'react-best-practices',
-        description: 'Official React best practices for building modern React applications.',
-        repo: 'vercel-labs/agent-skills',
-    },
-    {
-        id: 'tdd',
-        name: 'tdd',
-        description: 'Test-Driven Development - write test first, watch fail, write code to pass.',
-        repo: 'mattpocock/skills',
-    },
-    {
-        id: 'improve-codebase-architecture',
-        name: 'improve-codebase-architecture',
-        description: 'Analyze and improve codebase architecture, decouple components.',
-        repo: 'mattpocock/skills',
-    },
-    {
-        id: 'systematic-debugging',
-        name: 'systematic-debugging',
-        description: 'Structured debugging: reproduce, minimize, hypothesize, instrument, fix.',
-        repo: 'obra/superpowers',
-    },
-    {
-        id: 'requesting-code-review',
-        name: 'requesting-code-review',
-        description: 'Dispatch a code reviewer subagent with precisely crafted context.',
-        repo: 'obra/superpowers',
-    },
-    {
-        id: 'receiving-code-review',
-        name: 'receiving-code-review',
-        description: 'Receive code review feedback with technical rigor and verification.',
-        repo: 'obra/superpowers',
-    },
-    {
-        id: 'diagnose',
-        name: 'diagnose',
-        description: 'Disciplined diagnosis loop for hard bugs and performance regressions.',
-        repo: 'mattpocock/skills',
-    },
-    {
-        id: 'webapp-testing',
-        name: 'webapp-testing',
-        description: 'Toolkit for testing local web apps using Playwright.',
-        repo: 'anthropics/skills',
-    },
-    {
-        id: 'verification-before-completion',
-        name: 'verification-before-completion',
-        description: 'Never claim work is complete without running verification.',
-        repo: 'obra/superpowers',
-    },
-    {
-        id: 'writing-plans',
-        name: 'writing-plans',
-        description: 'Write comprehensive implementation plans assuming zero codebase context.',
-        repo: 'obra/superpowers',
-    },
-]
 
 export const MENTION_PROVIDERS = [
     {
@@ -91,13 +21,6 @@ export const MENTION_PROVIDERS = [
         icon: Folder,
         title: 'Sessions',
         description: 'Your previous sessions',
-    },
-    {
-        id: 'skills',
-        trigger: 'skills:',
-        icon: Puzzle,
-        title: 'Skills',
-        description: 'Available skills from repos',
     },
     {
         id: 'secrets',
@@ -173,16 +96,11 @@ export const usePromptInputController = ({
     const isSessionsTriggered = !!sessionsMatch
     const sessionsSearchQuery = sessionsMatch ? sessionsMatch[1].toLowerCase() : ''
 
-    const skillsMatch = textBeforeCursor?.match(/@skills?:([^\s]*)$/)
-    const isSkillsTriggered = !!skillsMatch
-    const skillsSearchQuery = skillsMatch ? skillsMatch[1].toLowerCase() : ''
-
     const secretsMatch = textBeforeCursor?.match(/@secrets?:([^\s]*)$/)
     const isSecretsTriggered = !!secretsMatch
     const secretsSearchQuery = secretsMatch ? secretsMatch[1].toLowerCase() : ''
 
-    const isAnySubMenuTriggered =
-        isReposTriggered || isSessionsTriggered || isSkillsTriggered || isSecretsTriggered
+    const isAnySubMenuTriggered = isReposTriggered || isSessionsTriggered || isSecretsTriggered
 
     const atMatch = textBeforeCursor?.match(/@([a-zA-Z0-9_-]*)$/)
     const isAtTriggered = !!atMatch && !atMatch[0].includes(':') && !isAnySubMenuTriggered
@@ -243,13 +161,6 @@ export const usePromptInputController = ({
             (session.lastMessage || '').toLowerCase().includes(sessionsSearchQuery)
     )
 
-    const filteredSkills = DEFAULT_SKILLS.filter(
-        (skill) =>
-            skill.name.toLowerCase().includes(skillsSearchQuery) ||
-            skill.description.toLowerCase().includes(skillsSearchQuery) ||
-            (skill.repo && skill.repo.toLowerCase().includes(skillsSearchQuery))
-    )
-
     const { data: secretsData, isLoading: isSecretsLoading } = useQuery({
         queryKey: ['secrets', 'mention'],
         queryFn: secretsAPI.getSecrets,
@@ -267,12 +178,10 @@ export const usePromptInputController = ({
         atSearchQuery,
         repoSearchQuery,
         sessionsSearchQuery,
-        skillsSearchQuery,
         secretsSearchQuery,
         isAtTriggered,
         isReposTriggered,
         isSessionsTriggered,
-        isSkillsTriggered,
         isSecretsTriggered,
     ])
 
@@ -292,11 +201,7 @@ export const usePromptInputController = ({
 
     useEffect(() => {
         const isAnyDropdownOpen =
-            isAtTriggered ||
-            isReposTriggered ||
-            isSessionsTriggered ||
-            isSkillsTriggered ||
-            isSecretsTriggered
+            isAtTriggered || isReposTriggered || isSessionsTriggered || isSecretsTriggered
         if (isAnyDropdownOpen && textareaRef.current) {
             const rect = textareaRef.current.getBoundingClientRect()
             const spaceBelow = window.innerHeight - rect.bottom
@@ -306,13 +211,7 @@ export const usePromptInputController = ({
                 setDropdownPosition('bottom')
             }
         }
-    }, [
-        isAtTriggered,
-        isReposTriggered,
-        isSessionsTriggered,
-        isSkillsTriggered,
-        isSecretsTriggered,
-    ])
+    }, [isAtTriggered, isReposTriggered, isSessionsTriggered, isSecretsTriggered])
 
     useEffect(() => {
         if (dropdownRef.current) {
@@ -343,7 +242,6 @@ export const usePromptInputController = ({
             if (
                 (input?.endsWith('@repos:') ||
                     input?.endsWith('@sessions:') ||
-                    input?.endsWith('@skills:') ||
                     input?.endsWith('@secrets:')) &&
                 document.activeElement !== textareaRef.current
             ) {
@@ -367,12 +265,6 @@ export const usePromptInputController = ({
     const handleSelectSession = (session: any) => {
         const title = session.title || session.id
         const newValue = (input || '').replace(/@sessions?:[^\s]*$/, `@session:${title} `)
-        handleInputChange(newValue)
-        textareaRef.current?.focus()
-    }
-
-    const handleSelectSkill = (skill: any) => {
-        const newValue = (input || '').replace(/@skills?:[^\s]*$/, `@skill:${skill.name} `)
         handleInputChange(newValue)
         textareaRef.current?.focus()
     }
@@ -404,23 +296,17 @@ export const usePromptInputController = ({
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
         const isDropdownOpen =
-            isAtTriggered ||
-            isReposTriggered ||
-            isSessionsTriggered ||
-            isSkillsTriggered ||
-            isSecretsTriggered
+            isAtTriggered || isReposTriggered || isSessionsTriggered || isSecretsTriggered
 
         const currentOptionsCount = isReposTriggered
             ? Math.min(filteredRepos.length, 10)
             : isSessionsTriggered
               ? Math.min(filteredSessions.length, 10)
-              : isSkillsTriggered
-                ? Math.min(filteredSkills.length, 10)
-                : isSecretsTriggered
-                  ? Math.min(filteredSecrets.length, 10)
-                  : isAtTriggered
-                    ? filteredProviders.length
-                    : 0
+              : isSecretsTriggered
+                ? Math.min(filteredSecrets.length, 10)
+                : isAtTriggered
+                  ? filteredProviders.length
+                  : 0
 
         if (isDropdownOpen && currentOptionsCount > 0 && !forceClose) {
             if (event.key === 'ArrowDown') {
@@ -441,9 +327,6 @@ export const usePromptInputController = ({
                 } else if (isSessionsTriggered) {
                     const session = filteredSessions[selectedIndex]
                     if (session) handleSelectSession(session)
-                } else if (isSkillsTriggered) {
-                    const skill = filteredSkills[selectedIndex]
-                    if (skill) handleSelectSkill(skill)
                 } else if (isSecretsTriggered) {
                     const secret = filteredSecrets[selectedIndex]
                     if (secret) handleSelectSecret(secret)
@@ -505,12 +388,10 @@ export const usePromptInputController = ({
         isAtTriggered,
         isReposTriggered,
         isSessionsTriggered,
-        isSkillsTriggered,
         isSecretsTriggered,
         filteredProviders,
         filteredRepos,
         filteredSessions,
-        filteredSkills,
         filteredSecrets,
         isGithubConnected,
         isReposLoading,
@@ -519,7 +400,6 @@ export const usePromptInputController = ({
         githubConnectUrl,
         handleSelectRepo,
         handleSelectSession,
-        handleSelectSkill,
         handleSelectSecret,
         handleInputChange,
         handleSelect,

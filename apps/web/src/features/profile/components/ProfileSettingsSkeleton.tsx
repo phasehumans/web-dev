@@ -128,29 +128,6 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
         )
     }
 
-    if (activeTab === 'Skills') {
-        return (
-            <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150 gap-6">
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between mb-1">
-                        <Skeleton className="h-4 w-24 bg-white/[0.05] rounded" />
-                        <Skeleton className="h-7 w-24 rounded-lg bg-white/[0.03]" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        {[1, 2, 3, 4].map((i) => (
-                            <SettingRowSkeleton
-                                key={i}
-                                titleWidth="w-36"
-                                descWidth="w-72"
-                                actionType="badge"
-                            />
-                        ))}
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     if (activeTab === 'Secrets') {
         return (
             <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150 gap-6">
