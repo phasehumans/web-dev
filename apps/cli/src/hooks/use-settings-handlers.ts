@@ -20,6 +20,7 @@ export function useSettingsHandlers() {
         settingsAuthPriority,
         setSettingsAuthPriority,
         setAuthMethod,
+        setActiveModel,
         agent,
         addToast,
     } = useCliStore()
@@ -103,6 +104,7 @@ export function useSettingsHandlers() {
                     await saveConfig(config)
 
                     agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+                    setActiveModel(targetModel)
                     const { useCliStore } = await import('../store')
                     useCliStore.getState().setSelectedProvider(newProviderConfig.provider)
                     setAuthMethod(newProviderConfig.authMethod)

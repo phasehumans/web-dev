@@ -84,4 +84,31 @@ describe('InputBar Component (Unit)', () => {
         expect(frame).not.toContain('gemini-3.6-flash')
         expect(frame).not.toContain('? for shortcuts')
     })
+
+    it('renders updated model name immediately when activeModel prop changes', () => {
+        const handleSubmit = mock(() => {})
+        const { lastFrame, rerender } = render(
+            <RootLayout>
+                <InputBar
+                    onSubmit={handleSubmit}
+                    placeholder="Ask December to build..."
+                    activeModel="claude-opus-5"
+                />
+            </RootLayout>
+        )
+        expect(lastFrame()).toContain('claude-opus-5')
+
+        // Change model instantly to gpt-5.6-sol
+        rerender(
+            <RootLayout>
+                <InputBar
+                    onSubmit={handleSubmit}
+                    placeholder="Ask December to build..."
+                    activeModel="gpt-5.6-sol"
+                />
+            </RootLayout>
+        )
+        expect(lastFrame()).toContain('gpt-5.6-sol')
+        expect(lastFrame()).not.toContain('claude-opus-5')
+    })
 })

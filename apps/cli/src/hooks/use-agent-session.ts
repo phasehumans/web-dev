@@ -73,6 +73,8 @@ export function useAgentSession({
         setLogoutItems,
         selectedProvider,
         setSelectedProvider,
+        activeModel,
+        setActiveModel,
         apiKey,
         setApiKey,
         authError,
@@ -1595,5 +1597,7 @@ export function useAgentSession({
         handleAddMcpServer,
         handleRemoveMcpServer,
         handleTestMcpServer,
+        activeModel,
+        setActiveModel,
     }
 }

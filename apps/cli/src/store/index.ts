@@ -29,6 +29,8 @@ export interface CliState {
     setLogoutItems: (items: { label: string; value: string }[]) => void
     selectedProvider: string
     setSelectedProvider: (provider: string) => void
+    activeModel: string
+    setActiveModel: (model: string) => void
     apiKey: string
     setApiKey: (key: string) => void
     authError: string | null
@@ -167,6 +169,8 @@ export const useCliStore = create<CliState>((set) => ({
     setLogoutItems: (logoutItems) => set({ logoutItems }),
     selectedProvider: '',
     setSelectedProvider: (selectedProvider) => set({ selectedProvider }),
+    activeModel: '',
+    setActiveModel: (activeModel) => set({ activeModel }),
     apiKey: '',
     setApiKey: (apiKey) => set({ apiKey }),
     authError: null,

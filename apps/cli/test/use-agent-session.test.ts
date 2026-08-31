@@ -107,4 +107,18 @@ describe('useCliStore activeMessages handling', () => {
         expect(typeof tui.writeToClipboard).toBe('function')
         expect(typeof tui.createWorkspaceArchive).toBe('function')
     })
+
+    it('updates activeModel in useCliStore instantly and reacts to provider changes', () => {
+        const store = useCliStore.getState()
+        expect(store.activeModel).toBeDefined()
+
+        store.setActiveModel('claude-opus-5')
+        expect(useCliStore.getState().activeModel).toBe('claude-opus-5')
+
+        store.setActiveModel('gpt-5.6-sol')
+        expect(useCliStore.getState().activeModel).toBe('gpt-5.6-sol')
+
+        store.setActiveModel('gemini-3.7-flash')
+        expect(useCliStore.getState().activeModel).toBe('gemini-3.7-flash')
+    })
 })

@@ -217,6 +217,7 @@ async function main() {
         { localOperations, setActiveScopeDir },
         { instantiateProvider },
         { ensureValidModelForProvider },
+        { useCliStore },
     ] = await Promise.all([
         import('@december/agent'),
         import('@december/providers'),
@@ -231,6 +232,7 @@ async function main() {
         import('./local-operations'),
         import('./utils/provider-factory'),
         import('./utils/models'),
+        import('./store'),
     ])
 
     if (parsedArgs.scope) {
@@ -265,6 +267,9 @@ async function main() {
         parsedArgs.model ||
         providerConfig?.model ||
         ensureValidModelForProvider(activeProvider, config.activeModel)
+
+    useCliStore.getState().setActiveModel(initialModel)
+    useCliStore.getState().setSelectedProvider(activeProvider)
 
     const harness = new AgentHarness({
         llm: llm,

@@ -25,6 +25,7 @@ export function useAuthHandlers(
         setAuthMode,
         selectedProvider,
         setSelectedProvider,
+        setActiveModel,
         setApiKey,
         activeMessages,
         setActiveMessages,
@@ -58,7 +59,7 @@ export function useAuthHandlers(
                     {
                         id: codeMsgId,
                         role: 'assistant',
-                        blocks: [{ type: 'text', content: `\nGenerating device code...` }],
+                        blocks: [{ type: 'text', content: 'Generating December login code...' }],
                     },
                 ])
 
@@ -105,6 +106,7 @@ export function useAuthHandlers(
                     config.activeModel = activeModel
                     await saveConfig(config)
                     agent.modelOptions = { ...agent.modelOptions, model: activeModel }
+                    setActiveModel(activeModel)
                     setSelectedProvider(providerConfig.provider)
                     setIsAuthenticated(true)
                     setAuthMethod(providerConfig.authMethod)
@@ -157,6 +159,7 @@ export function useAuthHandlers(
         if (agent) {
             agent.modelOptions = { ...agent.modelOptions, model: item.value }
         }
+        setActiveModel(item.value)
         setAuthMode('none')
         addToast(`Model changed to ${item.value}`, 'success')
     }
@@ -174,6 +177,7 @@ export function useAuthHandlers(
             agent.setLLM(llm)
             agent.modelOptions = { ...agent.modelOptions, model: targetModel }
         }
+        setActiveModel(targetModel)
 
         const { getAuthStatus, getProviderConfig } = await import('../config')
         const authStatus = await getAuthStatus()
@@ -225,6 +229,7 @@ export function useAuthHandlers(
                 agent.setLLM(llm)
                 agent.modelOptions = { ...agent.modelOptions, model: targetModel }
             }
+            setActiveModel(targetModel)
 
             const { getAuthStatus, getProviderConfig } = await import('../config')
             const authStatus = await getAuthStatus()
@@ -331,6 +336,7 @@ export function useAuthHandlers(
                 agent.setLLM(testProvider)
                 agent.modelOptions = { ...agent.modelOptions, model: finalModel }
             }
+            setActiveModel(finalModel)
             setIsAuthenticated(true)
             setSelectedProvider(selectedProvider)
 
@@ -383,6 +389,7 @@ export function useAuthHandlers(
                     agent.setLLM(testProvider)
                     agent.modelOptions = { ...agent.modelOptions, model: finalModel }
                 }
+                setActiveModel(finalModel)
                 setIsAuthenticated(true)
                 setSelectedProvider(selectedProvider)
 
@@ -504,9 +511,11 @@ export function useAuthHandlers(
             config.activeModel = providerConfig.model
             await saveConfig(config)
             agent.modelOptions = { ...agent.modelOptions, model: providerConfig.model }
+            setActiveModel(providerConfig.model)
             setSelectedProvider(providerConfig.provider)
             setAuthMethod(providerConfig.authMethod)
         } else {
+            setActiveModel('')
             setSelectedProvider(undefined)
             setAuthMethod(undefined)
         }

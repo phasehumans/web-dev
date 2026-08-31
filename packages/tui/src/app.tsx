@@ -171,7 +171,9 @@ export function ChatApp({
                         .catch(console.error)
                 }}
                 placeholder="Ask December to build..."
-                activeModel={agent.modelOptions?.model || 'gemini-3.6-flash'}
+                activeModel={
+                    session.activeModel || agent?.modelOptions?.model || 'gemini-3.7-flash'
+                }
                 contextTokens={totalTokens}
                 authMethod={session.authMethod}
                 hasBothAuth={session.hasBothAuth}
