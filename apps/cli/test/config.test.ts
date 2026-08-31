@@ -102,7 +102,7 @@ describe('config', () => {
                     authPriority: 'december',
                     decemberToken: 'dec-token',
                     activeProvider: 'openai',
-                    activeModel: 'claude-3-7-sonnet-latest',
+                    activeModel: 'claude-sonnet-5',
                     providers: { openai: 'sk-test' },
                 })
             })
@@ -111,12 +111,12 @@ describe('config', () => {
             expect(providerConfig).toEqual({
                 provider: 'december_proxy',
                 apiKey: 'dec-token',
-                model: 'claude-3-7-sonnet-latest',
+                model: 'claude-sonnet-5',
                 authMethod: 'december',
             })
         })
 
-        test('falls back to byok if authPriority is byok', async () => {
+        test('falls back to byok if authPriority is byok and auto-switches model to recommended', async () => {
             mockReadFile.mockImplementation(async (filePath: string) => {
                 if (filePath.includes('settings.json')) throw new Error('No workspace config')
                 return JSON.stringify({
@@ -131,7 +131,45 @@ describe('config', () => {
             expect(providerConfig).toEqual({
                 provider: 'openai',
                 apiKey: 'sk-test',
-                model: undefined,
+                model: 'gpt-5.6-sol',
+                authMethod: 'byok',
+            })
+        })
+
+        test('auto-switches to provider recommended model if activeModel belongs to a different provider', async () => {
+            mockReadFile.mockImplementation(async (filePath: string) => {
+                if (filePath.includes('settings.json')) throw new Error('No workspace config')
+                return JSON.stringify({
+                    activeProvider: 'anthropic',
+                    activeModel: 'gpt-5.6-sol',
+                    providers: { anthropic: 'sk-ant-test' },
+                })
+            })
+
+            const providerConfig = await getProviderConfig()
+            expect(providerConfig).toEqual({
+                provider: 'anthropic',
+                apiKey: 'sk-ant-test',
+                model: 'claude-opus-5',
+                authMethod: 'byok',
+            })
+        })
+
+        test('preserves valid provider model if it matches active provider', async () => {
+            mockReadFile.mockImplementation(async (filePath: string) => {
+                if (filePath.includes('settings.json')) throw new Error('No workspace config')
+                return JSON.stringify({
+                    activeProvider: 'openai',
+                    activeModel: 'gpt-4o',
+                    providers: { openai: 'sk-test' },
+                })
+            })
+
+            const providerConfig = await getProviderConfig()
+            expect(providerConfig).toEqual({
+                provider: 'openai',
+                apiKey: 'sk-test',
+                model: 'gpt-4o',
                 authMethod: 'byok',
             })
         })
@@ -152,7 +190,7 @@ describe('config', () => {
                 if (filePath.includes('settings.json')) throw new Error('No workspace config')
                 return JSON.stringify({
                     decemberToken: 'dec-token',
-                    activeModel: 'gemini-3.6-flash',
+                    activeModel: 'gemini-3.7-flash',
                     providers: {},
                 })
             })
@@ -161,7 +199,7 @@ describe('config', () => {
             expect(providerConfig).toEqual({
                 provider: 'december_proxy',
                 apiKey: 'dec-token',
-                model: 'gemini-3.6-flash',
+                model: 'gemini-3.7-flash',
                 authMethod: 'december',
             })
         })

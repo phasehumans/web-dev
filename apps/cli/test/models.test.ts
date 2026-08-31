@@ -6,6 +6,7 @@ import {
     getModelContextWindow,
     isValidModelForProvider,
     getDefaultModelForProvider,
+    ensureValidModelForProvider,
 } from '../src/utils/models'
 
 describe('models utils', () => {
@@ -87,6 +88,33 @@ describe('models utils', () => {
             expect(getDefaultModelForProvider('anthropic')).toBe('claude-opus-5')
             expect(getDefaultModelForProvider('openai')).toBe('gpt-5.6-sol')
             expect(getDefaultModelForProvider('december_proxy')).toBe('gemini-3.7-flash')
+        })
+    })
+
+    describe('ensureValidModelForProvider', () => {
+        it('preserves valid model for the target provider', () => {
+            expect(ensureValidModelForProvider('anthropic', 'claude-sonnet-5')).toBe(
+                'claude-sonnet-5'
+            )
+            expect(ensureValidModelForProvider('openai', 'gpt-4o')).toBe('gpt-4o')
+            expect(ensureValidModelForProvider('december_proxy', 'gemini-3.7-flash')).toBe(
+                'gemini-3.7-flash'
+            )
+        })
+
+        it('auto-switches to provider recommended model if current model is invalid for provider', () => {
+            expect(ensureValidModelForProvider('anthropic', 'gpt-4o')).toBe('claude-opus-5')
+            expect(ensureValidModelForProvider('openai', 'claude-sonnet-5')).toBe('gpt-5.6-sol')
+            expect(ensureValidModelForProvider('google', 'gpt-5.6-sol')).toBe('gemini-3.7-flash')
+            expect(ensureValidModelForProvider('deepseek', 'gemini-3.7-flash')).toBe(
+                'deepseek-v4-pro'
+            )
+        })
+
+        it('auto-switches to provider recommended model if current model is undefined', () => {
+            expect(ensureValidModelForProvider('anthropic')).toBe('claude-opus-5')
+            expect(ensureValidModelForProvider('openai', undefined)).toBe('gpt-5.6-sol')
+            expect(ensureValidModelForProvider('ollama', undefined)).toBe('qwen2.5-coder:7b')
         })
     })
 

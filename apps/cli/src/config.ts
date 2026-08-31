@@ -1,6 +1,9 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+
+import { ensureValidModelForProvider } from './utils/models'
+
 export interface ProviderConfig {
     provider:
         | 'openai'
@@ -159,30 +162,33 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
 
     // if preferred is december and it exists, use it first
     if (config.authPriority === 'december' && hasDecember) {
+        const model = ensureValidModelForProvider('december_proxy', config.activeModel)
         return {
             provider: 'december_proxy',
             apiKey: config.decemberToken!,
-            model: config.activeModel,
+            model,
             authMethod: 'december',
         }
     }
 
     // wallet vs byok priority: byok via config file takes precedence.
     if (hasByokConfig) {
+        const model = ensureValidModelForProvider(config.activeProvider!, config.activeModel)
         return {
             provider: config.activeProvider as any,
             apiKey: config.providers[config.activeProvider!],
-            model: config.activeModel,
+            model,
             authMethod: 'byok',
         }
     }
 
     // wallet fallback
     if (hasDecember) {
+        const model = ensureValidModelForProvider('december_proxy', config.activeModel)
         return {
             provider: 'december_proxy',
             apiKey: config.decemberToken!,
-            model: config.activeModel,
+            model,
             authMethod: 'december',
         }
     }

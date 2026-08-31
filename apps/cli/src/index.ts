@@ -120,6 +120,7 @@ async function main() {
             { runHeadlessTask },
             { localOperations, setActiveScopeDir },
             { instantiateProvider },
+            { ensureValidModelForProvider },
         ] = await Promise.all([
             import('@december/agent'),
             import('@december/providers'),
@@ -129,6 +130,7 @@ async function main() {
             import('./headless-runner'),
             import('./local-operations'),
             import('./utils/provider-factory'),
+            import('./utils/models'),
         ])
 
         if (parsedArgs.scope) {
@@ -146,6 +148,11 @@ async function main() {
         const sessionRepository = new FileSessionRepository()
         const sessionId = parsedArgs.sessionId || `session-${Date.now()}`
         const config = await loadConfig()
+        const activeProvider = providerConfig?.provider || config.activeProvider || 'gemini'
+        const initialModel =
+            parsedArgs.model ||
+            providerConfig?.model ||
+            ensureValidModelForProvider(activeProvider, config.activeModel)
 
         const harness = new AgentHarness({
             llm: llm,
@@ -165,11 +172,7 @@ async function main() {
             ],
             operations: localOperations,
             modelOptions: {
-                model:
-                    parsedArgs.model ||
-                    providerConfig?.model ||
-                    config.activeModel ||
-                    'gemini-3.6-flash',
+                model: initialModel,
                 thinkingLevel: config.thinkingLevel || 'auto',
             },
             sessionRepository,
@@ -213,6 +216,7 @@ async function main() {
         { useAgentSession },
         { localOperations, setActiveScopeDir },
         { instantiateProvider },
+        { ensureValidModelForProvider },
     ] = await Promise.all([
         import('@december/agent'),
         import('@december/providers'),
@@ -226,6 +230,7 @@ async function main() {
         import('./hooks/use-agent-session'),
         import('./local-operations'),
         import('./utils/provider-factory'),
+        import('./utils/models'),
     ])
 
     if (parsedArgs.scope) {
@@ -255,6 +260,11 @@ async function main() {
     const sessionRepository = new FileSessionRepository()
     const sessionId = parsedArgs.sessionId || `session-${Date.now()}`
     const config = await loadConfig()
+    const activeProvider = providerConfig?.provider || config.activeProvider || 'gemini'
+    const initialModel =
+        parsedArgs.model ||
+        providerConfig?.model ||
+        ensureValidModelForProvider(activeProvider, config.activeModel)
 
     const harness = new AgentHarness({
         llm: llm,
@@ -274,11 +284,7 @@ async function main() {
         ],
         operations: localOperations,
         modelOptions: {
-            model:
-                parsedArgs.model ||
-                providerConfig?.model ||
-                config.activeModel ||
-                'gemini-3.6-flash',
+            model: initialModel,
             thinkingLevel: config.thinkingLevel || 'auto',
         },
         sessionRepository,

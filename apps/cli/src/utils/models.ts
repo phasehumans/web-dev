@@ -373,7 +373,14 @@ export const getDefaultModelForProvider = (provider: string): string => {
     if (models && models.length > 0 && models[0].value !== 'default') {
         return models[0].value
     }
-    return 'gemini-3.6-flash'
+    return 'gemini-3.7-flash'
+}
+
+export const ensureValidModelForProvider = (provider: string, model?: string): string => {
+    if (model && isValidModelForProvider(provider, model)) {
+        return model
+    }
+    return getDefaultModelForProvider(provider)
 }
 
 export { getModelContextWindow }

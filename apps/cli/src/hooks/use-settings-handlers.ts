@@ -98,14 +98,9 @@ export function useSettingsHandlers() {
                     )
                     agent.setLLM(llm)
 
-                    const { isValidModelForProvider, getDefaultModelForProvider } =
-                        await import('../utils/models')
-                    let targetModel = newProviderConfig.model || config.activeModel
-                    if (!isValidModelForProvider(newProviderConfig.provider, targetModel)) {
-                        targetModel = getDefaultModelForProvider(newProviderConfig.provider)
-                        config.activeModel = targetModel
-                        await saveConfig(config)
-                    }
+                    const targetModel = newProviderConfig.model
+                    config.activeModel = targetModel
+                    await saveConfig(config)
 
                     agent.modelOptions = { ...agent.modelOptions, model: targetModel }
                     const { useCliStore } = await import('../store')

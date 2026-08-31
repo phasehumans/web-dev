@@ -101,8 +101,9 @@ export function useAuthHandlers(
                         providerConfig.apiKey
                     )
                     agent.setLLM(provider)
-                    const activeModel =
-                        providerConfig.model || config.activeModel || 'gemini-3.6-flash'
+                    const activeModel = providerConfig.model
+                    config.activeModel = activeModel
+                    await saveConfig(config)
                     agent.modelOptions = { ...agent.modelOptions, model: activeModel }
                     setSelectedProvider(providerConfig.provider)
                     setIsAuthenticated(true)
@@ -214,13 +215,9 @@ export function useAuthHandlers(
             const key = config.providers[item.value]
             config.activeProvider = item.value
 
-            const { isValidModelForProvider, getDefaultModelForProvider } =
-                await import('../utils/models')
-            let targetModel = config.activeModel
-            if (!isValidModelForProvider(item.value, targetModel)) {
-                targetModel = getDefaultModelForProvider(item.value)
-                config.activeModel = targetModel
-            }
+            const { getDefaultModelForProvider } = await import('../utils/models')
+            const targetModel = getDefaultModelForProvider(item.value)
+            config.activeModel = targetModel
             await saveConfig(config)
 
             const llm = instantiateProvider(item.value, key)
@@ -321,15 +318,18 @@ export function useAuthHandlers(
                 throw lastProbeErr
             }
 
+            const { getDefaultModelForProvider } = await import('../utils/models')
+            const finalModel = testModel || getDefaultModelForProvider(selectedProvider)
+
             const config = await loadConfig()
             config.providers[selectedProvider] = trimmedKey
             config.activeProvider = selectedProvider
-            config.activeModel = testModel
+            config.activeModel = finalModel
             await saveConfig(config)
 
             if (agent) {
                 agent.setLLM(testProvider)
-                agent.modelOptions = { ...agent.modelOptions, model: testModel }
+                agent.modelOptions = { ...agent.modelOptions, model: finalModel }
             }
             setIsAuthenticated(true)
             setSelectedProvider(selectedProvider)
@@ -370,15 +370,18 @@ export function useAuthHandlers(
                 errStr.includes('no available channel') ||
                 isLowCredit
             ) {
+                const { getDefaultModelForProvider } = await import('../utils/models')
+                const finalModel = testModel || getDefaultModelForProvider(selectedProvider)
+
                 const config = await loadConfig()
                 config.providers[selectedProvider] = trimmedKey
                 config.activeProvider = selectedProvider
-                config.activeModel = testModel
+                config.activeModel = finalModel
                 await saveConfig(config)
 
                 if (agent) {
                     agent.setLLM(testProvider)
-                    agent.modelOptions = { ...agent.modelOptions, model: testModel }
+                    agent.modelOptions = { ...agent.modelOptions, model: finalModel }
                 }
                 setIsAuthenticated(true)
                 setSelectedProvider(selectedProvider)
@@ -498,8 +501,13 @@ export function useAuthHandlers(
         if (providerConfig && agent) {
             const llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
             agent.setLLM(llm)
+            config.activeModel = providerConfig.model
+            await saveConfig(config)
+            agent.modelOptions = { ...agent.modelOptions, model: providerConfig.model }
+            setSelectedProvider(providerConfig.provider)
             setAuthMethod(providerConfig.authMethod)
         } else {
+            setSelectedProvider(undefined)
             setAuthMethod(undefined)
         }
 
