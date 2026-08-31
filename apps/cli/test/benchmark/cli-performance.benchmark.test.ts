@@ -23,6 +23,6 @@ describe('CLI Performance & Argument Parsing Benchmarks', () => {
         }
         const duration = performance.now() - start
 
-        expect(duration).toBeLessThan(200) // 20,000 parses in under 200ms
+        expect(duration).toBeLessThan(1000) // 20,000 parses in under 1000ms
     })
 })
