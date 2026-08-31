@@ -47,11 +47,6 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
                             descWidth="w-80"
                             actionType="button"
                         />
-                        <SettingRowSkeleton
-                            titleWidth="w-40"
-                            descWidth="w-64"
-                            actionType="toggle"
-                        />
                     </div>
                 </div>
 
@@ -237,6 +232,7 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
                     <SettingRowSkeleton titleWidth="w-28" descWidth="w-48" actionType="button" />
                     <SettingRowSkeleton titleWidth="w-32" descWidth="w-40" actionType="button" />
                     <SettingRowSkeleton titleWidth="w-24" descWidth="w-56" actionType="none" />
+                    <SettingRowSkeleton titleWidth="w-28" descWidth="w-36" actionType="button" />
                 </div>
             </div>
 
@@ -245,6 +241,7 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
                 <div className="flex flex-col gap-1">
                     <SettingRowSkeleton titleWidth="w-40" descWidth="w-64" actionType="toggle" />
                     <SettingRowSkeleton titleWidth="w-36" descWidth="w-52" actionType="toggle" />
+                    <SettingRowSkeleton titleWidth="w-32" descWidth="w-48" actionType="toggle" />
                 </div>
             </div>
 
@@ -253,6 +250,7 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
                 <div className="flex flex-col gap-1">
                     <SettingRowSkeleton titleWidth="w-36" descWidth="w-60" actionType="button" />
                     <SettingRowSkeleton titleWidth="w-32" descWidth="w-52" actionType="button" />
+                    <SettingRowSkeleton titleWidth="w-28" descWidth="w-44" actionType="button" />
                 </div>
             </div>
         </div>

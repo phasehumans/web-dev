@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import RedisStore from 'rate-limit-redis'
 
 import { redisClient } from '../config/redis'
+import { env } from '../env'
 import { extractToken } from '../modules/auth/auth.utils'
 
 export interface RateLimiterOptions {
@@ -50,7 +51,7 @@ export const createRateLimiter = (options: RateLimiterOptions = {}) => {
                         return `user:${decoded.userId}`
                     }
                 } catch {
-                    // Invalid format - fall through to API key / IP keying
+                    // Intentionally swallowed: invalid token format fallback to IP
                 }
             }
 
@@ -80,10 +81,10 @@ export const createRateLimiter = (options: RateLimiterOptions = {}) => {
     })
 }
 
-// Global baseline rate limiter (500 req / 15 min)
+// Global baseline rate limiter (1000 req / 15 min in prod, 5000 in dev)
 export const globalRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
-    limit: 500,
+    limit: env.NODE_ENV === 'development' ? 5000 : 1000,
     message: 'Global API rate limit exceeded',
     prefix: 'rl:global:',
 })
@@ -91,14 +92,14 @@ export const globalRateLimiter = createRateLimiter({
 // Strict rate limiters for specific sensitive modules
 export const authRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
-    limit: 20,
+    limit: env.NODE_ENV === 'development' ? 100 : 30,
     message: 'Too many authentication attempts, please try again after 15 minutes',
     prefix: 'rl:auth:',
 })
 
 export const refreshRateLimiter = createRateLimiter({
     windowMs: 15 * 60 * 1000,
-    limit: 100,
+    limit: env.NODE_ENV === 'development' ? 500 : 150,
     message: 'Too many session refresh requests, please try again later',
     prefix: 'rl:refresh:',
 })

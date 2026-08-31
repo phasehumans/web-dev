@@ -10,6 +10,7 @@ import { previewAPI } from '@/features/preview/api'
 import { profileAPI } from '@/features/profile/api/profile'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { useSessionController } from '@/features/sessions/hooks/useSessionController'
+import { ApiError } from '@/shared/api/client'
 
 export const useAppController = () => {
     const queryClient = useQueryClient()
@@ -54,8 +55,26 @@ export const useAppController = () => {
                 setIsAuthenticated(true)
                 queryClient.invalidateQueries({ queryKey: ['sessions'] })
                 queryClient.invalidateQueries({ queryKey: ['profile'] })
-            } catch {
-                // Intentionally swallowed: unauthenticated visitor on initial session restore
+            } catch (error: any) {
+                // If 401 Unauthorized, visitor has no session or is unauthenticated
+                if (error instanceof ApiError && error.status === 401) {
+                    return
+                }
+
+                // If transient 429 rate limit or network/server error occurs on refresh, retry once after backoff
+                if (!isMounted) return
+                try {
+                    await new Promise((resolve) => setTimeout(resolve, 1500))
+                    if (!isMounted) return
+                    await profileAPI.getQuickInfo()
+                    if (!isMounted) return
+
+                    setIsAuthenticated(true)
+                    queryClient.invalidateQueries({ queryKey: ['sessions'] })
+                    queryClient.invalidateQueries({ queryKey: ['profile'] })
+                } catch {
+                    // Intentionally swallowed: unauthenticated visitor or persistent error
+                }
             }
         }
 

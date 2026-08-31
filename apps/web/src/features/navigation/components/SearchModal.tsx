@@ -146,15 +146,15 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 },
             },
             {
-                id: 'go-connectors',
-                label: 'Connectors',
-                subtitle: 'Ecosystem / Connectors',
-                category: 'Navigation',
-                icon: <Icons.Connectors className="w-4 h-4 text-neutral-400" />,
+                id: 'go-settings-connections',
+                label: 'Connections',
+                subtitle: 'Settings / Connections',
+                category: 'Settings Subpages',
+                icon: <Icons.Connections className="w-4 h-4 text-neutral-400" />,
                 keywords: [
-                    'connectors',
-                    'integrations',
                     'connections',
+                    'integrations',
+                    'connectors',
                     'github',
                     'vercel',
                     'supabase',
@@ -166,7 +166,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 ],
                 action: () => {
                     onClose()
-                    navigate('/connectors')
+                    navigate('/settings/connections')
                 },
             },
             {

@@ -2,10 +2,10 @@ import React from 'react'
 
 import { type SortOption } from './SessionList'
 import { SessionListRow } from './SessionListRow'
+import { SessionListSkeleton } from './SessionListSkeleton'
 
 import { ErrorAlert } from '@/shared/components/ui/ErrorAlert'
 import { Icons } from '@/shared/components/ui/Icons'
-import { Skeleton } from '@/shared/components/ui/Skeleton'
 
 interface SessionListViewProps {
     projects: any[]
@@ -23,6 +23,7 @@ interface SessionListViewProps {
     onToggleStarFromMenu: (project: any, event: React.MouseEvent) => void
     onToggleArchiveFromMenu: (project: any, event: React.MouseEvent) => void
     onOpenRename: (project: any, event: React.MouseEvent) => void
+    onOpenDuplicate: (project: any, event: React.MouseEvent) => void
     onOpenDelete: (project: any, event: React.MouseEvent) => void
     onOpenTags: (project: any, event: React.MouseEvent) => void
     onOpenInsights: (project: any, event: React.MouseEvent) => void
@@ -31,54 +32,6 @@ interface SessionListViewProps {
     sortOption: SortOption
     onSortChange: (option: SortOption) => void
     hasUnfilteredProjects: boolean
-}
-
-const SessionListAreaSkeleton: React.FC = () => {
-    return (
-        <div className="min-h-[420px] flex flex-col gap-2 pb-4">
-            {Array.from({ length: 6 }).map((_, index) => (
-                <React.Fragment key={`session-list-skeleton-${index}`}>
-                    {/* Mobile skeleton card (< md): borderless, subtle muted background */}
-                    <div className="md:hidden flex flex-col p-3 bg-white/[0.02] rounded-xl gap-2">
-                        <div className="flex items-center justify-between">
-                            <Skeleton className="h-4 w-[55%] bg-white/[0.05] rounded" />
-                            <Skeleton className="h-3.5 w-12 bg-white/[0.03] rounded" />
-                        </div>
-                        <Skeleton className="h-3 w-[75%] bg-white/[0.03] rounded" />
-                        <div className="flex items-center justify-between pt-1">
-                            <Skeleton className="h-3 w-16 bg-white/[0.03] rounded" />
-                            <Skeleton className="h-3 w-14 bg-white/[0.03] rounded" />
-                        </div>
-                    </div>
-
-                    {/* Desktop skeleton grid (>= md): borderless, matching exact row geometry */}
-                    <div className="hidden md:grid grid-cols-[minmax(0,2fr)_minmax(100px,auto)_minmax(100px,auto)_minmax(150px,1fr)_minmax(100px,auto)_2.5rem] items-center gap-2 rounded-lg bg-white/[0.015] pl-1 pr-5 py-2.5 md:gap-3">
-                        <div className="flex flex-1 items-center gap-3 min-w-0 pr-4">
-                            <div className="flex flex-1 flex-col gap-1.5 min-w-0">
-                                <Skeleton className="h-4 w-[60%] bg-white/[0.05]" />
-                                <Skeleton className="h-3 w-[80%] bg-white/[0.03]" />
-                            </div>
-                        </div>
-                        <div className="truncate pr-2">
-                            <Skeleton className="h-3.5 w-12 bg-white/[0.03]" />
-                        </div>
-                        <div className="truncate pr-2">
-                            <Skeleton className="h-3.5 w-12 bg-white/[0.03]" />
-                        </div>
-                        <div className="flex items-center gap-1.5 min-w-0">
-                            <Skeleton className="h-4 w-14 rounded bg-white/[0.03]" />
-                        </div>
-                        <div className="truncate">
-                            <Skeleton className="h-3.5 w-12 bg-white/[0.03]" />
-                        </div>
-                        <div className="flex justify-center">
-                            <Skeleton className="h-6 w-6 rounded-lg bg-white/[0.03]" />
-                        </div>
-                    </div>
-                </React.Fragment>
-            ))}
-        </div>
-    )
 }
 
 const EmptySessionsState: React.FC = () => {
@@ -296,7 +249,7 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
             </div>
 
             {isInitialLoading ? (
-                <SessionListAreaSkeleton />
+                <SessionListSkeleton />
             ) : !hasUnfilteredSessions ? (
                 <EmptySessionsState />
             ) : !hasSessions ? (

@@ -18,6 +18,7 @@
 
     --animate-fade-in: fadeIn 0.8s ease-out forwards;
     --animate-popover-in: popoverIn 0.2s ease-out forwards;
+    --animate-shimmer: shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes fadeIn {
@@ -39,6 +40,15 @@
     100% {
         opacity: 1;
         transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
     }
 }
 

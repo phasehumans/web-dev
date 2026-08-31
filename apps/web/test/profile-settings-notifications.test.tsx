@@ -31,62 +31,9 @@ describe('Profile Settings Notifications Tab Placement', () => {
         cleanup()
     })
 
-    test('ProfileGeneralSettings (Preferences tab) renders Notifications section with toggles', () => {
+    test('ProfileSettingsContent (Account tab) renders Notifications section with toggles', () => {
         const handleNotificationToggle = mock(() => {})
-        const handleChatSuggestionsToggle = mock(() => {})
-        const handleGenerationSoundChange = mock(() => {})
 
-        render(
-            <QueryClientProvider client={queryClient}>
-                <MemoryRouter>
-                    <ProfileGeneralSettings
-                        chatSuggestions={true}
-                        generationSound="FIRST_GENERATION"
-                        emailNotifications={true}
-                        productUpdates={false}
-                        securityAlerts={true}
-                        onChatSuggestionsToggle={handleChatSuggestionsToggle}
-                        onGenerationSoundChange={handleGenerationSoundChange}
-                        onNotificationToggle={handleNotificationToggle}
-                    />
-                </MemoryRouter>
-            </QueryClientProvider>
-        )
-
-        // Headings
-        expect(screen.getByRole('heading', { name: 'Preferences' })).toBeDefined()
-        expect(screen.getByRole('heading', { name: 'Notifications' })).toBeDefined()
-        expect(screen.getByRole('heading', { name: 'Custom Rules' })).toBeDefined()
-
-        // Notification options
-        expect(screen.getByText('Project activity')).toBeDefined()
-        expect(
-            screen.getByText('Get notification updates when someone interacts with your projects')
-        ).toBeDefined()
-        expect(screen.getByText('Product updates')).toBeDefined()
-        expect(
-            screen.getByText('Get notification updates about new features and improvements')
-        ).toBeDefined()
-        expect(screen.getByText('Security alerts')).toBeDefined()
-        expect(
-            screen.getByText('Get notification updates for important security notices')
-        ).toBeDefined()
-
-        // Toggle switches
-        const switches = screen.getAllByRole('switch')
-        // 1 for chatSuggestions + 3 for notifications = 4 switches
-        expect(switches.length).toBe(4)
-
-        // Click Project activity switch (second switch)
-        fireEvent.click(switches[1])
-        expect(handleNotificationToggle).toHaveBeenCalledWith('notifyProjectActivity', false)
-
-        // Click Product updates switch (third switch)
-        fireEvent.click(switches[2])
-        expect(handleNotificationToggle).toHaveBeenCalledWith('notifyProductUpdates', true)
-    })
-
-    test('ProfileSettingsContent (Account tab) does NOT render Notifications section', () => {
         render(
             <QueryClientProvider client={queryClient}>
                 <MemoryRouter>
@@ -107,9 +54,14 @@ describe('Profile Settings Notifications Tab Placement', () => {
                         resolvedName="Test User"
                         hasProfile={true}
                         isGithubConnected={false}
+                        emailNotifications={true}
+                        productUpdates={false}
+                        securityAlerts={true}
+                        isNotificationPending={false}
                         onOpenNameModal={() => {}}
                         onOpenUsernameModal={() => {}}
                         onOpenPasswordModal={() => {}}
+                        onNotificationToggle={handleNotificationToggle}
                         onConnectGithub={() => {}}
                         onSignOut={() => {}}
                         onOpenSignOutAllSessionsModal={() => {}}
@@ -119,11 +71,57 @@ describe('Profile Settings Notifications Tab Placement', () => {
             </QueryClientProvider>
         )
 
-        // Account and System sections should exist
+        // Headings
         expect(screen.getByRole('heading', { name: 'Account' })).toBeDefined()
+        expect(screen.getByRole('heading', { name: 'Notifications' })).toBeDefined()
         expect(screen.getByRole('heading', { name: 'System' })).toBeDefined()
 
-        // Notifications section should NOT exist in Account tab
+        // Notification options
+        expect(screen.getByText('Project activity')).toBeDefined()
+        expect(
+            screen.getByText('Get notification updates when someone interacts with your projects')
+        ).toBeDefined()
+        expect(screen.getByText('Product updates')).toBeDefined()
+        expect(
+            screen.getByText('Get notification updates about new features and improvements')
+        ).toBeDefined()
+        expect(screen.getByText('Security alerts')).toBeDefined()
+        expect(
+            screen.getByText('Get notification updates for important security notices')
+        ).toBeDefined()
+
+        // Toggle switches
+        const switches = screen.getAllByRole('switch')
+        expect(switches.length).toBe(3)
+
+        // Click Project activity switch (first switch)
+        fireEvent.click(switches[0])
+        expect(handleNotificationToggle).toHaveBeenCalledWith('notifyProjectActivity', false)
+
+        // Click Product updates switch (second switch)
+        fireEvent.click(switches[1])
+        expect(handleNotificationToggle).toHaveBeenCalledWith('notifyProductUpdates', true)
+    })
+
+    test('ProfileGeneralSettings (Preferences tab) does NOT render Notifications section', () => {
+        render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <ProfileGeneralSettings
+                        chatSuggestions={true}
+                        generationSound="FIRST_GENERATION"
+                        onChatSuggestionsToggle={() => {}}
+                        onGenerationSoundChange={() => {}}
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        // Preferences and Custom Rules headings should exist
+        expect(screen.getByRole('heading', { name: 'Preferences' })).toBeDefined()
+        expect(screen.getByRole('heading', { name: 'Custom Rules' })).toBeDefined()
+
+        // Notifications section should NOT exist in Preferences tab
         expect(screen.queryByRole('heading', { name: 'Notifications' })).toBeNull()
         expect(screen.queryByText('Project activity')).toBeNull()
         expect(screen.queryByText('Product updates')).toBeNull()

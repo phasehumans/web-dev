@@ -42,21 +42,17 @@
         "typecheck": "tsc --noEmit",
         "test": "bun test",
         "test:unit": "bun test test/unit test/*.test.ts",
-        "test:integration": "bun test test/integration",
-        "test:load": "bun test test/load",
-        "test:benchmark": "bun test test/benchmark",
-        "test:smoke": "bun test test/smoke"
+        "test:integration": "bun test test/integration"
     },
     "devDependencies": {
         "@december/agent": "workspace:*",
         "@december/providers": "workspace:*",
+        "@december/shared": "workspace:*",
         "@december/tools": "workspace:*",
         "@december/tui": "workspace:*",
         "@types/bun": "latest",
         "fast-glob": "3.3.3",
         "ink": "7.1.0",
-        "ink-select-input": "6.2.0",
-        "ink-text-input": "6.0.0",
         "react": "19.2.7",
         "react-devtools-core": "7.0.1",
         "vitest": "^3.0.7",

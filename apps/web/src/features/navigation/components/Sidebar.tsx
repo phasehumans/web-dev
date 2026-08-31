@@ -12,7 +12,25 @@ import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionRenameModal } from '@/features/sessions/components/SessionRenameModal'
 import { useSessions } from '@/features/sessions/hooks/useSessions'
 import { Icons } from '@/shared/components/ui/Icons'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { cn } from '@/shared/lib/utils'
+
+const SidebarSessionsSkeleton: React.FC = () => (
+    <div className="flex flex-col gap-0.5 px-1 py-1">
+        {[
+            { titleW: 'w-[75%]', timeW: 'w-12' },
+            { titleW: 'w-[60%]', timeW: 'w-16' },
+            { titleW: 'w-[85%]', timeW: 'w-10' },
+            { titleW: 'w-[50%]', timeW: 'w-14' },
+            { titleW: 'w-[68%]', timeW: 'w-12' },
+        ].map((item, i) => (
+            <div key={i} className="flex flex-col gap-1 px-2.5 py-1.5 rounded-xl">
+                <Skeleton className={`h-3 ${item.titleW} bg-white/[0.04] rounded`} />
+                <Skeleton className={`h-2.5 ${item.timeW} bg-white/[0.02] rounded`} />
+            </div>
+        ))}
+    </div>
+)
 
 const Sidebar: React.FC<
     SidebarProps & {
@@ -27,7 +45,6 @@ const Sidebar: React.FC<
     onNewThread,
     onAllProjects,
     onSessions,
-    onConnectors,
     onProfile,
     onOpenProject,
     isAuthenticated,
@@ -297,16 +314,19 @@ const Sidebar: React.FC<
         path.startsWith('/projects') ||
         path.startsWith('/all-projects') ||
         path.startsWith('/sessions')
-    const isConnectorsActive = path.startsWith('/connectors')
-    const isSettingsActive = path.startsWith('/settings') || path.startsWith('/profile')
+    const isSettingsActive =
+        path.startsWith('/settings') ||
+        path.startsWith('/profile') ||
+        path.startsWith('/integrations') ||
+        path.startsWith('/connections') ||
+        path.startsWith('/connectors')
 
     let activeIndex = 0
     if (isSearchOpen) {
         activeIndex = 1
     } else if (!isHomeActive) {
         if (isProjectsActive) activeIndex = 2
-        else if (isConnectorsActive) activeIndex = 3
-        else if (isSettingsActive) activeIndex = 4
+        else if (isSettingsActive) activeIndex = 3
     } else {
         activeIndex = 0
     }
@@ -347,18 +367,6 @@ const Sidebar: React.FC<
             label: 'Sessions',
             icon: <Icons.Folder className="w-[17px] h-[17px]" />,
             onClick: onSessions,
-        },
-        {
-            id: 'connectors',
-            label: 'Connectors',
-            icon: <Icons.Connectors className="w-[17px] h-[17px]" />,
-            onClick: () => {
-                if (onConnectors) {
-                    onConnectors()
-                } else {
-                    navigate('/connectors')
-                }
-            },
         },
         {
             id: 'settings',
@@ -723,7 +731,9 @@ const Sidebar: React.FC<
 
                     <div className="flex flex-col gap-[2px] mt-1 overflow-y-auto no-scrollbar flex-1 min-h-0 pb-2">
                         {isAuthenticated ? (
-                            isSessionsLoading ? null : recentProjects.length > 0 ? (
+                            isSessionsLoading ? (
+                                <SidebarSessionsSkeleton />
+                            ) : recentProjects.length > 0 ? (
                                 recentProjects.map((project) => (
                                     <div
                                         key={project.id}

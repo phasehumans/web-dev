@@ -1,8 +1,10 @@
-export type ViewState = 'chat' | 'search' | 'sessions' | 'connectors' | 'profile' | 'project'
+export type ViewState = 'chat' | 'search' | 'sessions' | 'profile' | 'project'
 
 export type ProfileTab =
     | 'Account'
     | 'Preferences'
+    | 'Integrations'
+    | 'Connections'
     | 'Repositories'
     | 'Billing'
     | 'Analytics'
@@ -14,6 +16,8 @@ export type ProfileTab =
 const profileTabToSlug: Record<string, string> = {
     Account: 'account',
     Preferences: 'preferences',
+    Connections: 'connections',
+    Integrations: 'connections',
     Repositories: 'repositories',
     Billing: 'billing',
     Analytics: 'usage',
@@ -29,6 +33,8 @@ const slugToProfileTab: Record<string, ProfileTab> = {
     ),
     usage: 'Usage',
     analytics: 'Usage',
+    connections: 'Connections',
+    integrations: 'Connections',
 }
 
 export const getProfileTabFromSlug = (slug: string | undefined): ProfileTab =>
@@ -48,7 +54,6 @@ const simpleViewToPath: Record<string, string> = {
     chat: '/',
     search: '/search',
     sessions: '/sessions',
-    connectors: '/connectors',
 }
 
 const simplePathToView: Record<string, ViewState> = Object.fromEntries(
@@ -74,24 +79,18 @@ export const getViewForPath = (pathname: string): ViewState => {
     const simple = simplePathToView[pathname]
     if (simple) return simple
 
-    // /connectors or legacy integrations / mcp settings → connectors
-    if (
-        pathname === '/connectors' ||
-        pathname === '/settings/integrations' ||
-        pathname === '/profile/integrations' ||
-        pathname === '/settings/mcp-server' ||
-        pathname === '/profile/mcp-server' ||
-        pathname.startsWith('/connectors/')
-    ) {
-        return 'connectors'
-    }
-
-    // /settings or /settings/*, /profile, /privacy, /terms → profile
+    // /settings or /settings/*, /profile, /integrations, /connections, /connectors, /privacy, /terms → profile
     if (
         pathname === '/settings' ||
         pathname.startsWith('/settings/') ||
         pathname === '/profile' ||
         pathname.startsWith('/profile/') ||
+        pathname === '/integrations' ||
+        pathname.startsWith('/integrations/') ||
+        pathname === '/connections' ||
+        pathname.startsWith('/connections/') ||
+        pathname === '/connectors' ||
+        pathname.startsWith('/connectors/') ||
         pathname === '/privacy' ||
         pathname === '/terms'
     )

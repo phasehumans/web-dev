@@ -2,7 +2,8 @@ import { useGoogleLogin } from '@react-oauth/google'
 import { useMutation } from '@tanstack/react-query'
 
 import { authAPI } from '@/features/auth/api/auth'
-import { getGithubClientId } from '@/shared/utils/env'
+import { ApiError } from '@/shared/api/client'
+import { getGithubClientId } from '@/shared/config/env'
 
 type UseAuthMutationsOptions = {
     onRequireOtp: () => void
@@ -36,9 +37,19 @@ const getErrorMessage = (error: unknown) => {
         }
     }
 
+    if (error instanceof ApiError) {
+        if (error.status === 429) {
+            return 'Too many requests. Please wait a moment and try again.'
+        }
+        return error.message
+    }
+
     if (error instanceof Error) {
         if (error.message.toLowerCase() === 'validation failed') {
             return 'Something went wrong. Please try again.'
+        }
+        if (error.message.toLowerCase().includes('rate limit')) {
+            return 'Too many requests. Please wait a moment and try again.'
         }
         return error.message
     }

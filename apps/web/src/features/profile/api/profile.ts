@@ -251,7 +251,7 @@ const getGithubConnectUrl = (userId: string) => {
     const redirectPath =
         typeof window !== 'undefined'
             ? window.location.pathname + window.location.search
-            : '/profile/integrations'
+            : '/settings/connections'
     const appName = getGithubAppName() || 'trydecember'
     const stateVal = `${userId}|${redirectPath}`
     return `https://github.com/apps/${appName}/installations/new?state=${encodeURIComponent(stateVal)}`
@@ -261,7 +261,7 @@ const getVercelConnectUrl = (userId: string) => {
     const redirectPath =
         typeof window !== 'undefined'
             ? window.location.pathname + window.location.search
-            : '/profile/integrations'
+            : '/settings/connections'
     const stateVal = `${userId}:${redirectPath}`
     return buildUrl(`https://vercel.com/integrations/${getVercelIntegrationSlug()}/new`, {
         state: stateVal,

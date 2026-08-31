@@ -15,9 +15,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useProfileSettingsController } from '../hooks/useProfileSettingsController'
 
 import { ProfileBillingSettings } from './ProfileBillingSettings'
+import { ProfileConnectionsSettings } from './ProfileConnectionsSettings'
 import { ProfileDeleteAccountModal } from './ProfileDeleteAccountModal'
 import { ProfileGeneralSettings } from './ProfileGeneralSettings'
-import { ProfileIntegrationsSettings } from './ProfileIntegrationsSettings'
 import { ProfileNameModal } from './ProfileNameModal'
 import { ProfilePasswordModal } from './ProfilePasswordModal'
 import { ProfilePrivacySettings } from './ProfilePrivacySettings'
@@ -54,9 +54,9 @@ const SETTINGS_NAV_GROUPS = [
                 icon: Sliders,
             },
             {
-                tab: 'Integrations',
-                slug: 'integrations',
-                label: 'Integrations',
+                tab: 'Connections',
+                slug: 'connections',
+                label: 'Connections',
                 icon: Icons.Connections,
             },
             {
@@ -114,8 +114,8 @@ const SETTINGS_NAV_GROUPS = [
 const TAB_LABEL_MAP: Record<string, string> = {
     Account: 'Account',
     Preferences: 'Preferences',
-    Integrations: 'Integrations',
-    Connections: 'Integrations',
+    Connections: 'Connections',
+    Integrations: 'Connections',
     Repositories: 'Repositories',
     Secrets: 'Secrets',
     Billing: 'Billing',
@@ -234,12 +234,17 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         resolvedName={resolvedName}
                         hasProfile={hasProfile}
                         isGithubConnected={isGithubConnected}
+                        emailNotifications={emailNotifications}
+                        productUpdates={productUpdates}
+                        securityAlerts={securityAlerts}
+                        isNotificationPending={updateNotificationMutation.isPending}
                         onOpenNameModal={openNameModal}
                         onOpenUsernameModal={() => {
                             setTempUsername(profile?.username || '')
                             setUsernameModalOpen(true)
                         }}
                         onOpenPasswordModal={openPasswordModal}
+                        onNotificationToggle={handleNotificationToggle}
                         onConnectGithub={connectGithub}
                         onSignOut={onSignOut}
                         onOpenDeleteAccountModal={() => setDeleteAccountModalOpen(true)}
@@ -251,19 +256,14 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                     <ProfileGeneralSettings
                         chatSuggestions={chatSuggestions}
                         generationSound={generationSound}
-                        emailNotifications={emailNotifications}
-                        productUpdates={productUpdates}
-                        securityAlerts={securityAlerts}
-                        isNotificationPending={updateNotificationMutation.isPending}
                         onChatSuggestionsToggle={handleChatSuggestionsToggle}
                         onGenerationSoundChange={handleGenerationSoundChange}
-                        onNotificationToggle={handleNotificationToggle}
                     />
                 )
-            case 'Integrations':
             case 'Connections':
+            case 'Integrations':
                 return (
-                    <ProfileIntegrationsSettings
+                    <ProfileConnectionsSettings
                         isGithubConnected={isGithubConnected}
                         isVercelConnected={isVercelConnected}
                         isSupabaseConnected={isSupabaseConnected}
@@ -544,16 +544,16 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         </button>
                         <button
                             onClick={() =>
-                                navigate(`/settings/${getSlugForProfileTab('Integrations')}`)
+                                navigate(`/settings/${getSlugForProfileTab('Connections')}`)
                             }
                             className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                                activeTab === 'Integrations' || activeTab === 'Connections'
+                                activeTab === 'Connections' || activeTab === 'Integrations'
                                     ? 'bg-[#242323] text-[#D6D5C9]'
                                     : 'text-[#D6D5C9] hover:bg-[#191919]'
                             }`}
                         >
                             <Icons.Connections className="w-[18px] h-[18px]" />
-                            Integrations
+                            Connections
                         </button>
                         <button
                             onClick={() =>

@@ -1,9 +1,7 @@
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion'
-import { ArrowUpRight, Loader2 } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 
-import { useBillingOverview } from '@/features/billing/hooks/useBillingData'
 import { Icons } from '@/shared/components/ui/Icons'
 
 interface HomeHeaderProps {
@@ -70,33 +68,13 @@ const MagneticIconWithTooltip = ({ icon: Icon, tooltip, onClick, href }: any) =>
     )
 }
 
-export const HomeHeader: React.FC<HomeHeaderProps> = ({ isAuthenticated, onOpenAuth }) => {
-    const navigate = useNavigate()
-
-    const { data: overview, isLoading: isOverviewLoading } = useBillingOverview(
-        Boolean(isAuthenticated)
-    )
-    const remaining = overview?.creditBalance ?? 0
-
+export const HomeHeader: React.FC<HomeHeaderProps> = ({
+    isAuthenticated: _isAuthenticated,
+    onOpenAuth: _onOpenAuth,
+}) => {
     return (
         <div className="absolute top-0 left-0 w-full h-11 px-4 md:px-6 z-50 flex justify-between items-center pointer-events-none">
-            <div className="flex-1 pointer-events-auto flex items-center justify-start pl-2 md:pl-0">
-                {isAuthenticated && (
-                    <button
-                        onClick={() => navigate('/settings/billing')}
-                        className="hidden md:flex items-center gap-1.5 h-7 px-2.5 rounded-full bg-[#1F1F1F] hover:bg-[#252525] text-[12px] transition-all font-medium text-[#999999] hover:text-[#E8E8E8]"
-                    >
-                        <span>Credits:</span>
-                        <span>
-                            {isOverviewLoading ? (
-                                <Loader2 className="w-3 h-3 animate-spin inline-block" />
-                            ) : (
-                                `$ ${(remaining / 100).toFixed(2)}`
-                            )}
-                        </span>
-                    </button>
-                )}
-            </div>
+            <div className="flex-1 pointer-events-auto flex items-center justify-start pl-2 md:pl-0" />
 
             {/* center heading */}
             <div className="flex-initial flex items-center justify-center pointer-events-auto">

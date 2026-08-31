@@ -85,12 +85,14 @@ app.get('/api/v1/health', healthCheckHandler)
 // Pre-parse token context for user-aware rate limiting and auth routing
 app.use(parseAuthToken)
 
-// Apply global baseline rate limiter to all API endpoints
-app.use('/api', globalRateLimiter)
-app.use('/socket.io', globalRateLimiter)
-
-// Apply strict module rate limiting tiers to sensitive endpoints
+// Mount auth router before global rate limiter so auth endpoints (signup, login, otp, etc.)
+// are governed exclusively by their dedicated strict rate limiters (authRateLimiter, refreshRateLimiter)
+// and are not blocked by generic API traffic quota exhaustion.
 app.use('/api/v1/auth', authRouter)
+
+// Apply global baseline rate limiter to all other API endpoints
+app.use('/api', globalRateLimiter)
+
 app.use('/api/v1/setting', settingRouter)
 
 app.use('/api/v1/runtime', runtimeRateLimiter, runtimeRouter)

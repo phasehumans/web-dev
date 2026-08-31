@@ -13,8 +13,8 @@ import App from './App'
 import { CliLogin } from './features/auth/components/CliLogin'
 import { DeviceActivate } from './features/auth/components/DeviceActivate'
 import { GithubCallback } from './features/auth/components/GithubCallback'
+import { getGoogleClientId } from './shared/config/env'
 import { QueryProvider } from './shared/providers/query-provider'
-import { getGoogleClientId } from './shared/utils/env'
 
 const elem = document.getElementById('root')!
 const app = (

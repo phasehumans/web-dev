@@ -17,19 +17,27 @@ afterEach(() => {
 })
 
 describe('Google OAuth Verification, Privacy & Terms', () => {
-    test('getViewForPath correctly routes legal and settings URLs to profile / settings view', () => {
+    test('getViewForPath correctly routes legal, connections, and settings URLs to profile / settings view', () => {
         expect(getViewForPath('/settings/privacy')).toBe('profile')
         expect(getViewForPath('/settings/terms')).toBe('profile')
         expect(getViewForPath('/settings/usage')).toBe('profile')
         expect(getViewForPath('/settings/billing')).toBe('profile')
+        expect(getViewForPath('/settings/integrations')).toBe('profile')
+        expect(getViewForPath('/profile/integrations')).toBe('profile')
+        expect(getViewForPath('/settings/connections')).toBe('profile')
+        expect(getViewForPath('/connections')).toBe('profile')
+        expect(getViewForPath('/connectors')).toBe('profile')
         expect(getViewForPath('/privacy')).toBe('profile')
         expect(getViewForPath('/terms')).toBe('profile')
     })
 
-    test('getProfileTabFromSlug and getSlugForProfileTab resolve billing and usage correctly', () => {
+    test('getProfileTabFromSlug and getSlugForProfileTab resolve connections, billing, and usage correctly', () => {
+        expect(getProfileTabFromSlug('connections')).toBe('Connections')
+        expect(getProfileTabFromSlug('integrations')).toBe('Connections')
         expect(getProfileTabFromSlug('usage')).toBe('Usage')
         expect(getProfileTabFromSlug('analytics')).toBe('Usage')
         expect(getProfileTabFromSlug('billing')).toBe('Billing')
+        expect(getSlugForProfileTab('Connections')).toBe('connections')
         expect(getSlugForProfileTab('Usage')).toBe('usage')
         expect(getSlugForProfileTab('Billing')).toBe('billing')
     })
@@ -64,5 +72,37 @@ describe('Google OAuth Verification, Privacy & Terms', () => {
 
         // Support contact email
         expect(screen.getAllByText(/team@trydecember.com/i).length).toBeGreaterThan(0)
+    })
+
+    test('ProfileConnectionsSettings renders Connections section without mock MCP servers', async () => {
+        const { ProfileConnectionsSettings } =
+            await import('../src/features/profile/components/ProfileConnectionsSettings')
+
+        render(
+            <ProfileConnectionsSettings
+                isGithubConnected={true}
+                isVercelConnected={false}
+                isSupabaseConnected={false}
+                isNotionConnected={false}
+                onConnectGithub={() => {}}
+                onConnectVercel={() => {}}
+                onConnectSupabase={() => {}}
+                onConnectNotion={() => {}}
+            />
+        )
+
+        // Section heading
+        expect(screen.getByRole('heading', { name: 'Connections' })).toBeDefined()
+        expect(screen.queryByRole('heading', { name: 'MCP Servers' })).toBeNull()
+
+        // Core connections
+        expect(screen.getAllByText('GitHub').length).toBeGreaterThan(0)
+        expect(screen.getByText('Vercel')).toBeDefined()
+        expect(screen.getByText('Supabase')).toBeDefined()
+        expect(screen.getAllByText('Notion').length).toBeGreaterThan(0)
+        expect(screen.getAllByText('Figma').length).toBeGreaterThan(0)
+
+        // GitHub connected status
+        expect(screen.getByText('Connected')).toBeDefined()
     })
 })

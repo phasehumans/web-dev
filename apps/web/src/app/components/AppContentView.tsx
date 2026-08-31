@@ -6,11 +6,6 @@ import type { PreviewRuntimeError, PreviewSelectedElement } from '@/features/pre
 
 import { HomeHero } from '@/features/home/components/HomeHero'
 
-const ConnectorsPage = React.lazy(() =>
-    import('@/features/connectors/components/ConnectorsPage').then((m) => ({
-        default: m.ConnectorsPage,
-    }))
-)
 const WorkspaceScreen = React.lazy(() =>
     import('@/features/preview/components/WorkspaceScreen').then((m) => ({
         default: m.WorkspaceScreen,
@@ -112,12 +107,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
                 {view === 'profile' && (
                     <AnimatedPage pageKey="profile">
                         <ProfileSettings onSignOut={onSignOut} onBack={onNewProject} />
-                    </AnimatedPage>
-                )}
-
-                {view === 'connectors' && (
-                    <AnimatedPage pageKey="connectors">
-                        <ConnectorsPage />
                     </AnimatedPage>
                 )}
 

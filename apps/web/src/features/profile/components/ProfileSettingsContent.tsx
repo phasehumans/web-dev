@@ -10,9 +10,17 @@ interface ProfileSettingsContentProps {
     resolvedName: string
     hasProfile: boolean
     isGithubConnected: boolean
+    emailNotifications: boolean
+    productUpdates: boolean
+    securityAlerts: boolean
+    isNotificationPending: boolean
     onOpenNameModal: () => void
     onOpenUsernameModal: () => void
     onOpenPasswordModal: () => void
+    onNotificationToggle: (
+        field: 'notifyProjectActivity' | 'notifyProductUpdates' | 'notifySecurityAlerts',
+        value: boolean
+    ) => void
     onConnectGithub: () => void
     onSignOut: () => void
     onOpenSignOutAllSessionsModal: () => void
@@ -25,9 +33,14 @@ export const ProfileSettingsContent: React.FC<ProfileSettingsContentProps> = (pr
         resolvedName,
         hasProfile,
         isGithubConnected,
+        emailNotifications,
+        productUpdates,
+        securityAlerts,
+        isNotificationPending,
         onOpenNameModal,
         onOpenUsernameModal,
         onOpenPasswordModal,
+        onNotificationToggle,
         onConnectGithub,
         onSignOut,
         onOpenSignOutAllSessionsModal,
@@ -129,6 +142,92 @@ export const ProfileSettingsContent: React.FC<ProfileSettingsContentProps> = (pr
                             className="w-full sm:w-auto px-4 py-1.5 rounded-lg border border-[#383736] text-[13px] text-[#D6D5C9] hover:bg-[#242323] transition-colors"
                         >
                             {profile?.hasPassword ? 'Change password' : 'Set password'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* notifications */}
+            <div className="flex flex-col mb-6">
+                <h2 className="text-[16px] font-medium text-[#D6D5C9] mb-3">Notifications</h2>
+                <div className="flex flex-col gap-6 border-t border-[#242323] pt-6 pb-2">
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[14px] text-[#D6D5C9]">Project activity</span>
+                            <span className="text-[13px] text-[#7B7A79]">
+                                Get notification updates when someone interacts with your projects
+                            </span>
+                        </div>
+                        <button
+                            role="switch"
+                            onClick={() =>
+                                onNotificationToggle('notifyProjectActivity', !emailNotifications)
+                            }
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                emailNotifications
+                                    ? 'bg-[#87B2F4]'
+                                    : 'bg-[#100E12] border-[#383736]'
+                            }`}
+                        >
+                            <span
+                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${
+                                    emailNotifications
+                                        ? 'translate-x-4 bg-[#100E12]'
+                                        : 'translate-x-0 bg-[#383736]'
+                                }`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[14px] text-[#D6D5C9]">Product updates</span>
+                            <span className="text-[13px] text-[#7B7A79]">
+                                Get notification updates about new features and improvements
+                            </span>
+                        </div>
+                        <button
+                            role="switch"
+                            onClick={() =>
+                                onNotificationToggle('notifyProductUpdates', !productUpdates)
+                            }
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                productUpdates ? 'bg-[#87B2F4]' : 'bg-[#100E12] border-[#383736]'
+                            }`}
+                        >
+                            <span
+                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${
+                                    productUpdates
+                                        ? 'translate-x-4 bg-[#100E12]'
+                                        : 'translate-x-0 bg-[#383736]'
+                                }`}
+                            />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[14px] text-[#D6D5C9]">Security alerts</span>
+                            <span className="text-[13px] text-[#7B7A79]">
+                                Get notification updates for important security notices
+                            </span>
+                        </div>
+                        <button
+                            role="switch"
+                            onClick={() =>
+                                onNotificationToggle('notifySecurityAlerts', !securityAlerts)
+                            }
+                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                securityAlerts ? 'bg-[#87B2F4]' : 'bg-[#100E12] border-[#383736]'
+                            }`}
+                        >
+                            <span
+                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${
+                                    securityAlerts
+                                        ? 'translate-x-4 bg-[#100E12]'
+                                        : 'translate-x-0 bg-[#383736]'
+                                }`}
+                            />
                         </button>
                     </div>
                 </div>
