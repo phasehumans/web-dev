@@ -26,6 +26,10 @@ export const generateAppJwt = (): string => {
 
 export const getInstallationDetails = async (installationId: string): Promise<any | null> => {
     try {
+        if (env.NODE_ENV === 'test') {
+            return null
+        }
+
         const appJwt = generateAppJwt()
         const response = await fetch(`https://api.github.com/app/installations/${installationId}`, {
             method: 'GET',
@@ -34,6 +38,7 @@ export const getInstallationDetails = async (installationId: string): Promise<an
                 Accept: 'application/vnd.github+json',
                 'X-GitHub-Api-Version': '2022-11-28',
             },
+            signal: AbortSignal.timeout(3000),
         })
 
         if (!response.ok) {

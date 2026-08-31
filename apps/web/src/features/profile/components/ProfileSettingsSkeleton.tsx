@@ -155,33 +155,6 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
         )
     }
 
-    if (activeTab === 'Schedules') {
-        return (
-            <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150 gap-6">
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between mb-1">
-                        <Skeleton className="h-4 w-28 bg-white/[0.05] rounded" />
-                        <Skeleton className="h-7 w-28 rounded-lg bg-white/[0.03]" />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        {[1, 2, 3].map((i) => (
-                            <div
-                                key={i}
-                                className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.015]"
-                            >
-                                <div className="flex flex-col gap-1.5">
-                                    <Skeleton className="h-3.5 w-40 bg-white/[0.05] rounded" />
-                                    <Skeleton className="h-3 w-56 bg-white/[0.03] rounded" />
-                                </div>
-                                <Skeleton className="h-5 w-16 rounded-md bg-white/[0.03]" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     if (activeTab === 'Billing') {
         return (
             <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150 gap-6">

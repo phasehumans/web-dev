@@ -249,9 +249,6 @@ export const SessionList: React.FC<{
         }
     }
 
-    // dummy state for share modal
-    const shareModal = { isOpen: false, project: null }
-
     return (
         <div
             className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar"

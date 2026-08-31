@@ -192,7 +192,7 @@ This is clean content without divider lines.
         expect(getByText('Live chats, multiplayer games, financial feeds')).not.toBeNull()
     })
 
-    test('SearchSpaceScreen renders header with clean minimal controls and Report issue inside 3 dots dropdown', async () => {
+    test('SearchSpaceScreen renders header with clean minimal controls inside 3 dots dropdown', async () => {
         const queryClient = new QueryClient({
             defaultOptions: { queries: { retry: false } },
         })
@@ -214,11 +214,10 @@ This is clean content without divider lines.
         const moreBtn = getByTitle('More options')
         expect(moreBtn).not.toBeNull()
 
-        // Clicking 3 dots opens dropdown: Share, Archive, Report issue, Delete
+        // Clicking 3 dots opens dropdown: Share, Archive, Delete
         fireEvent.click(moreBtn)
         expect(getByText('Share')).not.toBeNull()
         expect(getByText('Archive')).not.toBeNull()
-        expect(getByText('Report issue')).not.toBeNull()
         expect(getByText('Delete')).not.toBeNull()
     })
 

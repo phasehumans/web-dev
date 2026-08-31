@@ -7,7 +7,6 @@ import {
     ArrowUpRight,
     KeyRound,
     FileText,
-    Clock,
     Activity,
 } from 'lucide-react'
 import React from 'react'
@@ -15,8 +14,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useProfileSettingsController } from '../hooks/useProfileSettingsController'
 
-import { ConnectCliModal } from './ConnectCliModal'
-import { ProfileApiKeysSettings } from './ProfileApiKeysSettings'
 import { ProfileBillingSettings } from './ProfileBillingSettings'
 import { ProfileDeleteAccountModal } from './ProfileDeleteAccountModal'
 import { ProfileGeneralSettings } from './ProfileGeneralSettings'
@@ -24,7 +21,6 @@ import { ProfileNameModal } from './ProfileNameModal'
 import { ProfilePasswordModal } from './ProfilePasswordModal'
 import { ProfilePrivacySettings } from './ProfilePrivacySettings'
 import { ProfileRepositoriesSettings } from './ProfileRepositoriesSettings'
-import { ProfileSchedulesSettings } from './ProfileSchedulesSettings'
 import { ProfileSecretsSettings } from './ProfileSecretsSettings'
 import { ProfileSettingsContent } from './ProfileSettingsContent'
 import { ProfileSettingsSkeleton } from './ProfileSettingsSkeleton'
@@ -67,12 +63,6 @@ const SETTINGS_NAV_GROUPS = [
                 slug: 'secrets',
                 label: 'Secrets',
                 icon: KeyRound,
-            },
-            {
-                tab: 'Schedules',
-                slug: 'schedules',
-                label: 'Schedules',
-                icon: Clock,
             },
             {
                 tab: 'Billing',
@@ -119,7 +109,6 @@ const TAB_LABEL_MAP: Record<string, string> = {
     Preferences: 'Preferences',
     Repositories: 'Repositories',
     Secrets: 'Secrets',
-    Schedules: 'Schedules',
     Billing: 'Billing',
     Usage: 'Usage',
     Analytics: 'Usage',
@@ -148,7 +137,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
     const [tempUsername, setTempUsername] = React.useState('')
     const [deleteAccountModalOpen, setDeleteAccountModalOpen] = React.useState(false)
     const [signOutAllSessionsModalOpen, setSignOutAllSessionsModalOpen] = React.useState(false)
-    const [connectCliModalOpen, setConnectCliModalOpen] = React.useState(false)
 
     const {
         profile,
@@ -178,9 +166,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
         updatePasswordMutation,
         updateNotificationMutation,
         isGithubConnected,
-        isVercelConnected,
-        isSupabaseConnected,
-        isNotionConnected,
         emailNotifications,
         productUpdates,
         securityAlerts,
@@ -195,9 +180,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
         handleChatSuggestionsToggle,
         handleGenerationSoundChange,
         connectGithub,
-        connectVercel,
-        connectSupabase,
-        connectNotion,
     } = useProfileSettingsController()
 
     const profileErrorMessage =
@@ -207,6 +189,8 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
             : profileError
               ? 'Failed to load profile'
               : null)
+
+    const hasProfile = Boolean(profile)
 
     const renderTabContent = () => {
         if (isProfileLoading && !profile) {
@@ -219,7 +203,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                     <ProfileSettingsContent
                         profile={profile}
                         resolvedName={resolvedName}
-                        hasProfile={Boolean(profile)}
+                        hasProfile={hasProfile}
                         isGithubConnected={isGithubConnected}
                         emailNotifications={emailNotifications}
                         productUpdates={productUpdates}
@@ -252,8 +236,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
             case 'Usage':
             case 'Analytics':
                 return <ProfileUsageSettings />
-            case 'API Keys':
-                return <ProfileApiKeysSettings />
             case 'Repositories':
                 return (
                     <ProfileRepositoriesSettings
@@ -263,8 +245,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                 )
             case 'Secrets':
                 return <ProfileSecretsSettings />
-            case 'Schedules':
-                return <ProfileSchedulesSettings />
             case 'Terms':
                 return <ProfileTermsSettings />
             case 'Privacy':
@@ -544,19 +524,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             Secrets
                         </button>
                         <button
-                            onClick={() =>
-                                navigate(`/settings/${getSlugForProfileTab('Schedules')}`)
-                            }
-                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                                activeTab === 'Schedules'
-                                    ? 'bg-[#242323] text-[#D6D5C9]'
-                                    : 'text-[#D6D5C9] hover:bg-[#191919]'
-                            }`}
-                        >
-                            <Clock className="w-[18px] h-[18px]" strokeWidth={1.75} />
-                            Schedules
-                        </button>
-                        <button
                             onClick={() => navigate(`/settings/${getSlugForProfileTab('Billing')}`)}
                             className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                                 activeTab === 'Billing'
@@ -764,12 +731,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         console.error('Failed to sign out of all sessions', error)
                     }
                 }}
-            />
-
-            <ConnectCliModal
-                isOpen={connectCliModalOpen}
-                onClose={() => setConnectCliModalOpen(false)}
-                userId={profile?.id}
             />
         </div>
     )

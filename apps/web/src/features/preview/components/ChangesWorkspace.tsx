@@ -51,72 +51,7 @@ function renderDiffSyntaxLine(
     isDeleted: boolean,
     isAdded: boolean
 ): React.ReactNode {
-    if (isDeleted) {
-        const darkRedWords = [
-            "'black'",
-            "'white'",
-            "'gray'",
-            'isSelected',
-            'theme, isSelected',
-            'colors.dimSeparator',
-            'legacyRunner',
-            'timeout: 30000',
-        ]
-        const regex = new RegExp(
-            `(${darkRedWords.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
-            'g'
-        )
-        const parts = content.split(regex)
-
-        return parts.map((part, i) => {
-            if (darkRedWords.includes(part)) {
-                return (
-                    <span
-                        key={i}
-                        className="bg-[#5C1D24] text-white px-1 py-[0.5px] rounded-[3px] font-semibold select-text"
-                    >
-                        {part}
-                    </span>
-                )
-            }
-            return <span key={i}>{renderCodeTokens(part, isDeleted, isAdded)}</span>
-        })
-    }
-
-    if (isAdded) {
-        const darkGreenWords = [
-            "'white'",
-            '"white"',
-            'colors.primary',
-            'colors.dimSeparator',
-            "'\\u0020\\u2022\\u0020'",
-            "'\\u0020\\u0020\\u0020'",
-            'theme',
-            'createSessionRunner',
-            'isFocused',
-        ]
-        const regex = new RegExp(
-            `(${darkGreenWords.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
-            'g'
-        )
-        const parts = content.split(regex)
-
-        return parts.map((part, i) => {
-            if (darkGreenWords.includes(part)) {
-                return (
-                    <span
-                        key={i}
-                        className="bg-[#0F4A32] text-white px-1 py-[0.5px] rounded-[3px] font-semibold select-text"
-                    >
-                        {part}
-                    </span>
-                )
-            }
-            return <span key={i}>{renderCodeTokens(part, isDeleted, isAdded)}</span>
-        })
-    }
-
-    return renderCodeTokens(content, false, false)
+    return renderCodeTokens(content, isDeleted, isAdded)
 }
 
 function renderCodeTokens(text: string, isDeleted: boolean, isAdded: boolean): React.ReactNode {

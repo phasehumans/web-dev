@@ -4,7 +4,6 @@ import {
     ThumbsDown,
     Copy,
     Check,
-    Flag,
     MoreHorizontal,
     Share2,
     Archive,
@@ -18,7 +17,6 @@ import { SearchMarkdown } from './SearchMarkdown'
 
 import { useAppStore } from '@/app/store'
 import { ChatPromptInput } from '@/features/chat/components/ChatPromptInput'
-import { BadSessionModal } from '@/features/preview/components/BadSessionModal'
 import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionDeleteModal } from '@/features/sessions/components/SessionDeleteModal'
 import { Icons } from '@/shared/components/ui/Icons'
@@ -55,7 +53,6 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
     const [copiedId, setCopiedId] = useState<string | null>(null)
     const [feedback, setFeedback] = useState<Record<string, 'like' | 'dislike' | null>>({})
 
-    const [isBadSessionModalOpen, setIsBadSessionModalOpen] = useState(false)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [isDeletePending, setIsDeletePending] = useState(false)
     const [isCopiedShare, setIsCopiedShare] = useState(false)
@@ -558,24 +555,7 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                                         </div>
                                     </button>
 
-                                    {/* 3. Report issue */}
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsMoreMenuOpen(false)
-                                            setIsBadSessionModalOpen(true)
-                                        }}
-                                        className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-left outline-none cursor-pointer text-[#EDEDEF] hover:bg-white/5 hover:text-white"
-                                    >
-                                        <div className="flex items-center gap-2.5 min-w-0">
-                                            <span className="text-[#8E8D8C] shrink-0">
-                                                <Flag className="w-3.5 h-3.5" />
-                                            </span>
-                                            <span className="truncate">Report issue</span>
-                                        </div>
-                                    </button>
-
-                                    {/* 4. Delete */}
+                                    {/* 3. Delete */}
                                     <button
                                         type="button"
                                         onClick={() => {
@@ -743,14 +723,6 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     </div>
                 </div>
             </div>
-
-            {/* Bad Session / Report Issue Feedback Modal */}
-            <BadSessionModal
-                isOpen={isBadSessionModalOpen}
-                onClose={() => setIsBadSessionModalOpen(false)}
-                sessionId={sessionId}
-                projectName={sessionTitle || initialPrompt || 'Search Session'}
-            />
 
             {/* Session Delete Modal */}
             <SessionDeleteModal

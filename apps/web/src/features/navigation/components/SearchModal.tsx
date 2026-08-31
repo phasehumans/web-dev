@@ -210,26 +210,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 },
             },
             {
-                id: 'go-settings-schedules',
-                label: 'Schedules & Timers',
-                subtitle: 'Settings / Schedules',
-                category: 'Settings Subpages',
-                icon: <Icons.Clock className="w-4 h-4 text-neutral-400" />,
-                keywords: [
-                    'schedules',
-                    'cron',
-                    'timers',
-                    'recurring',
-                    'automation',
-                    'tasks',
-                    'jobs',
-                ],
-                action: () => {
-                    onClose()
-                    navigate('/settings/schedules')
-                },
-            },
-            {
                 id: 'go-settings-billing',
                 label: 'Billing & Credits',
                 subtitle: 'Settings / Billing',

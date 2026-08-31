@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { HomeHeader } from './HomeHeader'
-import { OnboardingModal } from './OnboardingModal'
 import PromptInput from './PromptInput'
 
 import type { HomeHeroProps } from '@/features/home/types'
@@ -49,14 +48,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         enabled: isAuthenticated,
     })
 
-    const completeOnboardingMutation = useMutation({
-        mutationFn: profileAPI.completeOnboarding,
-        onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: ['profile'] })
-        },
-    })
-
-    const [showOnboarding, setShowOnboarding] = useState(false)
     const [showFeedbackModal, setShowFeedbackModal] = useState(false)
     const [unauthDismissedCards, setUnauthDismissedCards] = useState<{
         github?: boolean
@@ -382,15 +373,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                 <Laptop className="w-3 h-3 text-[#666666]" />
                 <span>Best experience on desktop</span>
             </div>
-
-            <OnboardingModal
-                isOpen={showOnboarding}
-                onClose={() => setShowOnboarding(false)}
-                onConfirm={() => {
-                    completeOnboardingMutation.mutate()
-                    setShowOnboarding(false)
-                }}
-            />
 
             <OutOfCreditsModal
                 isOpen={showOutOfCreditsModal || showUpgradeModal}

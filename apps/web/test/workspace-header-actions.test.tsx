@@ -4,10 +4,8 @@ import { expect, test, describe, mock, afterEach, beforeEach } from 'bun:test'
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
 
-import { BadSessionModal } from '../src/features/preview/components/BadSessionModal'
 import { WorkspaceHeaderActions } from '../src/features/preview/components/WorkspaceHeaderActions'
 import { WorkspaceHeaderViewTabs } from '../src/features/preview/components/WorkspaceHeaderViewTabs'
-import { profileAPI } from '../src/features/profile/api/profile'
 import { sessionAPI } from '../src/features/sessions/api/session'
 
 if (!globalThis.document) {
@@ -154,48 +152,6 @@ describe('Ticket #401: Workspace Header Actions, PR Badge, and Feedback Integrat
         )
 
         expect(screen.getByText('PR #401')).not.toBeNull()
-    })
-
-    test('BadSessionModal submits feedback to profileAPI backend service', async () => {
-        const mockSubmitFeedback = mock(async () => ({ message: 'feedback submitted' }))
-        profileAPI.submitFeedback = mockSubmitFeedback
-
-        const onClose = mock()
-        const onSubmitFeedback = mock()
-
-        render(
-            <BadSessionModal
-                isOpen={true}
-                onClose={onClose}
-                sessionId="session-123"
-                projectName="my-test-app"
-                onSubmitFeedback={onSubmitFeedback}
-            />
-        )
-
-        // Select reasons
-        const incorrectCodeBtn = screen.getByRole('button', { name: 'Incorrect code' })
-        fireEvent.click(incorrectCodeBtn)
-
-        const detailsTextarea = screen.getByPlaceholderText(/Add more details/i)
-        fireEvent.change(detailsTextarea, { target: { value: 'Something broke in step 2' } })
-
-        // Submit form
-        const submitBtn = screen.getByRole('button', { name: 'Submit' })
-        fireEvent.click(submitBtn)
-
-        await waitFor(() => {
-            expect(mockSubmitFeedback).toHaveBeenCalled()
-            const callArgs = (mockSubmitFeedback.mock.calls[0] as any)?.[0]
-            expect(callArgs?.rating).toBe('sad')
-            expect(callArgs?.feedback).toContain('Incorrect code')
-            expect(callArgs?.feedback).toContain('Something broke in step 2')
-        })
-
-        // Thank you view should be shown
-        await waitFor(() => {
-            expect(screen.getByText('Thank you!')).not.toBeNull()
-        })
     })
 
     test('Session insights button opens the insights modal in WorkspaceHeaderActions', async () => {

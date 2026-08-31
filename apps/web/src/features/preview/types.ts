@@ -130,33 +130,3 @@ export interface PreviewWindowProps {
     onElementSelected: (element: PreviewSelectedElement) => void
     onClearSelection: () => void
 }
-
-export type CodeFilePath = string
-export type CodeFileLanguage = 'html' | 'css' | 'javascript' | 'typescript' | 'tsx'
-
-export interface CodeWorkspaceProps {
-    html: string
-    generatedFiles?: Record<string, GeneratedProjectFile>
-    activeFilePath?: CodeFilePath | null
-    onHtmlChange?: (nextHtml: string) => void
-}
-
-export interface CodeFile {
-    path: CodeFilePath
-    label: string
-    language: CodeFileLanguage
-}
-
-export interface CodeFileTreeFileNode {
-    type: 'file'
-    file: CodeFile
-}
-
-export interface CodeFileTreeFolderNode {
-    type: 'folder'
-    name: string
-    path: string
-    children: CodeFileTreeNode[]
-}
-
-export type CodeFileTreeNode = CodeFileTreeFileNode | CodeFileTreeFolderNode

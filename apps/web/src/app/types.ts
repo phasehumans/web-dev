@@ -6,7 +6,6 @@ export type ViewState =
     | 'connectors'
     | 'profile'
     | 'project'
-    | 'canvas'
     | 'automations'
 
 export type ProfileTab =
@@ -16,9 +15,6 @@ export type ProfileTab =
     | 'Billing'
     | 'Analytics'
     | 'Usage'
-    | 'API Keys'
-    | 'Schedules'
-    | 'December CLI'
     | 'Secrets'
     | 'Terms'
     | 'Privacy'
@@ -30,9 +26,6 @@ const profileTabToSlug: Record<string, string> = {
     Billing: 'billing',
     Analytics: 'usage',
     Usage: 'usage',
-    'API Keys': 'api-keys',
-    Schedules: 'schedules',
-    'December CLI': 'december-cli',
     Secrets: 'secrets',
     Terms: 'terms',
     Privacy: 'privacy',

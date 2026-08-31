@@ -2,7 +2,6 @@ import { Maximize2, Minimize2 } from 'lucide-react'
 import React from 'react'
 
 import { ChangesWorkspace } from './ChangesWorkspace'
-import { CodeWorkspace } from './CodeWorkspace'
 import { PreviewArea } from './PreviewArea'
 import { TasksWorkspace } from './TasksWorkspace'
 import { TerminalWorkspace } from './TerminalWorkspace'
@@ -168,15 +167,6 @@ export const WorkspaceScreenMainContent: React.FC<WorkspaceScreenMainContentProp
                     projectId={projectId}
                 />
             </div>
-
-            {activeTab === 'editor' && (
-                <CodeWorkspace
-                    html={previewHtml}
-                    generatedFiles={generatedFiles}
-                    activeFilePath={activeGeneratedFilePath}
-                    onHtmlChange={setPreviewHtml}
-                />
-            )}
 
             {activeTab === 'changes' && <ChangesWorkspace />}
 
