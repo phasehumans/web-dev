@@ -1,9 +1,7 @@
 import React from 'react'
 
-import { type SessionFilterState } from './SessionFilterDropdown'
+import { type SortOption } from './SessionList'
 import { SessionListRow } from './SessionListRow'
-
-import type { SortOption, TypeFilter } from './SessionList'
 
 import { ErrorAlert } from '@/shared/components/ui/ErrorAlert'
 import { Icons } from '@/shared/components/ui/Icons'
@@ -32,11 +30,6 @@ interface SessionListViewProps {
     onSearchChange: (query: string) => void
     sortOption: SortOption
     onSortChange: (option: SortOption) => void
-    typeFilter: TypeFilter
-    onTypeFilterChange: (filter: TypeFilter) => void
-    advancedFilters: SessionFilterState
-    onAdvancedFiltersChange: (filters: SessionFilterState) => void
-    availableTags: string[]
     hasUnfilteredProjects: boolean
 }
 
@@ -184,11 +177,6 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
     onSearchChange,
     sortOption,
     onSortChange,
-    typeFilter,
-    onTypeFilterChange,
-    advancedFilters,
-    onAdvancedFiltersChange,
-    availableTags,
     hasUnfilteredProjects: hasUnfilteredSessions,
 }) => {
     const [activeDropdown, setActiveDropdown] = React.useState<string | null>(null)

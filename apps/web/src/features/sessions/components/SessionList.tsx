@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 
 import { useSessionListMutations } from '../hooks/useSessionListMutations'
 import { useInfiniteSessions } from '../hooks/useSessions'
 
-import { type SessionFilterState, DEFAULT_FILTERS } from './SessionFilterDropdown'
 import { SessionListModals } from './SessionListModals'
 import { SessionListView } from './SessionListView'
 
@@ -12,7 +11,6 @@ import type { DeleteModalState, RenameModalState } from '@/features/sessions/typ
 import { MobileBreadcrumbsHeader } from '@/features/navigation/components/MobileBreadcrumbsHeader'
 
 export type SortOption = 'newest' | 'oldest'
-export type TypeFilter = 'any' | 'WEB' | 'CLI' | 'SEARCH'
 
 export const SessionList: React.FC<{
     onNewProject: () => void
@@ -21,24 +19,14 @@ export const SessionList: React.FC<{
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [sortOption, setSortOption] = useState<SortOption>('newest')
-    const [typeFilter, setTypeFilter] = useState<TypeFilter>('any')
-    const [advancedFilters, setAdvancedFilters] = useState<SessionFilterState>(DEFAULT_FILTERS)
 
     const queryFilters = useMemo(() => {
         return {
             search: searchQuery.trim() || undefined,
-            type: typeFilter !== 'any' ? typeFilter : undefined,
             sortBy: 'updatedAt' as const,
             sortOrder: sortOption === 'newest' ? 'desc' : 'asc',
-            isArchived:
-                advancedFilters?.archived === 'only'
-                    ? true
-                    : advancedFilters?.archived === 'exclude'
-                      ? false
-                      : undefined,
-            tags: advancedFilters?.tags?.length ? advancedFilters.tags : undefined,
         }
-    }, [searchQuery, typeFilter, sortOption, advancedFilters])
+    }, [searchQuery, sortOption])
 
     const { data, isLoading, isFetching, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
         useInfiniteSessions(queryFilters)
@@ -288,11 +276,6 @@ export const SessionList: React.FC<{
                     onSearchChange={setSearchQuery}
                     sortOption={sortOption}
                     onSortChange={setSortOption}
-                    typeFilter={typeFilter}
-                    onTypeFilterChange={setTypeFilter}
-                    advancedFilters={advancedFilters}
-                    onAdvancedFiltersChange={setAdvancedFilters}
-                    availableTags={availableTags}
                     hasUnfilteredProjects={sessions.length > 0}
                 />
             </div>

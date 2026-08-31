@@ -1,12 +1,4 @@
-export type ViewState =
-    | 'chat'
-    | 'search'
-    | 'all-projects'
-    | 'sessions'
-    | 'connectors'
-    | 'profile'
-    | 'project'
-    | 'automations'
+export type ViewState = 'chat' | 'search' | 'sessions' | 'connectors' | 'profile' | 'project'
 
 export type ProfileTab =
     | 'Account'
@@ -55,11 +47,8 @@ export const toProjectSlug = toSessionSlug
 const simpleViewToPath: Record<string, string> = {
     chat: '/',
     search: '/search',
-    'all-projects': '/sessions',
     sessions: '/sessions',
     connectors: '/connectors',
-    canvas: '/canvas',
-    automations: '/automations',
 }
 
 const simplePathToView: Record<string, ViewState> = Object.fromEntries(
@@ -90,7 +79,6 @@ export const getViewForPath = (pathname: string): ViewState => {
         pathname === '/connectors' ||
         pathname === '/settings/integrations' ||
         pathname === '/profile/integrations' ||
-        pathname === '/settings/mcp-server' ||
         pathname.startsWith('/connectors/')
     ) {
         return 'connectors'

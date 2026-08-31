@@ -52,9 +52,7 @@ const Sidebar: React.FC<
         null
     )
     const [sortBy, setSortBy] = React.useState<'created' | 'updated'>('updated')
-    const [filterSchedules, setFilterSchedules] = React.useState(true)
     const [filterArchived, setFilterArchived] = React.useState(false)
-    const [filterAutomations, setFilterAutomations] = React.useState(false)
     const [sessionType, setSessionType] = React.useState<'all' | 'agent' | 'search'>('all')
     const recentMenuRef = React.useRef<HTMLDivElement | null>(null)
     const recentMenuTriggerRef = React.useRef<HTMLButtonElement | null>(null)
@@ -396,18 +394,11 @@ const Sidebar: React.FC<
             createdAt: s.createdAt,
             isArchived: Boolean(s.isArchived),
             type: s.type || 'WEB',
-            isSchedule: Boolean(
-                s.tags?.some((t) => t.toLowerCase().includes('schedule')) ||
-                s.type === ('SCHEDULE' as any)
-            ),
             prNumber: s.prNumber,
         }))
 
         return sourceList
             .filter((item) => {
-                if (!filterSchedules && item.isSchedule) {
-                    return false
-                }
                 if (!filterArchived && item.isArchived) {
                     return false
                 }
@@ -431,7 +422,7 @@ const Sidebar: React.FC<
                 return updatedB - updatedA
             })
             .slice(0, 5)
-    }, [isAuthenticated, sessions, sortBy, filterSchedules, filterArchived, sessionType])
+    }, [isAuthenticated, sessions, sortBy, filterArchived, sessionType])
 
     return (
         <div
@@ -665,19 +656,6 @@ const Sidebar: React.FC<
                                             <div className="px-2.5 py-1 text-[11.5px] font-medium text-[#8F8E8D]">
                                                 Filter
                                             </div>
-                                            <button
-                                                onClick={() => setFilterSchedules(!filterSchedules)}
-                                                className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                                            >
-                                                <span>Schedules</span>
-                                                <div
-                                                    className={`w-7 h-[14px] rounded-full flex items-center px-[2px] transition-colors ${filterSchedules ? 'bg-[#87B2F4]' : 'bg-[#333333]'}`}
-                                                >
-                                                    <div
-                                                        className={`w-[10px] h-[10px] rounded-full bg-white transition-transform ${filterSchedules ? 'translate-x-[14px]' : 'translate-x-0'}`}
-                                                    />
-                                                </div>
-                                            </button>
                                             <button
                                                 onClick={() => setFilterArchived(!filterArchived)}
                                                 className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"

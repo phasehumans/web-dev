@@ -1,5 +1,4 @@
 import { interpolateServerConfig, loadMcpConfig } from './config'
-import { SandboxStdioTransport } from './transports/sandbox-stdio'
 
 import type { McpConfigFile, McpServerConfig, McpServerInfo } from './types'
 import type { Tool, ToolExecuteContext } from '@december/shared'
@@ -258,14 +257,6 @@ export class McpClientPool {
         } else if (serverConfig.type === 'sse' || serverConfig.url) {
             const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js')
             transport = new SSEClientTransport(new URL(serverConfig.url!))
-        } else if (this.options.operations?.isSandbox || this.options.operations?.vmId) {
-            transport = new SandboxStdioTransport({
-                command: serverConfig.command!,
-                args: serverConfig.args,
-                env: serverConfig.env,
-                operations: this.options.operations,
-                workspaceDir: this.options.workspaceDir,
-            })
         } else {
             const { StdioClientTransport } =
                 await import('@modelcontextprotocol/sdk/client/stdio.js')

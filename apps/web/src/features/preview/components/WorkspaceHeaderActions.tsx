@@ -109,16 +109,6 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
         ? `feature/${projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
         : 'main'
 
-    const telemetry = (sessionData as any)?.telemetry
-    const usage = telemetry?.onDemandUsage || (sessionData as any)?.usage
-    const messagesCount =
-        telemetry?.totalMessages ??
-        (sessionData as any)?.messagesCount ??
-        (sessionData as any)?.messageCount
-    const sessionSize = (sessionData as any)?.sessionSize
-    const platform = (sessionData as any)?.platform || (sessionData as any)?.type
-    const hasStats = Boolean(usage || messagesCount != null || sessionSize || platform)
-
     const handleCopyBranch = (e: React.MouseEvent) => {
         e.stopPropagation()
         e.preventDefault()

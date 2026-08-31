@@ -46,7 +46,7 @@ export interface HarnessConfig extends Omit<AgentConfig, 'systemPrompt'> {
 export class AgentHarness {
     private agent: Agent
     private config: HarnessConfig
-    private mcpPool: McpClientPool
+    private mcpPool?: McpClientPool
 
     constructor(config: HarnessConfig) {
         this.config = config
@@ -83,18 +83,20 @@ export class AgentHarness {
             systemPrompt: finalPrompt,
         })
 
-        // 5. attach mcp pool
-        this.mcpPool =
-            config.mcpPool ||
-            new McpClientPool({
-                workspaceDir: config.workspaceDir,
-                operations: config.operations,
-            })
-        this.agent.mcpPool = this.mcpPool
+        // 5. attach mcp pool for local CLI runtime
+        if (!config.skipMcp && config.runtime !== 'cloud') {
+            this.mcpPool =
+                config.mcpPool ||
+                new McpClientPool({
+                    workspaceDir: config.workspaceDir,
+                    operations: config.operations,
+                })
+            this.agent.mcpPool = this.mcpPool
+        }
     }
 
     public async initMCP(config?: McpConfigFile): Promise<Tool[]> {
-        if (this.config.skipMcp || this.config.runtime === 'cloud') {
+        if (this.config.skipMcp || this.config.runtime === 'cloud' || !this.mcpPool) {
             return []
         }
         await this.mcpPool.initialize(config || this.config.mcpConfig)
@@ -104,7 +106,7 @@ export class AgentHarness {
     }
 
     public async reloadMCP(config?: McpConfigFile): Promise<{ tools: Tool[]; serverInfos: any[] }> {
-        if (this.config.skipMcp || this.config.runtime === 'cloud') {
+        if (this.config.skipMcp || this.config.runtime === 'cloud' || !this.mcpPool) {
             return { tools: [], serverInfos: [] }
         }
         const result = await this.mcpPool.reload(config)
@@ -112,7 +114,7 @@ export class AgentHarness {
         return result
     }
 
-    public getMcpPool(): McpClientPool {
+    public getMcpPool(): McpClientPool | undefined {
         return this.mcpPool
     }
 

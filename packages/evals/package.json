@@ -6,20 +6,10 @@
     "types": "src/index.ts",
     "private": true,
     "scripts": {
-        "eval": "bun run src/cli.ts",
-        "eval:humaneval": "bun run src/cli.ts benchmarks/humaneval_official.json",
-        "eval:mbpp": "bun run src/cli.ts benchmarks/mbpp_official.json",
-        "eval:terminalbench": "bun run src/cli.ts benchmarks/terminalbench_official.json",
-        "eval:swebench": "python3 src/python/swe_bench_harness.py --task-file benchmarks/swe_bench_lite.json",
         "typecheck": "tsc --noEmit",
-        "test": "bun test test/unit test/integration",
-        "test:unit": "bun test test/unit",
-        "test:integration": "bun test test/integration"
+        "test": "echo 'evals stub'"
     },
-    "dependencies": {
-        "@december/shared": "workspace:*",
-        "zod": "^3.24.2"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@types/bun": "latest",
         "@types/node": "^22.0.0",

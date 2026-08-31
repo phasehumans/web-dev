@@ -22,8 +22,6 @@ export const useAppController = () => {
     const activeProjectId = useAppStore((s) => s.activeProjectId)
     const activeProjectName = useAppStore((s) => s.activeProjectName)
     const activeProjectVersionId = useAppStore((s) => s.activeProjectVersionId)
-    const canvasState = useAppStore((s) => s.canvasState)
-    const setCanvasState = useAppStore((s) => s.setCanvasState)
     const isGenerating = useAppStore((s) => s.isGenerating)
     const isAuthenticated = useAppStore((s) => s.isAuthenticated)
     const setIsAuthenticated = useAppStore((s) => s.setIsAuthenticated)

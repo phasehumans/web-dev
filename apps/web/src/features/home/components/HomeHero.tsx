@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { HomeHeader } from './HomeHeader'
+import { OnboardingModal } from './OnboardingModal'
 import PromptInput from './PromptInput'
 
 import type { HomeHeroProps } from '@/features/home/types'
@@ -37,7 +38,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     const [prompt, setPrompt] = React.useState('')
     const [activeImportForm, setActiveImportForm] = useState<'github' | null>(null)
     const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-    const [isUbuntuMenuOpen, setIsUbuntuMenuOpen] = useState(false)
     const [chatMode, setChatMode] = useState<'agent' | 'search'>('agent')
     const [isLogoAnimating, setIsLogoAnimating] = useState(false)
 
@@ -48,6 +48,14 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         enabled: isAuthenticated,
     })
 
+    const completeOnboardingMutation = useMutation({
+        mutationFn: profileAPI.completeOnboarding,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['profile'] })
+        },
+    })
+
+    const [showOnboarding, setShowOnboarding] = useState(false)
     const [showFeedbackModal, setShowFeedbackModal] = useState(false)
     const [unauthDismissedCards, setUnauthDismissedCards] = useState<{
         github?: boolean
@@ -89,14 +97,12 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         }
     }
 
-    // Disabled: first-time onboarding video modal is temporarily disabled until video asset is ready
-    /*
     useEffect(() => {
         let timer: any = null
         if (isAuthenticated && profile && profile.hasCompletedOnboarding === false) {
             timer = setTimeout(() => {
                 setShowOnboarding(true)
-            }, 3000)
+            }, 800)
         } else {
             setShowOnboarding(false)
         }
@@ -104,7 +110,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
             if (timer) clearTimeout(timer)
         }
     }, [isAuthenticated, profile])
-    */
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -379,6 +384,18 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                 onClose={() => {
                     setShowOutOfCreditsModal(false)
                     setShowUpgradeModal(false)
+                }}
+            />
+
+            <OnboardingModal
+                isOpen={showOnboarding}
+                onClose={() => {
+                    completeOnboardingMutation.mutate()
+                    setShowOnboarding(false)
+                }}
+                onConfirm={() => {
+                    completeOnboardingMutation.mutate()
+                    setShowOnboarding(false)
                 }}
             />
 

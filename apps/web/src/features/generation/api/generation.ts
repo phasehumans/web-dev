@@ -228,7 +228,6 @@ type GenerateProjectInput = {
     prompt: string
     sessionId?: string | null
     projectId?: string | null
-    canvasState?: any
     model?: string
     signal?: AbortSignal
     onEvent: (event: GenerationStreamEvent) => void
