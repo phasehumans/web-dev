@@ -241,7 +241,7 @@ describe('Session Service - Unit Tests', () => {
             }
         })
 
-        it('should return session with formatted chatMessages and canvas', async () => {
+        it('should return session with formatted chatMessages', async () => {
             const uniqueSessionId = `unit-test-session-${Date.now()}`
             const originalFind = sessionRepository.findSessionById
             sessionRepository.findSessionById = mock(async (sessionId: string, userId: string) => {

@@ -65,7 +65,7 @@ describe('Worker Engine Integration Tests (Mock E2B)', () => {
         E2BSandboxService.setMockClient(mockClient)
 
         const result = await E2BSandboxService.runEphemeralTask({
-            taskType: 'pr_review',
+            taskType: 'security_audit',
             repoUrl: 'https://github.com/example/repo',
             taskRunner: async (sandbox) => {
                 const res = await sandbox.commands.run('npm test', { cwd: '/workspace' })

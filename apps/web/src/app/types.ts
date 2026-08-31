@@ -3,7 +3,6 @@ export type ViewState =
     | 'search'
     | 'all-projects'
     | 'sessions'
-    | 'review'
     | 'profile'
     | 'project'
     | 'canvas'
@@ -21,7 +20,6 @@ export type ProfileTab =
     | 'Analytics'
     | 'Usage'
     | 'API Keys'
-    | 'Review'
     | 'Schedules'
     | 'December CLI'
     | 'Secrets'
@@ -40,7 +38,6 @@ const profileTabToSlug: Record<string, string> = {
     Analytics: 'usage',
     Usage: 'usage',
     'API Keys': 'api-keys',
-    Review: 'review',
     Schedules: 'schedules',
     'December CLI': 'december-cli',
     Secrets: 'secrets',
@@ -74,7 +71,6 @@ const simpleViewToPath: Record<string, string> = {
     search: '/search',
     'all-projects': '/sessions',
     sessions: '/sessions',
-    review: '/review',
     canvas: '/canvas',
     automations: '/automations',
 }
@@ -112,15 +108,6 @@ export const getViewForPath = (pathname: string): ViewState => {
         pathname === '/terms'
     )
         return 'profile'
-
-    // /review or /reviews or subpaths → review
-    if (
-        pathname === '/review' ||
-        pathname.startsWith('/review/') ||
-        pathname === '/reviews' ||
-        pathname.startsWith('/reviews/')
-    )
-        return 'review'
 
     // /sessions/*, /session/* or /project/* → project (workspace screen)
     if (

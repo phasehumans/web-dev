@@ -178,33 +178,6 @@ export const ProfileSettingsSkeleton: React.FC<ProfileSettingsSkeletonProps> = (
         )
     }
 
-    if (activeTab === 'Review') {
-        return (
-            <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150 gap-6">
-                <div className="flex flex-col gap-2">
-                    <Skeleton className="h-4 w-36 bg-white/[0.05] rounded mb-1" />
-                    <div className="flex flex-col gap-1">
-                        <SettingRowSkeleton
-                            titleWidth="w-40"
-                            descWidth="w-80"
-                            actionType="toggle"
-                        />
-                        <SettingRowSkeleton
-                            titleWidth="w-48"
-                            descWidth="w-96"
-                            actionType="toggle"
-                        />
-                        <SettingRowSkeleton
-                            titleWidth="w-36"
-                            descWidth="w-64"
-                            actionType="button"
-                        />
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     if (activeTab === 'Schedules') {
         return (
             <div className="flex flex-col w-full max-w-[720px] text-[#D6D5C9] animate-in fade-in duration-150 gap-6">

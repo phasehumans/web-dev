@@ -208,17 +208,17 @@ describe('E2BSandboxService (Unit & Integration)', () => {
         E2BSandboxService.setMockClient(mockClient)
 
         const res = await E2BSandboxService.runEphemeralTask({
-            taskType: 'pr_review',
+            taskType: 'security_audit',
             gitToken: 'ghp_secret_token_123',
             taskRunner: async (sb) => {
                 taskExecuted = true
-                return { prReviewId: 'review-99', status: 'APPROVED' }
+                return { auditId: 'audit-99', status: 'PASSED' }
             },
         })
 
         expect(res.success).toBe(true)
         expect(taskExecuted).toBe(true)
-        expect(res.data.prReviewId).toBe('review-99')
+        expect(res.data.auditId).toBe('audit-99')
     })
 
     it('should destroy sandbox and remove instance from active cache', async () => {

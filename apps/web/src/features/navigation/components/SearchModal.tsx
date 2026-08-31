@@ -225,26 +225,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                 },
             },
             {
-                id: 'go-settings-review',
-                label: 'Code Review Settings',
-                subtitle: 'Settings / Review',
-                category: 'Settings Subpages',
-                icon: <Icons.DesignSystems className="w-4 h-4 text-neutral-400" />,
-                keywords: [
-                    'review',
-                    'code review',
-                    'linter',
-                    'standards',
-                    'pr',
-                    'pull request',
-                    'rules',
-                ],
-                action: () => {
-                    onClose()
-                    navigate('/settings/review')
-                },
-            },
-            {
                 id: 'go-settings-schedules',
                 label: 'Schedules & Timers',
                 subtitle: 'Settings / Schedules',

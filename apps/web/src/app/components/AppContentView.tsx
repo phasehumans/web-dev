@@ -9,9 +9,6 @@ import { HomeHero } from '@/features/home/components/HomeHero'
 const CanvasPage = React.lazy(() =>
     import('../../features/canvas/components/CanvasPage').then((m) => ({ default: m.CanvasPage }))
 )
-const ReviewPage = React.lazy(() =>
-    import('../../features/sessions/components/ReviewPage').then((m) => ({ default: m.ReviewPage }))
-)
 const WorkspaceScreen = React.lazy(() =>
     import('@/features/preview/components/WorkspaceScreen').then((m) => ({
         default: m.WorkspaceScreen,
@@ -107,12 +104,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
                 {view === 'sessions' && (
                     <AnimatedPage pageKey="sessions">
                         <SessionList onNewProject={onNewProject} onOpenProject={onOpenProject} />
-                    </AnimatedPage>
-                )}
-
-                {view === 'review' && (
-                    <AnimatedPage pageKey="review">
-                        <ReviewPage onNewProject={onNewProject} />
                     </AnimatedPage>
                 )}
 

@@ -12,7 +12,6 @@ import {
     getTextFile,
 } from '../../shared/project-storage'
 import { getIO } from '../../socket'
-import { hydrateCanvasDocument } from '../canvas/canvas.utils'
 import { cliDispatcher } from '../cli/cli.dispatcher'
 import { usageService } from '../usage/usage.service'
 
@@ -207,20 +206,6 @@ const getSession = async (data: GetSession) => {
 
     const generatedFiles = await loadSessionFiles({ sessionId })
 
-    let canvasState = null
-    try {
-        const canvasContent = await getTextFile(`sessions/${sessionId}/canvas.json`)
-        if (canvasContent) {
-            canvasState = JSON.parse(canvasContent)
-        }
-    } catch (err: any) {
-        if (err?.Code !== 'NoSuchKey' && err?.$metadata?.httpStatusCode !== 404) {
-            console.error('Failed to load canvas state:', err?.message || err)
-        }
-    }
-
-    const hydratedCanvas = await hydrateCanvasDocument(canvasState)
-
     return {
         session,
         chatMessages: (session.messages || []).map((message) => ({
@@ -234,7 +219,6 @@ const getSession = async (data: GetSession) => {
             updatedAt: message.updatedAt,
         })),
         generatedFiles,
-        canvasState: hydratedCanvas,
     }
 }
 

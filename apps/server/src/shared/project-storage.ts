@@ -77,14 +77,6 @@ export function sessionAssetPrefix(sessionId: string) {
     return `sessions/${sessionId}/assets/`
 }
 
-export function temporaryCanvasAssetKey(userId: string, path: string) {
-    return `users/${userId}/canvas-temp/${normalizePath(path)}`
-}
-
-export function temporaryCanvasAssetPrefix(userId: string) {
-    return `users/${userId}/canvas-temp/`
-}
-
 export async function putTextFile({
     key,
     content,

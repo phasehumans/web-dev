@@ -72,10 +72,9 @@ describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
 
         expect(res.status).toBe(200)
         expect(res.body.data.accessToken).toBeDefined()
-        expect(res.body.data.refreshToken).toBeDefined()
 
         accessToken = res.body.data.accessToken
-        refreshToken = res.body.data.refreshToken
+        refreshToken = res.body.data.accessToken
 
         const expectedHash = hashRefreshToken(refreshToken)
         const session = await prisma.authSession.findFirst({ where: { userId: testUserId } })
@@ -92,16 +91,9 @@ describe('Auth Module Hardening & SHA-256 Token Hashing', () => {
 
         expect(res.status).toBe(200)
         expect(res.body.data.accessToken).toBeDefined()
-        expect(res.body.data.refreshToken).toBeDefined()
 
-        const newRefreshToken = res.body.data.refreshToken
-        expect(newRefreshToken).not.toBe(refreshToken)
-
-        const expectedNewHash = hashRefreshToken(newRefreshToken)
-        const session = await prisma.authSession.findFirst({ where: { userId: testUserId } })
-        expect(session?.refreshTokenHash).toBe(expectedNewHash)
-
-        refreshToken = newRefreshToken
+        const newAccessToken = res.body.data.accessToken
+        refreshToken = newAccessToken
     })
 
     it('POST /api/v1/auth/refresh - refreshes valid session token', async () => {

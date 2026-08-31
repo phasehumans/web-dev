@@ -27,7 +27,6 @@ import { ProfileNameModal } from './ProfileNameModal'
 import { ProfilePasswordModal } from './ProfilePasswordModal'
 import { ProfilePrivacySettings } from './ProfilePrivacySettings'
 import { ProfileRepositoriesSettings } from './ProfileRepositoriesSettings'
-import { ProfileReviewSettings } from './ProfileReviewSettings'
 import { ProfileSchedulesSettings } from './ProfileSchedulesSettings'
 import { ProfileSecretsSettings } from './ProfileSecretsSettings'
 import { ProfileSettingsContent } from './ProfileSettingsContent'
@@ -86,12 +85,6 @@ const SETTINGS_NAV_GROUPS = [
                 icon: KeyRound,
             },
             {
-                tab: 'Review',
-                slug: 'review',
-                label: 'Code Review',
-                icon: Icons.GitPullRequest,
-            },
-            {
                 tab: 'Schedules',
                 slug: 'schedules',
                 label: 'Schedules',
@@ -145,7 +138,6 @@ const TAB_LABEL_MAP: Record<string, string> = {
     Repositories: 'Repositories',
     Skills: 'Skills',
     Secrets: 'Secrets',
-    Review: 'Code Review',
     Schedules: 'Schedules',
     Billing: 'Billing',
     Usage: 'Usage',
@@ -306,8 +298,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                 return <ProfileSkillsSettings />
             case 'Secrets':
                 return <ProfileSecretsSettings />
-            case 'Review':
-                return <ProfileReviewSettings />
             case 'Schedules':
                 return <ProfileSchedulesSettings />
             case 'Terms':
@@ -611,17 +601,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         >
                             <KeyRound className="w-[18px] h-[18px]" strokeWidth={1.5} />
                             Secrets
-                        </button>
-                        <button
-                            onClick={() => navigate(`/settings/${getSlugForProfileTab('Review')}`)}
-                            className={`flex items-center gap-3 px-3 py-1.5 rounded-[10px] text-[13px] font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                                activeTab === 'Review'
-                                    ? 'bg-[#242323] text-[#D6D5C9]'
-                                    : 'text-[#D6D5C9] hover:bg-[#191919]'
-                            }`}
-                        >
-                            <Icons.GitPullRequest className="w-[18px] h-[18px]" />
-                            Review
                         </button>
                         <button
                             onClick={() =>

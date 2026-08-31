@@ -37,7 +37,6 @@ export const settingSelect = {
     welcomeCardDone: true,
     githubCardDone: true,
     feedbackCardDone: true,
-    canvasWaitlist: true,
 }
 
 import type {

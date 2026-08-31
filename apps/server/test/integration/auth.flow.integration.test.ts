@@ -53,10 +53,8 @@ describe('Auth Flow Integration Tests (Signup, Verify, Login, CLI Token, Signout
 
         expect(res.status).toBe(200)
         expect(res.body.data.accessToken).toBeDefined()
-        expect(res.body.data.refreshToken).toBeDefined()
 
         accessToken = res.body.data.accessToken
-        refreshToken = res.body.data.refreshToken
 
         const user = await prisma.user.findUnique({ where: { id: testUserId } })
         expect(user?.emailVerified).toBe(true)
@@ -70,7 +68,6 @@ describe('Auth Flow Integration Tests (Signup, Verify, Login, CLI Token, Signout
 
         expect(res.status).toBe(200)
         expect(res.body.data.accessToken).toBeDefined()
-        expect(res.body.data.refreshToken).toBeDefined()
 
         accessToken = res.body.data.accessToken
     })

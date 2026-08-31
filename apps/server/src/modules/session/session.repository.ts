@@ -62,10 +62,6 @@ export async function findManySessions(userId: string, filters?: SessionFilters)
                     orderBy: { sequence: 'desc' },
                     take: 1,
                 },
-                reviews: {
-                    orderBy: { createdAt: 'desc' },
-                    take: 1,
-                },
             },
         }),
     ])

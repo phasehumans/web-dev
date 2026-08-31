@@ -51,7 +51,6 @@ model User {
   welcomeCardDone        Boolean         @default(false)
   githubCardDone         Boolean         @default(false)
   feedbackCardDone       Boolean         @default(false)
-  canvasWaitlist         Boolean         @default(false)
 
   notifications      Notification[]
   imports            SessionImport[]
@@ -65,8 +64,6 @@ model User {
   githubInstallations GithubAppInstallation[]
   secrets            Secret[]
   feedbacks          Feedback[]
-  pullRequestReviews PullRequestReview[]
-  reviewPreference   ReviewPreference?
 }
 
 model Notification {
@@ -131,13 +128,11 @@ model Session {
   user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages        Message[]
   settings        SessionSettings?
-  reviews         ReviewComment[]
   imports         SessionImport[]
   memories        SessionMemory[]
   sessionMemories AgentSessionMemory[]
   collaborators      SessionCollaborator[]
   usageEvents        UsageEvent[]
-  pullRequestReviews PullRequestReview[]
 
   @@index([userId])
 }
@@ -150,20 +145,6 @@ model SessionSettings {
   updatedAt DateTime @updatedAt
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-}
-
-model ReviewComment {
-  id              String   @id @default(uuid())
-  sessionId       String
-  content         String
-  prUrl           String?
-  githubCommentId String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  @@index([sessionId])
 }
 
 enum SessionType {
@@ -437,64 +418,5 @@ model Feedback {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-}
-
-enum ReviewStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  FAILED
-}
-
-enum ReviewProvider {
-  GITHUB
-  GITLAB
-}
-
-enum ReviewStrictness {
-  LENIENT
-  STANDARD
-  STRICT
-}
-
-model PullRequestReview {
-  id           String         @id @default(uuid())
-  userId       String
-  sessionId    String?
-  prUrl        String
-  prNumber     Int
-  repository   String
-  provider     ReviewProvider @default(GITHUB)
-  title        String
-  author       String
-  authorAvatar String?
-  status       ReviewStatus   @default(PENDING)
-  isAutoReview Boolean        @default(false)
-  score        Int            @default(0)
-  summary      String?        @db.Text
-  findings     Json           @default("[]")
-  preferences  Json           @default("{}")
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-
-  @@index([userId])
-  @@index([sessionId])
-  @@index([repository])
-  @@index([status])
-}
-
-model ReviewPreference {
-  id                 String           @id @default(uuid())
-  userId             String           @unique
-  autoReviewAgentPrs Boolean          @default(true)
-  defaultStrictness  ReviewStrictness @default(STANDARD)
-  focusAreas         String[]         @default(["SECURITY", "PERFORMANCE", "CLEAN_CODE"])
-  createdAt          DateTime         @default(now())
-  updatedAt          DateTime         @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 

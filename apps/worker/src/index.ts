@@ -32,10 +32,8 @@ export const worker = new Worker(
             `Processing job ${job.id} (type: ${effectiveTaskType}) for session ${sessionId || reviewId}`
         )
 
-        // Handle Ephemeral Tasks (PR Review, One-Click Fix, Security Audit)
-        const isEphemeralTask = ['pr_review', 'one_click_fix', 'security_audit'].includes(
-            effectiveTaskType
-        )
+        // Handle Ephemeral Tasks (One-Click Fix, Security Audit)
+        const isEphemeralTask = ['one_click_fix', 'security_audit'].includes(effectiveTaskType)
 
         if (isEphemeralTask) {
             if (userId) {
@@ -75,17 +73,7 @@ export const worker = new Worker(
                                 })
                         }
 
-                        if (effectiveTaskType === 'pr_review') {
-                            const lintRes = await sandbox.commands
-                                .run('npm run lint --if-present', { cwd: '/workspace' })
-                                .catch(() => null)
-                            const typecheckRes = await sandbox.commands
-                                .run('npm run typecheck --if-present', { cwd: '/workspace' })
-                                .catch(() => null)
-                            runOutput = [lintRes?.stdout, typecheckRes?.stdout]
-                                .filter(Boolean)
-                                .join('\n')
-                        } else if (effectiveTaskType === 'security_audit') {
+                        if (effectiveTaskType === 'security_audit') {
                             const auditRes = await sandbox.commands
                                 .run('npm audit --json', { cwd: '/workspace' })
                                 .catch(() => null)

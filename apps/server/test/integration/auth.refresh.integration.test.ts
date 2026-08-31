@@ -39,7 +39,7 @@ describe('Auth Refresh Token & Rotation Integration Tests', () => {
             .send({ email: testEmail, password: testPassword })
 
         expect(loginRes.status).toBe(200)
-        refreshToken = loginRes.body.data.refreshToken
+        refreshToken = loginRes.body.data.accessToken
     })
 
     it('1. POST /api/v1/auth/refresh - refreshes session and returns 30-day session token', async () => {

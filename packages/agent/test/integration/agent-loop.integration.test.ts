@@ -416,7 +416,10 @@ describe('Agent Loop Integration', () => {
         }
 
         expect(
-            mockLlm.calls[0]!.messages.some((m) => m.content === 'Steer direction mid-run')
+            mockLlm.calls[0]!.messages.some(
+                (m) =>
+                    typeof m.content === 'string' && m.content.includes('Steer direction mid-run')
+            )
         ).toBe(true)
     })
 })
