@@ -17,7 +17,6 @@ settingRouter.patch('/notifications', settingController.updateNotifications)
 settingRouter.patch('/onboarding', settingController.completeOnboarding)
 settingRouter.post('/onboarding/dismiss', settingController.dismissOnboardingCard)
 
-settingRouter.post('/suggestions', settingController.chatSuggestions)
 settingRouter.post('/sound', settingController.generationSound)
 settingRouter.post('/feedback', settingController.submitFeedback)
 

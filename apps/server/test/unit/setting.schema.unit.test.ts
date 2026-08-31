@@ -5,7 +5,6 @@ import {
     updateUsernameSchema,
     changePasswordSchema,
     updateNotificationSchema,
-    chatSuggestionsSchema,
     generationSoundSchema,
     dismissOnboardingCardSchema,
     submitFeedbackSchema,
@@ -100,18 +99,6 @@ describe('Setting Schema - Unit Tests', () => {
                     notifyProjectActivity: 'true',
                 }).success
             ).toBe(false)
-        })
-    })
-
-    describe('chatSuggestionsSchema', () => {
-        it('should pass with boolean value', () => {
-            expect(chatSuggestionsSchema.safeParse({ chatSuggestions: true }).success).toBe(true)
-            expect(chatSuggestionsSchema.safeParse({ chatSuggestions: false }).success).toBe(true)
-        })
-
-        it('should fail with missing or non-boolean value', () => {
-            expect(chatSuggestionsSchema.safeParse({ chatSuggestions: 'yes' }).success).toBe(false)
-            expect(chatSuggestionsSchema.safeParse({}).success).toBe(false)
         })
     })
 

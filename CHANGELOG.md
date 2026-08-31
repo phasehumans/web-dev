@@ -2,6 +2,44 @@
 
 ### Features
 
+- _(web)_ Add cloudflare pages redirects and headers for spa deployment
+- _(web)_ Add pulsing logo preloader to index.html for instant startup loading
+
+### Bug Fixes
+
+- _(web)_ Disable code-splitting in bun build to fix blank screen on production html
+- _(auth,worker)_ Harden refresh token rotation grace period and fix worker usage select
+- _(auth)_ Implement 30-day sliding sessions and fix token race conditions
+- _(auth)_ Fix type assertions and repository calls in auth service
+- _(secrets,usage)_ Inject user secrets in worker sandbox and correct usage session title mapping
+- _(cli)_ Auto-switch model to provider recommended model on provider change
+- _(tui)_ Reactively update active model name below input bar on provider switch
+- _(auth)_ Resolve rate limiting, remove credits pill and prune unused dependencies
+
+### Refactor
+
+- _(auth)_ Consolidate to single session token architecture and remove dual-token boilerplate
+- Simplify workspace tabs, drop in-browser ide, and remove canvas subsystem
+- Clean evals package to single index.ts and restore user signup onboarding modal
+- _(web)_ Move notification section from account to preferences in settings
+
+### Testing
+
+- Adjust cli benchmark parsing threshold for concurrent suite runs
+
+### Miscellaneous Tasks
+
+- _(web)_ Remove vercel.json after migration to cloudflare pages
+- Rename deploy workflow environment to production (ec2)
+- Rename deploy workflow environment to production (aws)
+- Remove standalone pr review and canvas modules to simplify coding agent
+- Remove fake settings stubs, dead modals, and clean diff tokenizer
+- Remove dead canvas subsystem, unrendered session filters, and clean unused web code
+
+## [0.3.21] - 2026-08-28
+
+### Features
+
 - _(server)_ Implement redis bullmq email queue and worker for asynchronous dispatch
 - _(search)_ Implement lightweight streaming conversational search mode (#453)
 - _(worker)_ Asynchronous redis-backed email queue worker with bullmq
@@ -20,6 +58,10 @@
 - _(web)_ Implement dynamic code-splitting, lazy engines, chat memoization, and immutable caching
 - _(stream)_ Implement 60fps raf batching and instant scroll anchoring in workspace and search
 - _(stream)_ Add warm socket, raf batching, format cache, and containment
+
+### Miscellaneous Tasks
+
+- _(release)_ V0.3.21
 
 ## [0.3.20] - 2026-08-27
 

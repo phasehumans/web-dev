@@ -4,7 +4,6 @@ import { sendSuccess } from '../../shared/response'
 
 import {
     changePasswordSchema,
-    chatSuggestionsSchema,
     generationSoundSchema,
     updateNameSchema,
     updateNotificationSchema,
@@ -104,20 +103,6 @@ const updateNotifications = asyncHandler(async (req: Request, res: Response) => 
     return sendSuccess(res, 'notifications preferences updated', result)
 })
 
-const chatSuggestions = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.user?.userId as string | undefined
-
-    if (!userId) {
-        throw new AppError('unauthorized', 401)
-    }
-
-    const parseData = chatSuggestionsSchema.parse(req.body)
-    const { chatSuggestions } = parseData
-
-    const result = await settingService.chatSuggestions({ userId, chatSuggestions })
-    return sendSuccess(res, 'chat suggestions updated successfully', result)
-})
-
 const generationSound = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.userId as string | undefined
 
@@ -214,7 +199,6 @@ export const settingController = {
     updateUsername,
     changePassword,
     updateNotifications,
-    chatSuggestions,
     generationSound,
     completeOnboarding,
     dismissOnboardingCard,

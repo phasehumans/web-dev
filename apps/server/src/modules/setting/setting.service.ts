@@ -27,7 +27,6 @@ export const settingSelect = {
     notifyProjectActivity: true,
     notifyProductUpdates: true,
     notifySecurityAlerts: true,
-    chatSuggestions: true,
     generationSound: true,
     rules: true,
 
@@ -46,7 +45,6 @@ import type {
     UpdateUsername,
     ChangePassword,
     UpdateNotifications,
-    ChatSuggestions,
     UpdateGenerationSoundPayload,
     CompleteOnboarding,
     DismissOnboardingCard,
@@ -209,27 +207,6 @@ const updateNotifications = async (data: UpdateNotifications) => {
     return updatedUser
 }
 
-const chatSuggestions = async (data: ChatSuggestions) => {
-    const { userId, chatSuggestions } = data
-
-    const existingUser = await settingRepository.findUserByIdForChatSuggestions(userId)
-
-    if (!existingUser) {
-        throw new AppError('user not found', 404)
-    }
-
-    if (existingUser.chatSuggestions === chatSuggestions) {
-        throw new AppError(
-            'new input must be different from the current chat suggestion state',
-            400
-        )
-    }
-
-    const updatedUser = await settingRepository.updateChatSuggestions(userId, chatSuggestions)
-
-    return updatedUser
-}
-
 const generationSound = async (data: UpdateGenerationSoundPayload) => {
     const { userId, generationSound } = data
 
@@ -344,7 +321,6 @@ export const settingService = {
     updateUsername,
     changePassword,
     updateNotifications,
-    chatSuggestions,
     generationSound,
     completeOnboarding,
     dismissOnboardingCard,

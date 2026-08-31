@@ -26,7 +26,6 @@ export const useProfileSettingsController = () => {
         updateUsernameMutation,
         updatePasswordMutation,
         updateNotificationMutation,
-        updateChatSuggestionsMutation,
         updateGenerationSoundMutation,
     } = useProfileSettingsData({
         setProfileActionError,
@@ -50,7 +49,6 @@ export const useProfileSettingsController = () => {
     const emailNotifications = profile?.notifyProjectActivity ?? true
     const productUpdates = profile?.notifyProductUpdates ?? true
     const securityAlerts = profile?.notifySecurityAlerts ?? true
-    const chatSuggestions = profile?.chatSuggestions ?? true
     const generationSound = profile?.generationSound ?? 'FIRST_GENERATION'
     const resolvedName = profile?.name ?? 'User'
 
@@ -102,12 +100,6 @@ export const useProfileSettingsController = () => {
     ) => {
         updateNotificationMutation.mutate({
             [field]: value,
-        })
-    }
-
-    const handleChatSuggestionsToggle = (value: boolean) => {
-        updateChatSuggestionsMutation.mutate({
-            chatSuggestions: value,
         })
     }
 
@@ -170,7 +162,6 @@ export const useProfileSettingsController = () => {
         updateUsernameMutation,
         updatePasswordMutation,
         updateNotificationMutation,
-        updateChatSuggestionsMutation,
         updateGenerationSoundMutation,
         isGithubConnected,
         isVercelConnected,
@@ -179,7 +170,6 @@ export const useProfileSettingsController = () => {
         emailNotifications,
         productUpdates,
         securityAlerts,
-        chatSuggestions,
         generationSound,
         resolvedName,
         openNameModal,
@@ -187,7 +177,6 @@ export const useProfileSettingsController = () => {
         handleSaveName,
         handleUpdatePassword,
         handleNotificationToggle,
-        handleChatSuggestionsToggle,
         handleGenerationSoundChange,
         connectGithub,
         connectVercel,

@@ -195,7 +195,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
         emailNotifications,
         productUpdates,
         securityAlerts,
-        chatSuggestions,
         generationSound,
         resolvedName,
         openNameModal,
@@ -203,7 +202,6 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
         handleSaveName,
         handleUpdatePassword,
         handleNotificationToggle,
-        handleChatSuggestionsToggle,
         handleGenerationSoundChange,
         connectGithub,
         connectVercel,
@@ -254,9 +252,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
             case 'Preferences':
                 return (
                     <ProfileGeneralSettings
-                        chatSuggestions={chatSuggestions}
                         generationSound={generationSound}
-                        onChatSuggestionsToggle={handleChatSuggestionsToggle}
                         onGenerationSoundChange={handleGenerationSoundChange}
                     />
                 )
@@ -357,7 +353,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
 
                 {/* Drawer Nav Items */}
                 <div className="flex-1 flex flex-col gap-[2px] px-3 overflow-y-auto no-scrollbar pb-6">
-                    <div className="px-2.5 py-1 text-[11.5px] font-semibold text-[#666666] uppercase tracking-wider mb-0.5">
+                    <div className="px-2.5 py-1.5 text-[12px] font-medium text-[#919191] tracking-tight mb-0.5">
                         Settings
                     </div>
                     {SETTINGS_NAV_GROUPS[0].items.map((item) => {
@@ -391,9 +387,9 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                                     </div>
                                     <span
                                         className={cn(
-                                            'text-[13px] font-normal truncate tracking-[-0.01em]',
+                                            'font-medium text-[14px] tracking-wide transition-colors truncate',
                                             isActive
-                                                ? 'text-[#D6D5D4] font-medium'
+                                                ? 'text-[#D6D5D4]'
                                                 : 'text-[#919191] group-hover:text-[#D6D5D4]'
                                         )}
                                     >
@@ -404,7 +400,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                         )
                     })}
 
-                    <div className="px-2.5 py-1 text-[11.5px] font-semibold text-[#666666] uppercase tracking-wider mt-4 mb-0.5">
+                    <div className="px-2.5 py-1.5 text-[12px] font-medium text-[#919191] tracking-tight mt-4 mb-0.5">
                         Resources
                     </div>
                     {/* Privacy Policy */}
@@ -431,9 +427,9 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             </div>
                             <span
                                 className={cn(
-                                    'text-[13px] font-normal truncate tracking-[-0.01em]',
+                                    'font-medium text-[14px] tracking-wide transition-colors truncate',
                                     activeTab === 'Privacy'
-                                        ? 'text-[#D6D5D4] font-medium'
+                                        ? 'text-[#D6D5D4]'
                                         : 'text-[#919191] group-hover:text-[#D6D5D4]'
                                 )}
                             >
@@ -466,9 +462,9 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             </div>
                             <span
                                 className={cn(
-                                    'text-[13px] font-normal truncate tracking-[-0.01em]',
+                                    'font-medium text-[14px] tracking-wide transition-colors truncate',
                                     activeTab === 'Terms'
-                                        ? 'text-[#D6D5D4] font-medium'
+                                        ? 'text-[#D6D5D4]'
                                         : 'text-[#919191] group-hover:text-[#D6D5D4]'
                                 )}
                             >
@@ -488,7 +484,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             <div className="text-[#919191] group-hover:text-[#D6D5D4] transition-colors flex items-center justify-center shrink-0">
                                 <FileClock className="w-[18px] h-[18px]" strokeWidth={1.5} />
                             </div>
-                            <span className="text-[13px] font-normal text-[#919191] group-hover:text-[#D6D5D4] truncate tracking-[-0.01em]">
+                            <span className="font-medium text-[14px] tracking-wide transition-colors truncate text-[#919191] group-hover:text-[#D6D5D4]">
                                 Changelog
                             </span>
                         </div>
@@ -684,8 +680,8 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                     </div>
 
                     {/* Desktop Content Render: always visible on md: and up */}
-                    <div className="hidden md:flex flex-1 justify-center px-6 md:px-16 py-8 md:py-12 relative z-10 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
-                        <div className="flex flex-col items-end gap-2 absolute top-12 right-6 md:right-16">
+                    <div className="hidden md:flex flex-1 justify-center px-6 md:px-16 pt-8 md:pt-12 pb-6 md:pb-8 relative z-10 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                        <div className="flex flex-col items-end gap-2 absolute top-8 md:top-12 right-6 md:right-16">
                             {profileErrorMessage && (
                                 <ErrorAlert
                                     message={profileErrorMessage}

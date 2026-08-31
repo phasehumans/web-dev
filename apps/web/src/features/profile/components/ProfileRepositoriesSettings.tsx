@@ -75,11 +75,19 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
     return (
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
             <div className="flex flex-col mb-10">
-                <h1 className="text-[16px] font-medium mb-4">Repositories</h1>
+                <h1 className="text-[16px] font-medium mb-3">Repositories</h1>
 
-                <div className="flex flex-col border-t border-[#242323] pt-6">
+                <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
+                    <p className="text-[13px] text-[#7B7A79]">
+                        Reference a repository with an at sign, e.g.{' '}
+                        <code className="bg-[#202020] border border-[#282828] text-[#D6D5C9] px-1.5 py-0.5 rounded font-mono text-[12px]">
+                            @repos:owner/repo
+                        </code>
+                        . Connected repositories are cloned directly into your workspace sandbox.
+                    </p>
+
                     {/* Top Control Bar */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-2">
                         <div className="relative w-full max-w-full sm:max-w-[340px]">
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7B7A79]" />
                             <input
@@ -104,7 +112,7 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
                             </Tooltip>
                             <button
                                 onClick={onConnectGithub}
-                                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#202020] hover:bg-[#282828] border border-[#282828] text-[12.5px] font-medium text-[#D6D5C9] hover:text-white transition-colors cursor-pointer"
+                                className="flex-1 sm:flex-initial px-4 py-1.5 rounded-lg bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                             >
                                 <Plus className="w-3.5 h-3.5" />
                                 <span>Connect GitHub</span>

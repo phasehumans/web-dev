@@ -378,52 +378,6 @@ describe('Setting Service - Unit Tests', () => {
         })
     })
 
-    describe('chatSuggestions', () => {
-        it('should throw AppError 400 if chatSuggestions value is unchanged', async () => {
-            const originalFind = settingRepository.findUserByIdForChatSuggestions
-            settingRepository.findUserByIdForChatSuggestions = (async () => ({
-                chatSuggestions: true,
-            })) as any
-
-            try {
-                await expect(
-                    settingService.chatSuggestions({ userId: 'u1', chatSuggestions: true })
-                ).rejects.toThrow(
-                    new AppError(
-                        'new input must be different from the current chat suggestion state',
-                        400
-                    )
-                )
-            } finally {
-                settingRepository.findUserByIdForChatSuggestions = originalFind
-            }
-        })
-
-        it('should update chatSuggestions if value changes', async () => {
-            const originalFind = settingRepository.findUserByIdForChatSuggestions
-            const originalUpdate = settingRepository.updateChatSuggestions
-
-            settingRepository.findUserByIdForChatSuggestions = (async () => ({
-                chatSuggestions: false,
-            })) as any
-            settingRepository.updateChatSuggestions = (async (_userId, val) => ({
-                id: 'u1',
-                chatSuggestions: val,
-            })) as any
-
-            try {
-                const res = await settingService.chatSuggestions({
-                    userId: 'u1',
-                    chatSuggestions: true,
-                })
-                expect(res.chatSuggestions).toBe(true)
-            } finally {
-                settingRepository.findUserByIdForChatSuggestions = originalFind
-                settingRepository.updateChatSuggestions = originalUpdate
-            }
-        })
-    })
-
     describe('generationSound', () => {
         it('should throw AppError 400 if generationSound value is unchanged', async () => {
             const originalFind = settingRepository.findUserByIdForGenerationSound

@@ -76,11 +76,17 @@ describe('Profile Settings Notifications Tab Placement', () => {
         expect(screen.getByRole('heading', { name: 'Notifications' })).toBeDefined()
         expect(screen.getByRole('heading', { name: 'System' })).toBeDefined()
 
-        // Notification options
-        expect(screen.getByText('Project activity')).toBeDefined()
+        // Account rows (password should not be present)
+        expect(screen.getByText('Full Name')).toBeDefined()
+        expect(screen.getByText('Username')).toBeDefined()
+        expect(screen.getByText('Email')).toBeDefined()
+        expect(screen.queryByText('Password')).toBeNull()
+
+        // Notification options (Project activity should not be present)
+        expect(screen.queryByText('Project activity')).toBeNull()
         expect(
-            screen.getByText('Get notification updates when someone interacts with your projects')
-        ).toBeDefined()
+            screen.queryByText('Get notification updates when someone interacts with your projects')
+        ).toBeNull()
         expect(screen.getByText('Product updates')).toBeDefined()
         expect(
             screen.getByText('Get notification updates about new features and improvements')
@@ -90,27 +96,25 @@ describe('Profile Settings Notifications Tab Placement', () => {
             screen.getByText('Get notification updates for important security notices')
         ).toBeDefined()
 
-        // Toggle switches
+        // Toggle switches (2 remaining: Product updates, Security alerts)
         const switches = screen.getAllByRole('switch')
-        expect(switches.length).toBe(3)
+        expect(switches.length).toBe(2)
 
-        // Click Project activity switch (first switch)
+        // Click Product updates switch (first switch)
         fireEvent.click(switches[0])
-        expect(handleNotificationToggle).toHaveBeenCalledWith('notifyProjectActivity', false)
-
-        // Click Product updates switch (second switch)
-        fireEvent.click(switches[1])
         expect(handleNotificationToggle).toHaveBeenCalledWith('notifyProductUpdates', true)
+
+        // Click Security alerts switch (second switch)
+        fireEvent.click(switches[1])
+        expect(handleNotificationToggle).toHaveBeenCalledWith('notifySecurityAlerts', false)
     })
 
-    test('ProfileGeneralSettings (Preferences tab) does NOT render Notifications section', () => {
+    test('ProfileGeneralSettings (Preferences tab) does NOT render Notifications section or Chat suggestions', () => {
         render(
             <QueryClientProvider client={queryClient}>
                 <MemoryRouter>
                     <ProfileGeneralSettings
-                        chatSuggestions={true}
                         generationSound="FIRST_GENERATION"
-                        onChatSuggestionsToggle={() => {}}
                         onGenerationSoundChange={() => {}}
                     />
                 </MemoryRouter>
@@ -120,6 +124,18 @@ describe('Profile Settings Notifications Tab Placement', () => {
         // Preferences and Custom Rules headings should exist
         expect(screen.getByRole('heading', { name: 'Preferences' })).toBeDefined()
         expect(screen.getByRole('heading', { name: 'Custom Rules' })).toBeDefined()
+
+        // Completion sound should exist, Generation complete sound should not
+        expect(screen.getByText('Completion sound')).toBeDefined()
+        expect(screen.queryByText('Generation complete sound')).toBeNull()
+
+        // Chat suggestions should NOT exist
+        expect(screen.queryByText('Chat suggestions')).toBeNull()
+        expect(
+            screen.queryByText(
+                'Show helpful suggestions in the chat interface to enhance your experience.'
+            )
+        ).toBeNull()
 
         // Notifications section should NOT exist in Preferences tab
         expect(screen.queryByRole('heading', { name: 'Notifications' })).toBeNull()

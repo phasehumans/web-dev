@@ -102,26 +102,6 @@ async function updateNotifications(id: string, data: Prisma.UserUpdateInput) {
     })
 }
 
-async function findUserByIdForChatSuggestions(id: string) {
-    return prisma.user.findUnique({
-        where: { id },
-        select: {
-            id: true,
-            chatSuggestions: true,
-        },
-    })
-}
-
-async function updateChatSuggestions(id: string, chatSuggestions: boolean) {
-    return prisma.user.update({
-        where: { id },
-        data: { chatSuggestions },
-        select: {
-            chatSuggestions: true,
-        },
-    })
-}
-
 async function findUserByIdForGenerationSound(id: string) {
     return prisma.user.findUnique({
         where: { id },
@@ -250,8 +230,6 @@ export const settingRepository = {
     findUserPasswordById,
     updatePassword,
     updateNotifications,
-    findUserByIdForChatSuggestions,
-    updateChatSuggestions,
     findUserByIdForGenerationSound,
     updateGenerationSound,
 

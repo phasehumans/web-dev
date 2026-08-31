@@ -104,33 +104,29 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
             <div className="flex flex-col mb-6">
                 <h1 className="text-[16px] font-medium text-[#D6D5C9] mb-3">Credits</h1>
                 <div className="flex flex-col gap-4 border-t border-[#242323] pt-4">
+                    <p className="text-[13px] text-[#7B7A79]">
+                        Prepaid credits are used to power AI model completions and agent execution
+                        in your workspaces.
+                    </p>
+
                     {/* compact credits balance box */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 border border-[#2B2A27] rounded-2xl p-5 sm:p-6 w-full max-w-[560px] bg-[#141414]">
-                        <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[11px] uppercase tracking-wider text-[#8F8E8D] font-semibold">
-                                    Wallet Balance
-                                </span>
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-mono font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                    Active
-                                </span>
-                            </div>
-                            <div className="flex items-baseline gap-2 mt-0.5">
-                                <span className="text-[32px] sm:text-[36px] font-semibold text-white font-mono leading-none tracking-tight">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#242323] rounded-xl p-4 sm:p-5 w-full max-w-[560px]">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[12px] font-medium text-[#7B7A79]">
+                                Wallet Balance
+                            </span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-[24px] sm:text-[28px] font-medium text-[#D6D5C9] font-mono leading-none tracking-tight">
                                     {formatCents(remainingInCents)}
                                 </span>
-                                <span className="text-[12px] text-[#7B7A79] font-mono">USD</span>
+                                <span className="text-[11px] text-[#7B7A79] font-mono">USD</span>
                             </div>
-                            <span className="text-[12px] text-[#7B7A79] mt-0.5">
-                                Auto-deducted per token generation. Add from $1 to $50.
-                            </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center">
                             <button
                                 type="button"
                                 onClick={() => setShowAddCreditsModal(true)}
-                                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white text-black hover:bg-neutral-200 text-[13px] font-semibold transition-all active:scale-[0.98] cursor-pointer shadow-sm text-center"
+                                className="w-full sm:w-auto px-4 py-1.5 rounded-lg bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] text-[13px] font-medium transition-colors cursor-pointer text-center shadow-sm"
                             >
                                 Add Credits
                             </button>

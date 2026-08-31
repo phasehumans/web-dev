@@ -32,7 +32,6 @@ export type Profile = {
     notifyProjectActivity?: boolean
     notifyProductUpdates?: boolean
     notifySecurityAlerts?: boolean
-    chatSuggestions?: boolean
     generationSound?: 'FIRST_GENERATION' | 'ALWAYS' | 'NEVER'
     memories?: string | null
     rules?: string | null
@@ -80,10 +79,6 @@ type UpdateNotificationInput = {
     notifyProjectActivity?: boolean
     notifyProductUpdates?: boolean
     notifySecurityAlerts?: boolean
-}
-
-type UpdateChatSuggestionsInput = {
-    chatSuggestions: boolean
 }
 
 type UpdateGenerationSoundInput = {
@@ -135,13 +130,6 @@ const changePassword = (data: ChangePasswordInput) => {
 const updateNotifications = (data: UpdateNotificationInput) => {
     return apiRequest<BackendProfile>('/setting/notifications', {
         method: 'PATCH',
-        body: JSON.stringify(data),
-    })
-}
-
-const updateChatSuggestions = (data: UpdateChatSuggestionsInput) => {
-    return apiRequest<BackendProfile>('/setting/suggestions', {
-        method: 'POST',
         body: JSON.stringify(data),
     })
 }
@@ -331,7 +319,6 @@ export const profileAPI = {
     updateAvatarUrl,
     changePassword,
     updateNotifications,
-    updateChatSuggestions,
     updateGenerationSound,
     getQuickInfo,
     signout,

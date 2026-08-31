@@ -28,7 +28,6 @@ model User {
   notifyProjectActivity  Boolean         @default(true)
   notifySecurityAlerts   Boolean         @default(true)
   deletedAt              DateTime?
-  chatSuggestions        Boolean         @default(false)
   generationSound        GenerationSound @default(FIRST_GENERATION)
   rules                  String?
   isDeleted              Boolean         @default(false)

@@ -31,11 +31,6 @@ export type UpdateNotifications = {
     notifySecurityAlerts?: boolean
 }
 
-export type ChatSuggestions = {
-    userId: string
-    chatSuggestions: boolean
-}
-
 export type UpdateGenerationSoundPayload = {
     userId: string
     generationSound: GenerationSoundEnum

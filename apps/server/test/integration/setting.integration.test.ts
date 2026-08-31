@@ -153,18 +153,7 @@ describe('Setting Module Integration Tests', () => {
         expect(res.body.data.welcomeCardDone).toBe(true)
     })
 
-    it('9. POST /api/v1/setting/suggestions - updates chat suggestions toggle', async () => {
-        const res = await request(app)
-            .post('/api/v1/setting/suggestions')
-            .set('x-forwarded-for', getRandomIP())
-            .set('Authorization', `Bearer ${accessToken}`)
-            .send({ chatSuggestions: true })
-
-        expect(res.status).toBe(200)
-        expect(res.body.data.chatSuggestions).toBe(true)
-    })
-
-    it('10. POST /api/v1/setting/sound - updates generation sound setting', async () => {
+    it('9. POST /api/v1/setting/sound - updates generation sound setting', async () => {
         const res = await request(app)
             .post('/api/v1/setting/sound')
             .set('x-forwarded-for', getRandomIP())
@@ -175,7 +164,7 @@ describe('Setting Module Integration Tests', () => {
         expect(res.body.data.generationSound).toBe('NEVER')
     })
 
-    it('11. POST /api/v1/setting/feedback - submits user feedback', async () => {
+    it('10. POST /api/v1/setting/feedback - submits user feedback', async () => {
         const res = await request(app)
             .post('/api/v1/setting/feedback')
             .set('x-forwarded-for', getRandomIP())
@@ -194,7 +183,7 @@ describe('Setting Module Integration Tests', () => {
         expect(fb?.feedback).toBe('Everything works smoothly!')
     })
 
-    it('12. PATCH /api/v1/setting/password - updates user password', async () => {
+    it('11. PATCH /api/v1/setting/password - updates user password', async () => {
         const newPassword = 'NewPassword456!'
         const res = await request(app)
             .patch('/api/v1/setting/password')

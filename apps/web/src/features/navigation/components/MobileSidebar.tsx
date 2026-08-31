@@ -24,6 +24,8 @@ const SidebarSessionsSkeleton: React.FC = () => (
             { titleW: 'w-[85%]', timeW: 'w-10' },
             { titleW: 'w-[50%]', timeW: 'w-14' },
             { titleW: 'w-[68%]', timeW: 'w-12' },
+            { titleW: 'w-[80%]', timeW: 'w-16' },
+            { titleW: 'w-[55%]', timeW: 'w-10' },
         ].map((item, i) => (
             <div key={i} className="flex flex-col gap-1 px-2.5 py-1.5 rounded-xl">
                 <Skeleton className={`h-3 ${item.titleW} bg-white/[0.04] rounded`} />
@@ -417,7 +419,7 @@ export const MobileSidebar: React.FC<
                 }
                 return updatedB - updatedA
             })
-            .slice(0, 5)
+            .slice(0, 7)
     }, [isAuthenticated, sessions, sortBy, filterSchedules, filterArchived, sessionType])
 
     return (

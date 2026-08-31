@@ -55,16 +55,12 @@ const playGenerationSoundPreview = () => {
 }
 
 interface ProfileGeneralSettingsProps {
-    chatSuggestions: boolean
     generationSound: 'FIRST_GENERATION' | 'ALWAYS' | 'NEVER'
-    onChatSuggestionsToggle: (value: boolean) => void
     onGenerationSoundChange: (value: 'FIRST_GENERATION' | 'ALWAYS' | 'NEVER') => void
 }
 
 export const ProfileGeneralSettings: React.FC<ProfileGeneralSettingsProps> = ({
-    chatSuggestions,
     generationSound,
-    onChatSuggestionsToggle,
     onGenerationSoundChange,
 }) => {
     const queryClient = useQueryClient()
@@ -121,38 +117,10 @@ Use this template file to specify coding styles, design tokens, architecture pat
             <div className="flex flex-col mb-10">
                 <h1 className="text-[16px] font-medium mb-4">Preferences</h1>
                 <div className="flex flex-col gap-7 border-t border-[#242323] pt-6">
-                    {/* chat suggestions */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-0.5">
-                            <span className="text-[14px] text-[#D6D5C9]">Chat suggestions</span>
-                            <span className="text-[13px] text-[#7B7A79]">
-                                Show helpful suggestions in the chat interface to enhance your
-                                experience.
-                            </span>
-                        </div>
-                        <button
-                            role="switch"
-                            onClick={() => onChatSuggestionsToggle(!chatSuggestions)}
-                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                chatSuggestions ? 'bg-[#87B2F4]' : 'bg-[#100E12] border-[#383736]'
-                            }`}
-                        >
-                            <span
-                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full shadow ring-0 transition duration-200 ease-in-out ${
-                                    chatSuggestions
-                                        ? 'translate-x-4 bg-[#100E12]'
-                                        : 'translate-x-0 bg-[#383736]'
-                                }`}
-                            />
-                        </button>
-                    </div>
-
-                    {/* generation complete sound */}
+                    {/* completion sound */}
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
                         <div className="flex flex-col gap-0.5 max-w-full sm:max-w-[60%]">
-                            <span className="text-[14px] text-[#D6D5C9]">
-                                Generation complete sound
-                            </span>
+                            <span className="text-[14px] text-[#D6D5C9]">Completion sound</span>
                             <span className="text-[13px] text-[#7B7A79]">
                                 Plays a satisfying sound notification when a generation is finished.
                             </span>

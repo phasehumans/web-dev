@@ -39,10 +39,6 @@ export const updateNotificationSchema = z.object({
         .optional(),
 })
 
-export const chatSuggestionsSchema = z.object({
-    chatSuggestions: z.boolean({ message: 'chatSuggestions must be a boolean' }),
-})
-
 export enum GenerationSound {
     FIRST_GENERATION = 'FIRST_GENERATION',
     ALWAYS = 'ALWAYS',

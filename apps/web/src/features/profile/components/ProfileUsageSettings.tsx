@@ -128,10 +128,15 @@ export const ProfileUsageSettings: React.FC = () => {
     return (
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
             <div className="flex flex-col mb-8">
-                <h1 className="text-[16px] font-medium mb-4">Usage</h1>
-                <div className="flex flex-col border-t border-[#242323] pt-6">
+                <h1 className="text-[16px] font-medium mb-3">Usage</h1>
+                <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
+                    <p className="text-[13px] text-[#7B7A79]">
+                        Track your token consumption, credit deductions, and generation costs across
+                        recent model sessions.
+                    </p>
+
                     {/* controls row */}
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-2">
                         {/* quick filters */}
                         <div className="flex items-center gap-1 bg-[#100E12] p-0.5 rounded-lg border border-[#242323]">
                             {['1d', '7d', '30d', '90d'].map((range) => {

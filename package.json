@@ -104,7 +104,7 @@
             "prettier --write"
         ]
     },
-    "version": "0.3.21",
+    "version": "0.3.22",
     "author": "Chaitanya Sonawane",
     "license": "MIT",
     "dependencies": {

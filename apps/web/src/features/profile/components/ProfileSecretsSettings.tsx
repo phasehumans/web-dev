@@ -199,7 +199,7 @@ export const ProfileSecretsSettings: React.FC = () => {
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
             {/* Header */}
             <div className="flex flex-col mb-10">
-                <h1 className="text-[16px] font-medium text-white mb-3">Secrets</h1>
+                <h1 className="text-[16px] font-medium mb-3">Secrets</h1>
                 <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
                     <p className="text-[13px] text-[#7B7A79]">
                         Reference a secret with a dollar sign, e.g.{' '}
@@ -266,7 +266,7 @@ export const ProfileSecretsSettings: React.FC = () => {
                             </div>
                         ) : filteredSecrets.length === 0 ? (
                             <div className="p-6 md:p-12 flex flex-col items-center justify-center gap-2 text-center">
-                                <h3 className="text-[14px] font-medium text-white">
+                                <h3 className="text-[14px] font-medium text-[#D6D5C9]">
                                     No secrets found
                                 </h3>
                                 <p className="text-[13px] text-[#7B7A79]">
@@ -285,7 +285,7 @@ export const ProfileSecretsSettings: React.FC = () => {
                                             <div className="md:hidden p-3.5 flex flex-col gap-2.5 text-[13px]">
                                                 <div className="flex items-start justify-between gap-2">
                                                     <div className="flex flex-col gap-0.5 min-w-0">
-                                                        <span className="font-mono font-medium text-white truncate">
+                                                        <span className="font-mono font-medium text-[#D6D5C9] truncate">
                                                             ${sec.name}
                                                         </span>
                                                         {isRevealed && decryptedVal && (
@@ -344,7 +344,7 @@ export const ProfileSecretsSettings: React.FC = () => {
                                             {/* Desktop row (>= md) */}
                                             <div className="hidden md:grid grid-cols-12 items-center px-4 py-3 hover:bg-[#202020] transition-colors text-[13px]">
                                                 {/* Name */}
-                                                <div className="col-span-4 font-mono font-medium text-white truncate pr-2 flex flex-col gap-0.5">
+                                                <div className="col-span-4 font-mono font-medium text-[#D6D5C9] truncate pr-2 flex flex-col gap-0.5">
                                                     <span>${sec.name}</span>
                                                     {isRevealed && decryptedVal && (
                                                         <span className="text-[11px] text-[#87B2F4] font-mono select-all truncate">
@@ -415,7 +415,7 @@ export const ProfileSecretsSettings: React.FC = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
                     <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-md p-6 flex flex-col gap-5 shadow-2xl">
                         <div className="flex flex-col gap-1">
-                            <h3 className="text-[16px] font-medium text-white">Add Secret</h3>
+                            <h3 className="text-[16px] font-medium text-[#D6D5C9]">Add Secret</h3>
                             <p className="text-[13px] text-[#7B7A79]">
                                 Add environment variables or API keys available to your workspace.
                             </p>
@@ -494,7 +494,9 @@ export const ProfileSecretsSettings: React.FC = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
                     <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-lg p-6 flex flex-col gap-5 shadow-2xl">
                         <div className="flex flex-col gap-1">
-                            <h3 className="text-[16px] font-medium text-white">Bulk Add Secrets</h3>
+                            <h3 className="text-[16px] font-medium text-[#D6D5C9]">
+                                Bulk Add Secrets
+                            </h3>
                             <p className="text-[13px] text-[#7B7A79]">
                                 Paste environment variables in{' '}
                                 <code className="text-[#D6D5C9]">KEY=VALUE</code> format.

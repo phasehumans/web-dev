@@ -124,54 +124,68 @@ export const ProfileConnectionsSettings: React.FC<ProfileConnectionsSettingsProp
     return (
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
             {/* Connections Section */}
-            <div className="flex flex-col mb-12">
-                <h1 className="text-[16px] font-medium mb-4">Connections</h1>
-                <div className="flex flex-col sm:gap-5 border-t border-[#242323] pt-4 sm:pt-6">
-                    {connectionsList.map(
-                        ({ id, name, description, Icon, iconColor, isConnected, onConnect }) => {
-                            const isUnavailable = !onConnect
-                            return (
-                                <div
-                                    key={id}
-                                    className="flex items-center justify-between gap-3 sm:gap-4 py-3.5 sm:py-0 border-b border-[#242323]/50 sm:border-none last:border-b-0"
-                                >
-                                    <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
-                                        <div
-                                            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#191919] border border-[#383736] flex items-center justify-center shrink-0"
-                                            style={{ color: iconColor }}
-                                        >
-                                            <Icon />
-                                        </div>
-                                        <div className="flex flex-col gap-0.5 min-w-0">
-                                            <span className="text-[14px] font-medium text-[#D6D5C9] truncate">
-                                                {name}
-                                            </span>
-                                            <span className="text-[12px] sm:text-[12.5px] text-[#7B7A79] sm:max-w-[380px] leading-relaxed line-clamp-1 sm:line-clamp-none">
-                                                {description}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={onConnect}
-                                        disabled={isConnected || isUnavailable}
-                                        className={`px-3 sm:px-4 py-1.5 rounded-lg border text-[12px] sm:text-[13px] font-medium transition-all shrink-0 text-center cursor-pointer ${
-                                            isConnected
-                                                ? 'border-[#383736] bg-[#191919] text-[#6A6968] cursor-default'
-                                                : isUnavailable
-                                                  ? 'border-[#2B2A29] text-[#4A4948] cursor-not-allowed'
-                                                  : 'border-[#383736] text-[#D6D5C9] hover:bg-[#191919] active:bg-[#202020]'
-                                        }`}
+            <div className="flex flex-col mb-0">
+                <h1 className="text-[16px] font-medium mb-3">Connections</h1>
+                <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
+                    <p className="text-[13px] text-[#7B7A79]">
+                        Connect third-party accounts and services to deploy apps, manage databases,
+                        and automate workflows.
+                    </p>
+                    <div className="flex flex-col sm:gap-5 pt-1">
+                        {connectionsList.map(
+                            ({
+                                id,
+                                name,
+                                description,
+                                Icon,
+                                iconColor,
+                                isConnected,
+                                onConnect,
+                            }) => {
+                                const isUnavailable = !onConnect
+                                return (
+                                    <div
+                                        key={id}
+                                        className="flex items-center justify-between gap-3 sm:gap-4 py-3.5 sm:py-0 border-b border-[#242323]/50 sm:border-none last:border-b-0"
                                     >
-                                        {isConnected
-                                            ? 'Connected'
-                                            : isUnavailable
-                                              ? 'Soon'
-                                              : 'Connect'}
-                                    </button>
-                                </div>
-                            )
-                        }
-                    )}
+                                        <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+                                            <div
+                                                className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#191919] border border-[#383736] flex items-center justify-center shrink-0"
+                                                style={{ color: iconColor }}
+                                            >
+                                                <Icon />
+                                            </div>
+                                            <div className="flex flex-col gap-0.5 min-w-0">
+                                                <span className="text-[14px] font-medium text-[#D6D5C9] truncate">
+                                                    {name}
+                                                </span>
+                                                <span className="text-[12px] sm:text-[12.5px] text-[#7B7A79] sm:max-w-[380px] leading-relaxed line-clamp-1 sm:line-clamp-none">
+                                                    {description}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={onConnect}
+                                            disabled={isConnected || isUnavailable}
+                                            className={`px-3 sm:px-4 py-1.5 rounded-lg border text-[12px] sm:text-[13px] font-medium transition-all shrink-0 text-center cursor-pointer ${
+                                                isConnected
+                                                    ? 'border-[#383736] bg-[#191919] text-[#6A6968] cursor-default'
+                                                    : isUnavailable
+                                                      ? 'border-[#2B2A29] text-[#4A4948] cursor-not-allowed'
+                                                      : 'border-[#383736] text-[#D6D5C9] hover:bg-[#191919] active:bg-[#202020]'
+                                            }`}
+                                        >
+                                            {isConnected
+                                                ? 'Connected'
+                                                : isUnavailable
+                                                  ? 'Soon'
+                                                  : 'Connect'}
+                                        </button>
+                                    </div>
+                                )
+                            }
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
