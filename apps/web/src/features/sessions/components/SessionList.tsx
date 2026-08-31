@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 
 import { useSessionListMutations } from '../hooks/useSessionListMutations'
 import { useInfiniteSessions } from '../hooks/useSessions'
@@ -83,15 +83,6 @@ export const SessionList: React.FC<{
         onDeleteMutate: () => setDeleteModal({ isOpen: false, project: null }),
     })
 
-    // collect all unique tags from sessions for the tag filter
-    const availableTags = useMemo(() => {
-        const tagSet = new Set<string>()
-        sessions.forEach((s) => {
-            if (s.tags) s.tags.forEach((t) => tagSet.add(t))
-        })
-        return Array.from(tagSet).sort()
-    }, [sessions])
-
     const filteredAndSortedSessions = useMemo(() => {
         let result = [...sessions]
 
@@ -106,32 +97,6 @@ export const SessionList: React.FC<{
             )
         }
 
-        // advanced filter: type (multi-select)
-        if (advancedFilters.types.length > 0) {
-            result = result.filter((session) => advancedFilters.types.includes(session.type))
-        }
-
-        // advanced filter: archived status
-        if (advancedFilters.archivedStatus === 'archived') {
-            result = result.filter((session) => session.isArchived === true)
-        } else if (advancedFilters.archivedStatus === 'not_archived') {
-            result = result.filter((session) => !session.isArchived)
-        }
-
-        // advanced filter: pinned status
-        if (advancedFilters.pinnedStatus === 'pinned') {
-            result = result.filter((session) => session.isPinned === true)
-        } else if (advancedFilters.pinnedStatus === 'not_pinned') {
-            result = result.filter((session) => !session.isPinned)
-        }
-
-        // advanced filter: tags
-        if (advancedFilters.tags.length > 0) {
-            result = result.filter((session) =>
-                advancedFilters.tags.some((tag) => session.tags?.includes(tag))
-            )
-        }
-
         // sort
         result.sort((a, b) => {
             const dateA = new Date(a.updatedAt || a.createdAt).getTime()
@@ -140,7 +105,7 @@ export const SessionList: React.FC<{
         })
 
         return result
-    }, [sessions, searchQuery, advancedFilters, sortOption])
+    }, [sessions, searchQuery, sortOption])
 
     const toggleStar = (id: string, event: React.MouseEvent) => {
         event.stopPropagation()

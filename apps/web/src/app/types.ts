@@ -79,6 +79,8 @@ export const getViewForPath = (pathname: string): ViewState => {
         pathname === '/connectors' ||
         pathname === '/settings/integrations' ||
         pathname === '/profile/integrations' ||
+        pathname === '/settings/mcp-server' ||
+        pathname === '/profile/mcp-server' ||
         pathname.startsWith('/connectors/')
     ) {
         return 'connectors'
