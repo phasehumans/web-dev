@@ -99,7 +99,7 @@ export const GithubCallback = () => {
                     <h2 className="text-lg font-semibold text-red-400 mb-2">
                         Authentication Failed
                     </h2>
-                    <p className="text-sm text-gray-300 bg-red-950/30 border border-red-800/40 rounded-xl p-3 mb-6 text-left">
+                    <p className="text-sm text-red-500 font-medium mb-6 text-center">
                         {errorMsg || 'An unknown error occurred during GitHub login.'}
                     </p>
                     <button

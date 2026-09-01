@@ -82,7 +82,7 @@ async function main() {
 
     if (parsedArgs.command === 'update') {
         const { handleUpdateCommand } = await import('./commands')
-        await handleUpdateCommand()
+        await handleUpdateCommand({ force: parsedArgs.force })
         process.exit(process.exitCode || 0)
     }
 

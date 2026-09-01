@@ -111,7 +111,7 @@ export async function handleInitCommand(options?: { quiet?: boolean }): Promise<
     }
 }
 
-export async function handleUpdateCommand(): Promise<void> {
+export async function handleUpdateCommand(options?: { force?: boolean }): Promise<void> {
     const { performCliUpdate } = await import('./utils/updater')
     const BLUE = '\x1b[38;2;135;178;244m'
     const GREEN = '\x1b[38;2;110;231;183m'
@@ -124,6 +124,8 @@ export async function handleUpdateCommand(): Promise<void> {
     console.log(`\n${BLUE}✱${RESET}  ${WHITE}Checking and updating December CLI...${RESET}`)
 
     const result = await performCliUpdate({
+        currentVersion: pkg.version,
+        force: options?.force,
         onProgress: (msg) => {
             console.log(`${BLUE}✱${RESET}  ${msg}`)
         },
@@ -133,13 +135,23 @@ export async function handleUpdateCommand(): Promise<void> {
         console.log(
             `\n${BLUE}✱${RESET}  Running December CLI from local source development directory.`
         )
-        console.log(`   Run ${WHITE}git pull && bun install${RESET} to update.\n`)
+        console.log(
+            `   Run ${WHITE}git pull && bun install && bun --cwd apps/cli run build${RESET} to update.\n`
+        )
         return
     }
 
     if (result.method === 'npx') {
         console.log(`\n${BLUE}✱${RESET}  Running December CLI via npx/bunx.`)
         console.log(`   Each invocation automatically pulls the latest version.\n`)
+        return
+    }
+
+    if (result.alreadyUpToDate) {
+        console.log(
+            `\n${GREEN}✔${RESET}  ${WHITE}You are already using the latest version of December CLI (v${result.installedVersion || result.targetVersion}).${RESET}`
+        )
+        console.log(`   ${GRAY}Use ${WHITE}december update --force${GRAY} to reinstall.${RESET}\n`)
         return
     }
 
@@ -166,10 +178,19 @@ export async function handleUpdateCommand(): Promise<void> {
             console.log('')
         }
     } else {
-        console.error(
-            `\n${RED}✖${RESET}  Failed to update December CLI via ${result.method}: ${result.error || 'Unknown error'}`
-        )
-        console.error(`   Try running manually: ${WHITE}${result.manualCmd}${RESET}\n`)
+        if (result.isPermissionError) {
+            console.error(
+                `\n${RED}✖${RESET}  ${WHITE}Permission denied while installing global package.${RESET}`
+            )
+            console.error(
+                `   ${YELLOW}→${RESET} Try running with elevated permissions: ${WHITE}${result.sudoCmd || result.manualCmd}${RESET}\n`
+            )
+        } else {
+            console.error(
+                `\n${RED}✖${RESET}  Failed to update December CLI via ${result.method}: ${result.error || 'Unknown error'}`
+            )
+            console.error(`   Try running manually: ${WHITE}${result.manualCmd}${RESET}\n`)
+        }
         process.exitCode = 1
     }
 }

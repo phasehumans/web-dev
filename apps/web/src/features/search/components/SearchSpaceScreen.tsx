@@ -43,7 +43,19 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
     const sessionId = searchParams.get('session')
     const promptParam = searchParams.get('prompt')
     const queryClient = useQueryClient()
-    const { setShowOutOfCreditsModal, setIsMobileSidebarOpen } = useAppStore()
+    const {
+        setShowOutOfCreditsModal,
+        setIsMobileSidebarOpen,
+        isAuthenticated,
+        isAuthRestored,
+        setShowAuthModal,
+    } = useAppStore()
+
+    useEffect(() => {
+        if (isAuthRestored && !isAuthenticated) {
+            navigate('/', { replace: true })
+        }
+    }, [isAuthRestored, isAuthenticated, navigate])
 
     const [promptText, setPromptText] = useState('')
     const [sessionTitle, setSessionTitle] = useState<string>('')
@@ -58,7 +70,6 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
     const [isCopiedShare, setIsCopiedShare] = useState(false)
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
     const [isThinkingMode, setIsThinkingMode] = useState(false)
-    const [liveTelemetry, setLiveTelemetry] = useState<any | null>(null)
     const moreMenuRef = useRef<HTMLDivElement | null>(null)
 
     const scrollContainerRef = useRef<HTMLDivElement | null>(null)
@@ -80,22 +91,6 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [isMoreMenuOpen])
-
-    // Load insights/telemetry when more menu opens
-    useEffect(() => {
-        if (isMoreMenuOpen && sessionId && !liveTelemetry) {
-            sessionAPI
-                .getSessionInsights(sessionId)
-                .then((res: any) => {
-                    if (res?.telemetry) {
-                        setLiveTelemetry(res.telemetry)
-                    }
-                })
-                .catch(() => {
-                    // Intentionally swallowed: fallback to local telemetry
-                })
-        }
-    }, [isMoreMenuOpen, sessionId, liveTelemetry])
 
     // Load existing session messages if sessionId is present
     useEffect(() => {
@@ -470,17 +465,9 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
         }
     }
 
-    const telemetry = liveTelemetry || (sessionData as any)?.telemetry
-    const usage = telemetry?.onDemandUsage || (sessionData as any)?.usage || '$0.00'
-    const totalTokens =
-        telemetry?.totalTokens != null
-            ? telemetry.totalTokens.toLocaleString()
-            : telemetry?.inputTokens != null || telemetry?.outputTokens != null
-              ? ((telemetry.inputTokens || 0) + (telemetry.outputTokens || 0)).toLocaleString()
-              : undefined
-    const duration =
-        telemetry?.durationMinutes != null ? `${telemetry.durationMinutes}m` : undefined
-    const sessionSize = (sessionData as any)?.sessionSize
+    if (isAuthRestored && !isAuthenticated) {
+        return null
+    }
 
     return (
         <div className="flex-1 flex flex-col h-full bg-[#141414] text-[#EDEDEF] relative overflow-hidden min-h-0 font-sans">
@@ -647,13 +634,19 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                                                     className={cn(
                                                         'p-2 sm:p-1.5 rounded-lg sm:rounded-md transition-colors cursor-pointer touch-manipulation',
                                                         isLiked
-                                                            ? 'text-[#87B2F4] bg-[#87B2F4]/10'
+                                                            ? 'text-white'
                                                             : 'text-[#8E8D8C] hover:text-white hover:bg-white/5 active:bg-white/10'
                                                     )}
                                                     title="Helpful response"
                                                     aria-label="Helpful response"
                                                 >
-                                                    <ThumbsUp size={13.5} />
+                                                    <ThumbsUp
+                                                        size={13.5}
+                                                        fill={isLiked ? 'currentColor' : 'none'}
+                                                        className={
+                                                            isLiked ? 'text-white fill-white' : ''
+                                                        }
+                                                    />
                                                 </button>
 
                                                 <button
@@ -667,13 +660,21 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                                                     className={cn(
                                                         'p-2 sm:p-1.5 rounded-lg sm:rounded-md transition-colors cursor-pointer touch-manipulation',
                                                         isDisliked
-                                                            ? 'text-red-400 bg-red-400/10'
+                                                            ? 'text-white'
                                                             : 'text-[#8E8D8C] hover:text-white hover:bg-white/5 active:bg-white/10'
                                                     )}
                                                     title="Unhelpful response"
                                                     aria-label="Unhelpful response"
                                                 >
-                                                    <ThumbsDown size={13.5} />
+                                                    <ThumbsDown
+                                                        size={13.5}
+                                                        fill={isDisliked ? 'currentColor' : 'none'}
+                                                        className={
+                                                            isDisliked
+                                                                ? 'text-white fill-white'
+                                                                : ''
+                                                        }
+                                                    />
                                                 </button>
 
                                                 <button
@@ -714,6 +715,8 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                             selectedElement={null}
                             handleClearSelection={() => {}}
                             isApplyingEdit={isStreaming}
+                            isAuthenticated={isAuthenticated}
+                            onOpenAuth={() => setShowAuthModal(true)}
                             mode="search"
                             isThinkingMode={isThinkingMode}
                             onToggleThinking={setIsThinkingMode}

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Volume1, Volume2, VolumeX, FilePlus, Trash2, Loader2, FileText, Save } from 'lucide-react'
+import { Volume1, Volume2, VolumeX, FilePlus, FileText } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -224,23 +224,20 @@ Use this template file to specify coding styles, design tokens, architecture pat
                             </button>
                         </div>
                     ) : (
-                        <div className="flex flex-col border-0 sm:border sm:border-[#242323] rounded-none sm:rounded-xl bg-transparent sm:bg-[#141414] overflow-visible sm:overflow-hidden transition-all">
+                        <div className="flex flex-col border border-[#2B2A27] rounded-lg bg-transparent overflow-hidden transition-all">
                             {/* Editor Header Bar */}
-                            <div className="flex items-center justify-between px-0 sm:px-4 py-0 sm:py-2.5 mb-2.5 sm:mb-0 bg-transparent sm:bg-[#191919] border-0 sm:border-b sm:border-[#242323]">
+                            <div className="flex items-center justify-between px-3.5 pt-3 pb-1 bg-transparent">
                                 <div className="flex items-center gap-2">
                                     <FileText className="w-4 h-4 text-[#87B2F4]" />
                                     <span className="text-[13px] font-medium text-[#D6D5C9]">
                                         rules.md
                                     </span>
                                 </div>
-                                <span className="text-[11px] font-mono text-[#7B7A79] bg-[#191919] sm:bg-[#100E12] px-2 py-0.5 rounded border border-[#242323]">
-                                    {rulesText.length} chars
-                                </span>
                             </div>
 
                             {/* Editor Code Area */}
                             <textarea
-                                className="w-full h-[280px] sm:h-[380px] bg-[#191919] sm:bg-transparent border border-[#242323] sm:border-0 rounded-xl sm:rounded-none p-3.5 sm:p-4 text-[13px] text-[#D6D5C9] placeholder:text-[#7B7A79] font-mono leading-relaxed resize-none focus:outline-none focus:border-[#383736] sm:focus:border-transparent transition-colors caret-[#87B2F4] selection:bg-[#2B2B2B] no-scrollbar"
+                                className="w-full h-[280px] sm:h-[360px] bg-transparent px-3.5 py-2 text-[13px] text-[#D6D5C9] placeholder:text-[#7B7A79] font-mono leading-relaxed resize-none focus:outline-none transition-colors caret-[#87B2F4] selection:bg-[#2B2B2B] no-scrollbar border-0"
                                 spellCheck={false}
                                 value={rulesText}
                                 onChange={(e) => {
@@ -251,22 +248,14 @@ Use this template file to specify coding styles, design tokens, architecture pat
                             ></textarea>
 
                             {/* Editor Footer Bar */}
-                            <div className="flex items-center justify-between px-0 sm:px-4 py-0 sm:py-2.5 mt-2.5 sm:mt-0 bg-transparent sm:bg-[#191919] border-0 sm:border-t sm:border-[#242323]">
-                                <span className="text-[12px] text-[#7B7A79] hidden sm:inline">
-                                    Persistent rules for december
-                                </span>
-                                <div className="flex items-center justify-between sm:justify-end gap-2.5 w-full sm:w-auto">
+                            <div className="flex items-center justify-end px-3.5 pb-3 pt-1 bg-transparent">
+                                <div className="flex items-center justify-end gap-2.5 w-full sm:w-auto">
                                     <button
                                         onClick={() => deleteRulesMutation.mutate()}
                                         disabled={deleteRulesMutation.isPending}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] font-medium text-[#7B7A79] hover:text-red-400 transition-colors rounded-lg disabled:opacity-30 cursor-pointer"
+                                        className="px-3 py-1.5 text-[12.5px] font-medium text-[#7B7A79] hover:text-red-400 transition-colors rounded-lg disabled:opacity-30 cursor-pointer"
                                     >
-                                        {deleteRulesMutation.isPending ? (
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                        ) : (
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        )}
-                                        <span>Delete</span>
+                                        {deleteRulesMutation.isPending ? 'Deleting...' : 'Delete'}
                                     </button>
                                     <button
                                         onClick={() => {
@@ -277,18 +266,13 @@ Use this template file to specify coding styles, design tokens, architecture pat
                                             }
                                         }}
                                         disabled={!rulesDirty || updateRulesMutation.isPending}
-                                        className={`px-3.5 py-1.5 rounded-lg border text-[12.5px] font-medium transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                                        className={`px-4 py-1.5 rounded-lg border text-[12.5px] font-medium transition-colors flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
                                             rulesDirty
                                                 ? 'border-[#87B2F4] bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF]'
                                                 : 'border-[#383736] bg-[#191919] text-[#D6D5C9] hover:bg-[#242323]'
                                         }`}
                                     >
-                                        {updateRulesMutation.isPending ? (
-                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-current" />
-                                        ) : (
-                                            <Save className="w-3.5 h-3.5 text-current" />
-                                        )}
-                                        <span>Save</span>
+                                        {updateRulesMutation.isPending ? 'Saving...' : 'Save'}
                                     </button>
                                 </div>
                             </div>

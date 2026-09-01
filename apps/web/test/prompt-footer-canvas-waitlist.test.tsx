@@ -1,6 +1,5 @@
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { expect, test, describe, spyOn, afterEach, beforeEach, mock } from 'bun:test'
 import React from 'react'
 import { MemoryRouter } from 'react-router-dom'
@@ -16,6 +15,8 @@ import { PromptFooter } from '../src/shared/components/ui/PromptFooter'
 if (!globalThis.document) {
     GlobalRegistrator.register()
 }
+
+const { render, screen, fireEvent, cleanup } = await import('@testing-library/react')
 
 describe('PromptFooter & PromptInput: Mention Dropdown & Back Navigation', () => {
     let queryClient: QueryClient
@@ -171,8 +172,8 @@ describe('PromptFooter & PromptInput: Mention Dropdown & Back Navigation', () =>
         // "Connect GitHub" should be rendered as a link with href
         const connectLink = screen.getByRole('link', { name: /Connect GitHub/i })
         expect(connectLink).not.toBeNull()
-        expect(connectLink.getAttribute('href')).toContain('github.com/apps')
-        expect(connectLink.getAttribute('href')).toContain('installations/new')
+        expect(connectLink.getAttribute('href')).toContain('github.com/login/oauth/authorize')
+        expect(connectLink.getAttribute('href')).toContain('client_id=')
 
         // Suffix text should be visible
         expect(screen.getByText(/to see repos\./i)).not.toBeNull()

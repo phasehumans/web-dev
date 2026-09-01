@@ -1,5 +1,7 @@
 import { exec } from 'node:child_process'
+import fsSync from 'node:fs'
 
+import pkg from '../../package.json' with { type: 'json' }
 import { loadConfig } from '../config'
 
 import {
@@ -8,6 +10,17 @@ import {
     resolveAndCleanStaleBinaries,
 } from './bin-discovery'
 import { clearVersionCheckCache, fetchLatestFromNpm } from './version-check'
+
+function isPermissionDeniedError(errMsg: string): boolean {
+    const lower = errMsg.toLowerCase()
+    return (
+        lower.includes('eacces') ||
+        lower.includes('eperm') ||
+        lower.includes('permission denied') ||
+        lower.includes('missing write access') ||
+        lower.includes('operation not permitted')
+    )
+}
 
 export type InstallMethod = 'npm' | 'bun' | 'pnpm' | 'npx' | 'source'
 
@@ -19,6 +32,7 @@ export interface UpdateCommandInfo {
 
 export interface UpdateResult {
     success: boolean
+    alreadyUpToDate?: boolean
     method: InstallMethod
     command: string
     manualCmd: string
@@ -28,6 +42,8 @@ export interface UpdateResult {
     collisionFixed?: boolean
     cleanedBinaries?: string[]
     shellHashNotice?: boolean
+    isPermissionError?: boolean
+    sudoCmd?: string
     error?: string
     output?: string
 }
@@ -47,27 +63,35 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
     }
 
     const execPath = (options?.execPath ?? process.execPath ?? '').replace(/\\/g, '/')
-    const argv1 = (
-        options?.argv1 ??
-        (process.argv.length > 1 ? process.argv[1] : '') ??
-        ''
-    ).replace(/\\/g, '/')
+    const rawArgv1 = options?.argv1 ?? (process.argv.length > 1 ? process.argv[1] : '') ?? ''
+    let realArgv1 = rawArgv1
+    try {
+        if (rawArgv1 && fsSync.existsSync(rawArgv1)) {
+            realArgv1 = fsSync.realpathSync(rawArgv1)
+        }
+    } catch {
+        // Intentionally swallowed: fallback to unresolved path
+    }
+
+    const argv1 = rawArgv1.replace(/\\/g, '/')
+    const realArgv1Norm = realArgv1.replace(/\\/g, '/')
+    const combined = `${argv1} ${realArgv1Norm}`.toLowerCase()
     const env = options?.env ?? process.env
 
-    // 1. Local source repository
+    // 1. Local source repository or symlinked dev build
     if (
-        argv1.includes('/apps/cli/src') ||
-        argv1.includes('/apps/cli/dist') ||
-        argv1.includes('december/apps/cli')
+        combined.includes('/apps/cli/src') ||
+        combined.includes('/apps/cli/dist') ||
+        combined.includes('december/apps/cli')
     ) {
         return 'source'
     }
 
     // 2. NPX / Bunx ephemeral execution
     if (
-        argv1.includes('/_npx/') ||
-        argv1.includes('\\_npx\\') ||
-        argv1.includes('/.bunx/') ||
+        combined.includes('/_npx/') ||
+        combined.includes('\\_npx\\') ||
+        combined.includes('/.bunx/') ||
         env.npm_config_user_agent?.includes('npx')
     ) {
         return 'npx'
@@ -75,8 +99,8 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
 
     // 3. Bun global
     if (
-        argv1.includes('.bun/bin') ||
-        argv1.includes('/.bun/') ||
+        combined.includes('.bun/bin') ||
+        combined.includes('/.bun/') ||
         (execPath.includes('/bun') && !execPath.endsWith('/node'))
     ) {
         return 'bun'
@@ -84,9 +108,9 @@ export function detectInstallMethod(options?: DetectOptions): InstallMethod {
 
     // 4. PNPM global
     if (
-        argv1.includes('pnpm') ||
-        argv1.includes('.pnpm') ||
-        (env.PNPM_HOME && argv1.includes(env.PNPM_HOME.replace(/\\/g, '/')))
+        combined.includes('pnpm') ||
+        combined.includes('.pnpm') ||
+        (env.PNPM_HOME && combined.includes(env.PNPM_HOME.replace(/\\/g, '/').toLowerCase()))
     ) {
         return 'pnpm'
     }
@@ -123,8 +147,8 @@ export function getUpdateCommand(
         }
         case 'source': {
             return {
-                command: 'git pull && bun install',
-                manualCmd: 'git pull && bun install',
+                command: 'git pull && bun install && bun --cwd apps/cli run build',
+                manualCmd: 'git pull && bun install && bun --cwd apps/cli run build',
                 description: 'Local source repository',
             }
         }
@@ -140,6 +164,9 @@ export function getUpdateCommand(
 }
 
 export interface PerformUpdateOptions {
+    currentVersion?: string
+    force?: boolean
+    fetchLatestFn?: () => Promise<string | null>
     onProgress?: (message: string) => void
     onSuccess?: () => Promise<void> | void
     onError?: (error: string, manualCmd: string) => void
@@ -194,12 +221,35 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
     // 1. Pre-flight check: query target version and check for collisions
     let targetVersion: string | undefined
     try {
-        const remoteVersion = await fetchLatestFromNpm()
+        const fetchFn = options?.fetchLatestFn ?? fetchLatestFromNpm
+        const remoteVersion = await fetchFn()
         if (remoteVersion) {
             targetVersion = remoteVersion
         }
     } catch {
         // Intentionally swallowed: offline or network timeout during version query
+    }
+
+    const currentVersion = options?.currentVersion ?? pkg.version
+
+    // Fast-path: already on latest version
+    if (
+        !options?.force &&
+        targetVersion &&
+        currentVersion &&
+        compareVersions(currentVersion, targetVersion) >= 0
+    ) {
+        return {
+            success: true,
+            alreadyUpToDate: true,
+            method,
+            command,
+            manualCmd,
+            targetVersion,
+            installedVersion: currentVersion,
+            verified: true,
+            output: `December CLI is already up to date (v${currentVersion}).`,
+        }
     }
 
     options?.onProgress?.(
@@ -212,7 +262,13 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
         execCommand(command, { timeout: 120_000 }, async (error, stdout, stderr) => {
             if (error) {
                 const errMessage = (stderr || error.message || 'Unknown update failure').trim()
-                options?.onError?.(errMessage, manualCmd)
+                const isPerm = isPermissionDeniedError(errMessage)
+                const sudoCmd =
+                    isPerm && (method === 'npm' || method === 'bun' || method === 'pnpm')
+                        ? `sudo ${manualCmd}`
+                        : undefined
+
+                options?.onError?.(errMessage, sudoCmd || manualCmd)
                 resolve({
                     success: false,
                     method,
@@ -220,6 +276,8 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
                     manualCmd,
                     targetVersion,
                     verified: false,
+                    isPermissionError: isPerm,
+                    sudoCmd,
                     error: errMessage,
                 })
                 return

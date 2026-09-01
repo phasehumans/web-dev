@@ -9,6 +9,7 @@ interface SearchModalProps {
     onClose: () => void
     onNewThread?: () => void
     isAuthenticated?: boolean
+    isSidebarCollapsed?: boolean
 }
 
 export type SearchCategory = 'Recent' | 'Navigation' | 'Settings Subpages'
@@ -28,6 +29,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     onClose,
     onNewThread,
     isAuthenticated,
+    isSidebarCollapsed = false,
 }) => {
     const navigate = useNavigate()
     const [searchQuery, setSearchQuery] = useState('')
@@ -389,94 +391,108 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     let currentIndex = 0
 
     return (
-        <div
-            className="fixed inset-0 bg-black/50 z-[200] flex items-center sm:items-start justify-center p-3 sm:p-4 sm:pt-[15vh] animate-in fade-in duration-200"
-            onClick={onClose}
-        >
+        <div className="fixed inset-0 z-[200]">
+            {/* Backdrop */}
             <div
-                className="w-full max-w-[360px] xs:max-w-[420px] sm:max-w-[648px] bg-[#1E1E1E] border border-[#282828] rounded-xl sm:rounded-[14px] shadow-[0_0_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans"
-                onClick={(e) => e.stopPropagation()}
+                className="fixed inset-0 bg-black/50 animate-in fade-in duration-200"
+                onClick={onClose}
+            />
+
+            {/* Centered container in remaining area (after excluding desktop sidebar) */}
+            <div
+                className={cn(
+                    'fixed inset-0 flex items-center sm:items-start justify-center p-3 sm:p-4 sm:pt-[12vh] pointer-events-none transition-[left] duration-300',
+                    isSidebarCollapsed ? 'md:left-[56px]' : 'md:left-[200px]'
+                )}
             >
-                {/* Search input */}
-                <div className="flex items-center px-3.5 py-3 sm:px-4 sm:py-3.5 border-b border-[#282828] bg-[#1E1E1E]">
-                    <Icons.Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#888888] mr-2.5 sm:mr-3 shrink-0" />
-                    <input
-                        ref={inputRef}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search pages or topics..."
-                        className="w-full bg-transparent text-[13.5px] sm:text-[14.5px] font-medium text-[#EDEDED] placeholder-[#777777] focus:outline-none caret-white font-sans"
-                    />
-                </div>
+                <div
+                    className="w-full max-w-[360px] xs:max-w-[400px] sm:max-w-[480px] bg-[#1E1E1E] border border-[#282828] rounded-2xl sm:rounded-[18px] shadow-[0_0_80px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 font-sans pointer-events-auto"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {/* Search input */}
+                    <div className="flex items-center px-3.5 py-2.5 sm:px-4 sm:py-3 border-b border-[#282828] bg-[#1E1E1E]">
+                        <Icons.Search className="w-3.5 h-3.5 text-[#888888] mr-2.5 shrink-0" />
+                        <input
+                            ref={inputRef}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search pages or topics..."
+                            className="w-full bg-transparent text-[13px] sm:text-[13.5px] font-medium text-[#EDEDED] placeholder-[#777777] focus:outline-none caret-white font-sans"
+                        />
+                    </div>
 
-                {/* Results list */}
-                <div className="flex flex-col py-1.5 sm:py-2 max-h-[300px] sm:max-h-[428px] overflow-y-auto no-scrollbar">
-                    {categories.map((category) => {
-                        const categoryItems = displayedItems.filter(
-                            (item) => item.category === category
-                        )
-                        if (categoryItems.length === 0) return null
+                    {/* Results list */}
+                    <div className="flex flex-col py-1.5 max-h-[320px] sm:max-h-[420px] overflow-y-auto no-scrollbar">
+                        {categories.map((category) => {
+                            const categoryItems = displayedItems.filter(
+                                (item) => item.category === category
+                            )
+                            if (categoryItems.length === 0) return null
 
-                        return (
-                            <div key={category} className="flex flex-col mb-1.5 sm:mb-2 last:mb-0">
-                                <div className="px-3.5 sm:px-4 py-1 sm:py-1.5 text-[11px] sm:text-[12px] font-semibold text-[#7B7A79]">
-                                    {category}
-                                </div>
-                                <div className="flex flex-col gap-0.5 px-1.5 sm:px-2 pb-0.5">
-                                    {categoryItems.map((item, localIdx) => {
-                                        const itemIndex = currentIndex++
-                                        const isSelected = itemIndex === selectedIndex
+                            return (
+                                <div
+                                    key={category}
+                                    className="flex flex-col mb-1 sm:mb-1.5 last:mb-0"
+                                >
+                                    <div className="px-3.5 py-1 text-[10.5px] sm:text-[11px] font-semibold text-[#7B7A79]">
+                                        {category}
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 px-2 pb-0.5">
+                                        {categoryItems.map((item, localIdx) => {
+                                            const itemIndex = currentIndex++
+                                            const isSelected = itemIndex === selectedIndex
 
-                                        return (
-                                            <button
-                                                key={`${category}-${item.id}-${localIdx}`}
-                                                id={`search-item-${itemIndex}`}
-                                                onClick={() => {
-                                                    saveRecent(item.id)
-                                                    item.action()
-                                                }}
-                                                onMouseEnter={() => setSelectedIndex(itemIndex)}
-                                                className={cn(
-                                                    'flex items-center justify-between px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg transition-colors w-full text-left outline-none cursor-pointer group',
-                                                    isSelected
-                                                        ? 'bg-[#2A2928]'
-                                                        : 'hover:bg-[#2A2928]/40'
-                                                )}
-                                            >
-                                                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                                                    <div className="shrink-0 text-[#888888] group-hover:text-[#EDEDED] flex items-center justify-center">
-                                                        {item.icon}
-                                                    </div>
-                                                    <div className="flex items-baseline min-w-0 gap-2 truncate">
-                                                        <span
-                                                            className={cn(
-                                                                'text-[13px] sm:text-[14px] font-medium transition-colors truncate',
-                                                                isSelected
-                                                                    ? 'text-[#EDEDED]'
-                                                                    : 'text-[#D6D5D4]'
-                                                            )}
-                                                        >
-                                                            {item.label}
-                                                        </span>
-                                                        {item.subtitle && (
-                                                            <span className="text-[11.5px] sm:text-[13px] text-[#7B7A79] transition-colors truncate hidden xs:inline sm:inline">
-                                                                {item.subtitle}
+                                            return (
+                                                <button
+                                                    key={`${category}-${item.id}-${localIdx}`}
+                                                    id={`search-item-${itemIndex}`}
+                                                    onClick={() => {
+                                                        saveRecent(item.id)
+                                                        item.action()
+                                                    }}
+                                                    onMouseEnter={() => setSelectedIndex(itemIndex)}
+                                                    className={cn(
+                                                        'flex items-center justify-between px-2.5 py-1.5 rounded-[10px] transition-colors w-full text-left outline-none cursor-pointer group',
+                                                        isSelected
+                                                            ? 'bg-[#2A2928]'
+                                                            : 'hover:bg-[#2A2928]/40'
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                        <div className="shrink-0 text-[#888888] group-hover:text-[#EDEDED] flex items-center justify-center">
+                                                            {item.icon}
+                                                        </div>
+                                                        <div className="flex items-baseline min-w-0 gap-2 truncate">
+                                                            <span
+                                                                className={cn(
+                                                                    'text-[12.5px] sm:text-[13px] font-medium transition-colors truncate',
+                                                                    isSelected
+                                                                        ? 'text-[#EDEDED]'
+                                                                        : 'text-[#D6D5D4]'
+                                                                )}
+                                                            >
+                                                                {item.label}
                                                             </span>
-                                                        )}
+                                                            {item.subtitle && (
+                                                                <span className="text-[11px] sm:text-[11.5px] text-[#7B7A79] transition-colors truncate hidden xs:inline sm:inline">
+                                                                    {item.subtitle}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </button>
-                                        )
-                                    })}
+                                                </button>
+                                            )
+                                        })}
+                                    </div>
                                 </div>
+                            )
+                        })}
+                        {displayedItems.length === 0 && (
+                            <div className="py-6 text-center text-[12.5px] sm:text-[13px] text-[#7B7A79]">
+                                No results found for "{searchQuery}"
                             </div>
-                        )
-                    })}
-                    {displayedItems.length === 0 && (
-                        <div className="py-6 sm:py-8 text-center text-[13px] sm:text-[14px] text-[#7B7A79]">
-                            No results found for "{searchQuery}"
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

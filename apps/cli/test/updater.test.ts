@@ -76,7 +76,7 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
 
         test('returns git pull command for source development', () => {
             const info = getUpdateCommand('source')
-            expect(info.command).toBe('git pull && bun install')
+            expect(info.command).toBe('git pull && bun install && bun --cwd apps/cli run build')
         })
     })
 
@@ -92,7 +92,7 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
 
             expect(result.success).toBe(true)
             expect(result.method).toBe('source')
-            expect(result.command).toBe('git pull && bun install')
+            expect(result.command).toBe('git pull && bun install && bun --cwd apps/cli run build')
             expect(progressMsg).toContain('source development')
         })
 
@@ -123,6 +123,8 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
 
             const result = await performCliUpdate({
                 configInstallMethod: 'bun',
+                force: true,
+                fetchLatestFn: async () => '1.0.0',
                 execFn: mockExec,
                 skipVerification: true,
                 onProgress: () => {
@@ -140,7 +142,7 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             expect(successCalled).toBe(true)
         })
 
-        test('handles update errors and passes manual instruction', async () => {
+        test('handles update errors and passes sudo instruction on permission errors', async () => {
             const mockExec: any = (cmd: string, opts: any, callback: any) => {
                 callback(new Error('EACCES: permission denied'), '', 'EACCES: permission denied')
             }
@@ -150,6 +152,8 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
 
             const result = await performCliUpdate({
                 configInstallMethod: 'npm',
+                force: true,
+                fetchLatestFn: async () => '1.0.0',
                 execFn: mockExec,
                 skipVerification: true,
                 onError: (err, manualCmd) => {
@@ -161,8 +165,50 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             expect(result.success).toBe(false)
             expect(result.method).toBe('npm')
             expect(result.error).toContain('EACCES')
+            expect(result.isPermissionError).toBe(true)
+            expect(result.sudoCmd).toBe('sudo npm install -g @trydecember/cli@latest')
             expect(errorCalled).toBe(true)
-            expect(reportedManualCmd).toBe('npm install -g @trydecember/cli@latest')
+            expect(reportedManualCmd).toBe('sudo npm install -g @trydecember/cli@latest')
+        })
+
+        test('returns alreadyUpToDate fast path when current version matches target', async () => {
+            let execCalled = false
+            const mockExec: any = () => {
+                execCalled = true
+            }
+
+            const result = await performCliUpdate({
+                configInstallMethod: 'npm',
+                currentVersion: '0.3.22',
+                fetchLatestFn: async () => '0.3.22',
+                execFn: mockExec,
+                skipVerification: true,
+            })
+
+            expect(result.success).toBe(true)
+            expect(result.alreadyUpToDate).toBe(true)
+            expect(execCalled).toBe(false)
+        })
+
+        test('bypasses alreadyUpToDate when force is true', async () => {
+            let execCalled = false
+            const mockExec: any = (cmd: string, opts: any, callback: any) => {
+                execCalled = true
+                callback(null, 'Updated', '')
+            }
+
+            const result = await performCliUpdate({
+                configInstallMethod: 'npm',
+                currentVersion: '0.3.22',
+                fetchLatestFn: async () => '0.3.22',
+                force: true,
+                execFn: mockExec,
+                skipVerification: true,
+            })
+
+            expect(result.success).toBe(true)
+            expect(result.alreadyUpToDate).toBeUndefined()
+            expect(execCalled).toBe(true)
         })
     })
 })

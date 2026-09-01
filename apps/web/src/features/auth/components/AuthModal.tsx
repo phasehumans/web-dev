@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft } from 'lucide-react'
+import { X } from 'lucide-react'
 import React from 'react'
 
 import { useAuthModalController } from '../hooks/useAuthModalController'
@@ -76,9 +76,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="hidden md:flex items-center gap-1 absolute top-8 left-8 text-[#888888] hover:text-white transition-colors z-50 outline-none text-[14px] font-medium"
+                        className="hidden md:flex items-center justify-center absolute top-5 left-5 text-[#888888] hover:text-[#EDEDED] p-2 rounded-lg hover:bg-white/5 transition-colors z-50 outline-none cursor-pointer"
+                        aria-label="Close"
+                        title="Close"
                     >
-                        <ChevronLeft size={16} strokeWidth={2.5} /> Back
+                        <X size={16} strokeWidth={1.75} />
                     </button>
                     <div className="w-full flex items-center justify-center p-6 md:p-10 lg:p-12 relative bg-[#141414]">
                         <motion.div

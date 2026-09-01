@@ -1,7 +1,6 @@
 import React from 'react'
 
 import { SessionDeleteModal } from './SessionDeleteModal'
-import { SessionInsightsModal } from './SessionInsightsModal'
 import { SessionOpenConfirmModal } from './SessionOpenConfirmModal'
 import { SessionRenameModal } from './SessionRenameModal'
 import { SessionTagsModal } from './SessionTagsModal'
@@ -13,7 +12,6 @@ interface SessionListModalsProps {
     deleteModal: DeleteModalState
     openConfirmModal: { isOpen: boolean; project: Project | null }
     tagsModal: { isOpen: boolean; project: any | null }
-    insightsModal: { isOpen: boolean; project: any | null }
     isRenamePending: boolean
     isDeletePending: boolean
     isTagsPending: boolean
@@ -26,7 +24,6 @@ interface SessionListModalsProps {
     onOpenConfirm: () => void
     onCloseTags: () => void
     onSaveTags: (tags: string[]) => void
-    onCloseInsights: () => void
 }
 
 export const SessionListModals: React.FC<SessionListModalsProps> = ({
@@ -34,7 +31,6 @@ export const SessionListModals: React.FC<SessionListModalsProps> = ({
     deleteModal,
     openConfirmModal,
     tagsModal,
-    insightsModal,
     isRenamePending,
     isDeletePending,
     isTagsPending,
@@ -47,7 +43,6 @@ export const SessionListModals: React.FC<SessionListModalsProps> = ({
     onOpenConfirm,
     onCloseTags,
     onSaveTags,
-    onCloseInsights,
 }) => {
     return (
         <>
@@ -81,12 +76,6 @@ export const SessionListModals: React.FC<SessionListModalsProps> = ({
                 isPending={isTagsPending}
                 onClose={onCloseTags}
                 onSave={onSaveTags}
-            />
-
-            <SessionInsightsModal
-                isOpen={insightsModal.isOpen}
-                session={insightsModal.project}
-                onClose={onCloseInsights}
             />
         </>
     )

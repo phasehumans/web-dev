@@ -8,6 +8,7 @@ export interface ParsedCliArgs {
     yes: boolean
     json: boolean
     fix: boolean
+    force: boolean
     model?: string
     provider?: string
     sessionId?: string
@@ -26,6 +27,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
                 yes: { type: 'boolean', short: 'y' },
                 json: { type: 'boolean' },
                 fix: { type: 'boolean' },
+                force: { type: 'boolean', short: 'f' },
                 model: { type: 'string', short: 'm' },
                 provider: { type: 'string', short: 'p' },
                 'session-id': { type: 'string' },
@@ -41,6 +43,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
         const yes = Boolean(values.yes)
         const json = Boolean(values.json)
         const fix = Boolean(values.fix)
+        const force = Boolean(values.force)
         const model = values.model as string | undefined
         const provider = values.provider as string | undefined
         const sessionId = values['session-id'] as string | undefined
@@ -68,6 +71,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
             yes,
             json,
             fix,
+            force,
             model,
             provider,
             sessionId,
@@ -82,6 +86,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
             yes: false,
             json: false,
             fix: false,
+            force: false,
             positionals: [],
         }
     }

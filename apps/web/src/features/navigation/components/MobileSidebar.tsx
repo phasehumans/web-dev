@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { History } from 'lucide-react'
 import React from 'react'
 import { createPortal } from 'react-dom'
@@ -9,8 +8,6 @@ import { SidebarFooter } from './SidebarFooter'
 
 import type { MobileSidebarProps } from '@/features/navigation/types'
 
-import { sessionAPI } from '@/features/sessions/api/session'
-import { SessionRenameModal } from '@/features/sessions/components/SessionRenameModal'
 import { useSessions } from '@/features/sessions/hooks/useSessions'
 import { Icons } from '@/shared/components/ui/Icons'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
@@ -51,7 +48,6 @@ export const MobileSidebar: React.FC<
     onHomeClick,
     user,
 }) => {
-    const queryClient = useQueryClient()
     const { data: sessionsData, isLoading: isSessionsLoading } = useSessions()
     const sessions = React.useMemo(() => sessionsData?.sessions || [], [sessionsData?.sessions])
     const location = useLocation()
@@ -75,33 +71,10 @@ export const MobileSidebar: React.FC<
         null
     )
     const [sortBy, setSortBy] = React.useState<'created' | 'updated'>('updated')
-    const [filterSchedules, setFilterSchedules] = React.useState(true)
     const [filterArchived, setFilterArchived] = React.useState(false)
     const [sessionType, setSessionType] = React.useState<'all' | 'agent' | 'search'>('all')
     const recentMenuRef = React.useRef<HTMLDivElement | null>(null)
     const recentMenuTriggerRef = React.useRef<HTMLButtonElement | null>(null)
-
-    // Item menu state
-    const [itemMenuState, setItemMenuState] = React.useState<{
-        sessionId: string
-        sessionTitle: string
-        isArchived: boolean
-        top: number
-        left: number
-    } | null>(null)
-    const itemMenuRef = React.useRef<HTMLDivElement | null>(null)
-    const [copiedSessionId, setCopiedSessionId] = React.useState<string | null>(null)
-
-    // Rename modal state
-    const [renameModal, setRenameModal] = React.useState<{
-        isOpen: boolean
-        sessionId: string
-        value: string
-    }>({
-        isOpen: false,
-        sessionId: '',
-        value: '',
-    })
 
     let activeIndex = 0
     if (isSearchOpen) {
@@ -187,178 +160,6 @@ export const MobileSidebar: React.FC<
         }
     }, [isRecentMenuOpen])
 
-    React.useEffect(() => {
-        if (!itemMenuState) return
-        const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
-            const target = e.target as Node | null
-            if (itemMenuRef.current && !itemMenuRef.current.contains(target)) {
-                setItemMenuState(null)
-            }
-        }
-        document.addEventListener('mousedown', handleOutsideClick)
-        document.addEventListener('touchstart', handleOutsideClick)
-        return () => {
-            document.removeEventListener('mousedown', handleOutsideClick)
-            document.removeEventListener('touchstart', handleOutsideClick)
-        }
-    }, [itemMenuState])
-
-    const handleToggleArchive = async (sessionId: string, currentArchived: boolean) => {
-        const nextArchived = !currentArchived
-        // Instant optimistic cache update
-        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
-            if (!old) return old
-            if (Array.isArray(old)) {
-                return old.map((s) => (s.id === sessionId ? { ...s, isArchived: nextArchived } : s))
-            }
-            if (Array.isArray(old.sessions)) {
-                return {
-                    ...old,
-                    sessions: old.sessions.map((s: any) =>
-                        s.id === sessionId ? { ...s, isArchived: nextArchived } : s
-                    ),
-                }
-            }
-            if (Array.isArray(old.pages)) {
-                return {
-                    ...old,
-                    pages: old.pages.map((page: any) => {
-                        if (!page) return page
-                        if (Array.isArray(page.sessions)) {
-                            return {
-                                ...page,
-                                sessions: page.sessions.map((s: any) =>
-                                    s.id === sessionId ? { ...s, isArchived: nextArchived } : s
-                                ),
-                            }
-                        }
-                        return page
-                    }),
-                }
-            }
-            return old
-        })
-        queryClient.setQueryData(['session', sessionId], (old: any) => {
-            if (!old) return old
-            return { ...old, isArchived: nextArchived }
-        })
-        setItemMenuState(null)
-
-        try {
-            if (currentArchived) {
-                await sessionAPI.unarchiveSession(sessionId)
-            } else {
-                await sessionAPI.archiveSession(sessionId)
-            }
-        } catch (err) {
-            console.error('Failed to toggle archive:', err)
-        } finally {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-        }
-    }
-
-    const handleDeleteSession = async (sessionId: string) => {
-        // Instant optimistic removal
-        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
-            if (!old) return old
-            if (Array.isArray(old)) {
-                return old.filter((s) => s.id !== sessionId)
-            }
-            if (Array.isArray(old.sessions)) {
-                return {
-                    ...old,
-                    sessions: old.sessions.filter((s: any) => s.id !== sessionId),
-                }
-            }
-            if (Array.isArray(old.pages)) {
-                return {
-                    ...old,
-                    pages: old.pages.map((page: any) => {
-                        if (!page) return page
-                        if (Array.isArray(page.sessions)) {
-                            return {
-                                ...page,
-                                sessions: page.sessions.filter((s: any) => s.id !== sessionId),
-                            }
-                        }
-                        return page
-                    }),
-                }
-            }
-            return old
-        })
-        queryClient.removeQueries({ queryKey: ['session', sessionId] })
-        setItemMenuState(null)
-
-        try {
-            await sessionAPI.deleteSession(sessionId)
-        } catch (err) {
-            console.error('Failed to delete session:', err)
-        } finally {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-        }
-    }
-
-    const handleRenameSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        const newTitle = renameModal.value.trim()
-        const sessionId = renameModal.sessionId
-        if (!newTitle || !sessionId) return
-
-        // Instant optimistic rename
-        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
-            if (!old) return old
-            if (Array.isArray(old)) {
-                return old.map((s) => (s.id === sessionId ? { ...s, title: newTitle } : s))
-            }
-            if (Array.isArray(old.sessions)) {
-                return {
-                    ...old,
-                    sessions: old.sessions.map((s: any) =>
-                        s.id === sessionId ? { ...s, title: newTitle } : s
-                    ),
-                }
-            }
-            if (Array.isArray(old.pages)) {
-                return {
-                    ...old,
-                    pages: old.pages.map((page: any) => {
-                        if (!page) return page
-                        if (Array.isArray(page.sessions)) {
-                            return {
-                                ...page,
-                                sessions: page.sessions.map((s: any) =>
-                                    s.id === sessionId ? { ...s, title: newTitle } : s
-                                ),
-                            }
-                        }
-                        return page
-                    }),
-                }
-            }
-            return old
-        })
-        setRenameModal({ isOpen: false, sessionId: '', value: '' })
-
-        try {
-            await sessionAPI.renameSession(sessionId, newTitle).catch(() => {})
-        } catch (err) {
-            console.error('Failed to rename session:', err)
-        } finally {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-        }
-    }
-
-    const handleCopyLink = (sessionId: string) => {
-        const url = `${window.location.origin}/session/${sessionId}`
-        navigator.clipboard.writeText(url)
-        setCopiedSessionId(sessionId)
-        setTimeout(() => {
-            setCopiedSessionId(null)
-            setItemMenuState(null)
-        }, 1000)
-    }
-
     const formatRelativeTime = (isoString?: string) => {
         if (!isoString) return 'just now'
         const date = new Date(isoString)
@@ -385,18 +186,11 @@ export const MobileSidebar: React.FC<
             createdAt: s.createdAt,
             isArchived: Boolean(s.isArchived),
             type: s.type || 'WEB',
-            isSchedule: Boolean(
-                s.tags?.some((t) => t.toLowerCase().includes('schedule')) ||
-                s.type === ('SCHEDULE' as any)
-            ),
             prNumber: s.prNumber,
         }))
 
         return sourceList
             .filter((item) => {
-                if (!filterSchedules && item.isSchedule) {
-                    return false
-                }
                 if (!filterArchived && item.isArchived) {
                     return false
                 }
@@ -420,7 +214,7 @@ export const MobileSidebar: React.FC<
                 return updatedB - updatedA
             })
             .slice(0, 7)
-    }, [isAuthenticated, sessions, sortBy, filterSchedules, filterArchived, sessionType])
+    }, [isAuthenticated, sessions, sortBy, filterArchived, sessionType])
 
     return (
         <>
@@ -583,21 +377,6 @@ export const MobileSidebar: React.FC<
                                                 </div>
                                                 <button
                                                     onClick={() =>
-                                                        setFilterSchedules(!filterSchedules)
-                                                    }
-                                                    className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                                                >
-                                                    <span>Schedules</span>
-                                                    <div
-                                                        className={`w-7 h-[14px] rounded-full flex items-center px-[2px] transition-colors ${filterSchedules ? 'bg-[#87B2F4]' : 'bg-[#333333]'}`}
-                                                    >
-                                                        <div
-                                                            className={`w-[10px] h-[10px] rounded-full bg-white transition-transform ${filterSchedules ? 'translate-x-[14px]' : 'translate-x-0'}`}
-                                                        />
-                                                    </div>
-                                                </button>
-                                                <button
-                                                    onClick={() =>
                                                         setFilterArchived(!filterArchived)
                                                     }
                                                     className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
@@ -672,14 +451,14 @@ export const MobileSidebar: React.FC<
                                     recentProjects.map((project) => (
                                         <div
                                             key={project.id}
-                                            className="group flex items-center justify-between px-2.5 py-1.5 w-full text-left rounded-xl hover:bg-[#202020] transition-colors cursor-pointer relative"
+                                            className="flex items-center justify-between px-2.5 py-2 w-full text-left rounded-xl hover:bg-[#202020] active:bg-[#252525] transition-colors cursor-pointer relative"
                                             onClick={() => {
                                                 onOpenProject(project.id)
                                                 onClose()
                                             }}
                                         >
-                                            <div className="flex flex-col min-w-0 pr-1.5 overflow-hidden flex-1">
-                                                <span className="font-normal text-[12.5px] transition-colors tracking-tight text-[#EDEDED] group-hover:text-white truncate leading-snug">
+                                            <div className="flex flex-col min-w-0 overflow-hidden flex-1">
+                                                <span className="font-normal text-[12.5px] transition-colors tracking-tight text-[#EDEDED] truncate leading-snug">
                                                     {project.title}
                                                 </span>
                                                 <div className="flex items-center gap-1.5 text-[11px] text-[#8F8E8D] tracking-tight truncate mt-[2px]">
@@ -698,72 +477,6 @@ export const MobileSidebar: React.FC<
                                                         </>
                                                     ) : null}
                                                 </div>
-                                            </div>
-
-                                            {/* Right side hover actions */}
-                                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                                {/* Archive Button with Tooltip */}
-                                                <div className="relative group/btn">
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            handleToggleArchive(
-                                                                project.id,
-                                                                project.isArchived
-                                                            )
-                                                        }}
-                                                        className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"
-                                                        aria-label={
-                                                            project.isArchived
-                                                                ? 'Unarchive'
-                                                                : 'Archive'
-                                                        }
-                                                    >
-                                                        <Icons.Archive className="w-3.5 h-3.5" />
-                                                    </button>
-                                                    <div className="absolute bottom-[calc(100%+6px)] right-0 z-50 hidden group-hover/btn:flex items-center gap-1 bg-[#1F1F1F] border border-[#282828] px-2 py-0.5 rounded-md shadow-lg whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
-                                                        <span className="text-[11.5px] font-medium text-[#EDEDEF]">
-                                                            {project.isArchived
-                                                                ? 'Unarchive'
-                                                                : 'Archive'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* 3 Dots Menu Button */}
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        const rect =
-                                                            e.currentTarget.getBoundingClientRect()
-                                                        const menuWidth = 180
-                                                        const left = Math.max(
-                                                            10,
-                                                            Math.min(
-                                                                rect.right - menuWidth,
-                                                                window.innerWidth - menuWidth - 10
-                                                            )
-                                                        )
-                                                        const top = Math.min(
-                                                            rect.bottom + 4,
-                                                            window.innerHeight - 200
-                                                        )
-                                                        setItemMenuState({
-                                                            sessionId: project.id,
-                                                            sessionTitle: project.title,
-                                                            isArchived: project.isArchived,
-                                                            top,
-                                                            left,
-                                                        })
-                                                    }}
-                                                    className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"
-                                                    title="More options"
-                                                    aria-label="More options"
-                                                >
-                                                    <Icons.MoreHorizontal className="w-3.5 h-3.5" />
-                                                </button>
                                             </div>
                                         </div>
                                     ))
@@ -808,99 +521,6 @@ export const MobileSidebar: React.FC<
                 onClose={() => setIsSearchOpen(false)}
                 onNewThread={isAuthenticated ? onNewThread : onOpenAuth}
                 isAuthenticated={isAuthenticated}
-            />
-
-            {/* Session Item 3-Dots Dropdown Menu Portal */}
-            {itemMenuState &&
-                typeof document !== 'undefined' &&
-                createPortal(
-                    <div
-                        ref={itemMenuRef}
-                        className="fixed z-[250] w-[180px] rounded-xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-2xl p-1 flex flex-col gap-0 animate-in fade-in zoom-in-95 duration-100 font-sans text-left"
-                        style={{
-                            top: itemMenuState.top,
-                            left: itemMenuState.left,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Folder */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setItemMenuState(null)
-                                onOpenProject?.(itemMenuState.sessionId)
-                                onClose()
-                            }}
-                            className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <Icons.Folder className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                                <span>Folder</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[#8F8E8D]">
-                                <span className="text-[11.5px] font-normal truncate max-w-[70px]">
-                                    {itemMenuState.sessionTitle || 'project1'}
-                                </span>
-                                <Icons.ChevronRight className="w-3.5 h-3.5 shrink-0" />
-                            </div>
-                        </button>
-
-                        {/* Rename */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRenameModal({
-                                    isOpen: true,
-                                    sessionId: itemMenuState.sessionId,
-                                    value: itemMenuState.sessionTitle,
-                                })
-                                setItemMenuState(null)
-                            }}
-                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <Icons.Edit className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                            <span>Rename</span>
-                        </button>
-
-                        {/* Copy session link */}
-                        <button
-                            type="button"
-                            onClick={() => handleCopyLink(itemMenuState.sessionId)}
-                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <Icons.Copy className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                            <span>
-                                {copiedSessionId === itemMenuState.sessionId
-                                    ? 'Copied!'
-                                    : 'Copy session link'}
-                            </span>
-                        </button>
-
-                        {/* Analyze session */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setItemMenuState(null)
-                                onOpenProject?.(itemMenuState.sessionId)
-                                onClose()
-                            }}
-                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <Icons.Search className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                            <span>Analyze session</span>
-                        </button>
-                    </div>,
-                    document.body
-                )}
-
-            {/* Session Rename Modal */}
-            <SessionRenameModal
-                isOpen={renameModal.isOpen}
-                value={renameModal.value}
-                isPending={false}
-                onClose={() => setRenameModal({ isOpen: false, sessionId: '', value: '' })}
-                onChange={(val) => setRenameModal((prev) => ({ ...prev, value: val }))}
-                onSubmit={handleRenameSubmit}
             />
         </>
     )

@@ -1,13 +1,27 @@
-import { Search, Plus, Eye, EyeOff, Copy, Check, Trash2, FileText, Loader2 } from 'lucide-react'
+import {
+    Search,
+    Plus,
+    Eye,
+    EyeOff,
+    Copy,
+    Check,
+    Trash2,
+    Loader2,
+    MoreHorizontal,
+} from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
 import { secretsAPI, type SecretSummary } from '../api/secrets'
+
+import { Modal } from '@/shared/components/ui/Modal'
+import { Tooltip } from '@/shared/components/ui/Tooltip'
 
 export const ProfileSecretsSettings: React.FC = () => {
     const [secrets, setSecrets] = useState<SecretSummary[]>([])
     const [decryptedValues, setDecryptedValues] = useState<Record<string, string>>({})
     const [revealedNames, setRevealedNames] = useState<Record<string, boolean>>({})
     const [copiedName, setCopiedName] = useState<string | null>(null)
+    const [openMobileMenuName, setOpenMobileMenuName] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -203,17 +217,11 @@ export const ProfileSecretsSettings: React.FC = () => {
                 <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
                     <p className="text-[13px] text-[#7B7A79]">
                         Reference a secret with a dollar sign, e.g.{' '}
-                        <code className="bg-[#202020] border border-[#282828] text-[#D6D5C9] px-1.5 py-0.5 rounded font-mono text-[12px]">
-                            $SERVICE_USERNAME
-                        </code>
-                        . Secrets are encrypted at rest and injected into your sandbox sessions.
+                        <span className="text-[#87B2F4]">$SERVICE_USERNAME</span>. Secrets are
+                        encrypted at rest and injected into your sandbox sessions.
                     </p>
 
-                    {error && (
-                        <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-lg text-[13px] text-red-300">
-                            {error}
-                        </div>
-                    )}
+                    {error && <p className="text-[12.5px] text-red-500 font-medium">{error}</p>}
 
                     {/* Controls Row: Search Input + Action Buttons */}
                     {/* Controls Row: Search Input + Action Buttons */}
@@ -250,22 +258,32 @@ export const ProfileSecretsSettings: React.FC = () => {
                     </div>
 
                     {/* Secrets Table Container */}
-                    <div className="bg-[#191919] border border-[#242323] rounded-xl overflow-hidden mt-1">
-                        {/* Table Header (Desktop only) */}
-                        <div className="hidden md:grid grid-cols-12 bg-[#202020] border-b border-[#242323] px-4 py-2.5 text-[12px] font-medium text-[#7B7A79]">
-                            <div className="col-span-4">Name</div>
-                            <div className="col-span-4">Note</div>
-                            <div className="col-span-4 text-right">Updated at</div>
+                    <div className="bg-[#191919] border border-[#242323] rounded-xl overflow-hidden mt-1 min-h-[380px] flex flex-col">
+                        {/* Table Header */}
+                        <div className="bg-[#202020] border-b border-[#242323] px-3.5 sm:px-4 py-2.5 text-[12px] font-medium text-[#7B7A79]">
+                            {/* Mobile header (< md) */}
+                            <div className="flex md:hidden items-center justify-between">
+                                <span>Name</span>
+                                <span className="pr-6">Updated at</span>
+                            </div>
+
+                            {/* Desktop header (>= md) */}
+                            <div className="hidden md:grid grid-cols-12">
+                                <div className="col-span-4">Name</div>
+                                <div className="col-span-4">Note</div>
+                                <div className="col-span-2">Updated at</div>
+                                <div className="col-span-2 text-right"></div>
+                            </div>
                         </div>
 
                         {/* Table Rows or Loading/Empty State */}
                         {isLoading ? (
-                            <div className="p-6 md:p-12 flex flex-col items-center justify-center gap-2 text-center text-[#7B7A79]">
+                            <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center text-[#7B7A79] min-h-[320px]">
                                 <Loader2 className="w-5 h-5 animate-spin" />
                                 <span className="text-[13px]">Loading secrets...</span>
                             </div>
                         ) : filteredSecrets.length === 0 ? (
-                            <div className="p-6 md:p-12 flex flex-col items-center justify-center gap-2 text-center">
+                            <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center min-h-[320px] p-6">
                                 <h3 className="text-[14px] font-medium text-[#D6D5C9]">
                                     No secrets found
                                 </h3>
@@ -282,29 +300,177 @@ export const ProfileSecretsSettings: React.FC = () => {
                                     return (
                                         <React.Fragment key={sec.id}>
                                             {/* Mobile card (< md) */}
-                                            <div className="md:hidden p-3.5 flex flex-col gap-2.5 text-[13px]">
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <div className="flex flex-col gap-0.5 min-w-0">
-                                                        <span className="font-mono font-medium text-[#D6D5C9] truncate">
-                                                            ${sec.name}
-                                                        </span>
-                                                        {isRevealed && decryptedVal && (
-                                                            <span className="text-[11.5px] text-[#87B2F4] font-mono select-all break-all">
+                                            <div className="md:hidden p-3.5 flex flex-col gap-1.5 text-[13px] relative">
+                                                <div className="flex items-center justify-between gap-3">
+                                                    {/* Left: Name (or revealed value) and Note */}
+                                                    <div className="flex flex-col min-w-0 pr-2">
+                                                        {isRevealed && decryptedVal ? (
+                                                            <span className="font-mono font-medium text-[#87B2F4] select-all truncate text-[13px]">
                                                                 {decryptedVal}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="font-mono font-medium text-white truncate text-[13px]">
+                                                                ${sec.name}
+                                                            </span>
+                                                        )}
+                                                        {sec.note && (
+                                                            <span className="text-[12px] text-[#8F8E8D] truncate mt-0.5">
+                                                                {sec.note}
                                                             </span>
                                                         )}
                                                     </div>
 
-                                                    {/* Actions */}
-                                                    <div className="flex items-center gap-1 shrink-0">
+                                                    {/* Right: Date and 3-dots button */}
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className="text-[12px] text-[#7B7A79]">
+                                                            {formatDate(sec.updatedAt)}
+                                                        </span>
+
+                                                        {/* 3-dots dropdown */}
+                                                        <div className="relative">
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation()
+                                                                    setOpenMobileMenuName(
+                                                                        openMobileMenuName ===
+                                                                            sec.name
+                                                                            ? null
+                                                                            : sec.name
+                                                                    )
+                                                                }}
+                                                                className="p-1 rounded text-[#7B7A79] hover:text-white hover:bg-[#202020] active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                                                                aria-label="Secret options"
+                                                            >
+                                                                <MoreHorizontal className="w-4 h-4" />
+                                                            </button>
+
+                                                            {openMobileMenuName === sec.name && (
+                                                                <>
+                                                                    <div
+                                                                        className="fixed inset-0 z-40"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation()
+                                                                            setOpenMobileMenuName(
+                                                                                null
+                                                                            )
+                                                                        }}
+                                                                    />
+                                                                    <div className="absolute right-0 top-full mt-1.5 z-50 w-36 bg-[#1C1C1C] border border-[#2B2A27] rounded-xl shadow-2xl p-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                toggleReveal(
+                                                                                    sec.name
+                                                                                )
+                                                                                setOpenMobileMenuName(
+                                                                                    null
+                                                                                )
+                                                                            }}
+                                                                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-[12px] text-[#D6D5C9] hover:text-white hover:bg-[#282828] transition-colors text-left cursor-pointer"
+                                                                        >
+                                                                            {isRevealed ? (
+                                                                                <EyeOff className="w-3.5 h-3.5 text-[#8F8E8D]" />
+                                                                            ) : (
+                                                                                <Eye className="w-3.5 h-3.5 text-[#8F8E8D]" />
+                                                                            )}
+                                                                            <span>
+                                                                                {isRevealed
+                                                                                    ? 'Hide value'
+                                                                                    : 'Reveal value'}
+                                                                            </span>
+                                                                        </button>
+
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleCopy(sec.name)
+                                                                                setOpenMobileMenuName(
+                                                                                    null
+                                                                                )
+                                                                            }}
+                                                                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-[12px] text-[#D6D5C9] hover:text-white hover:bg-[#282828] transition-colors text-left cursor-pointer"
+                                                                        >
+                                                                            {copiedName ===
+                                                                            sec.name ? (
+                                                                                <Check className="w-3.5 h-3.5 text-[#34D399]" />
+                                                                            ) : (
+                                                                                <Copy className="w-3.5 h-3.5 text-[#8F8E8D]" />
+                                                                            )}
+                                                                            <span>
+                                                                                {copiedName ===
+                                                                                sec.name
+                                                                                    ? 'Copied'
+                                                                                    : 'Copy value'}
+                                                                            </span>
+                                                                        </button>
+
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation()
+                                                                                handleDelete(
+                                                                                    sec.name
+                                                                                )
+                                                                                setOpenMobileMenuName(
+                                                                                    null
+                                                                                )
+                                                                            }}
+                                                                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-[12px] text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left cursor-pointer"
+                                                                        >
+                                                                            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                                                                            <span>
+                                                                                Delete secret
+                                                                            </span>
+                                                                        </button>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Desktop row (>= md) */}
+                                            <div className="group hidden md:grid grid-cols-12 items-center px-4 py-3 text-[13px]">
+                                                {/* Name / Revealed Value */}
+                                                <div className="col-span-4 font-mono font-medium truncate pr-2">
+                                                    {isRevealed && decryptedVal ? (
+                                                        <span className="text-[#87B2F4] select-all truncate">
+                                                            {decryptedVal}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[#D6D5C9]">
+                                                            ${sec.name}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Note */}
+                                                <div className="col-span-4 text-[#7B7A79] truncate pr-2">
+                                                    {sec.note || ''}
+                                                </div>
+
+                                                {/* Updated at */}
+                                                <div className="col-span-2 text-[12px] text-[#7B7A79]">
+                                                    {formatDate(sec.updatedAt)}
+                                                </div>
+
+                                                {/* Actions (hover only + tooltips) */}
+                                                <div className="col-span-2 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                                    <Tooltip
+                                                        position="top"
+                                                        content={
+                                                            isRevealed
+                                                                ? 'Hide secret'
+                                                                : 'Reveal secret'
+                                                        }
+                                                    >
                                                         <button
                                                             onClick={() => toggleReveal(sec.name)}
-                                                            className="p-1.5 rounded-lg text-[#7B7A79] hover:text-[#D6D5C9] bg-[#202020] border border-[#2B2A29]"
-                                                            title={
-                                                                isRevealed
-                                                                    ? 'Hide Secret'
-                                                                    : 'Reveal Secret'
-                                                            }
+                                                            className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors cursor-pointer"
                                                         >
                                                             {isRevealed ? (
                                                                 <EyeOff className="w-3.5 h-3.5" />
@@ -312,10 +478,15 @@ export const ProfileSecretsSettings: React.FC = () => {
                                                                 <Eye className="w-3.5 h-3.5" />
                                                             )}
                                                         </button>
+                                                    </Tooltip>
+
+                                                    <Tooltip
+                                                        position="top"
+                                                        content="Copy secret value"
+                                                    >
                                                         <button
                                                             onClick={() => handleCopy(sec.name)}
-                                                            className="p-1.5 rounded-lg text-[#7B7A79] hover:text-[#D6D5C9] bg-[#202020] border border-[#2B2A29]"
-                                                            title="Copy Secret"
+                                                            className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors cursor-pointer"
                                                         >
                                                             {copiedName === sec.name ? (
                                                                 <Check className="w-3.5 h-3.5 text-[#34D399]" />
@@ -323,82 +494,20 @@ export const ProfileSecretsSettings: React.FC = () => {
                                                                 <Copy className="w-3.5 h-3.5" />
                                                             )}
                                                         </button>
+                                                    </Tooltip>
+
+                                                    <Tooltip
+                                                        position="top"
+                                                        align="end"
+                                                        content="Delete secret"
+                                                    >
                                                         <button
                                                             onClick={() => handleDelete(sec.name)}
-                                                            className="p-1.5 rounded-lg text-[#7B7A79] hover:text-red-400 bg-[#202020] border border-[#2B2A29]"
-                                                            title="Delete Secret"
+                                                            className="p-1 rounded text-[#7B7A79] hover:text-red-400 hover:bg-[#242323] transition-colors cursor-pointer"
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5" />
                                                         </button>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center justify-between text-[11.5px] text-[#7B7A79] pt-1 border-t border-[#242323]/50">
-                                                    <span className="truncate max-w-[60%]">
-                                                        {sec.note || 'No note'}
-                                                    </span>
-                                                    <span>{formatDate(sec.updatedAt)}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Desktop row (>= md) */}
-                                            <div className="hidden md:grid grid-cols-12 items-center px-4 py-3 hover:bg-[#202020] transition-colors text-[13px]">
-                                                {/* Name */}
-                                                <div className="col-span-4 font-mono font-medium text-[#D6D5C9] truncate pr-2 flex flex-col gap-0.5">
-                                                    <span>${sec.name}</span>
-                                                    {isRevealed && decryptedVal && (
-                                                        <span className="text-[11px] text-[#87B2F4] font-mono select-all truncate">
-                                                            {decryptedVal}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Note */}
-                                                <div className="col-span-4 text-[#7B7A79] truncate pr-2">
-                                                    {sec.note || '—'}
-                                                </div>
-
-                                                {/* Updated at & Actions */}
-                                                <div className="col-span-4 flex items-center justify-end gap-1.5">
-                                                    <span className="text-[12px] text-[#7B7A79] mr-1">
-                                                        {formatDate(sec.updatedAt)}
-                                                    </span>
-
-                                                    <button
-                                                        onClick={() => toggleReveal(sec.name)}
-                                                        className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
-                                                        title={
-                                                            isRevealed
-                                                                ? 'Hide Secret'
-                                                                : 'Reveal Secret'
-                                                        }
-                                                    >
-                                                        {isRevealed ? (
-                                                            <EyeOff className="w-3.5 h-3.5" />
-                                                        ) : (
-                                                            <Eye className="w-3.5 h-3.5" />
-                                                        )}
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => handleCopy(sec.name)}
-                                                        className="p-1 rounded text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
-                                                        title="Copy Secret Value"
-                                                    >
-                                                        {copiedName === sec.name ? (
-                                                            <Check className="w-3.5 h-3.5 text-[#34D399]" />
-                                                        ) : (
-                                                            <Copy className="w-3.5 h-3.5" />
-                                                        )}
-                                                    </button>
-
-                                                    <button
-                                                        onClick={() => handleDelete(sec.name)}
-                                                        className="p-1 rounded text-[#7B7A79] hover:text-red-400 hover:bg-[#242323] transition-colors"
-                                                        title="Delete Secret"
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </button>
+                                                    </Tooltip>
                                                 </div>
                                             </div>
                                         </React.Fragment>
@@ -411,134 +520,150 @@ export const ProfileSecretsSettings: React.FC = () => {
             </div>
 
             {/* Modal: Add Single Secret */}
-            {isAddOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
-                    <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-md p-6 flex flex-col gap-5 shadow-2xl">
-                        <div className="flex flex-col gap-1">
-                            <h3 className="text-[16px] font-medium text-[#D6D5C9]">Add Secret</h3>
-                            <p className="text-[13px] text-[#7B7A79]">
-                                Add environment variables or API keys available to your workspace.
-                            </p>
-                        </div>
-
-                        <form onSubmit={handleAddSecret} className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[13px] font-medium text-[#D6D5C9]">
-                                    Secret Name
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. SERVICE_USERNAME"
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                    className="bg-[#100E12] border border-[#383736] rounded-xl px-3.5 py-2 text-[13px] font-mono text-[#D6D5C9] placeholder-[#7B7A79] focus:outline-none focus:border-[#87B2F4]"
-                                    required
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[13px] font-medium text-[#D6D5C9]">
-                                    Secret Value
-                                </label>
-                                <input
-                                    type="password"
-                                    placeholder="Enter key or token value..."
-                                    value={newValue}
-                                    onChange={(e) => setNewValue(e.target.value)}
-                                    className="bg-[#100E12] border border-[#383736] rounded-xl px-3.5 py-2 text-[13px] font-mono text-[#D6D5C9] placeholder-[#7B7A79] focus:outline-none focus:border-[#87B2F4]"
-                                    required
-                                />
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-[13px] font-medium text-[#D6D5C9]">
-                                    Note (Optional)
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="Brief note or usage purpose"
-                                    value={newNote}
-                                    onChange={(e) => setNewNote(e.target.value)}
-                                    className="bg-[#100E12] border border-[#383736] rounded-xl px-3.5 py-2 text-[13px] text-[#D6D5C9] placeholder-[#7B7A79] focus:outline-none focus:border-[#87B2F4]"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-3 mt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 rounded-xl text-[13px] font-medium bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                                >
-                                    {isSubmitting ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    ) : (
-                                        <Plus className="w-3.5 h-3.5" />
-                                    )}
-                                    Save Secret
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                isOpen={isAddOpen}
+                onClose={() => {
+                    setIsAddOpen(false)
+                    setNewName('')
+                    setNewValue('')
+                    setNewNote('')
+                }}
+                title="Add Secret"
+                description="Add environment variables or API keys available to your workspace."
+                variant="premium"
+            >
+                <form onSubmit={handleAddSecret} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                        <label
+                            htmlFor="secret-name-input"
+                            className="text-[12px] font-medium text-[#8F8E8D]"
+                        >
+                            Secret Name
+                        </label>
+                        <input
+                            id="secret-name-input"
+                            type="text"
+                            autoFocus
+                            placeholder="e.g. SERVICE_USERNAME"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-lg px-3.5 py-2.5 text-white text-[13px] font-mono focus:outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948]"
+                            required
+                        />
                     </div>
-                </div>
-            )}
+
+                    <div className="flex flex-col gap-1.5">
+                        <label
+                            htmlFor="secret-value-input"
+                            className="text-[12px] font-medium text-[#8F8E8D]"
+                        >
+                            Secret Value
+                        </label>
+                        <input
+                            id="secret-value-input"
+                            type="password"
+                            placeholder="Enter key or token value..."
+                            value={newValue}
+                            onChange={(e) => setNewValue(e.target.value)}
+                            className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-lg px-3.5 py-2.5 text-white text-[13px] font-mono focus:outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948]"
+                            required
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                        <label
+                            htmlFor="secret-note-input"
+                            className="text-[12px] font-medium text-[#8F8E8D]"
+                        >
+                            Note (Optional)
+                        </label>
+                        <input
+                            id="secret-note-input"
+                            type="text"
+                            placeholder="Brief note or usage purpose"
+                            value={newNote}
+                            onChange={(e) => setNewNote(e.target.value)}
+                            className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-lg px-3.5 py-2.5 text-white text-[13px] focus:outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948]"
+                        />
+                    </div>
+
+                    <div className="mt-1 flex items-center justify-end gap-2.5">
+                        <button
+                            type="button"
+                            onClick={() => setIsAddOpen(false)}
+                            disabled={isSubmitting}
+                            className="bg-transparent text-white hover:bg-white/5 active:scale-95 transition-[transform,background-color,border-color,color] duration-200 text-[13px] font-medium px-4 py-2 rounded-lg focus:outline-none disabled:opacity-50 cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={!newName.trim() || !newValue.trim() || isSubmitting}
+                            className="bg-white text-black hover:bg-neutral-200 active:scale-95 transition-[transform,background-color,border-color,color] duration-200 text-[13px] font-medium px-4 py-2 rounded-lg focus:outline-none disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center min-w-[100px] cursor-pointer"
+                        >
+                            {isSubmitting ? (
+                                <div className="flex items-center gap-1.5 justify-center">
+                                    <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                    <span>Saving...</span>
+                                </div>
+                            ) : (
+                                'Save Secret'
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             {/* Modal: Bulk Add Secrets */}
-            {isBulkAddOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-none p-4">
-                    <div className="bg-[#191919] border border-[#242323] rounded-2xl w-full max-w-lg p-6 flex flex-col gap-5 shadow-2xl">
-                        <div className="flex flex-col gap-1">
-                            <h3 className="text-[16px] font-medium text-[#D6D5C9]">
-                                Bulk Add Secrets
-                            </h3>
-                            <p className="text-[13px] text-[#7B7A79]">
-                                Paste environment variables in{' '}
-                                <code className="text-[#D6D5C9]">KEY=VALUE</code> format.
-                            </p>
-                        </div>
-
-                        <form onSubmit={handleBulkAddSecrets} className="flex flex-col gap-4">
-                            <div className="flex flex-col gap-1.5">
-                                <textarea
-                                    placeholder={`SERVICE_USERNAME=admin\nSTRIPE_API_KEY=sk_test_12345\nDATABASE_URL=postgres://...`}
-                                    value={bulkContent}
-                                    onChange={(e) => setBulkContent(e.target.value)}
-                                    rows={8}
-                                    className="bg-[#100E12] border border-[#383736] rounded-xl px-3.5 py-2 text-[13px] font-mono text-[#D6D5C9] placeholder-[#7B7A79] focus:outline-none focus:border-[#87B2F4] resize-none"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-3 mt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsBulkAddOpen(false)}
-                                    className="px-4 py-2 rounded-xl text-[13px] font-medium text-[#7B7A79] hover:text-[#D6D5C9] hover:bg-[#242323] transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 rounded-xl text-[13px] font-medium bg-[#87B2F4] text-[#100E12] hover:bg-[#A3C7FF] transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                                >
-                                    {isSubmitting ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                    ) : (
-                                        <FileText className="w-3.5 h-3.5" />
-                                    )}
-                                    Import Secrets
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                isOpen={isBulkAddOpen}
+                onClose={() => {
+                    setIsBulkAddOpen(false)
+                    setBulkContent('')
+                }}
+                title="Bulk Add Secrets"
+                description="Paste environment variables in KEY=VALUE format."
+                variant="premium"
+            >
+                <form onSubmit={handleBulkAddSecrets} className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-1.5">
+                        <textarea
+                            autoFocus
+                            placeholder={`SERVICE_USERNAME=admin\nSTRIPE_API_KEY=sk_test_12345\nDATABASE_URL=postgres://...`}
+                            value={bulkContent}
+                            onChange={(e) => setBulkContent(e.target.value)}
+                            rows={8}
+                            className="w-full bg-white/[0.03] border border-[#2B2A27] rounded-lg px-3.5 py-2.5 text-white text-[13px] font-mono focus:outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-[#4A4948] resize-none"
+                            required
+                        />
                     </div>
-                </div>
-            )}
+
+                    <div className="mt-1 flex items-center justify-end gap-2.5">
+                        <button
+                            type="button"
+                            onClick={() => setIsBulkAddOpen(false)}
+                            disabled={isSubmitting}
+                            className="bg-transparent text-white hover:bg-white/5 active:scale-95 transition-[transform,background-color,border-color,color] duration-200 text-[13px] font-medium px-4 py-2 rounded-lg focus:outline-none disabled:opacity-50 cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={!bulkContent.trim() || isSubmitting}
+                            className="bg-white text-black hover:bg-neutral-200 active:scale-95 transition-[transform,background-color,border-color,color] duration-200 text-[13px] font-medium px-4 py-2 rounded-lg focus:outline-none disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center min-w-[110px] cursor-pointer"
+                        >
+                            {isSubmitting ? (
+                                <div className="flex items-center gap-1.5 justify-center">
+                                    <span className="w-3.5 h-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                    <span>Importing...</span>
+                                </div>
+                            ) : (
+                                'Import Secrets'
+                            )}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     )
 }

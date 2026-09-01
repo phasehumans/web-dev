@@ -138,6 +138,7 @@ const getUserGithubRepos = async (data: ListGithubRepos): Promise<GithubRepo[]> 
                     Authorization: `Bearer ${user.githubToken}`,
                     Accept: 'application/vnd.github+json',
                     'X-GitHub-Api-Version': '2022-11-28',
+                    'User-Agent': 'December-App',
                 },
             }
         )

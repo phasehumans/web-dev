@@ -28,25 +28,57 @@ const connectVercel = asyncHandler(async (req: Request, res: Response) => {
 })
 
 const connectSupabase = asyncHandler(async (req: Request, res: Response) => {
-    const { code, state: userId } = connectOAuthQuerySchema.parse(req.query)
+    const { code, state } = connectOAuthQuerySchema.parse(req.query)
 
-    await integrationsService.connectSupabase({
-        userId,
-        code,
-    })
+    let userId = state
+    let redirectPath = '/settings/connections'
+    if (state.includes(':')) {
+        const parts = state.split(':')
+        userId = parts[0] as string
+        redirectPath = parts.slice(1).join(':') || '/settings/connections'
+    }
 
-    return res.redirect(`${env.WEB_URL}/profile/integrations`)
+    if (!userId && (req as any).user?.userId) {
+        userId = (req as any).user.userId
+    }
+
+    if (userId) {
+        await integrationsService.connectSupabase({
+            userId,
+            code,
+        })
+    }
+
+    return res.redirect(
+        `${env.WEB_URL}${redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`}`
+    )
 })
 
 const connectNotion = asyncHandler(async (req: Request, res: Response) => {
-    const { code, state: userId } = connectOAuthQuerySchema.parse(req.query)
+    const { code, state } = connectOAuthQuerySchema.parse(req.query)
 
-    await integrationsService.connectNotion({
-        userId,
-        code,
-    })
+    let userId = state
+    let redirectPath = '/settings/connections'
+    if (state.includes(':')) {
+        const parts = state.split(':')
+        userId = parts[0] as string
+        redirectPath = parts.slice(1).join(':') || '/settings/connections'
+    }
 
-    return res.redirect(`${env.WEB_URL}/profile/integrations`)
+    if (!userId && (req as any).user?.userId) {
+        userId = (req as any).user.userId
+    }
+
+    if (userId) {
+        await integrationsService.connectNotion({
+            userId,
+            code,
+        })
+    }
+
+    return res.redirect(
+        `${env.WEB_URL}${redirectPath.startsWith('/') ? redirectPath : `/${redirectPath}`}`
+    )
 })
 
 const connectGithub = asyncHandler(async (req: Request, res: Response) => {
@@ -57,14 +89,21 @@ const connectGithub = asyncHandler(async (req: Request, res: Response) => {
     }
 
     let userId = state
-    let redirectPath = '/profile/integrations'
+    let redirectPath = '/settings/repositories'
     if (state.includes(':')) {
         const parts = state.split(':')
         userId = parts[0] as string
-        redirectPath = parts.slice(1).join(':')
+        redirectPath = parts.slice(1).join(':') || '/settings/repositories'
     }
 
-    await integrationsService.handleGitHubOAuth({ code, userId })
+    if (!userId && (req as any).user?.userId) {
+        userId = (req as any).user.userId
+    }
+
+    if (userId) {
+        await integrationsService.handleGitHubOAuth({ code, userId })
+    }
+
     return res.redirect(`${env.WEB_URL}${redirectPath}`)
 })
 

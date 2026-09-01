@@ -11,13 +11,6 @@ interface AddCreditsModalProps {
     onClose: () => void
 }
 
-const PRESET_TIERS = [
-    { amount: 5, label: 'Starter' },
-    { amount: 10, label: 'Popular', badge: 'Popular' },
-    { amount: 25, label: 'Developer' },
-    { amount: 50, label: 'Pro' },
-]
-
 const loadRazorpayScript = () => {
     return new Promise<boolean>((resolve) => {
         if ((window as any).Razorpay) {
@@ -61,11 +54,6 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
         if (amountNum < 1 || amountNum > 50) {
             setError('Amount must be a whole number between $1 and $50.')
         }
-    }
-
-    const selectPreset = (amount: number) => {
-        setAmountStr(amount.toString())
-        setError(null)
     }
 
     const handlePayment = async () => {
@@ -167,21 +155,21 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
             isOpen={true}
             onClose={onClose}
             title="Add Wallet Credits"
-            description="Top up your wallet balance to continue using AI models ($1.00 to $50.00)."
+            description="Top up your wallet balance to continue using AI models."
             variant="premium"
         >
             <div className="flex flex-col gap-4 py-1">
-                {/* Hero Amount Card */}
-                <div className="flex flex-col gap-3.5 p-5 bg-[#141414] border border-[#2B2A27] rounded-2xl">
+                {/* Amount Input Card */}
+                <div className="flex flex-col gap-3 p-4 sm:p-5 bg-[#191919] border border-[#242323] rounded-xl">
                     <div className="flex items-center justify-between">
                         <label
                             htmlFor="credit-amount-input"
-                            className="text-[11px] font-semibold text-[#8F8E8D] uppercase tracking-wider block"
+                            className="text-[11px] font-medium text-[#7B7A79] uppercase tracking-wider block"
                         >
                             Enter Amount
                         </label>
                         {inrEstimate && !error && (
-                            <span className="text-[11.5px] text-[#A1A09E] font-mono">
+                            <span className="text-[12px] text-[#7B7A79] font-medium">
                                 ≈ ₹{inrEstimate.toLocaleString('en-IN')} INR
                             </span>
                         )}
@@ -189,7 +177,7 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
 
                     {/* Large focal input */}
                     <div className="relative flex items-center">
-                        <span className="text-neutral-400 font-mono text-3xl font-medium mr-2 select-none">
+                        <span className="text-[#7B7A79] text-3xl sm:text-4xl font-medium mr-2 select-none">
                             $
                         </span>
                         <input
@@ -199,51 +187,20 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
                             pattern="[0-9]*"
                             value={amountStr}
                             onChange={(e) => handleAmountChange(e.target.value)}
-                            className="w-full bg-transparent text-white text-3xl sm:text-4xl font-mono font-semibold focus:outline-none placeholder-neutral-700 tracking-tight"
+                            className="w-full bg-transparent text-white text-3xl sm:text-4xl font-medium focus:outline-none placeholder-[#3A3A3A] tracking-tight"
                             placeholder="10"
                             disabled={isProcessing || !!successMessage}
                             autoComplete="off"
                             autoFocus
                         />
                     </div>
-
-                    {/* Minimalist preset pills */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-[#222120]">
-                        <span className="text-[11px] text-[#7B7A79] mr-1 hidden sm:inline">
-                            Presets:
-                        </span>
-                        {PRESET_TIERS.map((tier) => {
-                            const isSelected = amountNum === tier.amount
-                            return (
-                                <button
-                                    key={tier.amount}
-                                    type="button"
-                                    onClick={() => selectPreset(tier.amount)}
-                                    disabled={isProcessing || !!successMessage}
-                                    className={`px-3 py-1.5 rounded-lg text-[12px] font-mono transition-all active:scale-95 cursor-pointer ${
-                                        isSelected
-                                            ? 'bg-white text-black font-semibold shadow-sm'
-                                            : 'bg-white/[0.04] text-[#A1A09E] hover:text-white hover:bg-white/[0.08] border border-[#2B2A27]'
-                                    }`}
-                                >
-                                    ${tier.amount}
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-
-                {/* Subtext info */}
-                <div className="px-1 flex items-center justify-between text-[11.5px] text-[#7B7A79] font-mono">
-                    <span>Rate: $1 ≈ ₹{usdToInrRate}</span>
-                    <span>Billed via UPI / Cards</span>
                 </div>
 
                 {/* Error message */}
                 {error && (
-                    <div className="text-[12px] text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-xl animate-in fade-in duration-200">
+                    <p className="text-[12px] text-red-500 font-medium px-1 animate-in fade-in duration-150">
                         {error}
-                    </div>
+                    </p>
                 )}
 
                 {/* Success messaging */}
@@ -255,18 +212,17 @@ export const AddCreditsModal: React.FC<AddCreditsModalProps> = ({ onClose }) => 
                 )}
 
                 {/* Footer actions */}
-                <div className="mt-2 flex items-center justify-between gap-3 pt-2 border-t border-[#222120]">
-                    <div className="flex items-center gap-1.5 opacity-60">
+                <div className="mt-1 flex items-center justify-between gap-3 pt-1">
+                    <div className="flex items-center gap-1.5 select-none">
                         <svg
-                            fill="#FFFFFF"
                             viewBox="0 0 24 24"
-                            className="h-4 w-4"
+                            className="h-3.5 w-3.5 fill-[#5893EE] shrink-0"
                             xmlns="http://www.w3.org/2000/svg"
                         >
                             <path d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24zM14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z" />
                         </svg>
-                        <span className="text-[10.5px] font-medium tracking-wide whitespace-nowrap text-[#8F8E8D]">
-                            SECURED BY RAZORPAY
+                        <span className="text-[12px] font-medium text-[#7B7A79]">
+                            Secured by <span className="text-[#D6D5C9] font-medium">Razorpay</span>
                         </span>
                     </div>
 

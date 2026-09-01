@@ -29,7 +29,7 @@ export const Modal: React.FC<ModalProps> = ({
     if (!isOpen) return null
 
     if (variant === 'premium') {
-        const premiumMaxWidth = maxWidth === 'max-w-[480px]' ? 'max-w-[400px]' : maxWidth
+        const premiumMaxWidth = maxWidth === 'max-w-[480px]' ? 'max-w-[360px]' : maxWidth
         return createPortal(
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-auto">
                 <div
@@ -54,14 +54,14 @@ export const Modal: React.FC<ModalProps> = ({
 
                     {banner}
 
-                    <div className="p-6">
-                        <div className="flex flex-col mb-4">
+                    <div className="p-6 sm:py-6.5 sm:px-6">
+                        <div className="flex flex-col mb-4.5">
                             {showLogo && (
-                                <div className="mb-3 select-none inline-block text-[#D6D5D4]">
+                                <div className="mb-3.5 select-none inline-block text-[#D6D5D4]">
                                     <Icons.DecemberLogo className="w-8 h-8" />
                                 </div>
                             )}
-                            <h2 className="text-[18px] font-semibold text-white tracking-tight leading-tight mb-1">
+                            <h2 className="text-[18px] font-medium text-white tracking-tight leading-tight mb-1.5">
                                 {title}
                             </h2>
                             {description && (

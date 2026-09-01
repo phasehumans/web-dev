@@ -44,6 +44,9 @@ export const useAppController = () => {
     const activeAssistantMessageIdRef = React.useRef<string | null>(null)
     const outputOriginViewRef = React.useRef<ViewState>('chat')
 
+    const isAuthRestored = useAppStore((s) => s.isAuthRestored)
+    const setIsAuthRestored = useAppStore((s) => s.setIsAuthRestored)
+
     React.useEffect(() => {
         let isMounted = true
 
@@ -58,6 +61,7 @@ export const useAppController = () => {
             } catch (error: any) {
                 // If 401 Unauthorized, visitor has no session or is unauthenticated
                 if (error instanceof ApiError && error.status === 401) {
+                    if (isMounted) setIsAuthenticated(false)
                     return
                 }
 
@@ -73,7 +77,11 @@ export const useAppController = () => {
                     queryClient.invalidateQueries({ queryKey: ['sessions'] })
                     queryClient.invalidateQueries({ queryKey: ['profile'] })
                 } catch {
-                    // Intentionally swallowed: unauthenticated visitor or persistent error
+                    if (isMounted) setIsAuthenticated(false)
+                }
+            } finally {
+                if (isMounted) {
+                    setIsAuthRestored(true)
                 }
             }
         }
@@ -82,7 +90,29 @@ export const useAppController = () => {
         return () => {
             isMounted = false
         }
-    }, [queryClient, setIsAuthenticated])
+    }, [queryClient, setIsAuthenticated, setIsAuthRestored])
+
+    // Redirect unauthenticated visitors attempting to access protected routes to home
+    React.useEffect(() => {
+        if (!isAuthRestored || isAuthenticated) return
+
+        const pathname = location.pathname
+        const isPublic =
+            pathname === '/' ||
+            pathname === '/search' ||
+            pathname === '/terms' ||
+            pathname === '/privacy' ||
+            pathname === '/settings/terms' ||
+            pathname === '/settings/privacy' ||
+            pathname === '/settings/changelog' ||
+            pathname.startsWith('/github/callback') ||
+            pathname.startsWith('/cli-login') ||
+            pathname.startsWith('/device/activate')
+
+        if (!isPublic) {
+            navigate('/', { replace: true })
+        }
+    }, [isAuthRestored, isAuthenticated, location.pathname, navigate])
 
     const { data: profile } = useQuery({
         queryKey: ['profile'],

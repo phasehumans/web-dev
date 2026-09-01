@@ -154,7 +154,7 @@ describe('Ticket #401: Workspace Header Actions, PR Badge, and Feedback Integrat
         expect(screen.getByText('PR #401')).not.toBeNull()
     })
 
-    test('Session insights button opens the insights modal in WorkspaceHeaderActions', async () => {
+    test('WorkspaceHeaderActions 3 dots menu opens and shows actions without Session insights', async () => {
         sessionAPI.getSession = mock(async () => ({
             id: 'session-insights-test',
             title: 'Test App',
@@ -172,6 +172,7 @@ describe('Ticket #401: Workspace Header Actions, PR Badge, and Feedback Integrat
                     <WorkspaceHeaderActions
                         projectId="session-insights-test"
                         projectName="Test App"
+                        onDownload={() => {}}
                     />
                 </MemoryRouter>
             </QueryClientProvider>
@@ -187,13 +188,13 @@ describe('Ticket #401: Workspace Header Actions, PR Badge, and Feedback Integrat
             ) || moreButtons[moreButtons.length - 1]
         fireEvent.click(threeDotsButton)
 
-        const insightsButton = await screen.findByRole('button', { name: /Session insights/i })
-        expect(insightsButton).not.toBeNull()
-        fireEvent.click(insightsButton)
+        // Menu items should show Rename, Tags, Archive, Download ZIP
+        expect(await screen.findByRole('button', { name: /Rename/i })).not.toBeNull()
+        expect(await screen.findByRole('button', { name: /Tags/i })).not.toBeNull()
+        expect(await screen.findByRole('button', { name: /Archive/i })).not.toBeNull()
+        expect(await screen.findByRole('button', { name: /Download ZIP/i })).not.toBeNull()
 
-        // SessionInsightsModal should open with title "Session usage & tokens"
-        await waitFor(() => {
-            expect(screen.getByText('Session usage & tokens')).not.toBeNull()
-        })
+        // Session insights should not be in the menu
+        expect(screen.queryByRole('button', { name: /Session insights/i })).toBeNull()
     })
 })

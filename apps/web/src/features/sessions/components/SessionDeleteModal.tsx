@@ -30,7 +30,6 @@ export const SessionDeleteModal: React.FC<SessionDeleteModalProps> = ({
             title="Delete project"
             description="Permanently delete this project from your workspace."
             variant="premium"
-            maxWidth="max-w-[380px]"
         >
             <div className="flex flex-col gap-4">
                 <p className="text-[13px] text-[#8F8E8D] leading-relaxed">

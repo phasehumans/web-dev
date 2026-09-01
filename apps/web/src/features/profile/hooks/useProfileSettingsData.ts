@@ -105,7 +105,7 @@ export const useProfileSettingsData = ({
             const previousProfile = queryClient.getQueryData<Profile>(profileQueryKey)
 
             queryClient.setQueryData<Profile>(profileQueryKey, (currentProfile) =>
-                currentProfile ? { ...currentProfile, githubUsername: username } : currentProfile
+                currentProfile ? { ...currentProfile, username } : currentProfile
             )
 
             onUsernameMutate()

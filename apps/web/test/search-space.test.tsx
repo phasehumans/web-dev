@@ -296,7 +296,7 @@ This is clean content without divider lines.
         expect(getByText(thoughts)).not.toBeNull()
     })
 
-    test('ChatPromptInput in search mode hides attach repo icon and triggers onUpload on plus button click', async () => {
+    test('ChatPromptInput in search mode hides attach repo icon and triggers onUpload on plus button click when authenticated', async () => {
         let uploadCalled = false
         const queryClient = new QueryClient({
             defaultOptions: { queries: { retry: false } },
@@ -310,6 +310,7 @@ This is clean content without divider lines.
                         onChange={() => {}}
                         onSubmit={() => {}}
                         mode="search"
+                        isAuthenticated={true}
                         onUpload={() => {
                             uploadCalled = true
                         }}
@@ -337,6 +338,44 @@ This is clean content without divider lines.
         expect(queryByText('Repositories')).toBeNull()
         expect(queryByText('Sessions')).toBeNull()
         expect(uploadCalled).toBe(true)
+    })
+
+    test('ChatPromptInput in search mode when unauthenticated triggers onOpenAuth and does not trigger onUpload on plus button click', async () => {
+        let uploadCalled = false
+        let authCalled = false
+        const queryClient = new QueryClient({
+            defaultOptions: { queries: { retry: false } },
+        })
+
+        const { container } = render(
+            <QueryClientProvider client={queryClient}>
+                <MemoryRouter>
+                    <ChatPromptInput
+                        value=""
+                        onChange={() => {}}
+                        onSubmit={() => {}}
+                        mode="search"
+                        isAuthenticated={false}
+                        onOpenAuth={() => {
+                            authCalled = true
+                        }}
+                        onUpload={() => {
+                            uploadCalled = true
+                        }}
+                    />
+                </MemoryRouter>
+            </QueryClientProvider>
+        )
+
+        const plusButton = container.querySelector('button')
+        expect(plusButton).not.toBeNull()
+
+        await act(async () => {
+            fireEvent.click(plusButton!)
+        })
+
+        expect(authCalled).toBe(true)
+        expect(uploadCalled).toBe(false)
     })
 
     test('ChatPromptInput in search mode renders Thinking mode toggle button (default off) and toggles state', async () => {

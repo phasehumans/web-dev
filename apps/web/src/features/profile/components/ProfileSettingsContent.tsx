@@ -48,7 +48,20 @@ export const ProfileSettingsContent: React.FC<ProfileSettingsContentProps> = (pr
     const queryClient = useQueryClient()
     const updateAvatarMutation = useMutation({
         mutationFn: profileAPI.updateAvatarUrl,
-        onSuccess: () => {
+        onMutate: async ({ avatarUrl }) => {
+            await queryClient.cancelQueries({ queryKey: ['profile'] })
+            const previousProfile = queryClient.getQueryData<any>(['profile'])
+            queryClient.setQueryData<any>(['profile'], (old: any) =>
+                old ? { ...old, avatarUrl } : old
+            )
+            return { previousProfile }
+        },
+        onError: (_err, _vars, context) => {
+            if (context?.previousProfile) {
+                queryClient.setQueryData(['profile'], context.previousProfile)
+            }
+        },
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['profile'] })
         },
     })

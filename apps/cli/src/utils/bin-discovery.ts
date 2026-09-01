@@ -207,10 +207,10 @@ export async function findAllDecemberBinaries(
 
             const manager = inferManagerFromPath(normalizedPath, realPath)
 
-            // Try reading version
-            let version = await readVersionFromPackageJson(realPath)
+            // Try reading version: execution is authoritative because dist might not match package.json
+            let version = await readVersionFromExecution(normalizedPath)
             if (!version) {
-                version = await readVersionFromExecution(normalizedPath)
+                version = await readVersionFromPackageJson(realPath)
             }
 
             const isActive = !activeAssigned

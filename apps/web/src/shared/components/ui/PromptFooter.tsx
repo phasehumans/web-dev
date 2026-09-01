@@ -183,6 +183,10 @@ export const PromptFooter: React.FC<PromptFooterProps> = ({
                         <button
                             onClick={(e) => {
                                 if (mode === 'search') {
+                                    if (!isAuthenticated) {
+                                        onOpenAuth?.()
+                                        return
+                                    }
                                     handleUploadClick()
                                     return
                                 }

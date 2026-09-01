@@ -49,6 +49,33 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
 
     const markAsReadMutation = useMutation({
         mutationFn: notificationAPI.markAsRead,
+        onMutate: async (id) => {
+            await queryClient.cancelQueries({ queryKey: ['notifications'] })
+            await queryClient.cancelQueries({ queryKey: ['notifications-unread-count'] })
+
+            queryClient.setQueriesData({ queryKey: ['notifications'] }, (old: any) => {
+                if (!old) return old
+                if (Array.isArray(old)) {
+                    return old.map((n: any) => (n.id === id ? { ...n, isRead: true } : n))
+                }
+                if (Array.isArray(old.pages)) {
+                    return {
+                        ...old,
+                        pages: old.pages.map((page: any) => ({
+                            ...page,
+                            notifications: page.notifications?.map((n: any) =>
+                                n.id === id ? { ...n, isRead: true } : n
+                            ),
+                        })),
+                    }
+                }
+                return old
+            })
+
+            queryClient.setQueryData(['notifications-unread-count'], (count: number | undefined) =>
+                typeof count === 'number' ? Math.max(0, count - 1) : 0
+            )
+        },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
             queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
@@ -59,21 +86,28 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
         mutationFn: notificationAPI.deleteNotification,
         onMutate: async (id) => {
             await queryClient.cancelQueries({ queryKey: ['notifications'] })
-            const previous = queryClient.getQueryData<Notification[]>(['notifications'])
-            if (previous) {
-                queryClient.setQueryData<Notification[]>(['notifications'], (old) =>
-                    old ? old.filter((n) => n.id !== id) : []
-                )
-            }
-            return { previous }
-        },
-        onError: (err, id, context) => {
-            if (context?.previous) {
-                queryClient.setQueryData(['notifications'], context.previous)
-            }
+            await queryClient.cancelQueries({ queryKey: ['notifications-unread-count'] })
+
+            queryClient.setQueriesData({ queryKey: ['notifications'] }, (old: any) => {
+                if (!old) return old
+                if (Array.isArray(old)) {
+                    return old.filter((n: any) => n.id !== id)
+                }
+                if (Array.isArray(old.pages)) {
+                    return {
+                        ...old,
+                        pages: old.pages.map((page: any) => ({
+                            ...page,
+                            notifications: page.notifications?.filter((n: any) => n.id !== id),
+                        })),
+                    }
+                }
+                return old
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
+            queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
             setSelectedNotification(null)
         },
     })
@@ -82,21 +116,27 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
         mutationFn: notificationAPI.deleteAllRead,
         onMutate: async () => {
             await queryClient.cancelQueries({ queryKey: ['notifications'] })
-            const previous = queryClient.getQueryData<Notification[]>(['notifications'])
-            if (previous) {
-                queryClient.setQueryData<Notification[]>(['notifications'], (old) =>
-                    old ? old.filter((n) => !n.isRead) : []
-                )
-            }
-            return { previous }
-        },
-        onError: (err, variables, context) => {
-            if (context?.previous) {
-                queryClient.setQueryData(['notifications'], context.previous)
-            }
+
+            queryClient.setQueriesData({ queryKey: ['notifications'] }, (old: any) => {
+                if (!old) return old
+                if (Array.isArray(old)) {
+                    return old.filter((n: any) => !n.isRead)
+                }
+                if (Array.isArray(old.pages)) {
+                    return {
+                        ...old,
+                        pages: old.pages.map((page: any) => ({
+                            ...page,
+                            notifications: page.notifications?.filter((n: any) => !n.isRead),
+                        })),
+                    }
+                }
+                return old
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['notifications'] })
+            queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
             setIsMenuOpen(false)
         },
     })
@@ -240,7 +280,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
                     style={{ scrollbarWidth: 'none' }}
                 >
                     <div>
-                        <h3 className="text-[13px] font-semibold text-white leading-snug">
+                        <h3 className="text-[13px] font-medium text-white leading-snug">
                             {selectedNotification.title}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
@@ -387,7 +427,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
                         <div className="w-10 h-10 rounded-2xl bg-[#252525]/60 flex items-center justify-center mb-4 border border-[#2E2D2C]/60 shadow-sm">
                             <Bell className="w-[18px] h-[18px] text-[#D6D5D4]" strokeWidth={1.5} />
                         </div>
-                        <h3 className="text-[13px] font-semibold text-white mb-1.5 tracking-tight">
+                        <h3 className="text-[13px] font-medium text-white mb-1.5 tracking-tight">
                             No Notifications
                         </h3>
                         <p className="text-[12px] text-[#8F8E8D] leading-[1.4] max-w-[190px]">

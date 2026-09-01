@@ -251,15 +251,17 @@ describe('Integration Service - Unit Tests', () => {
             globalThis.fetch = (async (url: string) => {
                 if (url.includes('github.com/login/oauth/access_token')) {
                     return {
+                        ok: true,
                         json: async () => ({ access_token: 'gho_secret_token' }),
                     } as any
                 }
                 if (url.includes('api.github.com/user')) {
                     return {
+                        ok: true,
                         json: async () => ({ login: 'octocat_oauth' }),
                     } as any
                 }
-                return { json: async () => ({}) } as any
+                return { ok: true, json: async () => ({}) } as any
             }) as any
 
             try {

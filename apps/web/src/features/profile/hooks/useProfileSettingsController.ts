@@ -110,13 +110,8 @@ export const useProfileSettingsController = () => {
     }
 
     const redirectToIntegration = (getUrl: (userId: string) => string) => {
-        if (!profile?.id) {
-            setProfileActionError('Profile is still loading. Please try again.')
-            return
-        }
-
         setProfileActionError(null)
-        window.location.href = getUrl(profile.id)
+        window.location.href = getUrl(profile?.id || '')
     }
 
     const connectGithub = () => {

@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+import { env } from '../../env'
 import { AppError } from '../../shared/appError'
 import { notificationService } from '../notification/notification.service'
 
@@ -80,23 +81,43 @@ const connectSupabase = async (data: ConnectSupabase) => {
         throw new AppError('user not found', 404)
     }
 
+    const redirectUri =
+        env.SUPABASE_REDIRECT_URI ||
+        process.env.SUPABASE_REDIRECT_URI ||
+        `${env.SERVER_URL}/api/v1/integrations/supabase/connect`
+    const clientId =
+        env.SUPABASE_CLIENT_ID ||
+        process.env.SUPABASE_CLIENT_ID ||
+        '4a0473bb-3c69-4d28-8896-d1d8b6e18347'
+    const clientSecret = env.SUPABASE_CLIENT_SECRET || process.env.SUPABASE_CLIENT_SECRET
+
     const params = new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: process.env.SUPABASE_REDIRECT_URI!,
-        client_id: process.env.SUPABASE_CLIENT_ID!,
-        client_secret: process.env.SUPABASE_CLIENT_SECRET!,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+        client_secret: clientSecret || '',
     })
 
-    const response = await axios.post('https://api.supabase.com/v1/oauth/token', params, {
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-    })
+    let response
+    try {
+        response = await axios.post('https://api.supabase.com/v1/oauth/token', params, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+    } catch (error: any) {
+        const errorMsg =
+            error?.response?.data?.error_description ||
+            error?.response?.data?.message ||
+            error?.message ||
+            'failed to exchange supabase authorization code'
+        throw new AppError(errorMsg.toLowerCase(), 400)
+    }
 
     const tokenData = response.data
 
-    const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000)
+    const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000)
 
     const updatedUser = await integrationRepository.updateUserSupabase({
         id: userId,
@@ -208,10 +229,15 @@ const connectGithub = async (data: ConnectGithub) => {
 const handleGitHubOAuth = async (data: HandleGitHubOAuth) => {
     const { code, userId } = data
     type GithubTokenResponse = {
-        access_token: string
-        token_type: string
-        scope: string
+        access_token?: string
+        token_type?: string
+        scope?: string
+        error?: string
+        error_description?: string
     }
+
+    const clientId = env.GITHUB_CLIENT_ID || process.env.GITHUB_CLIENT_ID
+    const clientSecret = env.GITHUB_CLIENT_SECRET || process.env.GITHUB_CLIENT_SECRET
 
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
@@ -220,20 +246,34 @@ const handleGitHubOAuth = async (data: HandleGitHubOAuth) => {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            client_id: process.env.GITHUB_CLIENT_ID,
-            client_secret: process.env.GITHUB_CLIENT_SECRET,
+            client_id: clientId,
+            client_secret: clientSecret,
             code,
         }),
     })
 
     const tokenData = (await tokenResponse.json()) as GithubTokenResponse
+    if (tokenData.error || !tokenData.access_token) {
+        throw new AppError(
+            tokenData.error_description ||
+                tokenData.error ||
+                'failed to obtain github access token',
+            400
+        )
+    }
+
     const accessToken = tokenData.access_token
 
     const userRes = await fetch('https://api.github.com/user', {
         headers: {
             Authorization: `Bearer ${accessToken}`,
+            'User-Agent': 'December-App',
         },
     })
+
+    if (!userRes.ok) {
+        throw new AppError('failed to fetch github user profile', 400)
+    }
 
     const githubUser: any = await userRes.json()
     const username = githubUser.login

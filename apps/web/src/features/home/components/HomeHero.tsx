@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { MessageSquare, Laptop, Star } from 'lucide-react'
+import { Laptop } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -16,6 +16,9 @@ import { profileAPI } from '@/features/profile/api/profile'
 import { ProfileFeedbackModal } from '@/features/profile/components/ProfileFeedbackModal'
 import { Icons } from '@/shared/components/ui/Icons'
 import { getGithubAppName } from '@/shared/config/env'
+
+// Toggle to temporarily disable onboarding / welcome modal for users until turned back on
+const SHOW_ONBOARDING_MODAL = false
 
 export const HomeHero: React.FC<HomeHeroProps> = ({
     onPromptSubmit,
@@ -65,7 +68,24 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
     const dismissCardMutation = useMutation({
         mutationFn: profileAPI.dismissOnboardingCard,
-        onSuccess: () => {
+        onMutate: async (card) => {
+            await queryClient.cancelQueries({ queryKey: ['profile'] })
+            const previousProfile = queryClient.getQueryData<any>(['profile'])
+            queryClient.setQueryData<any>(['profile'], (old: any) => {
+                if (!old) return old
+                if (card === 'welcome') return { ...old, welcomeCardDone: true }
+                if (card === 'github') return { ...old, githubCardDone: true }
+                if (card === 'feedback') return { ...old, feedbackCardDone: true }
+                return old
+            })
+            return { previousProfile }
+        },
+        onError: (_err, _vars, context) => {
+            if (context?.previousProfile) {
+                queryClient.setQueryData(['profile'], context.previousProfile)
+            }
+        },
+        onSettled: () => {
             void queryClient.invalidateQueries({ queryKey: ['profile'] })
         },
     })
@@ -99,7 +119,12 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
     useEffect(() => {
         let timer: any = null
-        if (isAuthenticated && profile && profile.hasCompletedOnboarding === false) {
+        if (
+            SHOW_ONBOARDING_MODAL &&
+            isAuthenticated &&
+            profile &&
+            profile.hasCompletedOnboarding === false
+        ) {
             timer = setTimeout(() => {
                 setShowOnboarding(true)
             }, 800)
@@ -257,7 +282,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                     {(!isGithubDone || !isStarDone || !isFeedbackDone) && (
                         <div className="mt-8 w-full hidden md:flex flex-col gap-3.5 select-none animate-in fade-in duration-300">
                             <div className="flex flex-col gap-0.5 text-left px-1.5">
-                                <h3 className="text-[13px] md:text-[14px] font-sans font-semibold text-[#D6D5D4] tracking-tight">
+                                <h3 className="text-[13px] md:text-[14px] font-sans font-medium text-[#D6D5D4] tracking-tight">
                                     Get Started
                                 </h3>
                                 <p className="text-[11px] md:text-[11.5px] font-sans text-[#8F8E8D] leading-tight">
@@ -267,7 +292,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
                                 {/* Card 1: Connect GitHub */}
                                 {!isGithubDone && (
-                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[172px] text-left">
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[190px] text-left">
                                         <button
                                             onClick={() => handleDismissCard('github')}
                                             className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
@@ -275,23 +300,20 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                         >
                                             <Icons.X className="w-3.5 h-3.5" />
                                         </button>
-                                        <div className="flex flex-col gap-2.5">
-                                            <Icons.Github className="w-5 h-5 text-white" />
-                                            <div className="flex flex-col gap-1">
-                                                <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
-                                                    Connect GitHub
-                                                </h4>
-                                                <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                    Connect your repositories so that December can
-                                                    open Pull Requests and review code.
-                                                </p>
-                                            </div>
+                                        <div className="flex flex-col gap-1.5 pr-4">
+                                            <h4 className="text-[13px] font-sans font-medium text-[#E8E8E8]">
+                                                Connect GitHub
+                                            </h4>
+                                            <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-normal">
+                                                Connect your repositories so that December can open
+                                                Pull Requests and review code.
+                                            </p>
                                         </div>
                                         <button
                                             onClick={
                                                 isAuthenticated ? handleConnectGithub : onOpenAuth
                                             }
-                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] hover:text-[#E8E8E8] text-[11.5px] font-sans font-medium text-center cursor-pointer select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
+                                            className="mt-6 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] hover:text-[#E8E8E8] text-[11.5px] font-sans font-medium text-center cursor-pointer select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
                                         >
                                             {isAuthenticated
                                                 ? 'Install Integration'
@@ -302,7 +324,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
                                 {/* Card 2: Star on GitHub */}
                                 {!isStarDone && (
-                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[172px] text-left">
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[190px] text-left">
                                         <button
                                             onClick={() => handleDismissCard('star')}
                                             className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
@@ -310,23 +332,20 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                         >
                                             <Icons.X className="w-3.5 h-3.5" />
                                         </button>
-                                        <div className="flex flex-col gap-2.5">
-                                            <Star className="w-5 h-5 text-white" />
-                                            <div className="flex flex-col gap-1">
-                                                <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
-                                                    Star on GitHub
-                                                </h4>
-                                                <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                    Support December by starring our repository on
-                                                    GitHub and following our roadmap.
-                                                </p>
-                                            </div>
+                                        <div className="flex flex-col gap-1.5 pr-4">
+                                            <h4 className="text-[13px] font-sans font-medium text-[#E8E8E8]">
+                                                Star on GitHub
+                                            </h4>
+                                            <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-normal">
+                                                Support December by starring our repository on
+                                                GitHub and following our roadmap.
+                                            </p>
                                         </div>
                                         <a
                                             href="https://github.com/phasehumans/december"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] hover:text-[#E8E8E8] text-[11.5px] font-sans font-medium text-center cursor-pointer block select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
+                                            className="mt-6 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] hover:text-[#E8E8E8] text-[11.5px] font-sans font-medium text-center cursor-pointer block select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
                                         >
                                             Star on GitHub
                                         </a>
@@ -335,7 +354,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
 
                                 {/* Card 3: Feedback */}
                                 {!isFeedbackDone && (
-                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[172px] text-left">
+                                    <div className="relative flex flex-col justify-between p-4 rounded-[15px] bg-[#141414] border border-dashed border-[#333333] min-h-[190px] text-left">
                                         <button
                                             onClick={() => handleDismissCard('feedback')}
                                             className="absolute top-3 right-3 text-[#8F8E8D] hover:text-white transition-colors cursor-pointer"
@@ -343,17 +362,14 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                         >
                                             <Icons.X className="w-3.5 h-3.5" />
                                         </button>
-                                        <div className="flex flex-col gap-2.5">
-                                            <MessageSquare className="w-5 h-5 text-white" />
-                                            <div className="flex flex-col gap-1">
-                                                <h4 className="text-[13px] font-sans font-semibold text-[#E8E8E8]">
-                                                    Give feedback
-                                                </h4>
-                                                <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-medium">
-                                                    Help us improve December by sharing your
-                                                    thoughts and feature requests.
-                                                </p>
-                                            </div>
+                                        <div className="flex flex-col gap-1.5 pr-4">
+                                            <h4 className="text-[13px] font-sans font-medium text-[#E8E8E8]">
+                                                Give feedback
+                                            </h4>
+                                            <p className="text-[11px] font-sans text-[#8F8E8D] leading-normal font-normal">
+                                                Help us improve December by sharing your thoughts
+                                                and feature requests.
+                                            </p>
                                         </div>
                                         <button
                                             onClick={
@@ -361,7 +377,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                                                     ? () => setShowFeedbackModal(true)
                                                     : onOpenAuth
                                             }
-                                            className="mt-5 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] hover:text-[#E8E8E8] text-[11.5px] font-sans font-medium text-center cursor-pointer select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
+                                            className="mt-6 w-full py-1.5 rounded-[7px] bg-[#191919] border border-[#262626] text-[#9A9998] hover:text-[#E8E8E8] text-[11.5px] font-sans font-medium text-center cursor-pointer select-none transition-transform duration-75 active:scale-[0.98] active:translate-y-[0.5px]"
                                         >
                                             Share feedback
                                         </button>
@@ -387,17 +403,19 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
                 }}
             />
 
-            <OnboardingModal
-                isOpen={showOnboarding}
-                onClose={() => {
-                    completeOnboardingMutation.mutate()
-                    setShowOnboarding(false)
-                }}
-                onConfirm={() => {
-                    completeOnboardingMutation.mutate()
-                    setShowOnboarding(false)
-                }}
-            />
+            {SHOW_ONBOARDING_MODAL && (
+                <OnboardingModal
+                    isOpen={showOnboarding}
+                    onClose={() => {
+                        completeOnboardingMutation.mutate()
+                        setShowOnboarding(false)
+                    }}
+                    onConfirm={() => {
+                        completeOnboardingMutation.mutate()
+                        setShowOnboarding(false)
+                    }}
+                />
+            )}
 
             <ProfileFeedbackModal
                 isOpen={showFeedbackModal}

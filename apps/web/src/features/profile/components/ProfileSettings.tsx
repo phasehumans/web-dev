@@ -31,6 +31,7 @@ import { ProfileUsageSettings } from './ProfileUsageSettings'
 
 import type { ProfileSettingsProps } from '@/features/profile/types'
 
+import { useAppStore } from '@/app/store'
 import { getProfileTabFromSlug, getSlugForProfileTab } from '@/app/types'
 import { MobileBreadcrumbsHeader } from '@/features/navigation/components/MobileBreadcrumbsHeader'
 import { ErrorAlert } from '@/shared/components/ui/ErrorAlert'
@@ -128,6 +129,8 @@ const TAB_LABEL_MAP: Record<string, string> = {
 export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onBack }) => {
     const location = useLocation()
     const navigate = useNavigate()
+    const isAuthenticated = useAppStore((s) => s.isAuthenticated)
+    const isAuthRestored = useAppStore((s) => s.isAuthRestored)
 
     const activeTabMatch = location.pathname.match(
         /^\/(?:profile|settings|integrations|connections|connectors)(?:\/([^/]+))?/
@@ -142,6 +145,14 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
         activeTabSlug = 'integrations'
     }
     const activeTab = getProfileTabFromSlug(activeTabSlug)
+    const isPublicTab = activeTab === 'Terms' || activeTab === 'Privacy'
+
+    React.useEffect(() => {
+        if (isAuthRestored && !isAuthenticated && !isPublicTab) {
+            navigate('/', { replace: true })
+        }
+    }, [isAuthRestored, isAuthenticated, isPublicTab, navigate])
+
     const isMobileRoot =
         !activeTabSlug &&
         !location.pathname.startsWith('/integrations') &&
@@ -305,6 +316,10 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
         }
     }, [isMobileRoot])
 
+    if (!isPublicTab && (!isAuthRestored || !isAuthenticated)) {
+        return null
+    }
+
     return (
         <div className="flex w-full h-full bg-[#141414] md:bg-[#100E12] overflow-hidden p-0 md:p-[8px] no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
             {/* Mobile Drawer Backdrop */}
@@ -363,7 +378,8 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             <button
                                 key={item.slug}
                                 onClick={() => {
-                                    navigate(`/settings/${item.slug}`)
+                                    const slug = item.slug || getSlugForProfileTab(item.tab)
+                                    navigate(`/settings/${slug}`)
                                     setIsMobileDrawerOpen(false)
                                 }}
                                 className={cn(

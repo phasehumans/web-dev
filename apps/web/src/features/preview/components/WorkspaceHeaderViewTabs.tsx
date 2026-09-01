@@ -4,7 +4,7 @@ import React from 'react'
 import { Tooltip } from '@/shared/components/ui/Tooltip'
 import { cn } from '@/shared/lib/utils'
 
-export type WorkspaceTabId = 'changes' | 'desktop' | 'editor' | 'shell' | 'tasks' | 'pull_requests'
+export type WorkspaceTabId = 'changes' | 'desktop' | 'editor' | 'shell' | 'pull_requests'
 
 export interface WorkspaceTabDef {
     id: WorkspaceTabId
@@ -56,21 +56,6 @@ const ShellIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5'
     </svg>
 )
 
-const TasksIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
-    <svg
-        viewBox="0 0 16 16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.3"
-        className={className}
-    >
-        <path d="M3 5.5l1.5 1.5 3-3" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M9.5 5.5h4" strokeLinecap="round" />
-        <path d="M3 11.5l1.5 1.5 3-3" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M9.5 11.5h4" strokeLinecap="round" />
-    </svg>
-)
-
 const PullRequestsIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
     <svg
         viewBox="0 0 16 16"
@@ -95,7 +80,6 @@ export const BASE_TAB_DEFS: WorkspaceTabDef[] = [
     { id: 'desktop', label: 'Desktop', icon: <DesktopIcon /> },
     { id: 'shell', label: 'Shell', icon: <ShellIcon /> },
     { id: 'editor', label: 'Editor', icon: <Code className="w-3.5 h-3.5" /> },
-    { id: 'tasks', label: 'Tasks', icon: <TasksIcon /> },
 ]
 
 export const AVAILABLE_PRS: WorkspaceTabDef[] = []

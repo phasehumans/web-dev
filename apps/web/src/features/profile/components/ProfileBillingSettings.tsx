@@ -110,7 +110,7 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
                     </p>
 
                     {/* compact credits balance box */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-[#242323] rounded-xl p-4 sm:p-5 w-full max-w-[560px]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#191919] rounded-xl p-4 sm:p-5 w-full max-w-[560px]">
                         <div className="flex flex-col gap-1">
                             <span className="text-[12px] font-medium text-[#7B7A79]">
                                 Wallet Balance
@@ -144,17 +144,17 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
                             No recent credit transactions.
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-4">
-                            {/* Desktop header row */}
-                            <div className="hidden md:grid grid-cols-5 gap-4 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 pb-1">
-                                <div className="col-span-1">Date</div>
-                                <div className="col-span-2">Details</div>
-                                <div className="col-span-1">Status</div>
-                                <div className="col-span-1 text-right">Amount</div>
+                        <div className="flex flex-col">
+                            {/* Header row */}
+                            <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 pb-1">
+                                <div className="hidden md:block md:col-span-3">Date</div>
+                                <div className="col-span-7 md:col-span-5">Details</div>
+                                <div className="hidden md:block md:col-span-2">Status</div>
+                                <div className="col-span-5 md:col-span-2 text-right">Amount</div>
                             </div>
 
-                            {/* Data rows (responsive on mobile, grid on desktop) */}
-                            <div className="flex flex-col gap-2.5 md:gap-3.5">
+                            {/* Data rows */}
+                            <div className="flex flex-col divide-y divide-[#242323]/40">
                                 {mergedHistory.map((tx) => {
                                     const formattedDate = new Date(tx.date).toLocaleDateString(
                                         undefined,
@@ -177,64 +177,62 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
                                     }[tx.status] || { label: tx.status, color: 'text-neutral-500' }
 
                                     return (
-                                        <React.Fragment key={tx.id}>
-                                            {/* Mobile card view (< md) */}
-                                            <div className="md:hidden flex flex-col p-3.5 bg-[#191919] border border-[#242323] rounded-xl gap-2 text-[13px]">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-[12px] text-[#7B7A79] font-mono">
-                                                        {formattedDate}
-                                                    </span>
-                                                    <span className="text-[14px] font-semibold text-emerald-400 font-mono">
-                                                        +{formatCents(tx.amountInCents)}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
+                                        <div key={tx.id} className="py-3 text-[13px]">
+                                            {/* Mobile row layout (< md) */}
+                                            <div className="md:hidden flex items-start justify-between gap-2">
+                                                <div className="flex flex-col min-w-0 pr-2">
                                                     <span className="text-[#D6D5C9] font-medium truncate">
                                                         {tx.methodOrCode}
                                                     </span>
-                                                    <span className="text-[10.5px] text-[#7B7A79] font-mono mt-0.5 truncate">
+                                                    <div className="flex items-center gap-1.5 text-[11.5px] text-[#7B7A79] mt-0.5">
+                                                        <span>{formattedDate}</span>
+                                                        <span>•</span>
+                                                        <span
+                                                            className={`font-medium ${statusConfig.color}`}
+                                                        >
+                                                            {statusConfig.label}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[11px] text-[#7B7A79] mt-0.5 truncate select-all">
                                                         {txId}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center justify-between pt-1 border-t border-[#242323]/50 text-[11.5px]">
-                                                    <span className="text-[#7B7A79]">Status</span>
-                                                    <span
-                                                        className={`font-medium ${statusConfig.color}`}
-                                                    >
-                                                        {statusConfig.label}
+                                                <div className="text-right shrink-0 pt-0.5">
+                                                    <span className="font-medium text-emerald-400 text-[13.5px]">
+                                                        +{formatCents(tx.amountInCents)}
                                                     </span>
                                                 </div>
                                             </div>
 
-                                            {/* Desktop grid row (>= md) */}
-                                            <div className="hidden md:grid grid-cols-5 gap-4 items-center text-[13px] text-neutral-300">
-                                                <div className="col-span-1 text-[#7B7A79]">
+                                            {/* Desktop grid layout (>= md) */}
+                                            <div className="hidden md:grid grid-cols-12 gap-2 items-center text-neutral-300">
+                                                <div className="col-span-3 text-[#7B7A79]">
                                                     {formattedDate}
                                                 </div>
-                                                <div className="col-span-2 flex flex-col min-w-0">
+                                                <div className="col-span-5 flex flex-col min-w-0 pr-2">
                                                     <span
-                                                        className="text-neutral-300 truncate"
+                                                        className="text-[#D6D5C9] font-medium truncate"
                                                         title={tx.methodOrCode}
                                                     >
                                                         {tx.methodOrCode}
                                                     </span>
                                                     <span
-                                                        className="text-[10px] text-[#7B7A79] font-mono mt-0.5 truncate"
+                                                        className="text-[11px] text-[#7B7A79] mt-0.5 truncate select-all"
                                                         title={txId}
                                                     >
                                                         {txId}
                                                     </span>
                                                 </div>
                                                 <div
-                                                    className={`col-span-1 font-medium ${statusConfig.color}`}
+                                                    className={`col-span-2 font-medium ${statusConfig.color}`}
                                                 >
                                                     {statusConfig.label}
                                                 </div>
-                                                <div className="col-span-1 text-right text-[#D6D5C9] font-medium font-mono">
+                                                <div className="col-span-2 text-right text-[#D6D5C9] font-medium">
                                                     +{formatCents(tx.amountInCents)}
                                                 </div>
                                             </div>
-                                        </React.Fragment>
+                                        </div>
                                     )
                                 })}
                             </div>

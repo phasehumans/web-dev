@@ -37,6 +37,7 @@ export const getInstallationDetails = async (installationId: string): Promise<an
                 Authorization: `Bearer ${appJwt}`,
                 Accept: 'application/vnd.github+json',
                 'X-GitHub-Api-Version': '2022-11-28',
+                'User-Agent': 'December-App',
             },
             signal: AbortSignal.timeout(3000),
         })

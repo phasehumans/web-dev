@@ -80,10 +80,8 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
                 <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
                     <p className="text-[13px] text-[#7B7A79]">
                         Reference a repository with an at sign, e.g.{' '}
-                        <code className="bg-[#202020] border border-[#282828] text-[#D6D5C9] px-1.5 py-0.5 rounded font-mono text-[12px]">
-                            @repos:owner/repo
-                        </code>
-                        . Connected repositories are cloned directly into your workspace sandbox.
+                        <span className="text-[#87B2F4]">@repos:spacetime</span>. Connected
+                        repositories are cloned directly into your workspace sandbox.
                     </p>
 
                     {/* Top Control Bar */}
@@ -188,12 +186,13 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
                                 return (
                                     <div
                                         key={repo.id}
+                                        onClick={() => window.open(repo.htmlUrl, '_blank')}
                                         className="group relative bg-[#1B1B1B] hover:bg-[#202020] rounded-xl p-3.5 transition-all duration-200 flex flex-col justify-between min-h-[96px] cursor-pointer"
                                     >
                                         {/* Card Header */}
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-[13px] font-semibold text-white truncate">
+                                                <span className="text-[13px] font-medium text-white truncate">
                                                     {name || repo.fullName}
                                                 </span>
                                                 <span className="text-[11.5px] text-[#8F8E8D] truncate">

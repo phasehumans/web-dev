@@ -1,19 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-    MoreHorizontal,
-    Pencil,
-    Tag,
-    Archive,
-    ArchiveRestore,
-    TrendingUp,
-    Download,
-} from 'lucide-react'
+import { MoreHorizontal, Pencil, Tag, Archive, ArchiveRestore, Download } from 'lucide-react'
 import React, { useState } from 'react'
 
 import type { BackendProjectVersionSummary } from '@/features/sessions/api/session'
 
 import { sessionAPI } from '@/features/sessions/api/session'
-import { SessionInsightsModal } from '@/features/sessions/components/SessionInsightsModal'
 import { Button } from '@/shared/components/ui/Button'
 import { Icons } from '@/shared/components/ui/Icons'
 import { Tooltip } from '@/shared/components/ui/Tooltip'
@@ -45,7 +36,6 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
     onDownload,
 }) => {
     const queryClient = useQueryClient()
-    const [isInsightsModalOpen, setIsInsightsModalOpen] = useState(false)
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
     const moreMenuRef = React.useRef<HTMLDivElement | null>(null)
 
@@ -367,24 +357,6 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
                                 </button>
                             ))}
                         </div>
-
-                        {/* Divider */}
-                        <div className="h-[1px] bg-[#272727] my-1.5" />
-
-                        {/* Usage & Insights Section */}
-                        <div className="flex flex-col gap-0.5">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIsMoreMenuOpen(false)
-                                    setIsInsightsModalOpen(true)
-                                }}
-                                className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#EDEDEF] hover:bg-white/5 hover:text-white transition-colors text-left outline-none cursor-pointer"
-                            >
-                                <TrendingUp className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                                <span>Session insights</span>
-                            </button>
-                        </div>
                     </div>
                 )}
             </div>
@@ -401,16 +373,6 @@ export const WorkspaceHeaderActions: React.FC<WorkspaceHeaderActionsProps> = ({
                     <Icons.SidebarToggle className="w-4 h-4 text-[#91908F] group-hover:text-white" />
                 </Button>
             )}
-
-            {/* Session Insights Modal */}
-            <SessionInsightsModal
-                isOpen={isInsightsModalOpen}
-                onClose={() => setIsInsightsModalOpen(false)}
-                session={
-                    sessionData ||
-                    (projectId ? { id: projectId, title: projectName, projectName } : null)
-                }
-            />
         </div>
     )
 }

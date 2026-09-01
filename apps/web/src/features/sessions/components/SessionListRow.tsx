@@ -18,7 +18,6 @@ interface SessionListRowProps {
     onOpenRename: (session: any, event: React.MouseEvent) => void
     onOpenDelete: (session: any, event: React.MouseEvent) => void
     onOpenTags: (session: any, event: React.MouseEvent) => void
-    onOpenInsights: (session: any, event: React.MouseEvent) => void
 }
 
 export const SessionListRow: React.FC<SessionListRowProps> = ({
@@ -34,7 +33,6 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
     onOpenRename,
     onOpenDelete,
     onOpenTags,
-    onOpenInsights,
 }) => {
     const [menuDirection, setMenuDirection] = useState<'down' | 'up'>('down')
     const session = project // alias for clarity
@@ -150,13 +148,6 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                                     className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-[#D6D5C9] transition-colors hover:bg-[#262626]"
                                 >
                                     <Icons.Tag className="h-3.5 w-3.5 text-[#7B7A79]" /> Tags
-                                </button>
-                                <button
-                                    onClick={(e) => onOpenInsights(session, e)}
-                                    className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-[#D6D5C9] transition-colors hover:bg-[#262626]"
-                                >
-                                    <Icons.LineChart className="h-3.5 w-3.5 text-[#7B7A79]" />{' '}
-                                    Insights
                                 </button>
                                 <button
                                     onClick={(e) => onToggleArchiveFromMenu(session, e)}
@@ -333,12 +324,6 @@ export const SessionListRow: React.FC<SessionListRowProps> = ({
                                 className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-[#D6D5C9] transition-colors hover:bg-[#262626]"
                             >
                                 <Icons.Tag className="h-3.5 w-3.5 text-[#7B7A79]" /> Tags
-                            </button>
-                            <button
-                                onClick={(e) => onOpenInsights(session, e)}
-                                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-[#D6D5C9] transition-colors hover:bg-[#262626]"
-                            >
-                                <Icons.LineChart className="h-3.5 w-3.5 text-[#7B7A79]" /> Insights
                             </button>
                             <button
                                 onClick={(e) => onToggleArchiveFromMenu(session, e)}

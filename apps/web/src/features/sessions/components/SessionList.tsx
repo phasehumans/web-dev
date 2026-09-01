@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { useSessionListMutations } from '../hooks/useSessionListMutations'
 import { useInfiniteSessions } from '../hooks/useSessions'
@@ -8,6 +9,7 @@ import { SessionListView } from './SessionListView'
 
 import type { DeleteModalState, RenameModalState } from '@/features/sessions/types'
 
+import { useAppStore } from '@/app/store'
 import { MobileBreadcrumbsHeader } from '@/features/navigation/components/MobileBreadcrumbsHeader'
 
 export type SortOption = 'newest' | 'oldest'
@@ -16,6 +18,16 @@ export const SessionList: React.FC<{
     onNewProject: () => void
     onOpenProject: (projectId: string) => void
 }> = ({ onNewProject, onOpenProject }) => {
+    const navigate = useNavigate()
+    const isAuthenticated = useAppStore((s) => s.isAuthenticated)
+    const isAuthRestored = useAppStore((s) => s.isAuthRestored)
+
+    useEffect(() => {
+        if (isAuthRestored && !isAuthenticated) {
+            navigate('/', { replace: true })
+        }
+    }, [isAuthRestored, isAuthenticated, navigate])
+
     const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
     const [sortOption, setSortOption] = useState<SortOption>('newest')
@@ -49,13 +61,6 @@ export const SessionList: React.FC<{
         project: null,
     })
     const [tagsModal, setTagsModal] = useState<{
-        isOpen: boolean
-        project: any | null
-    }>({
-        isOpen: false,
-        project: null,
-    })
-    const [insightsModal, setInsightsModal] = useState<{
         isOpen: boolean
         project: any | null
     }>({
@@ -154,9 +159,6 @@ export const SessionList: React.FC<{
     const openTagsModal = (session: any, event: React.MouseEvent) =>
         openModal(event, () => setTagsModal({ isOpen: true, project: session }))
 
-    const openInsightsModal = (session: any, event: React.MouseEvent) =>
-        openModal(event, () => setInsightsModal({ isOpen: true, project: session }))
-
     const handleSaveTags = (tags: string[]) => {
         if (!tagsModal.project) return
         updateTagsMutation.mutate(
@@ -202,6 +204,10 @@ export const SessionList: React.FC<{
         }
     }
 
+    if (!isAuthRestored || !isAuthenticated) {
+        return null
+    }
+
     return (
         <div
             className="relative h-full w-full flex-1 overflow-y-auto bg-background font-sans no-scrollbar"
@@ -236,7 +242,6 @@ export const SessionList: React.FC<{
                     onOpenRename={openRenameModal}
                     onOpenDelete={openDeleteModal}
                     onOpenTags={openTagsModal}
-                    onOpenInsights={openInsightsModal}
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
                     sortOption={sortOption}
@@ -250,7 +255,6 @@ export const SessionList: React.FC<{
                 deleteModal={deleteModal}
                 openConfirmModal={openConfirmModal}
                 tagsModal={tagsModal}
-                insightsModal={insightsModal}
                 isRenamePending={renameMutation.isPending}
                 isDeletePending={deleteMutation.isPending}
                 isTagsPending={updateTagsMutation.isPending}
@@ -265,7 +269,6 @@ export const SessionList: React.FC<{
                 onOpenConfirm={handleOpenConfirm}
                 onCloseTags={() => setTagsModal({ isOpen: false, project: null })}
                 onSaveTags={handleSaveTags}
-                onCloseInsights={() => setInsightsModal({ isOpen: false, project: null })}
             />
         </div>
     )

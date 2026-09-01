@@ -8,14 +8,12 @@ import {
     Pencil,
     RotateCw,
     Tag,
-    TrendingUp,
 } from 'lucide-react'
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { ChangesWorkspace } from './ChangesWorkspace'
 import { PreviewArea } from './PreviewArea'
-import { TasksWorkspace } from './TasksWorkspace'
 import { TerminalWorkspace } from './TerminalWorkspace'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceScreenMainContent } from './WorkspaceScreenMainContent'
@@ -31,7 +29,7 @@ import { sessionAPI } from '@/features/sessions/api/session'
 import { SessionTagsModal } from '@/features/sessions/components/SessionTagsModal'
 import { Icons } from '@/shared/components/ui/Icons'
 
-type MobileWorkspaceTab = 'chat' | 'changes' | 'desktop' | 'shell' | 'tasks'
+type MobileWorkspaceTab = 'chat' | 'changes' | 'desktop' | 'shell'
 
 const ChangesTabIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (
     <svg
@@ -603,48 +601,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                                             </button>
                                         )}
                                     </div>
-
-                                    {/* Divider */}
-                                    <div className="h-[1px] bg-[#272727] my-1.5" />
-
-                                    {/* Usage & Insights Section */}
-                                    <div className="flex flex-col gap-0.5">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#EDEDEF] hover:bg-white/5 hover:text-white transition-colors text-left outline-none cursor-pointer"
-                                        >
-                                            <TrendingUp className="w-3.5 h-3.5 text-[#8E8D8C] shrink-0" />
-                                            <span>Session insights</span>
-                                        </button>
-                                    </div>
-
-                                    {/* Stats Section */}
-                                    <div className="mt-1.5 pt-1.5 px-2.5 flex flex-col gap-1 text-[11px] text-[#8E8D8C] border-t border-[#272727]/60">
-                                        <div className="flex items-center justify-between">
-                                            <span>On-demand usage:</span>
-                                            <span className="text-[#EDEDEF] font-semibold">
-                                                $10.13
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span>User messages:</span>
-                                            <span className="text-[#EDEDEF] font-semibold">
-                                                {messages.filter((m) => m.role === 'user').length ||
-                                                    5}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span>Session size:</span>
-                                            <span className="text-[#EDEDEF] font-semibold">M</span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span>Platform:</span>
-                                            <span className="text-[#EDEDEF] font-semibold">
-                                                Linux
-                                            </span>
-                                        </div>
-                                    </div>
                                 </div>
                             )}
                         </div>
@@ -800,13 +756,6 @@ export const WorkspaceScreen: React.FC<WorkspaceScreenProps> = ({
                             generatedFiles={activeFilesToDisplay}
                         />
                     </div>
-
-                    {/* Tasks Tab */}
-                    {mobileActiveTab === 'tasks' && (
-                        <div className="h-full min-h-0 flex flex-col">
-                            <TasksWorkspace generatedFiles={activeFilesToDisplay} />
-                        </div>
-                    )}
                 </div>
 
                 {/* Session Tag Management Modal for Mobile */}

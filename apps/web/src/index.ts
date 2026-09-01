@@ -22,6 +22,7 @@ const proxyBackendApi = (req: Request) => {
     const options: RequestInit & { duplex?: string } = {
         method: req.method,
         headers,
+        redirect: 'manual',
     }
 
     if (req.method !== 'GET' && req.method !== 'HEAD') {

@@ -166,8 +166,19 @@ export const useAuthMutations = ({
         onSuccess: (codeResponse) => {
             googleMutation.mutate({ code: codeResponse.code })
         },
-        onError: () => {
-            setErrorMessage('Google Login Failed')
+        onError: (errorResponse) => {
+            console.error('Google OAuth error:', errorResponse)
+            if (errorResponse?.error_description) {
+                setErrorMessage(errorResponse.error_description)
+            } else {
+                setErrorMessage('Google Login Failed')
+            }
+        },
+        onNonOAuthError: (nonOAuthError) => {
+            if (nonOAuthError.type === 'popup_closed') {
+                return
+            }
+            console.error('Google OAuth non-oauth error:', nonOAuthError)
         },
     })
 

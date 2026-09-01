@@ -104,6 +104,14 @@ export const getGithubClientId = (): string => {
     )
 }
 
+export const getGithubRedirectUri = (apiBaseUrl: string = getApiBaseUrl()): string => {
+    return (
+        getClientEnv('GITHUB_REDIRECT_URI') ??
+        getClientEnv('PUBLIC_GITHUB_REDIRECT_URI') ??
+        `${apiBaseUrl}/integrations/github/connect`
+    )
+}
+
 export const getGithubAppName = (): string => {
     return (
         getClientEnv('GITHUB_APP_NAME') ?? getClientEnv('PUBLIC_GITHUB_APP_NAME') ?? 'trydecember'

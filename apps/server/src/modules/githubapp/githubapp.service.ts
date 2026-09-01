@@ -64,6 +64,7 @@ const getInstallationAccessToken = async (
                 Authorization: `Bearer ${appJwt}`,
                 Accept: 'application/vnd.github+json',
                 'X-GitHub-Api-Version': '2022-11-28',
+                'User-Agent': 'December-App',
             },
         }
     )
@@ -142,6 +143,7 @@ const getUserInstallationRepos = async (
                             Authorization: `Bearer ${token}`,
                             Accept: 'application/vnd.github+json',
                             'X-GitHub-Api-Version': '2022-11-28',
+                            'User-Agent': 'December-App',
                         },
                     }
                 )

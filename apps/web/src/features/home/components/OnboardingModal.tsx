@@ -49,7 +49,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
 
                 {/* 2. Text Info */}
                 <div className="flex flex-col mt-6 mb-6">
-                    <h2 className="text-[17px] font-semibold text-white tracking-tight leading-tight mb-2">
+                    <h2 className="text-[17px] font-medium text-white tracking-tight leading-tight mb-2">
                         Introducing December
                     </h2>
                     <p className="text-[12.5px] text-[#8F8E8D] leading-relaxed font-normal">

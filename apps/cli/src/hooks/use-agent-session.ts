@@ -1011,13 +1011,18 @@ export function useAgentSession({
 
                 if (result.method === 'source') {
                     addToast(
-                        'Running December CLI from local source. Run "git pull && bun install" to update.',
+                        'Running December CLI from local source. Run "git pull && bun install && bun --cwd apps/cli run build" to update.',
                         'info'
                     )
                 } else if (result.method === 'npx') {
                     addToast(
                         'Running December CLI via npx/bunx. You are automatically using the latest version.',
                         'info'
+                    )
+                } else if (result.alreadyUpToDate) {
+                    addToast(
+                        `You are already using the latest version (v${result.installedVersion || result.targetVersion}).`,
+                        'success'
                     )
                 } else if (result.success) {
                     const verStr = result.installedVersion ? ` to v${result.installedVersion}` : ''
@@ -1038,8 +1043,9 @@ export function useAgentSession({
                         )
                     }
                 } else {
+                    const hintCmd = result.sudoCmd || result.manualCmd
                     addToast(
-                        `Update failed (${result.method}): ${result.error || 'Unknown error'}. Try running: ${result.manualCmd}`,
+                        `Update failed (${result.method}): ${result.error || 'Unknown error'}. Try: ${hintCmd}`,
                         'error'
                     )
                 }

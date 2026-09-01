@@ -9,10 +9,10 @@ import { SidebarFooter } from './SidebarFooter'
 import type { SidebarProps } from '@/features/navigation/types'
 
 import { sessionAPI } from '@/features/sessions/api/session'
-import { SessionRenameModal } from '@/features/sessions/components/SessionRenameModal'
 import { useSessions } from '@/features/sessions/hooks/useSessions'
 import { Icons } from '@/shared/components/ui/Icons'
 import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { Tooltip } from '@/shared/components/ui/Tooltip'
 import { cn } from '@/shared/lib/utils'
 
 const SidebarSessionsSkeleton: React.FC = () => (
@@ -77,28 +77,6 @@ const Sidebar: React.FC<
     const recentMenuTriggerRef = React.useRef<HTMLButtonElement | null>(null)
     const [isLogoAnimating, setIsLogoAnimating] = React.useState(false)
 
-    // Item-level hover options menu state
-    const [itemMenuState, setItemMenuState] = React.useState<{
-        sessionId: string
-        sessionTitle: string
-        isArchived: boolean
-        top: number
-        left: number
-    } | null>(null)
-    const itemMenuRef = React.useRef<HTMLDivElement | null>(null)
-    const [copiedSessionId, setCopiedSessionId] = React.useState<string | null>(null)
-
-    // Rename modal state
-    const [renameModal, setRenameModal] = React.useState<{
-        isOpen: boolean
-        sessionId: string
-        value: string
-    }>({
-        isOpen: false,
-        sessionId: '',
-        value: '',
-    })
-
     React.useEffect(() => {
         if (isCollapsed) {
             setIsLogoAnimating(true)
@@ -127,22 +105,6 @@ const Sidebar: React.FC<
             document.removeEventListener('touchstart', handleOutsideClick)
         }
     }, [isRecentMenuOpen])
-
-    React.useEffect(() => {
-        if (!itemMenuState) return
-        const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
-            const target = e.target as Node | null
-            if (itemMenuRef.current && !itemMenuRef.current.contains(target)) {
-                setItemMenuState(null)
-            }
-        }
-        document.addEventListener('mousedown', handleOutsideClick)
-        document.addEventListener('touchstart', handleOutsideClick)
-        return () => {
-            document.removeEventListener('mousedown', handleOutsideClick)
-            document.removeEventListener('touchstart', handleOutsideClick)
-        }
-    }, [itemMenuState])
 
     React.useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -194,7 +156,6 @@ const Sidebar: React.FC<
             if (!old) return old
             return { ...old, isArchived: nextArchived }
         })
-        setItemMenuState(null)
 
         try {
             if (currentArchived) {
@@ -240,7 +201,6 @@ const Sidebar: React.FC<
             return old
         })
         queryClient.removeQueries({ queryKey: ['session', sessionId] })
-        setItemMenuState(null)
 
         try {
             await sessionAPI.deleteSession(sessionId)
@@ -249,66 +209,6 @@ const Sidebar: React.FC<
         } finally {
             queryClient.invalidateQueries({ queryKey: ['sessions'] })
         }
-    }
-
-    const handleRenameSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        const newTitle = renameModal.value.trim()
-        const sessionId = renameModal.sessionId
-        if (!newTitle || !sessionId) return
-
-        // Instant optimistic rename
-        queryClient.setQueriesData({ queryKey: ['sessions'] }, (old: any) => {
-            if (!old) return old
-            if (Array.isArray(old)) {
-                return old.map((s) => (s.id === sessionId ? { ...s, title: newTitle } : s))
-            }
-            if (Array.isArray(old.sessions)) {
-                return {
-                    ...old,
-                    sessions: old.sessions.map((s: any) =>
-                        s.id === sessionId ? { ...s, title: newTitle } : s
-                    ),
-                }
-            }
-            if (Array.isArray(old.pages)) {
-                return {
-                    ...old,
-                    pages: old.pages.map((page: any) => {
-                        if (!page) return page
-                        if (Array.isArray(page.sessions)) {
-                            return {
-                                ...page,
-                                sessions: page.sessions.map((s: any) =>
-                                    s.id === sessionId ? { ...s, title: newTitle } : s
-                                ),
-                            }
-                        }
-                        return page
-                    }),
-                }
-            }
-            return old
-        })
-        setRenameModal({ isOpen: false, sessionId: '', value: '' })
-
-        try {
-            await sessionAPI.renameSession(sessionId, newTitle).catch(() => {})
-        } catch (err) {
-            console.error('Failed to rename session:', err)
-        } finally {
-            queryClient.invalidateQueries({ queryKey: ['sessions'] })
-        }
-    }
-
-    const handleCopyLink = (sessionId: string) => {
-        const url = `${window.location.origin}/session/${sessionId}`
-        navigator.clipboard.writeText(url)
-        setCopiedSessionId(sessionId)
-        setTimeout(() => {
-            setCopiedSessionId(null)
-            setItemMenuState(null)
-        }, 1000)
     }
 
     const isHomeActive = path === '/'
@@ -584,45 +484,44 @@ const Sidebar: React.FC<
                         </span>
                         <div className="flex items-center gap-0.5">
                             <div className="relative">
-                                <button
-                                    ref={recentMenuTriggerRef}
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        if (!isAuthenticated) {
-                                            onOpenAuth?.()
-                                        } else {
-                                            if (!isRecentMenuOpen) {
-                                                const rect = e.currentTarget.getBoundingClientRect()
-                                                const menuWidth = 180
-                                                const left = Math.max(
-                                                    10,
-                                                    Math.min(
-                                                        rect.right + 8,
-                                                        window.innerWidth - menuWidth - 10
+                                <Tooltip content="More options" position="bottom" usePortal>
+                                    <button
+                                        ref={recentMenuTriggerRef}
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            if (!isAuthenticated) {
+                                                onOpenAuth?.()
+                                            } else {
+                                                if (!isRecentMenuOpen) {
+                                                    const rect =
+                                                        e.currentTarget.getBoundingClientRect()
+                                                    const menuWidth = 180
+                                                    const left = Math.max(
+                                                        10,
+                                                        Math.min(
+                                                            rect.right + 8,
+                                                            window.innerWidth - menuWidth - 10
+                                                        )
                                                     )
-                                                )
-                                                const top = Math.min(
-                                                    rect.top,
-                                                    window.innerHeight - 340
-                                                )
-                                                setRecentMenuPos({
-                                                    top,
-                                                    left,
-                                                })
+                                                    const top = Math.min(
+                                                        rect.top,
+                                                        window.innerHeight - 340
+                                                    )
+                                                    setRecentMenuPos({
+                                                        top,
+                                                        left,
+                                                    })
+                                                }
+                                                setIsRecentMenuOpen(!isRecentMenuOpen)
                                             }
-                                            setIsRecentMenuOpen(!isRecentMenuOpen)
-                                        }
-                                    }}
-                                    className="relative flex items-center justify-center p-1 rounded-md text-[#919191] hover:text-[#E8E8E8] hover:bg-[#252525] transition-all outline-none group/btn"
-                                >
-                                    <Icons.MoreHorizontal className="w-3.5 h-3.5" />
-                                    <div className="absolute bottom-[calc(100%+6px)] left-0 z-50 hidden group-hover/btn:flex items-center gap-1.5 bg-[#1F1F1F] border border-[#282828] px-2.5 py-1 rounded-lg shadow-none whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
-                                        <span className="text-[12px] font-medium text-[#EDEDEF]">
-                                            More options
-                                        </span>
-                                    </div>
-                                </button>
+                                        }}
+                                        className="relative flex items-center justify-center p-1 rounded-md text-[#919191] hover:text-[#E8E8E8] hover:bg-[#252525] transition-all outline-none cursor-pointer"
+                                        aria-label="More options"
+                                    >
+                                        <Icons.MoreHorizontal className="w-3.5 h-3.5" />
+                                    </button>
+                                </Tooltip>
                                 {isRecentMenuOpen &&
                                     recentMenuPos &&
                                     typeof document !== 'undefined' &&
@@ -764,8 +663,14 @@ const Sidebar: React.FC<
 
                                         {/* Right side hover actions */}
                                         <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                            {/* Archive Button with Tooltip */}
-                                            <div className="relative group/btn">
+                                            <Tooltip
+                                                content={
+                                                    project.isArchived ? 'Unarchive' : 'Archive'
+                                                }
+                                                position="top"
+                                                align="end"
+                                                usePortal
+                                            >
                                                 <button
                                                     type="button"
                                                     onClick={(e) => {
@@ -782,48 +687,7 @@ const Sidebar: React.FC<
                                                 >
                                                     <Icons.Archive className="w-3.5 h-3.5" />
                                                 </button>
-                                                <div className="absolute bottom-[calc(100%+6px)] right-0 z-50 hidden group-hover/btn:flex items-center gap-1 bg-[#1F1F1F] border border-[#282828] px-2 py-0.5 rounded-md shadow-lg whitespace-nowrap animate-in fade-in zoom-in-95 duration-150 pointer-events-none">
-                                                    <span className="text-[11.5px] font-medium text-[#EDEDEF]">
-                                                        {project.isArchived
-                                                            ? 'Unarchive'
-                                                            : 'Archive'}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* 3 Dots Menu Button */}
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    const rect =
-                                                        e.currentTarget.getBoundingClientRect()
-                                                    const menuWidth = 180
-                                                    const left = Math.max(
-                                                        10,
-                                                        Math.min(
-                                                            rect.right + 8,
-                                                            window.innerWidth - menuWidth - 10
-                                                        )
-                                                    )
-                                                    const top = Math.min(
-                                                        rect.top,
-                                                        window.innerHeight - 200
-                                                    )
-                                                    setItemMenuState({
-                                                        sessionId: project.id,
-                                                        sessionTitle: project.title,
-                                                        isArchived: project.isArchived,
-                                                        top,
-                                                        left,
-                                                    })
-                                                }}
-                                                className="p-1 rounded-md text-[#8F8E8D] hover:text-white hover:bg-[#2E2E2E] transition-colors cursor-pointer"
-                                                title="More options"
-                                                aria-label="More options"
-                                            >
-                                                <Icons.MoreHorizontal className="w-3.5 h-3.5" />
-                                            </button>
+                                            </Tooltip>
                                         </div>
                                     </div>
                                 ))
@@ -864,97 +728,7 @@ const Sidebar: React.FC<
                 onClose={() => setIsSearchOpen(false)}
                 onNewThread={isAuthenticated ? onNewThread : onOpenAuth}
                 isAuthenticated={isAuthenticated}
-            />
-
-            {/* Session Item 3-Dots Dropdown Menu Portal */}
-            {itemMenuState &&
-                typeof document !== 'undefined' &&
-                createPortal(
-                    <div
-                        ref={itemMenuRef}
-                        className="fixed z-[250] w-[180px] rounded-xl border border-[#2E2D2C] bg-[#1E1E1E] shadow-2xl p-1 flex flex-col gap-0 animate-in fade-in zoom-in-95 duration-100 font-sans text-left"
-                        style={{
-                            top: itemMenuState.top,
-                            left: itemMenuState.left,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Folder */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setItemMenuState(null)
-                                onOpenProject?.(itemMenuState.sessionId)
-                            }}
-                            className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <div className="flex items-center gap-2.5">
-                                <Icons.Folder className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                                <span>Folder</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[#8F8E8D]">
-                                <span className="text-[11.5px] font-normal truncate max-w-[70px]">
-                                    {itemMenuState.sessionTitle || 'project1'}
-                                </span>
-                                <Icons.ChevronRight className="w-3.5 h-3.5 shrink-0" />
-                            </div>
-                        </button>
-
-                        {/* Rename */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setRenameModal({
-                                    isOpen: true,
-                                    sessionId: itemMenuState.sessionId,
-                                    value: itemMenuState.sessionTitle,
-                                })
-                                setItemMenuState(null)
-                            }}
-                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <Icons.Edit className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                            <span>Rename</span>
-                        </button>
-
-                        {/* Copy session link */}
-                        <button
-                            type="button"
-                            onClick={() => handleCopyLink(itemMenuState.sessionId)}
-                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <Icons.Copy className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                            <span>
-                                {copiedSessionId === itemMenuState.sessionId
-                                    ? 'Copied!'
-                                    : 'Copy session link'}
-                            </span>
-                        </button>
-
-                        {/* Analyze session */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setItemMenuState(null)
-                                onOpenProject?.(itemMenuState.sessionId)
-                            }}
-                            className="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-lg hover:bg-[#2A2A2A] text-[#CBCACA] hover:text-white transition-colors text-left text-[12px] cursor-pointer outline-none group"
-                        >
-                            <Icons.Search className="w-3.5 h-3.5 text-[#CBCACA] group-hover:text-white shrink-0" />
-                            <span>Analyze session</span>
-                        </button>
-                    </div>,
-                    document.body
-                )}
-
-            {/* Session Rename Modal */}
-            <SessionRenameModal
-                isOpen={renameModal.isOpen}
-                value={renameModal.value}
-                isPending={false}
-                onClose={() => setRenameModal({ isOpen: false, sessionId: '', value: '' })}
-                onChange={(val) => setRenameModal((prev) => ({ ...prev, value: val }))}
-                onSubmit={handleRenameSubmit}
+                isSidebarCollapsed={isCollapsed}
             />
         </div>
     )

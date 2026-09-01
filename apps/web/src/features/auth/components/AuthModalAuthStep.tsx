@@ -141,19 +141,19 @@ export const AuthModalAuthStep: React.FC<AuthModalAuthStepProps> = ({
                 <button
                     type="button"
                     onClick={onToggleAuthMode}
-                    className="text-[13px] text-[#888888] hover:text-white transition-colors"
+                    className="text-[13px] text-[#888888] cursor-pointer"
                 >
                     {authMode === 'login' ? (
                         <span>
                             Don't have an account?{' '}
-                            <span className="text-[#EDEDED] underline underline-offset-4 hover:text-white font-medium">
+                            <span className="text-[#EDEDED] underline underline-offset-4 hover:text-white font-medium transition-colors">
                                 Sign up
                             </span>
                         </span>
                     ) : (
                         <span>
                             Already have an account?{' '}
-                            <span className="text-[#EDEDED] underline underline-offset-4 hover:text-white font-medium">
+                            <span className="text-[#EDEDED] underline underline-offset-4 hover:text-white font-medium transition-colors">
                                 Log in
                             </span>
                         </span>

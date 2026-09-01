@@ -54,7 +54,6 @@ describe('SessionListSkeleton UI', () => {
                 onOpenDuplicate={() => {}}
                 onOpenDelete={() => {}}
                 onOpenTags={() => {}}
-                onOpenInsights={() => {}}
                 searchQuery=""
                 onSearchChange={() => {}}
                 sortOption="newest"

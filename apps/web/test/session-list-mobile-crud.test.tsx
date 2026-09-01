@@ -25,10 +25,9 @@ describe('SessionListRow Mobile CRUD Interactions', () => {
         isArchived: false,
     }
 
-    test('mobile menu triggers rename, tags, insights, archive, and delete callbacks', () => {
+    test('mobile menu triggers rename, tags, archive, and delete callbacks', () => {
         const onOpenRename = mock()
         const onOpenTags = mock()
-        const onOpenInsights = mock()
         const onToggleArchiveFromMenu = mock()
         const onOpenDelete = mock()
         const onOpenProjectFromMenu = mock()
@@ -46,12 +45,13 @@ describe('SessionListRow Mobile CRUD Interactions', () => {
                 onToggleStarFromMenu={mock()}
                 onToggleArchiveFromMenu={onToggleArchiveFromMenu}
                 onOpenRename={onOpenRename}
-                onOpenShare={mock()}
                 onOpenDelete={onOpenDelete}
                 onOpenTags={onOpenTags}
-                onOpenInsights={onOpenInsights}
             />
         )
+
+        // Verify Insights button is removed
+        expect(screen.queryByRole('button', { name: /Insights/i })).toBeNull()
 
         // Multiple buttons with text "Rename" exist (mobile + desktop)
         const renameButtons = screen.getAllByRole('button', { name: /Rename/i })
@@ -67,12 +67,6 @@ describe('SessionListRow Mobile CRUD Interactions', () => {
         fireEvent.mouseDown(tagButtons[0])
         fireEvent.click(tagButtons[0])
         expect(onOpenTags).toHaveBeenCalled()
-
-        // Fire mousedown and click on mobile insights button
-        const insightButtons = screen.getAllByRole('button', { name: /Insights/i })
-        fireEvent.mouseDown(insightButtons[0])
-        fireEvent.click(insightButtons[0])
-        expect(onOpenInsights).toHaveBeenCalled()
 
         // Fire mousedown and click on mobile archive button
         const archiveButtons = screen.getAllByRole('button', { name: /Archive/i })

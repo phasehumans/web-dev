@@ -63,7 +63,7 @@ export const RedeemCodeModal: React.FC<RedeemCodeModalProps> = ({ onClose }) => 
                 <div>
                     <label
                         htmlFor="redeem-code-input"
-                        className="text-[11px] font-semibold text-[#8F8E8D] uppercase tracking-wider mb-1.5 block"
+                        className="text-[11px] font-medium text-[#8F8E8D] uppercase tracking-wider mb-1.5 block"
                     >
                         Code
                     </label>

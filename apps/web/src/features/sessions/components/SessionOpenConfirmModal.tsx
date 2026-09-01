@@ -30,7 +30,6 @@ export const SessionOpenConfirmModal: React.FC<SessionOpenConfirmModalProps> = (
                     : 'Open this session in the output workspace.'
             }
             variant="premium"
-            maxWidth="max-w-[420px]"
         >
             <div className="flex flex-col gap-4">
                 {isSwitching ? (

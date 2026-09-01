@@ -26,7 +26,6 @@ interface SessionListViewProps {
     onOpenDuplicate: (project: any, event: React.MouseEvent) => void
     onOpenDelete: (project: any, event: React.MouseEvent) => void
     onOpenTags: (project: any, event: React.MouseEvent) => void
-    onOpenInsights: (project: any, event: React.MouseEvent) => void
     searchQuery: string
     onSearchChange: (query: string) => void
     sortOption: SortOption
@@ -125,7 +124,6 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
     onOpenDuplicate,
     onOpenDelete,
     onOpenTags,
-    onOpenInsights,
     searchQuery,
     onSearchChange,
     sortOption,
@@ -273,7 +271,6 @@ export const SessionListView: React.FC<SessionListViewProps> = ({
                                     onOpenRename={onOpenRename}
                                     onOpenDelete={onOpenDelete}
                                     onOpenTags={onOpenTags}
-                                    onOpenInsights={onOpenInsights}
                                 />
                             ))}
                         </div>
