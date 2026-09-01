@@ -27,8 +27,6 @@ const App: React.FC = () => {
         handlePromptSubmit,
         handleOutputPromptSubmit,
         handlePreviewRuntimeError,
-        handleImportGithub,
-        handleImportZip,
         handleBackFromOutput,
         handleOpenProject,
         handleSelectVersion,
@@ -89,8 +87,6 @@ const App: React.FC = () => {
                         onBackFromOutput={handleBackFromOutput}
                         onNewProject={handleNewThread}
                         onOpenProject={handleOpenProject}
-                        onImportGithub={handleImportGithub}
-                        onImportZip={handleImportZip}
                         onSelectVersion={handleSelectVersion}
                         onDownloadProject={handleDownloadProject}
                         onSignOut={handleSignOut}

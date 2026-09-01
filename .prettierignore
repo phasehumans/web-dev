@@ -36,7 +36,6 @@ pnpm-lock.yaml
 **/generated/
 **/generated/prisma/
 packages/database/src/generated/
-**/.december-imports/
 *.sqlite
 *.sqlite-journal
 *.db

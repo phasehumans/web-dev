@@ -49,14 +49,6 @@ export function projectPrefix(projectId: string) {
     return `projects/${projectId}/`
 }
 
-export function importPrefix(userId: string, importId: string) {
-    return `imports/${userId}/${importId}/source/`
-}
-
-export function importObjectKey(userId: string, importId: string, path: string) {
-    return `${importPrefix(userId, importId)}${normalizePath(path)}`
-}
-
 export function storageBucket() {
     return BUCKET
 }

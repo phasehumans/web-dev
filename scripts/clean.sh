@@ -21,16 +21,7 @@ if command -v docker >/dev/null 2>&1; then
     fi
 fi
 
-# Clean temporary import directories
-if [ -d "apps/server/.december-imports" ]; then
-    echo "Clearing apps/server/.december-imports/*"
-    rm -rf apps/server/.december-imports/*
-fi
 
-if [ -d ".december-imports" ]; then
-    echo "Clearing .december-imports/*"
-    rm -rf .december-imports/*
-fi
 
 # Clean session log files and test artifacts
 echo "Clearing .december/logs and test log directories..."

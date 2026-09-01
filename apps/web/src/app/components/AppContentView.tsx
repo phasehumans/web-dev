@@ -38,8 +38,6 @@ interface AppContentViewProps {
     onBackFromOutput: () => void
     onNewProject: () => void
     onOpenProject: (projectId: string) => void
-    onImportGithub: (repoUrl: string) => Promise<void> | void
-    onImportZip: (file: File) => Promise<void> | void
     onSelectVersion: (versionId: string) => void
     onDownloadProject: () => void
     onSignOut: () => void
@@ -87,8 +85,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
     onBackFromOutput,
     onNewProject,
     onOpenProject,
-    onImportGithub,
-    onImportZip,
     onSelectVersion,
     onDownloadProject,
     onSignOut,
@@ -123,8 +119,6 @@ export const AppContentView: React.FC<AppContentViewProps> = ({
                                 onPromptSubmit={onHomePromptSubmit}
                                 onOpenAuth={onOpenAuth}
                                 onOpenProject={onOpenProject}
-                                onImportGithub={onImportGithub}
-                                onImportZip={onImportZip}
                                 onResetImportState={onResetImportState}
                             />
                         </AnimatedPage>

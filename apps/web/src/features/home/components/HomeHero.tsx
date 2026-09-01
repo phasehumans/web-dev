@@ -24,9 +24,7 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     onPromptSubmit,
     onOpenAuth,
     onOpenProject: _onOpenProject,
-    onImportGithub,
-    onImportZip,
-    onResetImportState,
+    onResetImportState: _onResetImportState,
 }) => {
     const {
         isGenerating,
@@ -39,7 +37,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
     const { data: overview } = useBillingOverview(Boolean(isAuthenticated))
     const navigate = useNavigate()
     const [prompt, setPrompt] = React.useState('')
-    const [activeImportForm, setActiveImportForm] = useState<'github' | null>(null)
     const [showUpgradeModal, setShowUpgradeModal] = useState(false)
     const [chatMode, setChatMode] = useState<'agent' | 'search'>('agent')
     const [isLogoAnimating, setIsLogoAnimating] = useState(false)
@@ -146,16 +143,6 @@ export const HomeHero: React.FC<HomeHeroProps> = ({
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
     }, [])
-
-    const toggleImportForm = (form: 'github') => {
-        if (!isAuthenticated) {
-            onOpenAuth()
-            return
-        }
-
-        onResetImportState?.()
-        setActiveImportForm((prev) => (prev === form ? null : form))
-    }
 
     return (
         <main

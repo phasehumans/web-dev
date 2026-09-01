@@ -15,7 +15,6 @@ import coreRouter from './modules/core/core.routes'
 import githubAppRouter from './modules/githubapp/githubapp.routes'
 import integrationsRouter from './modules/integration/integration.routes'
 import notificationRouter from './modules/notification/notification.routes'
-import importRouter from './modules/platform/import/import.routes'
 import platformRouter from './modules/platform/platform.routes'
 import runtimeRouter from './modules/runtime/runtime.routes'
 import secretsRouter from './modules/secrets/secrets.routes'
@@ -96,7 +95,6 @@ app.use('/api', globalRateLimiter)
 app.use('/api/v1/setting', settingRouter)
 
 app.use('/api/v1/runtime', runtimeRateLimiter, runtimeRouter)
-app.use('/api/v1/upload', importRouter)
 app.use('/api/v1/usage', usageRouter)
 app.use('/api/v1/integrations', integrationsRouter)
 app.use('/api/v1/notification', notificationRouter)

@@ -28,13 +28,6 @@ export const runtimeRepository = {
         return this.findSessionForStart(data)
     },
 
-    async findSessionImport(data: { sessionId: string }) {
-        const { sessionId } = data
-        return prisma.sessionImport.findFirst({
-            where: { sessionId },
-        })
-    },
-
     async findSessionForStatus(data: { previewId: string; userId: string }) {
         const { previewId, userId } = data
         return prisma.session.findFirst({

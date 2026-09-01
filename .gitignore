@@ -93,7 +93,6 @@ infra/minio/data/
 infra/postgres/data/
 
 # Runtime workspace staging
-**/.december-imports/
 /deployments/
 
 # IDE, Editors & OS files

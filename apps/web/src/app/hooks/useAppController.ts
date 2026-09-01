@@ -125,27 +125,21 @@ export const useAppController = () => {
     const { handleNewThread, handleHomeClick, handleNavigate, handleSignOut } =
         useNavigationController()
 
-    const {
-        openProject,
-        handleOpenProject,
-        handleSelectVersion,
-        handleImportGithub,
-        handleImportZip,
-        lastAutoFixSignatureRef,
-    } = useSessionController(
-        view,
-        () => {
-            generationAbortControllerRef.current?.abort()
-            generationAbortControllerRef.current = null
-        },
-        () => {
-            activeAssistantMessageIdRef.current = null
-            useAppStore.getState().setGenerationPhase(null)
-            useAppStore.getState().setActiveOperation(null)
-            useAppStore.getState().setCurrentGenerationFilePaths([])
-        },
-        outputOriginViewRef
-    )
+    const { openProject, handleOpenProject, handleSelectVersion, lastAutoFixSignatureRef } =
+        useSessionController(
+            view,
+            () => {
+                generationAbortControllerRef.current?.abort()
+                generationAbortControllerRef.current = null
+            },
+            () => {
+                activeAssistantMessageIdRef.current = null
+                useAppStore.getState().setGenerationPhase(null)
+                useAppStore.getState().setActiveOperation(null)
+                useAppStore.getState().setCurrentGenerationFilePaths([])
+            },
+            outputOriginViewRef
+        )
 
     const {
         handlePromptSubmit,
@@ -403,8 +397,6 @@ export const useAppController = () => {
         handlePromptSubmit,
         handleOutputPromptSubmit,
         handlePreviewRuntimeError,
-        handleImportGithub,
-        handleImportZip,
         handleBackFromOutput,
         handleOpenProject,
         handleSelectVersion,
