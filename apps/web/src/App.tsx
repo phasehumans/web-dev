@@ -38,7 +38,7 @@ const App: React.FC = () => {
     return (
         <>
             {isProjectOpening && (
-                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#141414] animate-in fade-in duration-150 select-none">
+                <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#141414] select-none">
                     <div className="flex flex-col items-center justify-center gap-3">
                         <div className="flex items-center justify-center animate-pulse">
                             <Icons.DecemberLogo

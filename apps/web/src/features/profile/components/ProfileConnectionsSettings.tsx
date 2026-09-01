@@ -82,12 +82,6 @@ const SlackIcon = () => (
     </svg>
 )
 
-const RailwayIcon = () => (
-    <svg viewBox="0 0 24 24" fill="white" className="w-5 h-5">
-        <path d="M10.287 0v8.441l6.732 4.415-6.732 4.416V24h3.426l6.732-4.416v-6.727L13.713 8.441V0h-3.426zm-3.426 0v24h3.426V0H6.861zm10.158 0v8.441l-3.426-2.247V0h3.426z" />
-    </svg>
-)
-
 export const ProfileConnectionsSettings: React.FC<ProfileConnectionsSettingsProps> = ({
     isGithubConnected,
     onConnectGithub,
@@ -135,16 +129,6 @@ export const ProfileConnectionsSettings: React.FC<ProfileConnectionsSettingsProp
             iconColor: '#D6D5C9',
             isConnected: isNotionConnected,
             onConnect: onConnectNotion,
-        },
-        {
-            id: 'railway' as const,
-            name: 'Railway',
-            description:
-                'Deploy fullstack backend services, microservices, and databases directly from december.',
-            Icon: RailwayIcon,
-            iconColor: '#D6D5C9',
-            isConnected: false,
-            onConnect: undefined,
         },
         {
             id: 'slack' as const,

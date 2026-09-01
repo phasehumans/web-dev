@@ -44,7 +44,7 @@ export const MobileBreadcrumbsHeader: React.FC<MobileBreadcrumbsHeaderProps> = (
     return (
         <div
             className={cn(
-                'md:hidden sticky top-0 z-30 flex items-center justify-between px-3.5 py-3 bg-[#141414]/95 backdrop-blur-md border-b border-[#242323]/50 shrink-0 select-none',
+                'md:hidden sticky top-0 z-30 flex items-center justify-between px-3.5 py-3 bg-[#141414]/95 backdrop-blur-md shrink-0 select-none',
                 className
             )}
         >

@@ -521,7 +521,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                             className="flex items-center text-[#7B7A79] hover:text-[#D6D5D4] hover:bg-[#191919] px-2 py-1 -ml-2 rounded-lg text-[13px] font-medium transition-colors cursor-pointer"
                         >
                             <ChevronLeft className="w-4 h-4 mr-2" />
-                            Home
+                            Back
                         </button>
                     </div>
 
@@ -683,7 +683,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({ onSignOut, onB
                     />
 
                     {/* Mobile Content: Active Tab Content directly rendered */}
-                    <div className="md:hidden flex-1 flex flex-col p-4 pb-12 w-full no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
+                    <div className="md:hidden flex flex-col p-4 pb-6 w-full no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none]">
                         {profileErrorMessage && (
                             <div className="mb-4">
                                 <ErrorAlert

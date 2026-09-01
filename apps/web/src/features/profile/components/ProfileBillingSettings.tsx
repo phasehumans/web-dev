@@ -136,7 +136,7 @@ export const ProfileBillingSettings: React.FC<ProfileBillingSettingsProps> = (pr
             </div>
 
             {/* credits history section */}
-            <div className="flex flex-col mb-6">
+            <div className="flex flex-col mb-0">
                 <h2 className="text-[16px] font-medium text-[#D6D5C9] mb-3">Credits History</h2>
                 <div className="flex flex-col border-t border-[#242323] pt-4">
                     {mergedHistory.length === 0 ? (

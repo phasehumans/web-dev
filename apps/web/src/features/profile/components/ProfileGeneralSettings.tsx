@@ -198,7 +198,7 @@ Use this template file to specify coding styles, design tokens, architecture pat
             </div>
 
             {/* custom rules */}
-            <div className="flex flex-col mb-10">
+            <div className="flex flex-col mb-0">
                 <h1 className="text-[16px] font-medium mb-4">Custom Rules</h1>
                 <div className="flex flex-col gap-4 border-t border-[#242323] pt-6">
                     <p className="text-[13px] text-[#7B7A79] mb-4 leading-relaxed">

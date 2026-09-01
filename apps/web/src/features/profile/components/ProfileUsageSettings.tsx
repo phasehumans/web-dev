@@ -126,7 +126,7 @@ export const ProfileUsageSettings: React.FC = () => {
 
     return (
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
-            <div className="flex flex-col mb-8">
+            <div className="flex flex-col mb-0">
                 <h1 className="text-[16px] font-medium mb-3">Usage</h1>
                 <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">
                     <p className="text-[13px] text-[#7B7A79]">

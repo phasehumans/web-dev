@@ -74,7 +74,7 @@ export const ProfileRepositoriesSettings: React.FC<ProfileRepositoriesSettingsPr
 
     return (
         <div className="flex flex-col w-full max-w-[800px] text-[#D6D5C9]">
-            <div className="flex flex-col mb-10">
+            <div className="flex flex-col mb-0">
                 <h1 className="text-[16px] font-medium mb-3">Repositories</h1>
 
                 <div className="flex flex-col border-t border-[#242323] pt-4 gap-4">

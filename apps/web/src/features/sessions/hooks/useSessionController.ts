@@ -187,18 +187,26 @@ export const useSessionController = (
                 outputOriginViewRef.current = originView
             }
 
+            const startTime = Date.now()
             setIsMobileSidebarOpen(false)
             setIsProjectOpening(true)
             setProjectLoadError(null)
 
             try {
                 const detail = await sessionAPI.getSessionDetail(projectId, versionId)
+                queryClient.setQueryData(['session', projectId], detail)
                 const sessionType = (detail as any).session?.type || (detail as any).project?.type
                 if (sessionType === 'SEARCH') {
                     navigate(`/search?session=${projectId}`)
-                    return
+                } else {
+                    hydrateProjectDetail(detail)
                 }
-                hydrateProjectDetail(detail)
+
+                const elapsed = Date.now() - startTime
+                const minDuration = 800
+                if (elapsed < minDuration) {
+                    await new Promise((resolve) => setTimeout(resolve, minDuration - elapsed))
+                }
             } catch (error) {
                 setProjectLoadError(
                     error instanceof Error ? error.message : 'Failed to open project'
@@ -210,6 +218,7 @@ export const useSessionController = (
         [
             abortGenerationRequest,
             hydrateProjectDetail,
+            queryClient,
             resetGenerationRefs,
             setIsGenerating,
             outputOriginViewRef,

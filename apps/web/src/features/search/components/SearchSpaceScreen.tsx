@@ -46,6 +46,7 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
     const {
         setShowOutOfCreditsModal,
         setIsMobileSidebarOpen,
+        setIsProjectOpening,
         isAuthenticated,
         isAuthRestored,
         setShowAuthModal,
@@ -57,10 +58,31 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
         }
     }, [isAuthRestored, isAuthenticated, navigate])
 
+    const initialCachedDetail = sessionId
+        ? queryClient.getQueryData<any>(['session', sessionId])
+        : null
+    const initialCachedSession = initialCachedDetail
+        ? (initialCachedDetail as any).session || initialCachedDetail.project
+        : null
+
     const [promptText, setPromptText] = useState('')
-    const [sessionTitle, setSessionTitle] = useState<string>('')
-    const [sessionData, setSessionData] = useState<any | null>(null)
-    const [messages, setMessages] = useState<SearchMessage[]>([])
+    const [sessionTitle, setSessionTitle] = useState<string>(
+        initialCachedSession?.title ||
+            initialCachedDetail?.project?.title ||
+            initialCachedDetail?.project?.name ||
+            ''
+    )
+    const [sessionData, setSessionData] = useState<any | null>(initialCachedSession || null)
+    const [messages, setMessages] = useState<SearchMessage[]>(() => {
+        if (initialCachedDetail?.chatMessages && initialCachedDetail.chatMessages.length > 0) {
+            return initialCachedDetail.chatMessages.map((m: any) => ({
+                id: m.id,
+                role: m.role.toLowerCase() as 'user' | 'assistant',
+                content: m.content,
+            }))
+        }
+        return []
+    })
     const [isStreaming, setIsStreaming] = useState(false)
     const [copiedId, setCopiedId] = useState<string | null>(null)
     const [feedback, setFeedback] = useState<Record<string, 'like' | 'dislike' | null>>({})
@@ -112,12 +134,36 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
             return
         }
 
+        // Check if data is already in cache
+        const cached = queryClient.getQueryData<any>(['session', sessionId])
+        if (cached) {
+            const sessionObj = (cached as any).session || cached.project
+            setSessionData(sessionObj || null)
+            const title =
+                sessionObj?.title || cached.project?.title || cached.project?.name || 'Search'
+            setSessionTitle(title)
+            if (cached.chatMessages && cached.chatMessages.length > 0) {
+                setMessages(
+                    cached.chatMessages.map((m: any) => ({
+                        id: m.id,
+                        role: m.role.toLowerCase() as 'user' | 'assistant',
+                        content: m.content,
+                    }))
+                )
+            }
+        }
+
         let isMounted = true
         const fetchSession = async () => {
+            const startTime = Date.now()
+            if (!cached?.chatMessages?.length) {
+                setIsProjectOpening(true)
+            }
             try {
                 const detail = await sessionAPI.getSessionDetail(sessionId)
                 if (!isMounted) return
 
+                queryClient.setQueryData(['session', sessionId], detail)
                 const sessionObj = (detail as any).session || detail.project
                 setSessionData(sessionObj || null)
 
@@ -133,16 +179,29 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     }))
                     setMessages(loadedMessages)
                 }
+
+                if (!cached?.chatMessages?.length) {
+                    const elapsed = Date.now() - startTime
+                    const minDuration = 800
+                    if (elapsed < minDuration) {
+                        await new Promise((resolve) => setTimeout(resolve, minDuration - elapsed))
+                    }
+                }
             } catch (err) {
                 console.error('[Search] Failed to load search session:', err)
+            } finally {
+                if (isMounted) {
+                    setIsProjectOpening(false)
+                }
             }
         }
 
         void fetchSession()
         return () => {
             isMounted = false
+            setIsProjectOpening(false)
         }
-    }, [sessionId, initialPrompt])
+    }, [sessionId, initialPrompt, queryClient, setIsProjectOpening])
 
     // Scroll management
     const scrollToBottom = useCallback((instant = false) => {

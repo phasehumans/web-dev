@@ -263,14 +263,14 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
                     height: 320,
                 }}
             >
-                <div className="flex items-center gap-1.5 px-2 py-1 shrink-0">
+                <div className="flex items-center gap-1.5 px-1 py-1 shrink-0">
                     <button
                         onClick={() => setSelectedNotification(null)}
-                        className="text-[#CBCACA] hover:text-white transition-colors p-1 rounded-lg hover:bg-[#252525] outline-none"
+                        className="text-[#CBCACA] hover:text-white transition-colors p-1 rounded-lg hover:bg-[#252525] outline-none cursor-pointer"
+                        aria-label="Back"
                     >
-                        <ArrowLeft className="w-[13px] h-[13px]" />
+                        <ArrowLeft className="w-[14px] h-[14px]" />
                     </button>
-                    <span className="text-[12px] text-[#CBCACA] font-medium">Back</span>
                 </div>
 
                 <div className="h-[1px] bg-[#2B2A29] mx-1 my-1 shrink-0" />
