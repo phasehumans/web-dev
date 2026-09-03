@@ -463,11 +463,11 @@ export const InputBar = React.memo(function InputBar({
                                     <Text color={THEME.colors.muted}>
                                         {activeModel}
                                         {authMethod === 'subscription'
-                                            ? ' (⚡ Subscription)'
+                                            ? ' (Subscription)'
                                             : authMethod === 'december'
-                                              ? ' (☁️ December Cloud)'
+                                              ? ' (December Cloud)'
                                               : authMethod === 'byok'
-                                                ? ' (🔑 BYOK)'
+                                                ? ' (BYOK)'
                                                 : ''}
                                     </Text>
                                     {activeToast && (

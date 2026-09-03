@@ -119,10 +119,8 @@ export function SubscriptionSelectMenu(props: SubscriptionSelectMenuProps) {
                             >
                                 {item.label}
                             </Text>
-                            {detected && <Text color="#6EE7B7"> [✔ Detected locally]</Text>}
-                            {!detected && (
-                                <Text color={THEME.colors.muted}> [OAuth / Connect]</Text>
-                            )}
+                            {detected && <Text color="#6EE7B7"> [detected locally]</Text>}
+                            {!detected && <Text color={THEME.colors.muted}> [connect]</Text>}
                         </Box>
                         {isSelected && item.hint && (
                             <Box paddingLeft={2}>

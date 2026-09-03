@@ -25,19 +25,19 @@ export function MenuMenu(props: MenuMenuProps) {
         }
     }
 
-    const subBadge = detectedCount > 0 ? ` (${detectedCount} detected locally ✔)` : ''
+    const subBadge = detectedCount > 0 ? ` (${detectedCount} detected)` : ''
 
     const items = [
         {
-            label: `⚡ Connect AI Subscription${subBadge}`,
+            label: `Connect AI Subscription${subBadge}`,
             value: 'subscriptions',
         },
         {
-            label: '🔑 Bring Your Own API Key (BYOK & Ollama)',
+            label: 'Bring Your Own Key (BYOK)',
             value: 'byok',
         },
         {
-            label: '☁️ Login via December (Cloud Wallet & Sync)',
+            label: 'Login via December (Cloud Wallet)',
             value: 'december',
         },
     ]

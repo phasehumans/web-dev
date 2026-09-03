@@ -31,10 +31,10 @@ describe('SubscriptionSelectMenu Component (Unit)', () => {
         const frame = lastFrame() || ''
         expect(frame).toContain('Select AI Subscription Provider:')
         expect(frame).toContain('GitHub Copilot')
-        expect(frame).toContain('[✔ Detected locally]')
+        expect(frame).toContain('[detected locally]')
         expect(frame).toContain('Claude Code (Anthropic)')
         expect(frame).toContain('ChatGPT Plus / Team / Pro (OpenAI)')
-        expect(frame).toContain('[OAuth / Connect]')
+        expect(frame).toContain('[connect]')
         expect(frame).toContain('Google Gemini / Antigravity')
     })
 
