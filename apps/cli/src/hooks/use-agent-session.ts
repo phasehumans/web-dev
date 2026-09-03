@@ -1286,7 +1286,10 @@ ${decStatus}
             if (text.trim() === '/model') {
                 const { getAuthStatus } = await import('../config')
                 const status = await getAuthStatus()
-                if (!isAuthenticated || (!status.hasByok && !status.hasDecember)) {
+                if (
+                    !isAuthenticated ||
+                    (!status.hasByok && !status.hasDecember && !status.hasSubscription)
+                ) {
                     const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
                     const noticeMsg: Message = {
                         id: getNextMsgId(),

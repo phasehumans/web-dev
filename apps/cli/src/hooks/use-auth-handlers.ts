@@ -239,6 +239,13 @@ export function useAuthHandlers(
                 setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
                 setSettingsAuthPriority(authStatus.authPriority)
 
+                const { updateConfig } = await import('../config')
+                await updateConfig({
+                    activeProvider: item.value,
+                    activeModel: targetModel,
+                    authPriority: 'subscription',
+                })
+
                 setAuthMode('none')
                 addToast(
                     `✔ Verified local ${item.value.toUpperCase()} subscription (${verifiedBundle.subscriptionType || 'active'})`,
@@ -305,6 +312,13 @@ export function useAuthHandlers(
                 setSelectedProvider(bundle.provider)
                 setIsAuthenticated(true)
                 setAuthMethod('subscription')
+
+                const { updateConfig } = await import('../config')
+                await updateConfig({
+                    activeProvider: bundle.provider,
+                    activeModel: targetModel,
+                    authPriority: 'subscription',
+                })
 
                 const authStatus = await getAuthStatus()
                 setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)

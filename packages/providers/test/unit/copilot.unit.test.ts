@@ -7,7 +7,7 @@ describe('Copilot Provider (Unit)', () => {
         expect(resolveCopilotModel('copilot/claude-3.7-sonnet')).toBe('claude-3.7-sonnet')
         expect(resolveCopilotModel('claude-3.5-sonnet')).toBe('claude-3.5-sonnet')
         expect(resolveCopilotModel('gpt-4o')).toBe('gpt-4o')
-        expect(resolveCopilotModel()).toBe('claude-3.7-sonnet')
+        expect(resolveCopilotModel()).toBe('gpt-4o')
     })
 
     it('instantiates CopilotProvider class wrapper and LLMProvider correctly', () => {

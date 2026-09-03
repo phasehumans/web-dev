@@ -225,11 +225,12 @@ export const getProviderModels = (provider: string) => {
         case 'github_copilot':
         case 'github':
             return [
-                { label: 'Claude 3.7 Sonnet (Recommended)', value: 'claude-3.7-sonnet' },
-                { label: 'Claude 3.5 Sonnet', value: 'claude-3.5-sonnet' },
-                { label: 'GPT-4o', value: 'gpt-4o' },
-                { label: 'o3-mini', value: 'o3-mini' },
+                { label: 'GPT-4o (Recommended)', value: 'gpt-4o' },
                 { label: 'GPT-4o Mini', value: 'gpt-4o-mini' },
+                { label: 'GPT-4.1', value: 'gpt-4.1' },
+                { label: 'Claude 3.5 Sonnet', value: 'claude-3.5-sonnet' },
+                { label: 'Claude 3.7 Sonnet', value: 'claude-3.7-sonnet' },
+                { label: 'o3-mini', value: 'o3-mini' },
             ]
         case 'claude':
             return getProviderModels('anthropic')

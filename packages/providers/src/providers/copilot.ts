@@ -5,7 +5,7 @@ import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '..
 export const COPILOT_DEFAULT_ENDPOINT = 'https://api.individual.githubcopilot.com'
 
 export function resolveCopilotModel(model?: string): string {
-    let name = model || 'claude-3.7-sonnet'
+    let name = model || 'gpt-4o'
     if (name.startsWith('copilot/')) {
         name = name.slice('copilot/'.length)
     }
