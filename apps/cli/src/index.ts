@@ -10,6 +10,8 @@ export { parseCliArgs, getHelpText } from './args'
 export {
     handleLogoutCommand,
     handleLoginCommand,
+    handleLinkCommand,
+    handleKeyCommand,
     handleAuthCommand,
     handleInitCommand,
     handleUpdateCommand,
@@ -74,6 +76,21 @@ async function main() {
         const action = parsedArgs.positionals[1] || 'status'
         const { handleAuthCommand } = await import('./commands')
         await handleAuthCommand({ action })
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'link') {
+        const targetProvider = parsedArgs.positionals[1]
+        const { handleLinkCommand } = await import('./commands')
+        await handleLinkCommand({ provider: targetProvider })
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'key') {
+        const targetProvider = parsedArgs.positionals[1]
+        const key = parsedArgs.positionals[2]
+        const { handleKeyCommand } = await import('./commands')
+        await handleKeyCommand({ provider: targetProvider, key })
         process.exit(0)
     }
 

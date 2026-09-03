@@ -7,7 +7,7 @@ import { createProvider } from '../models.ts'
 import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 import type { Content } from '@google/genai'
 
-function sanitizeSchemaForGemini(schema: any): any {
+export function sanitizeSchemaForGemini(schema: any): any {
     if (!schema || typeof schema !== 'object') return schema
 
     const result = { ...schema }

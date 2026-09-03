@@ -5,6 +5,7 @@ import {
     openrouterProvider,
     ollamaProvider,
     copilotProvider,
+    antigravityProvider,
 } from '@december/providers'
 
 import type { SubscriptionTokenBundle } from '../auth/subscriptions/types'
@@ -54,10 +55,24 @@ export function instantiateProvider(
             }
             return anthropicProvider(undefined, apiKey)
         }
+        case 'antigravity': {
+            const endpoint = options?.baseURL || options?.subscription?.endpoint
+            return antigravityProvider(apiKey, {
+                endpoint,
+                headers: options?.headers,
+            })
+        }
         case 'gemini':
-        case 'google':
-        case 'antigravity':
+        case 'google': {
+            if (options?.authMethod === 'subscription' || options?.subscription) {
+                const endpoint = options?.baseURL || options?.subscription?.endpoint
+                return antigravityProvider(apiKey, {
+                    endpoint,
+                    headers: options?.headers,
+                })
+            }
             return geminiProvider(apiKey)
+        }
         case 'openrouter':
             return openrouterProvider(apiKey)
         case 'deepseek':

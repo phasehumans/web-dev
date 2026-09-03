@@ -9,6 +9,8 @@ export type Message = {
 export type AuthMode =
     | 'none'
     | 'menu'
+    | 'subscription_select'
+    | 'subscription_provider'
     | 'context_select'
     | 'byok_provider'
     | 'byok_key'
@@ -18,6 +20,7 @@ export type AuthMode =
     | 'plan_approve'
     | 'grill_question'
     | 'ask_question'
+    | 'tool_permission'
     | 'settings_main'
     | 'tasks_mode'
     | 'usage'

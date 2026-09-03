@@ -159,6 +159,83 @@ export async function handleAuthCommand(options?: { action?: string }): Promise<
     )
 }
 
+export async function handleLinkCommand(options?: { provider?: string }): Promise<void> {
+    const targetProvider = (options?.provider || '').toLowerCase().trim()
+    const BLUE = '\x1b[38;2;135;178;244m'
+    const GREEN = '\x1b[38;2;110;231;183m'
+    const WHITE = '\x1b[38;2;244;244;245m'
+    const RESET = '\x1b[0m'
+
+    if (!targetProvider) {
+        console.log(
+            `\n${BLUE}✱${RESET}  ${WHITE}Link an AI Subscription (Flat-rate / OAuth)${RESET}`
+        )
+        console.log(`\nUsage: ${GREEN}december link <provider>${RESET}`)
+        console.log(`\nSupported Providers:`)
+        console.log(`  • ${WHITE}copilot${RESET}   - GitHub Copilot Subscription`)
+        console.log(`  • ${WHITE}claude${RESET}    - Claude Code (Anthropic Pro/Team)`)
+        console.log(`  • ${WHITE}chatgpt${RESET}   - OpenAI ChatGPT Plus/Team/Pro`)
+        console.log(`  • ${WHITE}gemini${RESET}    - Google Gemini / Antigravity\n`)
+        return
+    }
+
+    return handleLoginCommand({ provider: targetProvider })
+}
+
+export async function handleKeyCommand(options?: {
+    provider?: string
+    key?: string
+}): Promise<void> {
+    const provider = (options?.provider || '').toLowerCase().trim()
+    const key = options?.key?.trim()
+    const BLUE = '\x1b[38;2;135;178;244m'
+    const GREEN = '\x1b[38;2;110;231;183m'
+    const WHITE = '\x1b[38;2;244;244;245m'
+    const RESET = '\x1b[0m'
+
+    if (!provider) {
+        console.log(
+            `\n${BLUE}✱${RESET}  ${WHITE}Save a BYOK (Bring Your Own Key) API Provider${RESET}`
+        )
+        console.log(`\nUsage: ${GREEN}december key <provider> [api-key]${RESET}`)
+        console.log(`\nExamples:`)
+        console.log(`  december key openai sk-...`)
+        console.log(`  december key anthropic sk-ant-...`)
+        console.log(`  december key openrouter sk-or-...`)
+        console.log(`  december key deepseek sk-...`)
+        console.log(`  december key groq gsk_...\n`)
+        return
+    }
+
+    let finalKey = key
+    if (!finalKey) {
+        const readline = await import('node:readline/promises')
+        const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+        finalKey = (await rl.question(`Enter API key for ${provider.toUpperCase()}: `)).trim()
+        rl.close()
+    }
+
+    if (!finalKey) {
+        console.log('No API key provided. Operation cancelled.')
+        return
+    }
+
+    const { getDefaultModelForProvider } = await import('./utils/models')
+    const defaultModel = getDefaultModelForProvider(provider)
+
+    const config = await loadConfig()
+    config.providers = config.providers || {}
+    config.providers[provider] = finalKey
+    config.activeProvider = provider
+    config.activeModel = defaultModel
+    config.authPriority = 'byok'
+    await saveConfig(config)
+
+    console.log(
+        `\n${GREEN}✔ Successfully saved API key for ${provider.toUpperCase()} (Model: ${defaultModel})!${RESET}\n`
+    )
+}
+
 export async function handleLoginCommand(options?: { provider?: string }): Promise<void> {
     const targetProvider = (options?.provider || 'december').toLowerCase().trim()
     const { loadConfig, saveConfig } = await import('./config')
@@ -168,6 +245,7 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
         targetProvider === 'github' ||
         targetProvider === 'claude' ||
         targetProvider === 'codex' ||
+        targetProvider === 'chatgpt' ||
         targetProvider === 'openai' ||
         targetProvider === 'gemini' ||
         targetProvider === 'google' ||
@@ -184,6 +262,7 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
         configToSave.subscriptions = configToSave.subscriptions || {}
         configToSave.subscriptions[bundle.provider] = bundle
         configToSave.activeProvider = bundle.provider
+        configToSave.authPriority = 'subscription'
         await saveConfig(configToSave)
         console.log(
             `\x1b[32mSuccessfully authenticated ${targetProvider.toUpperCase()} subscription!\x1b[0m\n`
@@ -202,6 +281,7 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
     const configToSave = await loadConfig()
     configToSave.decemberToken = token
     if (email) configToSave.email = email
+    configToSave.authPriority = 'december'
     await saveConfig(configToSave)
     console.log('\x1b[32mSuccessfully logged in via device code!\x1b[0m\n')
 }

@@ -21,7 +21,7 @@ type Props = {
     disabled?: boolean
     placeholder?: string
     activeModel?: string
-    authMethod?: 'byok' | 'december' | 'env'
+    authMethod?: 'byok' | 'december' | 'env' | 'subscription'
     hasBothAuth?: boolean
     authUI?: React.ReactNode
     agent?: any
@@ -462,9 +462,13 @@ export const InputBar = React.memo(function InputBar({
                                 <Box gap={1} flexShrink={1}>
                                     <Text color={THEME.colors.muted}>
                                         {activeModel}
-                                        {hasBothAuth && authMethod
-                                            ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
-                                            : ''}
+                                        {authMethod === 'subscription'
+                                            ? ' (⚡ Subscription)'
+                                            : authMethod === 'december'
+                                              ? ' (☁️ December Cloud)'
+                                              : authMethod === 'byok'
+                                                ? ' (🔑 BYOK)'
+                                                : ''}
                                     </Text>
                                     {activeToast && (
                                         <Text

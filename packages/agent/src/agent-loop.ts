@@ -568,12 +568,8 @@ async function streamAssistantResponse(
             usage: lastUsage,
             durationMs,
         })
-        if (
-            agent.workspaceDir &&
-            !agent.disableLogging &&
-            process.env.DECEMBER_DISABLE_LOGGING !== 'true'
-        ) {
-            await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
+        if (!agent.disableLogging && process.env.DECEMBER_DISABLE_LOGGING !== 'true') {
+            await appendTurnLog(agent.sessionId, logEntry, agent.logsDir).catch(() => {
                 // Intentionally swallowed: Request logging must not block or crash agent loop
             })
         }
@@ -614,12 +610,8 @@ async function streamAssistantResponse(
             durationMs,
             error: errorMsg,
         })
-        if (
-            agent.workspaceDir &&
-            !agent.disableLogging &&
-            process.env.DECEMBER_DISABLE_LOGGING !== 'true'
-        ) {
-            await appendTurnLog(agent.workspaceDir, agent.sessionId, logEntry).catch(() => {
+        if (!agent.disableLogging && process.env.DECEMBER_DISABLE_LOGGING !== 'true') {
+            await appendTurnLog(agent.sessionId, logEntry, agent.logsDir).catch(() => {
                 // Intentionally swallowed: Request logging must not block or crash agent loop
             })
         }

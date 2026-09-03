@@ -12,6 +12,7 @@ import { OllamaSetupMenu } from './ollama-setup-menu'
 import { PlanApproveMenu } from './plan-approve-menu'
 import { SessionSelectMenu } from './session-select-menu'
 import { SettingsMainMenu } from './settings-main-menu'
+import { SubscriptionSelectMenu } from './subscription-select-menu'
 import { TasksModeMenu } from './tasks-mode-menu'
 import { ToolPermissionMenu } from './tool-permission-menu'
 
@@ -19,6 +20,9 @@ export function AuthMenus(props: any) {
     switch (props.authMode) {
         case 'menu':
             return <MenuMenu {...props} />
+        case 'subscription_select':
+        case 'subscription_provider':
+            return <SubscriptionSelectMenu {...props} />
         case 'mcp_manager':
             return <McpManagerMenu {...props} />
         case 'byok_provider':

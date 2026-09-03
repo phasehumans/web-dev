@@ -83,6 +83,10 @@ export function getConfigFile(): string {
     return path.join(getConfigDir(), 'config.json')
 }
 
+export function getLogsDir(): string {
+    return process.env.DECEMBER_LOGS_DIR || path.join(getConfigDir(), 'logs')
+}
+
 function deepMergeSettings(base: any, overrides: any): any {
     const result = { ...base }
     for (const key of Object.keys(overrides)) {

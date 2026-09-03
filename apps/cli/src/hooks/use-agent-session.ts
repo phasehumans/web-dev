@@ -171,6 +171,17 @@ export function useAgentSession({
         setExpandCommands((prev) => !prev)
     }, [])
 
+    const [detectedSubscriptions, setDetectedSubscriptions] = useState<Record<string, any>>({})
+
+    useEffect(() => {
+        import('../auth/subscriptions/subscription-manager')
+            .then(({ detectAllSubscriptions }) => detectAllSubscriptions())
+            .then((detected) => {
+                if (detected) setDetectedSubscriptions(detected)
+            })
+            .catch(() => {})
+    }, [])
+
     useEffect(() => {
         useCliStore.setState((prev) => ({
             ...prev,
@@ -1589,6 +1600,7 @@ ${decStatus}
         handleAuthMenuSelect,
         handleModelSelect,
         handleProviderSelect,
+        handleSubscriptionSelect,
         handleKeySubmit,
         handleLogoutSelect,
         handleSessionSelect,
@@ -1799,6 +1811,7 @@ ${decStatus}
         handleSessionSelect,
         handlePlanApprovalSelect,
         handleProviderSelect,
+        handleSubscriptionSelect,
         handleKeySubmit,
         handleLogoutSelect,
         handleGrillSelect,
@@ -1829,5 +1842,6 @@ ${decStatus}
         handleTestMcpServer,
         activeModel,
         setActiveModel,
+        detectedSubscriptions,
     }
 }

@@ -65,9 +65,11 @@ Ensure surgical diff edits.
 Current date: 2026-08-19
 Current working directory: ${tmpDir}`
 
+            const logsDir = path.join(tmpDir, 'logs')
             const agent = new Agent({
                 sessionId,
                 workspaceDir: tmpDir,
+                logsDir,
                 systemPrompt,
                 llm: mockLlm,
                 tools: [mockTool, mcpTool],
@@ -80,12 +82,13 @@ Current working directory: ${tmpDir}`
                 events.push(event)
             }
 
-            // Verify log file exists on disk
-            const logFile = getSessionLogPath(tmpDir, sessionId)
+            // Verify log file exists on disk in logsDir and not in workspaceDir/.december/logs
+            const logFile = getSessionLogPath(sessionId, logsDir)
             expect(fs.existsSync(logFile)).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'logs'))).toBe(false)
 
             // Read persisted JSONL logs
-            const turnLogs = await getTurnLogs(tmpDir, sessionId)
+            const turnLogs = await getTurnLogs(sessionId, logsDir)
             expect(turnLogs.length).toBe(2)
 
             // Verify Turn 1 Log Entry

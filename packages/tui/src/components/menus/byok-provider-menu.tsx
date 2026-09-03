@@ -8,33 +8,28 @@ import { MenuFooter } from './menu-footer'
 const WINDOW_SIZE = 7
 
 export const PROVIDER_MENU_ITEMS = [
-    { label: 'GitHub Copilot (Subscription / OAuth)', value: 'copilot' },
-    { label: 'Claude Code (Anthropic Subscription)', value: 'claude' },
-    { label: 'OpenAI Codex (ChatGPT Plus/Team/Pro)', value: 'codex' },
-    { label: 'Google Gemini / Antigravity (Subscription)', value: 'gemini' },
+    { label: 'Anthropic (Claude 3.7 / 3.5 API Key)', value: 'anthropic' },
+    { label: 'OpenAI (GPT-4o / o3 API Key)', value: 'openai' },
+    { label: 'Google AI Studio (Gemini API Key)', value: 'google' },
+    { label: 'OpenRouter (200+ Unified Models)', value: 'openrouter' },
+    { label: 'DeepSeek (DeepSeek V3 / R1)', value: 'deepseek' },
+    { label: 'Groq (Ultra-Fast Open Models)', value: 'groq' },
+    { label: 'Ollama (Local Models)', value: 'ollama' },
     { label: 'AgentRouter', value: 'agentrouter' },
-    { label: 'Anthropic', value: 'anthropic' },
     { label: 'Cerebras', value: 'cerebras' },
     { label: 'Cohere', value: 'cohere' },
-    { label: 'DeepSeek', value: 'deepseek' },
     { label: 'Fireworks AI', value: 'fireworks' },
-    { label: 'Google', value: 'google' },
-    { label: 'Groq', value: 'groq' },
     { label: 'Hugging Face', value: 'huggingface' },
     { label: 'Hyperbolic', value: 'hyperbolic' },
-    { label: 'Kimi', value: 'kimi' },
-    { label: 'Mistral', value: 'mistral' },
-    { label: 'Moonshot AI', value: 'moonshot' },
+    { label: 'Kimi (Moonshot AI)', value: 'kimi' },
+    { label: 'Mistral AI', value: 'mistral' },
     { label: 'NVIDIA NIM', value: 'nvidia' },
-    { label: 'Ollama (Local Models)', value: 'ollama' },
-    { label: 'OpenAI', value: 'openai' },
-    { label: 'OpenRouter', value: 'openrouter' },
     { label: 'Perplexity AI', value: 'perplexity' },
     { label: 'SambaNova Cloud', value: 'sambanova' },
     { label: 'SiliconFlow', value: 'siliconflow' },
     { label: 'Together AI', value: 'together' },
-    { label: 'xAI', value: 'xai' },
-    { label: 'ZAI', value: 'zai' },
+    { label: 'xAI (Grok)', value: 'xai' },
+    { label: 'ZAI (GLM)', value: 'zai' },
 ]
 
 export interface ByokProviderMenuProps {
@@ -80,7 +75,7 @@ export function ByokProviderMenu(props: ByokProviderMenuProps) {
 
         if (key.escape) {
             if (setAuthMode) {
-                setAuthMode('none')
+                setAuthMode('menu')
             }
             return
         }
@@ -94,7 +89,7 @@ export function ByokProviderMenu(props: ByokProviderMenuProps) {
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
-                <Text color={THEME.colors.text}>Select API Provider:</Text>
+                <Text color={THEME.colors.text}>Select API Provider (BYOK):</Text>
             </Box>
 
             {/* ↑ n more */}
@@ -136,7 +131,7 @@ export function ByokProviderMenu(props: ByokProviderMenuProps) {
                 items={[
                     { key: '↑/↓', label: 'Navigate' },
                     { key: 'enter', label: 'Select' },
-                    { key: 'esc', label: 'Cancel' },
+                    { key: 'esc', label: 'Back' },
                 ]}
             />
         </Box>

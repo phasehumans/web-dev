@@ -14,6 +14,7 @@ export { Spinner } from './components/spinner'
 export { Pill } from './components/pill'
 
 export * from './components/menus/menu-menu'
+export * from './components/menus/subscription-select-menu'
 export * from './components/menus/byok-provider-menu'
 export * from './components/menus/byok-key-menu'
 export * from './components/menus/model-select-menu'

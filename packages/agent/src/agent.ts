@@ -24,6 +24,7 @@ export interface AgentConfig {
     steeringMode?: 'all' | 'one-at-a-time'
     followUpMode?: 'all' | 'one-at-a-time'
     workspaceDir?: string
+    logsDir?: string
     disableLogging?: boolean
     tracer?: AgentTracer
 }
@@ -75,6 +76,7 @@ export class Agent {
     public convertToLlm: (messages: AgentMessage[]) => Message[]
     public mcpPool?: any
     public workspaceDir?: string
+    public logsDir?: string
     public disableLogging: boolean
     public tracer: AgentTracer
 
@@ -93,6 +95,7 @@ export class Agent {
         this.followUpQueue = new PendingMessageQueue(config.followUpMode || 'all')
         this.conversation = new ConversationManager()
         this.workspaceDir = config.workspaceDir
+        this.logsDir = config.logsDir
         this.disableLogging = config.disableLogging || false
         this.tracer =
             config.tracer ||

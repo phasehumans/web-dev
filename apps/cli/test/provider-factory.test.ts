@@ -7,6 +7,7 @@ vi.mock('@december/providers', () => ({
     openaiProvider: vi.fn(),
     anthropicProvider: vi.fn(),
     geminiProvider: vi.fn(),
+    antigravityProvider: vi.fn(),
     openrouterProvider: vi.fn(),
     ollamaProvider: vi.fn(),
 }))
@@ -20,6 +21,7 @@ describe('instantiateProvider', () => {
         ;(providers.openaiProvider as any).mockReturnValue('mock-openai')
         ;(providers.anthropicProvider as any).mockReturnValue('mock-anthropic')
         ;(providers.geminiProvider as any).mockReturnValue('mock-gemini')
+        ;(providers.antigravityProvider as any).mockReturnValue('mock-antigravity')
         ;(providers.openrouterProvider as any).mockReturnValue('mock-openrouter')
         ;(providers.ollamaProvider as any).mockReturnValue('mock-ollama')
     })
@@ -41,10 +43,30 @@ describe('instantiateProvider', () => {
         expect(providers.anthropicProvider).toHaveBeenCalledWith(undefined, 'key-123')
     })
 
-    it('instantiates gemini provider', () => {
+    it('instantiates gemini provider for BYOK API key', () => {
         const p = instantiateProvider('google', 'key-123')
         expect(p).toBe('mock-gemini')
         expect(providers.geminiProvider).toHaveBeenCalledWith('key-123')
+    })
+
+    it('instantiates antigravity provider for antigravity identifier', () => {
+        const p = instantiateProvider('antigravity', 'ya29.token-123')
+        expect(p).toBe('mock-antigravity')
+        expect(providers.antigravityProvider).toHaveBeenCalledWith('ya29.token-123', {
+            endpoint: undefined,
+            headers: undefined,
+        })
+    })
+
+    it('routes gemini subscription to antigravity provider', () => {
+        const p = instantiateProvider('gemini', 'ya29.token-123', {
+            authMethod: 'subscription',
+        })
+        expect(p).toBe('mock-antigravity')
+        expect(providers.antigravityProvider).toHaveBeenCalledWith('ya29.token-123', {
+            endpoint: undefined,
+            headers: undefined,
+        })
     })
 
     it('instantiates openrouter provider', () => {

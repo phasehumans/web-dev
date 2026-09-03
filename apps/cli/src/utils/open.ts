@@ -7,6 +7,13 @@ export function openUrl(
     osPlatform = () => os.platform(),
     osRelease = () => os.release()
 ): Promise<void> {
+    if (
+        execFn === cp.exec &&
+        (process.env.NODE_ENV === 'test' || !!process.env.BUN_TEST || !!process.env.VITEST)
+    ) {
+        return Promise.resolve()
+    }
+
     return new Promise((resolve, reject) => {
         try {
             const platform = osPlatform()

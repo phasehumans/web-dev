@@ -9,6 +9,7 @@ import {
     appendTurnLog,
     getTurnLogs,
     getSessionLogPath,
+    getLogsDir,
 } from '../../src/utils/request-logger'
 
 describe('Request Logger Core (Unit)', () => {
@@ -63,12 +64,13 @@ describe('Request Logger Core (Unit)', () => {
         expect(entry.response.durationMs).toBe(420)
     })
 
-    test('getSessionLogPath computes path matching .december/logs/session-<id>.jsonl', () => {
-        const p1 = getSessionLogPath('/workspace', '123')
-        expect(p1).toBe(path.join('/workspace', '.december', 'logs', 'session-123.jsonl'))
+    test('getSessionLogPath computes path matching global config logs/session-<id>.jsonl or custom logsDir', () => {
+        const defaultPath = getSessionLogPath('123')
+        expect(defaultPath).toBe(path.join(getLogsDir(), 'session-123.jsonl'))
 
-        const p2 = getSessionLogPath('/workspace', 'session-456')
-        expect(p2).toBe(path.join('/workspace', '.december', 'logs', 'session-456.jsonl'))
+        const customDir = '/custom/logs'
+        const customPath = getSessionLogPath('session-456', customDir)
+        expect(customPath).toBe(path.join('/custom/logs', 'session-456.jsonl'))
     })
 
     test('appends and reads turn logs in JSONL format asynchronously', async () => {

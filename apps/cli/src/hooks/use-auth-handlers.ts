@@ -43,6 +43,16 @@ export function useAuthHandlers(
     } = useCliStore()
 
     const handleAuthMenuSelect = async (item: any) => {
+        if (item.value === 'subscriptions' || item.value === 'subscription_select') {
+            setAuthMode('subscription_select')
+            return
+        }
+
+        if (item.value === 'byok') {
+            setAuthMode('byok_provider')
+            return
+        }
+
         if (item.value === 'december' || item.value === 'december_headless') {
             setAuthMode('none')
             setIsStreaming(true)
@@ -802,6 +812,7 @@ export function useAuthHandlers(
         handleAuthMenuSelect,
         handleModelSelect,
         handleProviderSelect,
+        handleSubscriptionSelect: handleProviderSelect,
         handleKeySubmit,
         handleLogoutSelect,
         handleSessionSelect,
