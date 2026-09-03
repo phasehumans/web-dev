@@ -90,6 +90,8 @@ const SUCCESS_HTML = `<!DOCTYPE html>
 export interface LocalOAuthServerOptions {
     timeoutMs?: number
     path?: string
+    port?: number
+    host?: string
 }
 
 export interface LocalOAuthResult {
@@ -191,10 +193,14 @@ export async function startLocalOAuthServer(options?: LocalOAuthServerOptions): 
             rejectServer(err)
         })
 
-        server.listen(0, '127.0.0.1', () => {
+        const listenPort = options?.port !== undefined ? options.port : 0
+        const listenHost = options?.host || '127.0.0.1'
+
+        server.listen(listenPort, listenHost, () => {
             const address = server.address() as AddressInfo
             const port = address.port
-            const redirectUri = `http://127.0.0.1:${port}${callbackPath}`
+            const hostForUri = listenHost === '0.0.0.0' ? 'localhost' : listenHost
+            const redirectUri = `http://${hostForUri}:${port}${callbackPath}`
 
             resolveServer({
                 port,
