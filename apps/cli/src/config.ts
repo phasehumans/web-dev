@@ -175,6 +175,13 @@ export async function saveConfig(config: DecemberConfig): Promise<void> {
     }
 }
 
+export async function updateConfig(partial: Partial<DecemberConfig>): Promise<DecemberConfig> {
+    const current = await loadConfig()
+    const updated = { ...current, ...partial }
+    await saveConfig(updated)
+    return updated
+}
+
 function resolveSubscriptionBundle(
     config: DecemberConfig
 ): { provider: string; bundle: SubscriptionTokenBundle } | undefined {
