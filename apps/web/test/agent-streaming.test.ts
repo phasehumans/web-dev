@@ -303,3 +303,166 @@ describe('Native Agent Streaming & Chat Slice', () => {
         )
     })
 })
+
+describe('Payload Normalization Layer (normalizeAgentStreamEvent)', () => {
+    it('normalizes flat and nested ThinkingChunk payloads', async () => {
+        const { normalizeAgentStreamEvent } =
+            await import('../src/features/generation/api/generation')
+
+        // Flat
+        const flatEvt = normalizeAgentStreamEvent({
+            type: 'ThinkingChunk',
+            content: 'Planning step 1',
+        })
+        expect(flatEvt.type).toBe('ThinkingChunk')
+        expect((flatEvt.data as any).content).toBe('Planning step 1')
+
+        // Nested under data
+        const nestedEvt = normalizeAgentStreamEvent({
+            type: 'ThinkingChunk',
+            data: { content: 'Planning step 2' },
+        })
+        expect(nestedEvt.type).toBe('ThinkingChunk')
+        expect((nestedEvt.data as any).content).toBe('Planning step 2')
+
+        // WireAgentEvent envelope
+        const wireEvt = normalizeAgentStreamEvent({
+            type: 'ThinkingChunk',
+            data: { type: 'ThinkingChunk', content: 'Planning step 3' },
+        })
+        expect(wireEvt.type).toBe('ThinkingChunk')
+        expect((wireEvt.data as any).content).toBe('Planning step 3')
+
+        // Stringified JSON payload
+        const strEvt = normalizeAgentStreamEvent(
+            JSON.stringify({ type: 'ThinkingChunk', content: 'Planning step 4' })
+        )
+        expect(strEvt.type).toBe('ThinkingChunk')
+        expect((strEvt.data as any).content).toBe('Planning step 4')
+    })
+
+    it('normalizes flat and nested StreamChunk payloads', async () => {
+        const { normalizeAgentStreamEvent } =
+            await import('../src/features/generation/api/generation')
+
+        const flatEvt = normalizeAgentStreamEvent({
+            type: 'StreamChunk',
+            content: 'Hello world',
+        })
+        expect(flatEvt.type).toBe('StreamChunk')
+        expect((flatEvt.data as any).content).toBe('Hello world')
+
+        const nestedEvt = normalizeAgentStreamEvent({
+            type: 'StreamChunk',
+            data: { chunk: 'Hello again' },
+        })
+        expect(nestedEvt.type).toBe('StreamChunk')
+        expect((nestedEvt.data as any).content).toBe('Hello again')
+    })
+
+    it('normalizes ToolCallStart with id, name, and input', async () => {
+        const { normalizeAgentStreamEvent } =
+            await import('../src/features/generation/api/generation')
+
+        const evt = normalizeAgentStreamEvent({
+            type: 'ToolCallStart',
+            toolCall: { id: 'call-1', name: 'bash', input: { command: 'ls' } },
+        })
+        expect(evt.type).toBe('ToolCallStart')
+        expect(evt.data.toolCall.id).toBe('call-1')
+        expect(evt.data.toolCall.name).toBe('bash')
+        expect(evt.data.toolCall.input).toEqual({ command: 'ls' })
+    })
+
+    it('normalizes ToolExecutionUpdate and TerminalData events', async () => {
+        const { normalizeAgentStreamEvent } =
+            await import('../src/features/generation/api/generation')
+
+        const updateEvt = normalizeAgentStreamEvent({
+            type: 'ToolExecutionUpdate',
+            toolCallId: 'call-1',
+            chunk: 'compiling...',
+        })
+        expect(updateEvt.type).toBe('ToolExecutionUpdate')
+        expect((updateEvt.data as any).toolCallId).toBe('call-1')
+        expect((updateEvt.data as any).chunk).toBe('compiling...')
+
+        const terminalEvt = normalizeAgentStreamEvent({
+            type: 'TerminalData',
+            taskId: 'task-100',
+            chunk: 'output stream',
+        })
+        expect(terminalEvt.type).toBe('ToolExecutionUpdate')
+        expect((terminalEvt.data as any).toolCallId).toBe('task-100')
+        expect((terminalEvt.data as any).chunk).toBe('output stream')
+    })
+
+    it('normalizes ToolCallResult with result string or object', async () => {
+        const { normalizeAgentStreamEvent } =
+            await import('../src/features/generation/api/generation')
+
+        const resEvt = normalizeAgentStreamEvent({
+            type: 'ToolCallResult',
+            toolCallId: 'call-1',
+            result: 'build succeeded',
+        })
+        expect(resEvt.type).toBe('ToolCallResult')
+        expect((resEvt.data as any).toolCallId).toBe('call-1')
+        expect((resEvt.data as any).output).toBe('build succeeded')
+
+        const errEvt = normalizeAgentStreamEvent({
+            type: 'ToolCallResult',
+            result: { toolCallId: 'call-2', error: 'build failed' },
+        })
+        expect(errEvt.type).toBe('ToolCallResult')
+        expect((errEvt.data as any).toolCallId).toBe('call-2')
+        expect((errEvt.data as any).error).toBe('build failed')
+    })
+
+    it('normalizes FileModified events with path, action, and diff', async () => {
+        const { normalizeAgentStreamEvent } =
+            await import('../src/features/generation/api/generation')
+
+        const fileEvt = normalizeAgentStreamEvent({
+            type: 'FileModified',
+            path: 'src/App.tsx',
+            diff: '--- a\n+++ b\n',
+            action: 'modified',
+        })
+        expect(fileEvt.type).toBe('FileModified')
+        expect((fileEvt.data as any).path).toBe('src/App.tsx')
+        expect((fileEvt.data as any).action).toBe('modified')
+        expect((fileEvt.data as any).diff).toBe('--- a\n+++ b\n')
+    })
+
+    it('normalizes AgentStatus, ContextCompacted, AgentError, and AgentInterrupt', async () => {
+        const { normalizeAgentStreamEvent } =
+            await import('../src/features/generation/api/generation')
+
+        const statusEvt = normalizeAgentStreamEvent({
+            type: 'AgentStatus',
+            message: 'Running tests...',
+        })
+        expect(statusEvt.type).toBe('AgentStatus')
+        expect((statusEvt.data as any).message).toBe('Running tests...')
+
+        const compactEvt = normalizeAgentStreamEvent({
+            type: 'ContextCompacted',
+            summary: 'Compacted 10 previous turns',
+        })
+        expect(compactEvt.type).toBe('ContextCompacted')
+        expect((compactEvt.data as any).summary).toBe('Compacted 10 previous turns')
+
+        const errorEvt = normalizeAgentStreamEvent({
+            type: 'AgentError',
+            error: 'Out of credits',
+        })
+        expect(errorEvt.type).toBe('AgentError')
+        expect((errorEvt.data as any).error).toBe('Out of credits')
+
+        const interruptEvt = normalizeAgentStreamEvent({
+            type: 'AgentInterrupt',
+        })
+        expect(interruptEvt.type).toBe('AgentInterrupt')
+    })
+})

@@ -223,7 +223,44 @@ const ChatMessageComponent: React.FC<ChatMessageProps> = ({
                             }
 
                             if (block.type === 'file_change') {
-                                return null
+                                const isCreated = block.action === 'created'
+                                const isDeleted = block.action === 'deleted'
+                                const actionColor = isCreated
+                                    ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                                    : isDeleted
+                                      ? 'text-red-400 bg-red-500/10 border-red-500/20'
+                                      : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
+                                const actionText = isCreated
+                                    ? 'Created'
+                                    : isDeleted
+                                      ? 'Deleted'
+                                      : 'Modified'
+
+                                return (
+                                    <div
+                                        key={bIdx}
+                                        className="flex items-center gap-2 py-0.5 my-0.5 font-mono text-[12px] select-text"
+                                    >
+                                        <span
+                                            className={cn(
+                                                'px-1.5 py-0.5 rounded text-[10.5px] uppercase font-medium border leading-none',
+                                                actionColor
+                                            )}
+                                        >
+                                            {actionText}
+                                        </span>
+                                        <span
+                                            onClick={() => onOpenFile?.(block.filePath)}
+                                            className={cn(
+                                                'text-[#EDEDEF] truncate',
+                                                onOpenFile && 'hover:underline cursor-pointer'
+                                            )}
+                                            title={block.filePath}
+                                        >
+                                            {block.filePath}
+                                        </span>
+                                    </div>
+                                )
                             }
 
                             if (block.type === 'text') {

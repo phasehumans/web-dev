@@ -201,12 +201,6 @@ export const useSessionController = (
                 } else {
                     hydrateProjectDetail(detail)
                 }
-
-                const elapsed = Date.now() - startTime
-                const minDuration = 800
-                if (elapsed < minDuration) {
-                    await new Promise((resolve) => setTimeout(resolve, minDuration - elapsed))
-                }
             } catch (error) {
                 setProjectLoadError(
                     error instanceof Error ? error.message : 'Failed to open project'

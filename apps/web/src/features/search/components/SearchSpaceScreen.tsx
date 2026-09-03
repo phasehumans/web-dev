@@ -179,14 +179,6 @@ export const SearchSpaceScreen: React.FC<SearchSpaceScreenProps> = ({ onBack, in
                     }))
                     setMessages(loadedMessages)
                 }
-
-                if (!cached?.chatMessages?.length) {
-                    const elapsed = Date.now() - startTime
-                    const minDuration = 800
-                    if (elapsed < minDuration) {
-                        await new Promise((resolve) => setTimeout(resolve, minDuration - elapsed))
-                    }
-                }
             } catch (err) {
                 console.error('[Search] Failed to load search session:', err)
             } finally {

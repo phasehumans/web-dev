@@ -282,20 +282,52 @@ export const useChatController = (
                                         streamFrameHandle = null
                                     }
                                     flushStreamBuffers()
-                                    if (event.data?.result) {
+                                    if (
+                                        event.data?.result !== undefined ||
+                                        event.data?.toolCallId
+                                    ) {
                                         updateToolCallResult(activeMessageId, {
                                             toolCallId:
-                                                event.data.result.toolCallId ||
-                                                event.data.toolCallId,
-                                            status: event.data.result.error ? 'error' : 'success',
+                                                event.data.toolCallId ||
+                                                event.data.result?.toolCallId,
+                                            status:
+                                                event.data.error || event.data.result?.error
+                                                    ? 'error'
+                                                    : 'success',
                                             output:
-                                                event.data.result.output ||
-                                                event.data.result.content ||
+                                                event.data.output ||
+                                                event.data.result?.output ||
+                                                event.data.result?.content ||
                                                 (typeof event.data.result === 'string'
                                                     ? event.data.result
                                                     : ''),
-                                            error: event.data.result.error,
+                                            error: event.data.error || event.data.result?.error,
                                         })
+                                    }
+                                    return
+                                case 'FileModified':
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
+                                    if (event.data?.path) {
+                                        addFileChangeBlock(activeMessageId, {
+                                            filePath: event.data.path,
+                                            action: event.data.action || 'modified',
+                                            diff: event.data.diff,
+                                        })
+                                        const curPaths =
+                                            useAppStore.getState().currentGenerationFilePaths
+                                        if (
+                                            curPaths.length > 0 &&
+                                            !curPaths.includes(event.data.path)
+                                        ) {
+                                            setCurrentGenerationFilePaths([
+                                                ...curPaths,
+                                                event.data.path,
+                                            ])
+                                        }
                                     }
                                     return
                                 case 'ContextCompacted':
@@ -337,6 +369,11 @@ export const useChatController = (
                                     return
                                 }
                                 case 'AgentError': {
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     setGenerationPhase(null)
                                     const errText =
                                         event.data?.error ||
@@ -404,21 +441,41 @@ export const useChatController = (
                                 case 'file-error':
                                     markGeneratedFileError(event.data.path)
                                     return
-                                case 'result':
+                                case 'result': {
+                                    if (streamFrameHandle !== null) {
+                                        cancelAnimationFrame(streamFrameHandle)
+                                        streamFrameHandle = null
+                                    }
+                                    flushStreamBuffers()
                                     setGenerationPhase('done')
                                     setAssistantStatus(activeMessageId, 'done')
-                                    replaceGeneratedOutput(event.data.generatedFiles)
-                                    setActiveProjectId(event.data.project.id)
-                                    setActiveProjectName(event.data.project.name)
-                                    setActiveProjectVersionId(event.data.version.id)
+                                    setIsGenerating(false)
+                                    if (event.data?.generatedFiles) {
+                                        replaceGeneratedOutput(event.data.generatedFiles)
+                                    }
+                                    if (event.data?.project?.id) {
+                                        setActiveProjectId(event.data.project.id)
+                                        if (event.data.project.name) {
+                                            setActiveProjectName(event.data.project.name)
+                                        }
+                                    }
+                                    if (event.data?.version?.id) {
+                                        setActiveProjectVersionId(event.data.version.id)
+                                    }
+                                    if (event.data?.versions) {
+                                        setProjectVersions(event.data.versions)
+                                    }
                                     void queryClient.invalidateQueries({ queryKey: ['sessions'] })
-                                    void openProject({
-                                        projectId: event.data.project.id,
-                                        versionId: event.data.version.id,
-                                        originView: outputOriginViewRef.current,
-                                        abortActiveGeneration: false,
-                                    })
+                                    const currentPid =
+                                        event.data?.project?.id ||
+                                        useAppStore.getState().activeProjectId
+                                    if (currentPid) {
+                                        void queryClient.invalidateQueries({
+                                            queryKey: ['session', currentPid],
+                                        })
+                                    }
                                     return
+                                }
                                 case 'error': {
                                     const activeFile =
                                         useAppStore.getState().activeGeneratedFilePath
@@ -611,11 +668,51 @@ export const useChatController = (
             setCurrentGenerationFilePaths([])
             setIsGenerating(true)
             setProjectType('generated')
-
             const abortController = new AbortController()
             generationAbortControllerRef.current = abortController
 
             void (async () => {
+                let pendingThinking = ''
+                let pendingStream = ''
+                let pendingToolOutputs: Record<string, string> = {}
+                let streamFrameHandle: number | null = null
+
+                const flushStreamBuffers = () => {
+                    const activeMsgId = activeAssistantMessageIdRef.current
+                    if (!activeMsgId) return
+
+                    if (pendingThinking) {
+                        const chunk = pendingThinking
+                        pendingThinking = ''
+                        appendThinkingChunk(activeMsgId, chunk)
+                    }
+
+                    if (pendingStream) {
+                        const chunk = pendingStream
+                        pendingStream = ''
+                        appendStreamChunk(activeMsgId, chunk)
+                    }
+
+                    const toolKeys = Object.keys(pendingToolOutputs)
+                    if (toolKeys.length > 0) {
+                        const snapshot = { ...pendingToolOutputs }
+                        pendingToolOutputs = {}
+                        for (const toolId of toolKeys) {
+                            if (snapshot[toolId]) {
+                                appendToolCallOutput(activeMsgId, toolId, snapshot[toolId])
+                            }
+                        }
+                    }
+                }
+
+                const scheduleStreamFlush = () => {
+                    if (streamFrameHandle !== null) return
+                    streamFrameHandle = requestAnimationFrame(() => {
+                        streamFrameHandle = null
+                        flushStreamBuffers()
+                    })
+                }
+
                 try {
                     let didHydrateStreamResult = false
                     const handleStreamEvent = (event: GenerationStreamEvent) => {
@@ -630,6 +727,11 @@ export const useChatController = (
                                 return
                             case 'AgentStart':
                             case 'TurnStart':
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
                                 setGenerationPhase('thinking')
                                 setAssistantStatus(activeMessageId, 'thinking')
                                 return
@@ -641,17 +743,24 @@ export const useChatController = (
                             case 'ThinkingChunk':
                                 if (event.data?.content) {
                                     setGenerationPhase('thinking')
-                                    appendThinkingChunk(activeMessageId, event.data.content)
+                                    pendingThinking += event.data.content
+                                    scheduleStreamFlush()
                                 }
                                 return
                             case 'StreamChunk':
                                 if (event.data?.content) {
                                     setGenerationPhase('building')
                                     setAssistantStatus(activeMessageId, 'building')
-                                    appendStreamChunk(activeMessageId, event.data.content)
+                                    pendingStream += event.data.content
+                                    scheduleStreamFlush()
                                 }
                                 return
                             case 'ToolCallStart':
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
                                 setGenerationPhase('building')
                                 setAssistantStatus(activeMessageId, 'building')
                                 if (event.data?.toolCall) {
@@ -669,40 +778,88 @@ export const useChatController = (
                                 return
                             case 'ToolExecutionUpdate':
                                 if (event.data?.toolCallId && event.data?.chunk) {
-                                    appendToolCallOutput(
-                                        activeMessageId,
-                                        event.data.toolCallId,
+                                    pendingToolOutputs[event.data.toolCallId] =
+                                        (pendingToolOutputs[event.data.toolCallId] || '') +
                                         event.data.chunk
-                                    )
+                                    scheduleStreamFlush()
                                 }
                                 return
                             case 'ToolCallResult':
-                                if (event.data?.result) {
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
+                                if (event.data?.result !== undefined || event.data?.toolCallId) {
                                     updateToolCallResult(activeMessageId, {
                                         toolCallId:
-                                            event.data.result.toolCallId || event.data.toolCallId,
-                                        status: event.data.result.error ? 'error' : 'success',
+                                            event.data.toolCallId || event.data.result?.toolCallId,
+                                        status:
+                                            event.data.error || event.data.result?.error
+                                                ? 'error'
+                                                : 'success',
                                         output:
-                                            event.data.result.output ||
-                                            event.data.result.content ||
+                                            event.data.output ||
+                                            event.data.result?.output ||
+                                            event.data.result?.content ||
                                             (typeof event.data.result === 'string'
                                                 ? event.data.result
                                                 : ''),
-                                        error: event.data.result.error,
+                                        error: event.data.error || event.data.result?.error,
                                     })
                                 }
                                 return
+                            case 'FileModified':
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
+                                if (event.data?.path) {
+                                    addFileChangeBlock(activeMessageId, {
+                                        filePath: event.data.path,
+                                        action: event.data.action || 'modified',
+                                        diff: event.data.diff,
+                                    })
+                                    const curPaths =
+                                        useAppStore.getState().currentGenerationFilePaths
+                                    if (
+                                        curPaths.length > 0 &&
+                                        !curPaths.includes(event.data.path)
+                                    ) {
+                                        setCurrentGenerationFilePaths([
+                                            ...curPaths,
+                                            event.data.path,
+                                        ])
+                                    }
+                                }
+                                return
                             case 'ContextCompacted':
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
                                 if (event.data?.summary) {
                                     addCompactionBlock(activeMessageId, event.data.summary)
                                 }
                                 return
                             case 'AgentInterrupt':
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
                                 addInterruptBlock(activeMessageId)
                                 setIsGenerating(false)
                                 return
                             case 'TurnEnd':
                             case 'AgentEnd': {
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
                                 setGenerationPhase('done')
                                 setAssistantStatus(activeMessageId, 'done')
                                 setIsGenerating(false)
@@ -716,6 +873,11 @@ export const useChatController = (
                                 return
                             }
                             case 'AgentError':
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
                                 setGenerationPhase(null)
                                 setAssistantError(
                                     activeMessageId,
@@ -781,6 +943,11 @@ export const useChatController = (
                                 markGeneratedFileError(event.data.path)
                                 return
                             case 'result':
+                                if (streamFrameHandle !== null) {
+                                    cancelAnimationFrame(streamFrameHandle)
+                                    streamFrameHandle = null
+                                }
+                                flushStreamBuffers()
                                 if (
                                     event.data.versions &&
                                     event.data.chatMessages &&
@@ -845,6 +1012,11 @@ export const useChatController = (
                     setProjectLoadError(message)
                     setAssistantError(assistantMessageId, message)
                 } finally {
+                    if (streamFrameHandle !== null) {
+                        cancelAnimationFrame(streamFrameHandle)
+                        streamFrameHandle = null
+                    }
+                    flushStreamBuffers()
                     if (!abortController.signal.aborted) {
                         setIsGenerating(false)
                         setGenerationPhase(null)
