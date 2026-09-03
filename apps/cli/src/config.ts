@@ -76,7 +76,10 @@ export interface DecemberConfig {
 }
 
 export function getConfigDir(): string {
-    return path.join(process.env.HOME || os.homedir(), '.config', 'december')
+    return (
+        process.env.DECEMBER_CONFIG_DIR ||
+        path.join(process.env.HOME || os.homedir(), '.config', 'december')
+    )
 }
 
 export function getConfigFile(): string {
@@ -198,19 +201,32 @@ function resolveSubscriptionBundle(
         return { provider: activeProvider, bundle: config.subscriptions[activeProvider] }
     }
 
-    // Check alias maps (e.g. anthropic -> claude, openai -> codex, google -> gemini)
-    if (activeProvider === 'anthropic' && config.subscriptions['claude']) {
-        return { provider: 'claude', bundle: config.subscriptions['claude'] }
-    }
-    if (activeProvider === 'openai' && config.subscriptions['codex']) {
-        return { provider: 'codex', bundle: config.subscriptions['codex'] }
-    }
-    if (activeProvider === 'google' && config.subscriptions['gemini']) {
-        return { provider: 'gemini', bundle: config.subscriptions['gemini'] }
+    // Only map aliases if priority is explicitly subscription OR if activeProvider has no BYOK key
+    const hasByokForActive = !!(
+        activeProvider &&
+        config.providers &&
+        config.providers[activeProvider]
+    )
+
+    if (config.authPriority === 'subscription' || !hasByokForActive) {
+        // Check alias maps (e.g. anthropic -> claude, openai -> codex, google -> gemini)
+        if (activeProvider === 'anthropic' && config.subscriptions['claude']) {
+            return { provider: 'claude', bundle: config.subscriptions['claude'] }
+        }
+        if (activeProvider === 'openai' && config.subscriptions['codex']) {
+            return { provider: 'codex', bundle: config.subscriptions['codex'] }
+        }
+        if (activeProvider === 'google' && config.subscriptions['gemini']) {
+            return { provider: 'gemini', bundle: config.subscriptions['gemini'] }
+        }
     }
 
-    const firstKey = Object.keys(config.subscriptions)[0]
-    return { provider: firstKey, bundle: config.subscriptions[firstKey] }
+    if (config.authPriority === 'subscription') {
+        const firstKey = Object.keys(config.subscriptions)[0]
+        return { provider: firstKey, bundle: config.subscriptions[firstKey] }
+    }
+
+    return undefined
 }
 
 export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
@@ -235,8 +251,12 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
         }
     }
 
-    // 2. If explicit authPriority is byok
-    if (config.authPriority === 'byok' && hasByokConfig) {
+    // 2. If explicit authPriority is byok, OR if activeProvider is configured in BYOK and priority is not subscription
+    if (
+        (config.authPriority === 'byok' ||
+            (hasByokConfig && config.authPriority !== 'subscription')) &&
+        hasByokConfig
+    ) {
         const model = ensureValidModelForProvider(config.activeProvider!, config.activeModel)
         return {
             provider: config.activeProvider as any,
@@ -246,7 +266,7 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
         }
     }
 
-    // 3. Priority Order: Subscription -> BYOK -> December Proxy -> Environment Variables
+    // 3. Subscription (explicit subscription priority, or active subscription without conflicting BYOK activeProvider)
     if (subMatch && config.authPriority !== 'byok' && config.authPriority !== 'december') {
         const { resolveSubscriptionToken } =
             await import('./auth/subscriptions/subscription-manager')

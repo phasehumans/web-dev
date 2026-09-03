@@ -1,4 +1,6 @@
 import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
@@ -13,9 +15,16 @@ import {
 
 describe('Subscription Detection & Local Import (Unit)', () => {
     let originalEnv: NodeJS.ProcessEnv
+    let testConfigDir: string
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        testConfigDir = path.join(
+            os.tmpdir(),
+            `december-detect-test-${Date.now()}-${Math.random()}`
+        )
+        await fs.mkdir(testConfigDir, { recursive: true })
         originalEnv = { ...process.env }
+        process.env.DECEMBER_CONFIG_DIR = testConfigDir
         delete process.env.CLAUDE_CODE_OAUTH_TOKEN
         delete process.env.ANTHROPIC_AUTH_TOKEN
         delete process.env.OPENAI_OAUTH_TOKEN
@@ -26,9 +35,14 @@ describe('Subscription Detection & Local Import (Unit)', () => {
         delete process.env.ANTIGRAVITY_TOKEN
     })
 
-    afterEach(() => {
+    afterEach(async () => {
         process.env = originalEnv
         vi.restoreAllMocks()
+        try {
+            await fs.rm(testConfigDir, { recursive: true, force: true })
+        } catch {
+            // Intentionally swallowed: test dir cleanup
+        }
     })
 
     describe('Claude Adapter Detection', () => {

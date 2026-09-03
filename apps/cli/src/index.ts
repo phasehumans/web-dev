@@ -5,8 +5,13 @@ import path from 'node:path'
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
+import { purgeProjectEnvApiKeys } from './utils/env-sanitizer'
+
+// Ensure no API keys or tokens from project .env files are loaded into CLI process
+purgeProjectEnvApiKeys()
 
 export { parseCliArgs, getHelpText } from './args'
+export { purgeProjectEnvApiKeys } from './utils/env-sanitizer'
 export {
     handleLogoutCommand,
     handleLoginCommand,
@@ -58,6 +63,7 @@ async function main() {
 
     if (parsedArgs.cwd) {
         process.chdir(parsedArgs.cwd)
+        purgeProjectEnvApiKeys(parsedArgs.cwd)
     }
 
     // Ingest non-TTY piped standard input into prompt if present
@@ -152,6 +158,7 @@ async function main() {
 
         if (parsedArgs.scope) {
             setActiveScopeDir(parsedArgs.scope)
+            purgeProjectEnvApiKeys(parsedArgs.scope)
         }
 
         const providerConfig = await getProviderConfig()

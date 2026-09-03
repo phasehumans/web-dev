@@ -7,20 +7,32 @@ import { sanitizeSchemaForGemini } from './gemini.ts'
 
 import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
-export const ANTIGRAVITY_DEFAULT_ENDPOINT = 'https://cloudcode-pa.googleapis.com'
+export const ANTIGRAVITY_DEFAULT_ENDPOINT =
+    process.env.ANTIGRAVITY_ENDPOINT ||
+    process.env.CLOUD_CODE_URL ||
+    'https://daily-cloudcode-pa.googleapis.com'
 
 export function resolveAntigravityModel(model?: string): string {
-    let name = model || 'gemini-3.7-flash'
+    let name = model || 'gemini-3.8-flash'
     if (name.startsWith('antigravity/')) {
         name = name.slice('antigravity/'.length)
     }
     if (name.startsWith('google/')) {
         name = name.slice('google/'.length)
     }
-    if (name === 'gemini-3.1-pro') {
-        return 'gemini-3-pro-preview'
+    const modelMapping: Record<string, string> = {
+        'gemini-3.8-flash': 'gemini-3.8-flash-tiered',
+        'gemini-3.7-flash': 'gemini-3.7-flash-tiered',
+        'gemini-3.6-flash': 'gemini-3.6-flash-high',
+        'gemini-3.5-flash': 'gemini-3-flash-agent',
+        'gemini-3.5-flash-lite': 'gemini-3.1-flash-lite',
+        'gemini-3.1-pro': 'gemini-pro-agent',
+        'gemini-3.1-pro-preview': 'gemini-pro-agent',
+        'gemini-3-pro': 'gemini-pro-agent',
+        'gemini-pro': 'gemini-pro-agent',
+        'gemini-flash': 'gemini-3.8-flash-tiered',
     }
-    return name
+    return modelMapping[name] || name
 }
 
 export interface AntigravityProviderOptions {
@@ -186,8 +198,7 @@ export function antigravityProvider(
                 maxOutputTokens = Math.max(maxOutputTokens, thinkingConfig.thinkingBudget + 16384)
             }
 
-            const requestBody: Record<string, any> = {
-                model: resolveAntigravityModel(modelOptions?.model),
+            const innerRequest: Record<string, any> = {
                 contents: antigravityMessages,
                 ...(systemPrompt ? { systemInstruction: { parts: [{ text: systemPrompt }] } } : {}),
                 ...(antigravityTools ? { tools: antigravityTools } : {}),
@@ -196,6 +207,12 @@ export function antigravityProvider(
                     maxOutputTokens,
                     thinkingConfig,
                 },
+            }
+
+            const requestBody: Record<string, any> = {
+                project: options?.projectId || 'aicode-consumers',
+                model: resolveAntigravityModel(modelOptions?.model),
+                request: innerRequest,
             }
 
             const headers: Record<string, string> = {
@@ -208,12 +225,71 @@ export function antigravityProvider(
             }
 
             const targetUrl = `${endpoint.replace(/\/+$/, '')}/v1internal:streamGenerateContent?alt=sse`
-            const response = await fetchFn(targetUrl, {
+            let response = await fetchFn(targetUrl, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(requestBody),
                 signal,
             })
+
+            // Fallback between daily and prod endpoints, or fallback to Generative Language API
+            if (
+                !response.ok &&
+                (response.status === 404 ||
+                    response.status === 403 ||
+                    response.status === 429 ||
+                    response.status === 503)
+            ) {
+                const fallbackEndpoint = endpoint.includes('daily-cloudcode-pa')
+                    ? endpoint.replace('daily-cloudcode-pa', 'cloudcode-pa')
+                    : endpoint.includes('cloudcode-pa') && !endpoint.includes('daily-')
+                      ? endpoint.replace('cloudcode-pa', 'daily-cloudcode-pa')
+                      : null
+                if (fallbackEndpoint) {
+                    const fallbackUrl = `${fallbackEndpoint.replace(/\/+$/, '')}/v1internal:streamGenerateContent?alt=sse`
+                    try {
+                        const fallbackResponse = await fetchFn(fallbackUrl, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify(requestBody),
+                            signal,
+                        })
+                        if (fallbackResponse.ok) {
+                            response = fallbackResponse
+                        }
+                    } catch {
+                        // Intentionally swallowed: fallback to reporting original response error
+                    }
+                }
+
+                if (!response.ok && (response.status === 404 || response.status === 403)) {
+                    // Fallback to Google Generative Language API using Bearer OAuth token
+                    const genModel = (modelOptions?.model || 'gemini-2.5-flash')
+                        .replace(/^google\//, '')
+                        .replace(/^antigravity\//, '')
+                    const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${genModel}:streamGenerateContent?alt=sse`
+                    try {
+                        const genResponse = await fetchFn(genUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Accept: 'text/event-stream',
+                                Authorization: `Bearer ${bearerToken}`,
+                                ...(options?.projectId
+                                    ? { 'x-goog-user-project': options.projectId }
+                                    : {}),
+                            },
+                            body: JSON.stringify(innerRequest),
+                            signal,
+                        })
+                        if (genResponse.ok) {
+                            response = genResponse
+                        }
+                    } catch {
+                        // Intentionally swallowed: fallback to reporting original response error
+                    }
+                }
+            }
 
             if (!response.ok) {
                 const errorText = await response.text().catch(() => '')
@@ -262,14 +338,16 @@ export function antigravityProvider(
                             continue
                         }
 
-                        if (chunk.usageMetadata) {
-                            totalPromptTokens =
-                                chunk.usageMetadata.promptTokenCount || totalPromptTokens
+                        const resp = chunk.response || chunk
+                        const usage = resp.usageMetadata || chunk.usageMetadata
+
+                        if (usage) {
+                            totalPromptTokens = usage.promptTokenCount || totalPromptTokens
                             totalCompletionTokens =
-                                chunk.usageMetadata.candidatesTokenCount || totalCompletionTokens
+                                usage.candidatesTokenCount || totalCompletionTokens
                         }
 
-                        const candidate = chunk.candidates?.[0]
+                        const candidate = resp.candidates?.[0] || chunk.candidates?.[0]
                         const parts = candidate?.content?.parts || []
                         let chunkText = ''
 

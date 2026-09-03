@@ -32,6 +32,7 @@ export function AuthMenus(props: any) {
         case 'ollama_setup':
             return (
                 <OllamaSetupMenu
+                    provider={props.selectedProvider || props.ollamaStatus?.provider || 'ollama'}
                     status={props.ollamaStatus}
                     onRetry={props.handleOllamaRetry}
                     onCancel={props.handleOllamaCancel}

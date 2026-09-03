@@ -5,17 +5,17 @@ import path from 'node:path'
 
 import type { SubscriptionAdapter, SubscriptionTokenBundle } from '../types'
 
+const DEFAULT_ENDPOINT = 'https://daily-cloudcode-pa.googleapis.com'
+
 export const geminiAdapter: SubscriptionAdapter = {
     provider: 'gemini',
     displayName: 'Google Antigravity / Gemini Advanced',
 
     async detectLocal(): Promise<SubscriptionTokenBundle | null> {
-        // 1. Check environment variables
+        // 1. Check environment variables (only OAuth / subscription tokens, NOT BYOK API keys)
         const envToken =
-            process.env.GEMINI_API_KEY ||
-            process.env.GOOGLE_API_KEY ||
-            process.env.GEMINI_OAUTH_TOKEN ||
             process.env.ANTIGRAVITY_TOKEN ||
+            process.env.GEMINI_OAUTH_TOKEN ||
             process.env.GOOGLE_OAUTH_TOKEN
         if (envToken) {
             return {
@@ -24,6 +24,7 @@ export const geminiAdapter: SubscriptionAdapter = {
                 subscriptionType: 'gemini_advanced',
                 source: 'env',
                 updatedAt: Date.now(),
+                endpoint: DEFAULT_ENDPOINT,
             }
         }
 
@@ -32,11 +33,11 @@ export const geminiAdapter: SubscriptionAdapter = {
         const candidatePaths = [
             path.join(home, '.gemini', 'antigravity-cli', 'antigravity-oauth-token'),
             path.join(home, '.gemini', 'antigravity-cli', 'auth.json'),
-            path.join(home, '.gemini', 'gemini-credentials.json'),
             path.join(home, '.gemini', 'google_accounts.json'),
             path.join(home, '.gemini', 'auth.json'),
             path.join(home, '.gemini', 'credentials.json'),
             path.join(home, '.config', 'gcloud', 'application_default_credentials.json'),
+            path.join(home, '.gemini', 'gemini-credentials.json'),
         ]
 
         if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -50,11 +51,17 @@ export const geminiAdapter: SubscriptionAdapter = {
                 try {
                     parsed = JSON.parse(raw)
                 } catch {
-                    // Plain text token (e.g. raw token string)
-                    if (raw.trim().length > 20 && !raw.includes('\n')) {
+                    // Plain text token (e.g. raw OAuth token string starting with ya29.)
+                    const trimmed = raw.trim()
+                    if (
+                        trimmed.length > 20 &&
+                        !trimmed.includes('\n') &&
+                        !trimmed.includes(':') &&
+                        trimmed.startsWith('ya29.')
+                    ) {
                         return {
                             provider: 'gemini',
-                            accessToken: raw.trim(),
+                            accessToken: trimmed,
                             subscriptionType: 'gemini_advanced',
                             source: 'local_import',
                             updatedAt: Date.now(),
@@ -76,15 +83,29 @@ export const geminiAdapter: SubscriptionAdapter = {
                     tokenObj.token ||
                     parsed.access_token ||
                     parsed.accessToken ||
-                    (typeof parsed.token === 'string' ? parsed.token : undefined) ||
-                    parsed.client_secret
+                    (typeof parsed.token === 'string' && !parsed.token.includes(':')
+                        ? parsed.token
+                        : undefined)
 
-                if (accessToken) {
+                const refreshToken =
+                    tokenObj.refresh_token ||
+                    tokenObj.refreshToken ||
+                    parsed.refresh_token ||
+                    parsed.refreshToken
+
+                if (accessToken || refreshToken) {
+                    // Ignore encrypted colon-separated strings
+                    if (accessToken && accessToken.includes(':')) {
+                        continue
+                    }
+
                     let expiresAt: number | undefined
                     const expiryVal =
                         tokenObj.expiry ||
                         tokenObj.expires_at ||
+                        tokenObj.expiresAt ||
                         parsed.token_expiry ||
+                        parsed.expires_at ||
                         parsed.expiresAt
                     if (expiryVal) {
                         expiresAt =
@@ -95,15 +116,19 @@ export const geminiAdapter: SubscriptionAdapter = {
 
                     return {
                         provider: 'gemini',
-                        accessToken,
-                        refreshToken:
-                            tokenObj.refresh_token || parsed.refresh_token || parsed.refreshToken,
+                        accessToken: accessToken || '',
+                        refreshToken,
                         expiresAt,
                         email: parsed.account || parsed.email || parsed.client_email,
                         subscriptionType: 'gemini_advanced',
                         source: 'local_import',
                         updatedAt: Date.now(),
-                        extra: { filePath },
+                        endpoint: DEFAULT_ENDPOINT,
+                        extra: {
+                            filePath,
+                            client_id: parsed.client_id || tokenObj.client_id,
+                            client_secret: parsed.client_secret || tokenObj.client_secret,
+                        },
                     }
                 }
             } catch {
@@ -142,17 +167,31 @@ export const geminiAdapter: SubscriptionAdapter = {
             return bundle
         }
 
+        const clientId =
+            bundle.extra?.client_id ||
+            process.env.GOOGLE_OAUTH_CLIENT_ID ||
+            process.env.GEMINI_OAUTH_CLIENT_ID ||
+            ''
+        const clientSecret =
+            bundle.extra?.client_secret ||
+            process.env.GOOGLE_OAUTH_CLIENT_SECRET ||
+            process.env.GEMINI_OAUTH_CLIENT_SECRET ||
+            ''
+
         try {
+            const bodyObj: Record<string, any> = {
+                grant_type: 'refresh_token',
+                refresh_token: bundle.refreshToken,
+                client_id: clientId,
+            }
+            if (clientSecret) {
+                bodyObj.client_secret = clientSecret
+            }
+
             const res = await fetch('https://oauth2.googleapis.com/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    grant_type: 'refresh_token',
-                    refresh_token: bundle.refreshToken,
-                    client_id:
-                        bundle.extra?.client_id ||
-                        '764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com',
-                }),
+                body: JSON.stringify(bodyObj),
             })
 
             if (res.ok) {
@@ -185,7 +224,16 @@ export const geminiAdapter: SubscriptionAdapter = {
         const { openUrl } = await import('../../../utils/open')
         const { startLocalOAuthServer, generatePKCE } = await import('../oauth-server')
 
-        const clientId = '764086051850-6qr4p6gpi6hn506pt8ejuq83di341hur.apps.googleusercontent.com'
+        const clientId =
+            process.env.GOOGLE_OAUTH_CLIENT_ID || process.env.GEMINI_OAUTH_CLIENT_ID || ''
+        const clientSecret =
+            process.env.GOOGLE_OAUTH_CLIENT_SECRET || process.env.GEMINI_OAUTH_CLIENT_SECRET || ''
+
+        if (!clientId) {
+            throw new Error(
+                'Google OAuth Client ID is required for interactive login. Set GOOGLE_OAUTH_CLIENT_ID in your environment, or authenticate via Google Application Default Credentials (gcloud auth application-default login).'
+            )
+        }
         const scopes =
             'https://www.googleapis.com/auth/generative-language.tuning https://www.googleapis.com/auth/cloud-platform openid email profile'
         const { codeVerifier, codeChallenge, state } = generatePKCE()
@@ -226,16 +274,21 @@ export const geminiAdapter: SubscriptionAdapter = {
             }
 
             // Exchange authorization code for tokens
+            const bodyObj: Record<string, any> = {
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: server.redirectUri,
+                client_id: clientId,
+                code_verifier: codeVerifier,
+            }
+            if (clientSecret) {
+                bodyObj.client_secret = clientSecret
+            }
+
             const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    grant_type: 'authorization_code',
-                    code,
-                    redirect_uri: server.redirectUri,
-                    client_id: clientId,
-                    code_verifier: codeVerifier,
-                }),
+                body: JSON.stringify(bodyObj),
             })
 
             if (!tokenRes.ok) {
@@ -248,30 +301,58 @@ export const geminiAdapter: SubscriptionAdapter = {
             const refreshToken = tokenData.refresh_token || tokenData.refreshToken
             const expiresIn = tokenData.expires_in || 3600
 
+            let email: string | undefined
+            if (tokenData.id_token) {
+                try {
+                    const parts = tokenData.id_token.split('.')
+                    if (parts.length >= 2) {
+                        const payload = JSON.parse(
+                            Buffer.from(parts[1], 'base64url').toString('utf-8')
+                        )
+                        email = payload.email
+                    }
+                } catch {
+                    // Intentionally swallowed: fallback to undefined email
+                }
+            }
+
             return {
                 provider: 'gemini',
                 accessToken,
                 refreshToken,
                 expiresAt: Date.now() + expiresIn * 1000,
+                email,
                 subscriptionType: 'gemini_advanced',
                 source: 'oauth_login',
                 updatedAt: Date.now(),
-                extra: { client_id: clientId },
+                endpoint: DEFAULT_ENDPOINT,
+                extra: { client_id: clientId, client_secret: clientSecret },
             }
         } catch (err: any) {
             if (server) {
-                await server.close().catch(() => {})
+                await server.close().catch(() => {
+                    // Intentionally swallowed: cleanup server
+                })
             }
             throw new Error(
                 `Google Antigravity / Gemini authorization failed: ${err.message}\n` +
-                    'You can also run `gcloud auth application-default login` or set `GEMINI_API_KEY` in your environment.'
+                    'You can also run `gcloud auth application-default login` or set `ANTIGRAVITY_TOKEN` in your environment.'
             )
         }
     },
 
     async verifyToken(bundle: SubscriptionTokenBundle): Promise<boolean> {
-        if (!bundle || !bundle.accessToken) return false
+        if (!bundle) return false
+        if (!bundle.accessToken && !bundle.refreshToken) return false
         if (bundle.expiresAt && bundle.expiresAt < Date.now() && !bundle.refreshToken) {
+            return false
+        }
+        if (
+            bundle.accessToken &&
+            (bundle.accessToken.includes(':') ||
+                bundle.accessToken.startsWith('AIza') ||
+                bundle.accessToken.startsWith('AQ.'))
+        ) {
             return false
         }
         return true

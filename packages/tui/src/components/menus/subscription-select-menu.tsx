@@ -15,22 +15,18 @@ export const SUBSCRIPTION_MENU_ITEMS: SubscriptionItem[] = [
     {
         label: 'GitHub Copilot',
         value: 'copilot',
-        hint: 'Use GitHub Copilot subscription via CLI / OAuth',
     },
     {
-        label: 'Claude Code (Anthropic)',
+        label: 'Claude Code',
         value: 'claude',
-        hint: 'Use Claude Pro / Team subscription via Claude Code CLI',
     },
     {
-        label: 'ChatGPT Plus / Team / Pro (OpenAI)',
+        label: 'ChatGPT Plus / Team / Pro',
         value: 'codex',
-        hint: 'Use OpenAI ChatGPT subscription via Codex auth',
     },
     {
         label: 'Google Gemini / Antigravity',
         value: 'gemini',
-        hint: 'Use Gemini Advanced / Antigravity via Google OAuth / ADC',
     },
 ]
 
@@ -47,7 +43,6 @@ export function SubscriptionSelectMenu(props: SubscriptionSelectMenuProps) {
         handleProviderSelect,
         handleSubscriptionSelect,
         setAuthMode,
-        detectedSubscriptions,
         items = SUBSCRIPTION_MENU_ITEMS,
     } = props
     const [selectedIndex, setSelectedIndex] = useState(0)
@@ -84,14 +79,6 @@ export function SubscriptionSelectMenu(props: SubscriptionSelectMenuProps) {
         }
     })
 
-    const isDetected = (value: string): boolean => {
-        if (!detectedSubscriptions) return false
-        if (Array.isArray(detectedSubscriptions)) {
-            return detectedSubscriptions.includes(value)
-        }
-        return !!detectedSubscriptions[value]
-    }
-
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>
             <Box marginBottom={1}>
@@ -100,33 +87,16 @@ export function SubscriptionSelectMenu(props: SubscriptionSelectMenuProps) {
 
             {items.map((item, idx) => {
                 const isSelected = idx === selectedIndex
-                const detected = isDetected(item.value)
                 return (
-                    <Box
-                        key={item.value}
-                        flexDirection="column"
-                        marginBottom={idx < items.length - 1 ? 1 : 0}
-                    >
-                        <Box>
-                            <Box marginRight={1}>
-                                <Text color={THEME.colors.brand}>
-                                    {isSelected ? THEME.glyphs.selector : ' '}
-                                </Text>
-                            </Box>
-                            <Text
-                                color={isSelected ? THEME.colors.brand : THEME.colors.text}
-                                bold={isSelected}
-                            >
-                                {item.label}
+                    <Box key={item.value} paddingLeft={0}>
+                        <Box marginRight={1}>
+                            <Text color={THEME.colors.brand}>
+                                {isSelected ? THEME.glyphs.selector : ' '}
                             </Text>
-                            {detected && <Text color="#6EE7B7"> [detected locally]</Text>}
-                            {!detected && <Text color={THEME.colors.muted}> [connect]</Text>}
                         </Box>
-                        {isSelected && item.hint && (
-                            <Box paddingLeft={2}>
-                                <Text color={THEME.colors.muted}>{item.hint}</Text>
-                            </Box>
-                        )}
+                        <Text color={isSelected ? THEME.colors.brand : THEME.colors.text}>
+                            {item.label}
+                        </Text>
                     </Box>
                 )
             })}

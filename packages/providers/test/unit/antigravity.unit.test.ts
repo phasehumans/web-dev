@@ -11,13 +11,17 @@ import type { Message, ProviderTool } from '../../src/types'
 
 describe('Antigravity Provider Adapter (Unit)', () => {
     it('resolves model aliases and strips antigravity/ and google/ prefixes correctly', () => {
-        expect(resolveAntigravityModel('gemini-3.7-flash')).toBe('gemini-3.7-flash')
-        expect(resolveAntigravityModel('antigravity/gemini-3.7-flash')).toBe('gemini-3.7-flash')
-        expect(resolveAntigravityModel('google/gemini-3.7-flash')).toBe('gemini-3.7-flash')
-        expect(resolveAntigravityModel('antigravity/gemini-3.6-flash')).toBe('gemini-3.6-flash')
-        expect(resolveAntigravityModel('gemini-3.1-pro')).toBe('gemini-3-pro-preview')
-        expect(resolveAntigravityModel('antigravity/gemini-3.1-pro')).toBe('gemini-3-pro-preview')
-        expect(resolveAntigravityModel()).toBe('gemini-3.7-flash')
+        expect(resolveAntigravityModel('gemini-3.7-flash')).toBe('gemini-3.7-flash-tiered')
+        expect(resolveAntigravityModel('antigravity/gemini-3.7-flash')).toBe(
+            'gemini-3.7-flash-tiered'
+        )
+        expect(resolveAntigravityModel('google/gemini-3.7-flash')).toBe('gemini-3.7-flash-tiered')
+        expect(resolveAntigravityModel('antigravity/gemini-3.6-flash')).toBe(
+            'gemini-3.6-flash-high'
+        )
+        expect(resolveAntigravityModel('gemini-3.1-pro')).toBe('gemini-pro-agent')
+        expect(resolveAntigravityModel('antigravity/gemini-3.1-pro')).toBe('gemini-pro-agent')
+        expect(resolveAntigravityModel()).toBe('gemini-3.8-flash-tiered')
     })
 
     it('instantiates AntigravityProvider class wrapper correctly', () => {
@@ -94,12 +98,13 @@ describe('Antigravity Provider Adapter (Unit)', () => {
         expect(capturedOptions.headers['x-goog-user-project']).toBe('test-antigravity-project')
 
         const requestBody = JSON.parse(capturedOptions.body)
-        expect(requestBody.model).toBe('gemini-3.7-flash')
-        expect(requestBody.systemInstruction).toEqual({
+        expect(requestBody.project).toBe('test-antigravity-project')
+        expect(requestBody.model).toBe('gemini-3.7-flash-tiered')
+        expect(requestBody.request.systemInstruction).toEqual({
             parts: [{ text: 'You are an AI assistant' }],
         })
-        expect(requestBody.tools[0].functionDeclarations[0].name).toBe('list_dir')
-        expect(requestBody.generationConfig.temperature).toBe(0.3)
+        expect(requestBody.request.tools[0].functionDeclarations[0].name).toBe('list_dir')
+        expect(requestBody.request.generationConfig.temperature).toBe(0.3)
 
         expect(chunks).toEqual([
             { type: 'thinking_delta', text: 'Thinking about user request...' },
@@ -141,7 +146,7 @@ describe('Antigravity Provider Adapter (Unit)', () => {
         })) {
             // consume
         }
-        expect(capturedBody.generationConfig.thinkingConfig).toEqual({
+        expect(capturedBody.request.generationConfig.thinkingConfig).toEqual({
             thinkingBudget: 4096,
             includeThoughts: true,
         })
@@ -152,7 +157,7 @@ describe('Antigravity Provider Adapter (Unit)', () => {
         })) {
             // consume
         }
-        expect(capturedBody.generationConfig.thinkingConfig).toEqual({
+        expect(capturedBody.request.generationConfig.thinkingConfig).toEqual({
             thinkingBudget: 0,
         })
 
@@ -162,7 +167,7 @@ describe('Antigravity Provider Adapter (Unit)', () => {
         })) {
             // consume
         }
-        expect(capturedBody.generationConfig.thinkingConfig).toEqual({
+        expect(capturedBody.request.generationConfig.thinkingConfig).toEqual({
             includeThoughts: true,
         })
     })

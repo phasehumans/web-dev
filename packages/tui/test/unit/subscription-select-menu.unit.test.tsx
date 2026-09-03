@@ -17,24 +17,21 @@ describe('SubscriptionSelectMenu Component (Unit)', () => {
         expect(SUBSCRIPTION_MENU_ITEMS[3].value).toBe('gemini')
     })
 
-    it('renders all subscriptions and displays detected badge when passed', () => {
+    it('renders all subscriptions', () => {
         const handleSelect = mock(() => {})
         const { lastFrame } = render(
             <KeyboardLayerProvider>
-                <SubscriptionSelectMenu
-                    handleSubscriptionSelect={handleSelect}
-                    detectedSubscriptions={{ copilot: true, claude: true }}
-                />
+                <SubscriptionSelectMenu handleSubscriptionSelect={handleSelect} />
             </KeyboardLayerProvider>
         )
 
         const frame = lastFrame() || ''
         expect(frame).toContain('Select AI Subscription Provider:')
         expect(frame).toContain('GitHub Copilot')
-        expect(frame).toContain('[detected locally]')
-        expect(frame).toContain('Claude Code (Anthropic)')
-        expect(frame).toContain('ChatGPT Plus / Team / Pro (OpenAI)')
-        expect(frame).toContain('[connect]')
+        expect(frame).not.toContain('[detected locally]')
+        expect(frame).toContain('Claude Code')
+        expect(frame).toContain('ChatGPT Plus / Team / Pro')
+        expect(frame).not.toContain('[connect]')
         expect(frame).toContain('Google Gemini / Antigravity')
     })
 

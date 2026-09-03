@@ -231,6 +231,9 @@ export async function handleKeyCommand(options?: {
     config.authPriority = 'byok'
     await saveConfig(config)
 
+    const { fetchLiveProviderModels } = await import('./utils/models')
+    fetchLiveProviderModels(provider, finalKey).catch(() => {})
+
     console.log(
         `\n${GREEN}✔ Successfully saved API key for ${provider.toUpperCase()} (Model: ${defaultModel})!${RESET}\n`
     )
@@ -264,6 +267,12 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
         configToSave.activeProvider = bundle.provider
         configToSave.authPriority = 'subscription'
         await saveConfig(configToSave)
+
+        const { fetchLiveProviderModels } = await import('./utils/models')
+        fetchLiveProviderModels(bundle.provider, bundle.accessToken, bundle.endpoint).catch(
+            () => {}
+        )
+
         console.log(
             `\x1b[32mSuccessfully authenticated ${targetProvider.toUpperCase()} subscription!\x1b[0m\n`
         )

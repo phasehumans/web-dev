@@ -6,11 +6,19 @@ import { createProvider } from '../models.ts'
 import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 
 export function resolveAnthropicModel(model?: string): string {
-    let name = model || 'claude-3-5-sonnet-20241022'
+    let name = model || 'claude-sonnet-5'
     if (name.startsWith('anthropic/')) {
         name = name.slice('anthropic/'.length)
     }
     const aliasMap: Record<string, string> = {
+        'claude-fable-5.1': 'claude-fable-5-1',
+        'claude-opus-4.8': 'claude-opus-4-8',
+        'claude-opus-4.7': 'claude-opus-4-7',
+        'claude-sonnet-4.6': 'claude-sonnet-4-6',
+        'claude-opus-4.6': 'claude-opus-4-6',
+        'claude-opus-4.5': 'claude-opus-4-5',
+        'claude-sonnet-4.5': 'claude-sonnet-4-5',
+        'claude-haiku-4.5': 'claude-haiku-4-5',
         'claude-3-7-sonnet-latest': 'claude-3-7-sonnet-20250219',
         'claude-3-5-sonnet-latest': 'claude-3-5-sonnet-20241022',
         'claude-3-5-haiku-latest': 'claude-3-5-haiku-20241022',
@@ -35,12 +43,25 @@ export function anthropicProvider(
         ? undefined
         : (customClientOrDefaultHeaders as Record<string, string> | undefined)
 
+    const isOAuth =
+        Boolean(
+            defaultHeaders &&
+            (defaultHeaders['anthropic-beta']?.includes('oauth') ||
+                defaultHeaders['anthropic-beta']?.includes('claude-code'))
+        ) || Boolean(apiKey && !apiKey.startsWith('sk-ant-api'))
+
     const client =
         (isCustomClient ? (customClientOrDefaultHeaders as Anthropic) : customClient) ||
         new Anthropic({
             baseURL,
-            apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
-            defaultHeaders,
+            apiKey: isOAuth ? undefined : apiKey || process.env.ANTHROPIC_API_KEY,
+            authToken: isOAuth
+                ? apiKey || process.env.ANTHROPIC_AUTH_TOKEN || process.env.CLAUDE_CODE_OAUTH_TOKEN
+                : undefined,
+            defaultHeaders: {
+                ...(isOAuth ? { 'anthropic-beta': 'oauth-2024-11-18' } : {}),
+                ...(defaultHeaders || {}),
+            },
         })
 
     return createProvider(

@@ -176,6 +176,7 @@ export function ChatApp({
                 }
                 contextTokens={totalTokens}
                 authMethod={session.authMethod}
+                isAuthenticated={isAuthenticated}
                 hasBothAuth={session.hasBothAuth}
                 authUI={authUI}
                 agent={agent}

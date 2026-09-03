@@ -62,7 +62,31 @@ describe('Subscription Config & Priority Resolution Hierarchy (Unit)', () => {
 
         const providerConfig = await getProviderConfig()
         expect(providerConfig?.authMethod).toBe('byok')
+        expect(providerConfig?.provider).toBe('anthropic')
         expect(providerConfig?.apiKey).toBe('sk-ant-byok-key')
+    })
+
+    it('resolves BYOK for OpenAI when activeProvider is openai and codex subscription exists', async () => {
+        vi.spyOn(fs, 'readFile').mockImplementation(async (filePath: any) => {
+            if (String(filePath).includes('settings.json')) throw new Error('ENOENT')
+            return JSON.stringify({
+                authPriority: 'byok',
+                subscriptions: {
+                    codex: {
+                        provider: 'codex',
+                        accessToken: 'sk-openai-oauth-token',
+                        subscriptionType: 'chatgpt_plus',
+                    },
+                },
+                activeProvider: 'openai',
+                providers: { openai: 'sk-openai-byok-key' },
+            })
+        })
+
+        const providerConfig = await getProviderConfig()
+        expect(providerConfig?.authMethod).toBe('byok')
+        expect(providerConfig?.provider).toBe('openai')
+        expect(providerConfig?.apiKey).toBe('sk-openai-byok-key')
     })
 
     it('respects authPriority: december over subscription and byok', async () => {

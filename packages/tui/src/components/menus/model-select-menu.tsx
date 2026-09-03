@@ -117,10 +117,7 @@ export function ModelSelectMenu(props: ModelSelectMenuProps) {
                                 {isSelected ? THEME.glyphs.selector : ' '}
                             </Text>
                         </Box>
-                        <Text
-                            color={isSelected ? THEME.colors.brand : THEME.colors.text}
-                            bold={isSelected}
-                        >
+                        <Text color={isSelected ? THEME.colors.brand : THEME.colors.text}>
                             {item.label}
                         </Text>
                     </Box>

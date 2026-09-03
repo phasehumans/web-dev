@@ -47,7 +47,7 @@ export function sanitizeSchemaForGemini(schema: any): any {
 }
 
 export function resolveGeminiModel(model?: string): string {
-    let name = model || 'gemini-3.6-flash'
+    let name = model || 'gemini-3.7-flash'
     if (name.startsWith('google/')) {
         name = name.slice('google/'.length)
     }

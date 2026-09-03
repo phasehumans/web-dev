@@ -79,7 +79,8 @@ export async function resolveSubscriptionToken(
 
     const fiveMinutes = 5 * 60 * 1000
     const isExpiringSoon =
-        bundle.expiresAt !== undefined && Date.now() >= bundle.expiresAt - fiveMinutes
+        !bundle.accessToken ||
+        (bundle.expiresAt !== undefined && Date.now() >= bundle.expiresAt - fiveMinutes)
 
     // For Copilot with raw github token or expiring token, always ensure token refresh/exchange
     const isCopilotRaw =
@@ -142,10 +143,18 @@ export async function verifyAndResolveSubscription(
 
     // 1. Check if existing subscription stored in config
     if (config.subscriptions && config.subscriptions[adapter.provider]) {
-        bundle = config.subscriptions[adapter.provider]
+        const storedBundle = config.subscriptions[adapter.provider]
+        if (adapter.verifyToken) {
+            const isValid = await adapter.verifyToken(storedBundle)
+            if (isValid) {
+                bundle = storedBundle
+            }
+        } else if (storedBundle.accessToken) {
+            bundle = storedBundle
+        }
     }
 
-    // 2. If not in config, attempt auto-detection from local files / env
+    // 2. If not in config (or invalid in config), attempt auto-detection from local files / env
     if (!bundle) {
         bundle = await adapter.detectLocal()
     }

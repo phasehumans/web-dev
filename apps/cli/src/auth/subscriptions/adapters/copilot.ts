@@ -113,55 +113,6 @@ export const copilotAdapter: SubscriptionAdapter = {
             }
         }
 
-        // 3. Check ~/.config/gh/hosts.yml
-        try {
-            const ghHostsPath = path.join(home, '.config', 'gh', 'hosts.yml')
-            const rawYml = await fs.readFile(ghHostsPath, 'utf-8')
-            const match = rawYml.match(/oauth_token:\s*([^\s\r\n]+)/)
-            const userMatch = rawYml.match(/user:\s*([^\s\r\n]+)/)
-            if (match && match[1]) {
-                const oauthToken = match[1].trim()
-                return {
-                    provider: 'copilot',
-                    accessToken: oauthToken,
-                    accountName: userMatch ? userMatch[1].trim() : undefined,
-                    subscriptionType: 'copilot',
-                    source: 'local_import',
-                    updatedAt: Date.now(),
-                    extra: { filePath: ghHostsPath, rawToken: oauthToken },
-                }
-            }
-        } catch {
-            // Intentionally swallowed: gh hosts.yml not present
-        }
-
-        // 4. Check gh auth token CLI command
-        try {
-            const { execSync } = await import('node:child_process')
-            const ghToken = execSync('gh auth token 2>/dev/null', {
-                encoding: 'utf-8',
-                timeout: 3000,
-            }).trim()
-            if (
-                ghToken &&
-                (ghToken.startsWith('gho_') ||
-                    ghToken.startsWith('ghu_') ||
-                    ghToken.startsWith('github_pat_') ||
-                    ghToken.startsWith('ghp_'))
-            ) {
-                return {
-                    provider: 'copilot',
-                    accessToken: ghToken,
-                    subscriptionType: 'copilot',
-                    source: 'local_import',
-                    updatedAt: Date.now(),
-                    extra: { rawToken: ghToken, source: 'gh_cli' },
-                }
-            }
-        } catch {
-            // Intentionally swallowed: gh CLI not installed or not authenticated
-        }
-
         return null
     },
 
@@ -305,12 +256,20 @@ export const copilotAdapter: SubscriptionAdapter = {
 
     async verifyToken(bundle: SubscriptionTokenBundle): Promise<boolean> {
         if (!bundle || !bundle.accessToken) return false
+
+        // 1. If we have a valid unexpired Copilot session token, it is already verified
+        if (bundle.expiresAt && bundle.expiresAt > Date.now()) {
+            return true
+        }
+
+        // 2. If token is a GitHub OAuth / PAT token (or session token is expired), verify via exchange
         const rawToken = bundle.extra?.rawToken || bundle.accessToken
         if (
-            rawToken.startsWith('gho_') ||
-            rawToken.startsWith('ghu_') ||
-            rawToken.startsWith('github_pat_') ||
-            rawToken.startsWith('ghp_')
+            rawToken &&
+            (rawToken.startsWith('gho_') ||
+                rawToken.startsWith('ghu_') ||
+                rawToken.startsWith('github_pat_') ||
+                rawToken.startsWith('ghp_'))
         ) {
             try {
                 const res = await exchangeGitHubTokenForCopilot(rawToken)

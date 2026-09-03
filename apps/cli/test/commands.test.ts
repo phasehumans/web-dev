@@ -8,12 +8,17 @@ import { loadConfig, saveConfig } from '../src/config'
 
 describe('CLI Standalone Commands', () => {
     const tmpDir = path.join(process.cwd(), '.tmp-commands-test')
+    const originalHome = process.env.HOME
 
     beforeEach(async () => {
         await fs.mkdir(tmpDir, { recursive: true })
+        process.env.HOME = tmpDir
+        process.env.DECEMBER_CONFIG_DIR = path.join(tmpDir, '.config', 'december')
     })
 
     afterEach(async () => {
+        process.env.HOME = originalHome
+        delete process.env.DECEMBER_CONFIG_DIR
         await fs.rm(tmpDir, { recursive: true, force: true })
     })
 

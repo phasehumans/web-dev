@@ -92,6 +92,8 @@ export interface LocalOAuthServerOptions {
     path?: string
     port?: number
     host?: string
+    redirectHost?: string
+    redirectUri?: string
 }
 
 export interface LocalOAuthResult {
@@ -199,8 +201,10 @@ export async function startLocalOAuthServer(options?: LocalOAuthServerOptions): 
         server.listen(listenPort, listenHost, () => {
             const address = server.address() as AddressInfo
             const port = address.port
-            const hostForUri = listenHost === '0.0.0.0' ? 'localhost' : listenHost
-            const redirectUri = `http://${hostForUri}:${port}${callbackPath}`
+            const hostForUri =
+                options?.redirectHost || (listenHost === '0.0.0.0' ? 'localhost' : listenHost)
+            const redirectUri =
+                options?.redirectUri || `http://${hostForUri}:${port}${callbackPath}`
 
             resolveServer({
                 port,

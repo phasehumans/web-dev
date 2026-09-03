@@ -15,6 +15,6 @@ describe('CLI Config Storage & Auth Status (Unit)', () => {
         expect(status).toBeDefined()
         expect(typeof status.hasByok).toBe('boolean')
         expect(typeof status.hasDecember).toBe('boolean')
-        expect(['byok', 'december']).toContain(status.authPriority)
+        expect(['byok', 'december', 'subscription']).toContain(status.authPriority)
     })
 })

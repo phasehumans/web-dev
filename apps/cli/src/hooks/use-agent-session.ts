@@ -225,7 +225,7 @@ export function useAgentSession({
         if (selectedProvider === 'openrouter' || authMode === 'model_select') {
             loadConfig().then((config) => {
                 if (config.activeProvider === 'openrouter' || selectedProvider === 'openrouter') {
-                    const apiKey = config.providers?.openrouter || process.env.OPENROUTER_API_KEY
+                    const apiKey = config.providers?.openrouter
                     fetchOpenRouterModels(apiKey).then((models) => {
                         setOpenRouterModels(models)
                     })
@@ -233,6 +233,23 @@ export function useAgentSession({
             })
         }
     }, [authMode, selectedProvider, setOpenRouterModels])
+
+    useEffect(() => {
+        loadConfig()
+            .then(async () => {
+                const { getProviderConfig } = await import('../config')
+                const providerConfig = await getProviderConfig()
+                if (providerConfig?.provider && providerConfig?.apiKey) {
+                    const { fetchLiveProviderModels } = await import('../utils/models')
+                    fetchLiveProviderModels(
+                        providerConfig.provider,
+                        providerConfig.apiKey,
+                        providerConfig.baseURL
+                    ).catch(() => {})
+                }
+            })
+            .catch(() => {})
+    }, [])
 
     const handleKillTask = useCallback(
         (taskId: string) => {
@@ -1332,6 +1349,13 @@ ${decStatus}
                         fetchOllamaModels(endpoint).then((models) => {
                             setOllamaModels(models)
                         })
+                    } else if (activeProvider && providerConfig?.apiKey) {
+                        const { fetchLiveProviderModels } = await import('../utils/models')
+                        fetchLiveProviderModels(
+                            activeProvider,
+                            providerConfig.apiKey,
+                            providerConfig.baseURL
+                        ).catch(() => {})
                     }
                     setAuthMode('model_select')
                 })
@@ -1446,7 +1470,7 @@ ${decStatus}
                         blocks: [
                             {
                                 type: 'text',
-                                content: `\nOpening GitHub issues...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Have feedback, found a bug, or have a feature request? Let us know on GitHub issues!*`,
+                                content: `\nOpening GitHub issues...\n\nIf it doesn't open automatically, please click here:\n[${url}](${url})\n\n*Have feedback, found a bug, or have a feature request? Let us know!*`,
                             },
                         ],
                     },
@@ -1600,6 +1624,7 @@ ${decStatus}
         handleAuthMenuSelect,
         handleModelSelect,
         handleProviderSelect,
+        handleByokSelect,
         handleSubscriptionSelect,
         handleKeySubmit,
         handleLogoutSelect,
@@ -1811,6 +1836,7 @@ ${decStatus}
         handleSessionSelect,
         handlePlanApprovalSelect,
         handleProviderSelect,
+        handleByokSelect,
         handleSubscriptionSelect,
         handleKeySubmit,
         handleLogoutSelect,

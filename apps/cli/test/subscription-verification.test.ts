@@ -23,16 +23,22 @@ describe('Subscription Verification & Provider Selection (Unit & Integration)', 
         process.env.USERPROFILE = testConfigDir
         delete process.env.CLAUDE_CODE_OAUTH_TOKEN
         delete process.env.ANTHROPIC_AUTH_TOKEN
+        delete process.env.ANTHROPIC_API_KEY
         delete process.env.COPILOT_TOKEN
         delete process.env.GITHUB_COPILOT_TOKEN
         delete process.env.GITHUB_TOKEN
         delete process.env.OPENAI_OAUTH_TOKEN
+        delete process.env.OPENAI_API_KEY
         delete process.env.CODEX_TOKEN
         delete process.env.OPENAI_CODEX_TOKEN
         delete process.env.GEMINI_OAUTH_TOKEN
+        delete process.env.GEMINI_API_KEY
         delete process.env.ANTIGRAVITY_TOKEN
         delete process.env.GOOGLE_OAUTH_TOKEN
         delete process.env.GOOGLE_APPLICATION_CREDENTIALS
+        delete process.env.KIMI_API_KEY
+        delete process.env.DASHSCOPE_API_KEY
+        delete process.env.ZAI_API_KEY
         globalThis.fetch = originalFetch
     })
 

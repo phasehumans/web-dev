@@ -19,12 +19,16 @@ export const PROVIDER_MENU_ITEMS = [
     { label: 'Hugging Face', value: 'huggingface' },
     { label: 'Hyperbolic', value: 'hyperbolic' },
     { label: 'Kimi', value: 'kimi' },
+    { label: 'LM Studio', value: 'lmstudio' },
+    { label: 'llama.cpp', value: 'llamacpp' },
+    { label: 'MiniMax', value: 'minimax' },
     { label: 'Mistral AI', value: 'mistral' },
     { label: 'NVIDIA NIM', value: 'nvidia' },
     { label: 'Ollama', value: 'ollama' },
     { label: 'OpenAI', value: 'openai' },
     { label: 'OpenRouter', value: 'openrouter' },
     { label: 'Perplexity AI', value: 'perplexity' },
+    { label: 'Qwen (DashScope)', value: 'dashscope' },
     { label: 'SambaNova Cloud', value: 'sambanova' },
     { label: 'SiliconFlow', value: 'siliconflow' },
     { label: 'Together AI', value: 'together' },
@@ -34,14 +38,22 @@ export const PROVIDER_MENU_ITEMS = [
 
 export interface ByokProviderMenuProps {
     handleProviderSelect?: (item: { label: string; value: string }) => void
+    handleByokSelect?: (item: { label: string; value: string }) => void
     setAuthMode?: (mode: string) => void
     items?: { label: string; value: string }[]
 }
 
 export function ByokProviderMenu(props: ByokProviderMenuProps) {
-    const { handleProviderSelect, setAuthMode, items = PROVIDER_MENU_ITEMS } = props
+    const {
+        handleProviderSelect,
+        handleByokSelect,
+        setAuthMode,
+        items = PROVIDER_MENU_ITEMS,
+    } = props
     const [selectedIndex, setSelectedIndex] = useState(0)
     const [windowStart, setWindowStart] = useState(0)
+
+    const onSelect = handleByokSelect || handleProviderSelect
 
     useInput((input, key) => {
         if (key.upArrow || input === 'k') {
@@ -67,8 +79,8 @@ export function ByokProviderMenu(props: ByokProviderMenuProps) {
         }
 
         if (key.return) {
-            if (handleProviderSelect && items[selectedIndex]) {
-                handleProviderSelect(items[selectedIndex])
+            if (onSelect && items[selectedIndex]) {
+                onSelect(items[selectedIndex])
             }
             return
         }
@@ -110,10 +122,7 @@ export function ByokProviderMenu(props: ByokProviderMenuProps) {
                                 {isSelected ? THEME.glyphs.selector : ' '}
                             </Text>
                         </Box>
-                        <Text
-                            color={isSelected ? THEME.colors.brand : THEME.colors.text}
-                            bold={isSelected}
-                        >
+                        <Text color={isSelected ? THEME.colors.brand : THEME.colors.text}>
                             {item.label}
                         </Text>
                     </Box>
