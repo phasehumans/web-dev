@@ -5,11 +5,28 @@ import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '..
 export const COPILOT_DEFAULT_ENDPOINT = 'https://api.individual.githubcopilot.com'
 
 export function resolveCopilotModel(model?: string): string {
-    let name = model || 'gpt-4o'
+    let name = (model || '').toLowerCase().trim()
     if (name.startsWith('copilot/')) {
         name = name.slice('copilot/'.length)
     }
-    return name
+    if (
+        !name ||
+        name.startsWith('claude') ||
+        name.startsWith('gemini') ||
+        name.startsWith('o1') ||
+        name.startsWith('o3') ||
+        name.startsWith('glm') ||
+        name.startsWith('deepseek')
+    ) {
+        return 'gpt-4o'
+    }
+    if (name.includes('mini')) {
+        return 'gpt-4o-mini'
+    }
+    if (name.startsWith('gpt-4')) {
+        return name
+    }
+    return 'gpt-4o'
 }
 
 export interface CopilotProviderOptions {

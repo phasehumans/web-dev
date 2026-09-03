@@ -2,7 +2,7 @@
   <img src="./apps/web/assets/logo.svg" alt="december" width="100" height="100" />
 </p>
 
-December is an open-source AI coding agent that helps you build faster by writing code, fixing bugs, and running commands across your entire workflow.
+December is an open-source coding agent that helps you build faster by writing code, fixing bugs, and running commands across your entire workflow.
 
 [npmjs.com/package/@trydecember/cli](https://www.npmjs.com/package/@trydecember/cli?activeTab=readme)
 

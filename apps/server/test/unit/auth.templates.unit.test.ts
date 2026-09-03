@@ -72,7 +72,7 @@ describe('Auth Email Templates - Unit Tests', () => {
 
             expect(subject).toBe('Welcome to December')
             expect(html).toContain('Hi Alex Developer')
-            expect(html).toContain('AI coding agent that lives in your terminal')
+            expect(html).toContain('a coding agent that lives in your terminal')
             expect(html).toContain('Writes code &amp; runs commands:')
             expect(html).toContain('Cloud Handoff:')
             expect(html).toContain('/handoff')
@@ -85,7 +85,7 @@ describe('Auth Email Templates - Unit Tests', () => {
             expect(html).toContain('Chaitanya Sonawane')
 
             expect(text).toContain('Hi Alex Developer')
-            expect(text).toContain('AI coding agent that lives in your terminal')
+            expect(text).toContain('a coding agent that lives in your terminal')
             expect(text).toContain('Writes code & runs commands:')
             expect(text).toContain('Cloud Handoff:')
             expect(text).toContain('/handoff')

@@ -4,9 +4,9 @@ import { copilotProvider, CopilotProvider, resolveCopilotModel } from '../../src
 
 describe('Copilot Provider (Unit)', () => {
     it('resolves model aliases correctly', () => {
-        expect(resolveCopilotModel('copilot/claude-3.7-sonnet')).toBe('claude-3.7-sonnet')
-        expect(resolveCopilotModel('claude-3.5-sonnet')).toBe('claude-3.5-sonnet')
-        expect(resolveCopilotModel('gpt-4o')).toBe('gpt-4o')
+        expect(resolveCopilotModel('copilot/gpt-4o')).toBe('gpt-4o')
+        expect(resolveCopilotModel('gpt-4o-mini')).toBe('gpt-4o-mini')
+        expect(resolveCopilotModel('claude-3.5-sonnet')).toBe('gpt-4o')
         expect(resolveCopilotModel()).toBe('gpt-4o')
     })
 
@@ -75,7 +75,7 @@ describe('Copilot Provider (Unit)', () => {
             [{ role: 'user', content: 'Say hi' }],
             undefined,
             'You are a helpful assistant',
-            { model: 'copilot/claude-3.7-sonnet' }
+            { model: 'copilot/gpt-4o' }
         )
 
         const chunks = []
@@ -83,7 +83,7 @@ describe('Copilot Provider (Unit)', () => {
             chunks.push(chunk)
         }
 
-        expect(capturedPayload.model).toBe('claude-3.7-sonnet')
+        expect(capturedPayload.model).toBe('gpt-4o')
         expect(capturedPayload.stream).toBe(true)
         expect(capturedPayload.messages[0]).toEqual({
             role: 'system',
