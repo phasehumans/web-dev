@@ -99,7 +99,13 @@ export function useAuthHandlers(
                 if (providerConfig) {
                     const provider = instantiateProvider(
                         providerConfig.provider,
-                        providerConfig.apiKey
+                        providerConfig.apiKey,
+                        {
+                            authMethod: providerConfig.authMethod,
+                            subscription: providerConfig.subscription,
+                            headers: providerConfig.headers,
+                            baseURL: providerConfig.baseURL,
+                        }
                     )
                     agent.setLLM(provider)
                     const activeModel = providerConfig.model
@@ -195,6 +201,140 @@ export function useAuthHandlers(
 
     const handleProviderSelect = async (item: any) => {
         const config = await loadConfig()
+
+        if (
+            item.value === 'copilot' ||
+            item.value === 'claude' ||
+            item.value === 'codex' ||
+            item.value === 'gemini'
+        ) {
+            const { verifyAndResolveSubscription, loginSubscription } =
+                await import('../auth/subscriptions/subscription-manager')
+            const { getDefaultModelForProvider } = await import('../utils/models')
+            const { getAuthStatus, getProviderConfig } = await import('../config')
+
+            // Step 1: Check and auto-verify local credentials if present
+            const verifiedBundle = await verifyAndResolveSubscription(item.value)
+            if (verifiedBundle) {
+                const targetModel = getDefaultModelForProvider(item.value)
+                const llm = instantiateProvider(
+                    verifiedBundle.provider,
+                    verifiedBundle.accessToken,
+                    {
+                        authMethod: 'subscription',
+                        subscription: verifiedBundle,
+                        baseURL: verifiedBundle.endpoint,
+                    }
+                )
+                if (agent) {
+                    agent.setLLM(llm)
+                    agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+                }
+                setActiveModel(targetModel)
+                setSelectedProvider(verifiedBundle.provider)
+                setIsAuthenticated(true)
+                setAuthMethod('subscription')
+
+                const authStatus = await getAuthStatus()
+                setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+                setSettingsAuthPriority(authStatus.authPriority)
+
+                setAuthMode('none')
+                addToast(
+                    `✔ Verified local ${item.value.toUpperCase()} subscription (${verifiedBundle.subscriptionType || 'active'})`,
+                    'success'
+                )
+                return
+            }
+
+            // Step 2: If no local credentials or verification failed, launch interactive OAuth/device flow
+            setAuthMode('none')
+            setIsStreaming(true)
+            try {
+                const codeMsgId = getNextMsgId()
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                setActiveMessages([
+                    {
+                        id: codeMsgId,
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: `Initiating ${item.value.toUpperCase()} subscription verification...`,
+                            },
+                        ],
+                    },
+                ])
+
+                const onCode = (code: string, uri: string) => {
+                    let promptText = `\nPlease open [${uri}](${uri}) in your browser to authorize.`
+                    if (code && !code.endsWith('-AUTH')) {
+                        promptText = `\nPlease open [${uri}](${uri}) on your device and enter code: \`${code}\``
+                    }
+                    setActiveMessages([
+                        {
+                            id: codeMsgId,
+                            role: 'assistant',
+                            blocks: [
+                                {
+                                    type: 'text',
+                                    content: promptText,
+                                },
+                                {
+                                    type: 'text',
+                                    content:
+                                        'Waiting for authorization and subscription verification...',
+                                },
+                            ],
+                        },
+                    ])
+                }
+
+                const bundle = await loginSubscription(item.value, onCode)
+                const targetModel = getDefaultModelForProvider(item.value)
+                const llm = instantiateProvider(bundle.provider, bundle.accessToken, {
+                    authMethod: 'subscription',
+                    subscription: bundle,
+                    baseURL: bundle.endpoint,
+                })
+                if (agent) {
+                    agent.setLLM(llm)
+                    agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+                }
+                setActiveModel(targetModel)
+                setSelectedProvider(bundle.provider)
+                setIsAuthenticated(true)
+                setAuthMethod('subscription')
+
+                const authStatus = await getAuthStatus()
+                setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+                setSettingsAuthPriority(authStatus.authPriority)
+
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                setActiveMessages([
+                    {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [
+                            {
+                                type: 'text',
+                                content: `✔ Successfully authenticated and verified ${item.value.toUpperCase()} subscription!`,
+                                color: '#6EE7B7',
+                            },
+                        ],
+                    },
+                ])
+                addToast(`Connected to ${item.value.toUpperCase()} subscription`, 'success')
+            } catch (err: any) {
+                const errorText = `Subscription verification failed: ${err?.message || String(err)}`
+                setAuthError(errorText)
+                setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                setActiveMessages([{ id: getNextMsgId(), role: 'error', text: errorText }])
+            } finally {
+                setIsStreaming(false)
+            }
+            return
+        }
 
         if (item.value === 'ollama') {
             const { checkOllamaStatus, getDefaultModelForProvider } =
@@ -484,13 +624,28 @@ export function useAuthHandlers(
             config.email = undefined
             setCurrentEmail(undefined)
             removedName = 'December Cloud Wallet'
+        } else if (value.startsWith('subscription:')) {
+            const provider = value.split(':')[1]
+            if (provider && config.subscriptions) {
+                delete config.subscriptions[provider]
+                removedName = `${provider.charAt(0).toUpperCase() + provider.slice(1)} Subscription`
+                if (config.activeProvider === provider) {
+                    config.activeProvider =
+                        Object.keys(config.subscriptions)[0] ||
+                        Object.keys(config.providers || {})[0] ||
+                        undefined
+                }
+            }
         } else if (value.startsWith('provider:')) {
             const provider = value.split(':')[1]
             if (provider && config.providers) {
                 delete config.providers[provider]
                 removedName = `${provider.charAt(0).toUpperCase() + provider.slice(1)} API Key`
                 if (config.activeProvider === provider) {
-                    config.activeProvider = Object.keys(config.providers)[0] || undefined
+                    config.activeProvider =
+                        Object.keys(config.subscriptions || {})[0] ||
+                        Object.keys(config.providers)[0] ||
+                        undefined
                 }
             }
         }
@@ -506,7 +661,12 @@ export function useAuthHandlers(
         setSettingsAuthPriority(authStatus.authPriority)
 
         if (providerConfig && agent) {
-            const llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
+            const llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey, {
+                authMethod: providerConfig.authMethod,
+                subscription: providerConfig.subscription,
+                headers: providerConfig.headers,
+                baseURL: providerConfig.baseURL,
+            })
             agent.setLLM(llm)
             config.activeModel = providerConfig.model
             await saveConfig(config)

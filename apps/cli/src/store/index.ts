@@ -15,12 +15,12 @@ export interface CliState {
 
     isAuthenticated: boolean
     setIsAuthenticated: (val: boolean) => void
-    authMethod: 'byok' | 'december' | 'env' | undefined
-    setAuthMethod: (method: 'byok' | 'december' | 'env' | undefined) => void
+    authMethod: 'byok' | 'december' | 'env' | 'subscription' | undefined
+    setAuthMethod: (method: 'byok' | 'december' | 'env' | 'subscription' | undefined) => void
     hasBothAuth: boolean
     setHasBothAuth: (val: boolean) => void
-    settingsAuthPriority: 'byok' | 'december'
-    setSettingsAuthPriority: (val: 'byok' | 'december') => void
+    settingsAuthPriority: 'byok' | 'december' | 'subscription'
+    setSettingsAuthPriority: (val: 'byok' | 'december' | 'subscription') => void
     currentEmail: string | undefined
     setCurrentEmail: (email: string | undefined) => void
     authMode: AuthMode

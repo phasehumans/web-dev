@@ -22,13 +22,25 @@ export function resolveAnthropicModel(model?: string): string {
 export function anthropicProvider(
     baseURL?: string,
     apiKey?: string,
+    customClientOrDefaultHeaders?: Anthropic | Record<string, string>,
     customClient?: Anthropic
 ): LLMProvider {
+    const isCustomClient =
+        customClientOrDefaultHeaders instanceof Anthropic ||
+        Boolean(
+            customClientOrDefaultHeaders &&
+            typeof (customClientOrDefaultHeaders as any).messages?.create === 'function'
+        )
+    const defaultHeaders = isCustomClient
+        ? undefined
+        : (customClientOrDefaultHeaders as Record<string, string> | undefined)
+
     const client =
-        customClient ||
+        (isCustomClient ? (customClientOrDefaultHeaders as Anthropic) : customClient) ||
         new Anthropic({
             baseURL,
             apiKey: apiKey || process.env.ANTHROPIC_API_KEY,
+            defaultHeaders,
         })
 
     return createProvider(
@@ -255,7 +267,7 @@ export class AnthropicProvider implements LLMProvider {
     public id = 'anthropic'
     private provider: LLMProvider
 
-    constructor(arg1?: string, arg2?: string) {
+    constructor(arg1?: string, arg2?: string, defaultHeaders?: Record<string, string>) {
         let baseURL: string | undefined
         let apiKey: string | undefined
         if (arg1 === undefined) {
@@ -266,7 +278,7 @@ export class AnthropicProvider implements LLMProvider {
         } else {
             apiKey = arg1
         }
-        this.provider = anthropicProvider(baseURL, apiKey)
+        this.provider = anthropicProvider(baseURL, apiKey, defaultHeaders)
     }
 
     stream(

@@ -5,16 +5,205 @@ import pkg from '../package.json' with { type: 'json' }
 
 import { loadConfig, saveConfig } from './config'
 
-export async function handleLogoutCommand(): Promise<void> {
+export async function handleLogoutCommand(options?: { provider?: string }): Promise<void> {
     const config = await loadConfig()
+    const targetProvider = options?.provider?.toLowerCase().trim()
+
+    if (targetProvider) {
+        let removed = false
+        if (config.subscriptions && config.subscriptions[targetProvider]) {
+            delete config.subscriptions[targetProvider]
+            removed = true
+        }
+        if (config.providers && config.providers[targetProvider]) {
+            delete config.providers[targetProvider]
+            removed = true
+        }
+        if (targetProvider === 'december' && config.decemberToken) {
+            delete config.decemberToken
+            delete config.email
+            removed = true
+        }
+        if (config.activeProvider === targetProvider) {
+            delete config.activeProvider
+            delete config.activeModel
+        }
+        await saveConfig(config)
+        if (removed) {
+            console.log(`Logged out of ${targetProvider} successfully. Stored credentials removed.`)
+        } else {
+            console.log(`No active credentials found for ${targetProvider}.`)
+        }
+        return
+    }
+
     delete config.decemberToken
     delete config.email
     config.providers = {}
+    config.subscriptions = {}
     delete config.activeProvider
     delete config.activeModel
 
     await saveConfig(config)
     console.log('Logged out successfully. Stored credentials removed.')
+}
+
+export async function handleAuthCommand(options?: { action?: string }): Promise<void> {
+    const BLUE = '\x1b[38;2;135;178;244m'
+    const GREEN = '\x1b[38;2;110;231;183m'
+    const YELLOW = '\x1b[38;2;253;224;71m'
+    const WHITE = '\x1b[38;2;244;244;245m'
+    const GRAY = '\x1b[38;2;161;161;170m'
+    const RESET = '\x1b[0m'
+
+    const action = (options?.action || 'status').toLowerCase().trim()
+
+    if (action === 'import') {
+        console.log(
+            `\n${BLUE}✱${RESET}  ${WHITE}Scanning local environment for subscription credentials...${RESET}\n`
+        )
+        const { importLocalSubscriptions } =
+            await import('./auth/subscriptions/subscription-manager')
+        const result = await importLocalSubscriptions()
+
+        if (result.imported.length === 0) {
+            console.log(
+                `  ${YELLOW}ℹ No local subscription credentials found in standard CLI directories (~/.claude, ~/.codex, ~/.config/github-copilot, Google ADC).${RESET}`
+            )
+            console.log(
+                `    ${GRAY}Run ${WHITE}december login <provider>${GRAY} to authenticate directly via OAuth.${RESET}\n`
+            )
+            return
+        }
+
+        console.log(
+            `  ${GREEN}✔ Successfully detected and imported ${result.imported.length} subscription credential(s):${RESET}\n`
+        )
+        for (const [provider, bundle] of Object.entries(result.bundles)) {
+            const typeStr = bundle.subscriptionType ? ` (${bundle.subscriptionType})` : ''
+            const userStr =
+                bundle.email || bundle.accountName ? ` - ${bundle.email || bundle.accountName}` : ''
+            console.log(
+                `  • ${WHITE}${provider.toUpperCase()}${RESET}${typeStr}${GRAY}${userStr}${RESET}`
+            )
+            if (bundle.expiresAt) {
+                const expDate = new Date(bundle.expiresAt).toLocaleDateString()
+                console.log(`    ${GRAY}↳ Expires: ${expDate}${RESET}`)
+            }
+        }
+        console.log(
+            `\n  ${GREEN}Active subscriptions are now available for agent execution!${RESET}\n`
+        )
+        return
+    }
+
+    // Default: status
+    const config = await loadConfig()
+    const { getAuthStatus } = await import('./config')
+    const authStatus = await getAuthStatus()
+
+    console.log(
+        `\n${BLUE}✱${RESET}  ${WHITE}December CLI Authentication & Subscription Status${RESET}\n`
+    )
+
+    // Subscriptions
+    const subKeys = config.subscriptions ? Object.keys(config.subscriptions) : []
+    console.log(`${WHITE}Subscriptions:${RESET}`)
+    if (subKeys.length > 0) {
+        for (const k of subKeys) {
+            const sub = config.subscriptions![k]
+            const typeStr = sub.subscriptionType ? ` [${sub.subscriptionType}]` : ''
+            const userStr = sub.email || sub.accountName ? ` (${sub.email || sub.accountName})` : ''
+            const expStr = sub.expiresAt
+                ? sub.expiresAt > Date.now()
+                    ? `${GREEN}Valid${RESET}`
+                    : `${YELLOW}Expired (will auto-refresh)${RESET}`
+                : `${GREEN}Active${RESET}`
+            console.log(
+                `  • ${GREEN}✔${RESET} ${WHITE}${k.toUpperCase()}${RESET}${typeStr}${userStr}: ${expStr}`
+            )
+        }
+    } else {
+        console.log(
+            `  ${GRAY}No subscriptions configured.${RESET} (Run ${WHITE}december auth import${RESET} or ${WHITE}december login <provider>${RESET})`
+        )
+    }
+    console.log('')
+
+    // BYOK
+    const byokKeys = config.providers ? Object.keys(config.providers) : []
+    console.log(`${WHITE}BYOK API Keys:${RESET}`)
+    if (byokKeys.length > 0) {
+        for (const k of byokKeys) {
+            console.log(`  • ${GREEN}✔${RESET} ${WHITE}${k.toUpperCase()}${RESET}`)
+        }
+    } else {
+        console.log(`  ${GRAY}No BYOK API keys saved in config.${RESET}`)
+    }
+    console.log('')
+
+    // December Cloud
+    console.log(`${WHITE}December Cloud Wallet:${RESET}`)
+    if (config.decemberToken) {
+        console.log(`  • ${GREEN}✔ Connected${RESET} ${config.email ? `(${config.email})` : ''}`)
+    } else {
+        console.log(`  ${GRAY}Not connected.${RESET}`)
+    }
+    console.log('')
+
+    console.log(
+        `${WHITE}Active Auth Priority:${RESET} ${GREEN}${config.authPriority || authStatus.authPriority}${RESET}`
+    )
+    console.log(
+        `${WHITE}Active Provider:${RESET}      ${GREEN}${config.activeProvider || 'none'}${RESET} (Model: ${config.activeModel || 'default'})\n`
+    )
+}
+
+export async function handleLoginCommand(options?: { provider?: string }): Promise<void> {
+    const targetProvider = (options?.provider || 'december').toLowerCase().trim()
+    const { loadConfig, saveConfig } = await import('./config')
+
+    if (
+        targetProvider === 'copilot' ||
+        targetProvider === 'github' ||
+        targetProvider === 'claude' ||
+        targetProvider === 'codex' ||
+        targetProvider === 'openai' ||
+        targetProvider === 'gemini' ||
+        targetProvider === 'google' ||
+        targetProvider === 'antigravity'
+    ) {
+        const { loginSubscription } = await import('./auth/subscriptions/subscription-manager')
+        console.log(`\nInitiating subscription login for ${targetProvider.toUpperCase()}...`)
+        const bundle = await loginSubscription(targetProvider, (code, uri) => {
+            console.log(
+                `\nPlease open ${uri} in your browser and enter code: ${code}\nWaiting for authorization...`
+            )
+        })
+        const configToSave = await loadConfig()
+        configToSave.subscriptions = configToSave.subscriptions || {}
+        configToSave.subscriptions[bundle.provider] = bundle
+        configToSave.activeProvider = bundle.provider
+        await saveConfig(configToSave)
+        console.log(
+            `\x1b[32mSuccessfully authenticated ${targetProvider.toUpperCase()} subscription!\x1b[0m\n`
+        )
+        return
+    }
+
+    // Default December device code login
+    const { loginViaDeviceCode } = await import('./auth')
+    console.log('\nGenerating device code for December login...')
+    const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
+        console.log(
+            `\nPlease open ${uri} on any device and enter code: ${code}\nWaiting for authorization...`
+        )
+    })
+    const configToSave = await loadConfig()
+    configToSave.decemberToken = token
+    if (email) configToSave.email = email
+    await saveConfig(configToSave)
+    console.log('\x1b[32mSuccessfully logged in via device code!\x1b[0m\n')
 }
 
 const DEFAULT_AGENTS_MD = `# Agent Guidelines & Project Instructions
@@ -278,6 +467,17 @@ export async function handleDoctorCommand(options?: { fix?: boolean }): Promise<
     const config = await loadConfig()
     const authStatus = await getAuthStatus()
     console.log(`${WHITE}Configuration & Authentication:${RESET}`)
+
+    const subCount = config.subscriptions ? Object.keys(config.subscriptions).length : 0
+    if (subCount > 0) {
+        const subList = Object.keys(config.subscriptions!).join(', ')
+        console.log(`  • Subscriptions:       ${GREEN}${subCount} active${RESET} (${subList})`)
+    } else {
+        console.log(
+            `  • Subscriptions:       ${GRAY}None detected${RESET} (Run "december auth import")`
+        )
+    }
+
     if (authStatus.hasDecember) {
         console.log(
             `  • December Cloud:      ${GREEN}Connected${RESET} ${config.email ? `(${config.email})` : ''}`
@@ -295,6 +495,8 @@ export async function handleDoctorCommand(options?: { fix?: boolean }): Promise<
         console.log(`  • BYOK Providers:      ${GRAY}None configured${RESET}`)
     }
 
-    console.log(`  • Auth Priority:       ${GRAY}${config.authPriority || 'byok'}${RESET}`)
+    console.log(
+        `  • Auth Priority:       ${GRAY}${config.authPriority || authStatus.authPriority}${RESET}`
+    )
     console.log('')
 }

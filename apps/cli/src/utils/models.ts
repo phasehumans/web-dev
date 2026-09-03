@@ -221,6 +221,21 @@ export const getProviderModels = (provider: string) => {
                 { label: 'DeepSeek V4 Pro', value: 'deepseek-v4-pro' },
                 { label: 'o4-mini', value: 'o4-mini' },
             ]
+        case 'copilot':
+        case 'github_copilot':
+        case 'github':
+            return [
+                { label: 'Claude 3.7 Sonnet (Recommended)', value: 'claude-3.7-sonnet' },
+                { label: 'Claude 3.5 Sonnet', value: 'claude-3.5-sonnet' },
+                { label: 'GPT-4o', value: 'gpt-4o' },
+                { label: 'o3-mini', value: 'o3-mini' },
+                { label: 'GPT-4o Mini', value: 'gpt-4o-mini' },
+            ]
+        case 'claude':
+            return getProviderModels('anthropic')
+        case 'codex':
+        case 'chatgpt':
+            return getProviderModels('openai')
         case 'ollama':
             return [
                 { label: 'Qwen 2.5 Coder 7B (Recommended)', value: 'qwen2.5-coder:7b' },
@@ -345,6 +360,9 @@ export const getModelLabel = (value: string) => {
         'perplexity',
         'cohere',
         'agentrouter',
+        'copilot',
+        'claude',
+        'codex',
         'ollama',
         'december_proxy',
     ]

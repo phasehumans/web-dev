@@ -4,17 +4,59 @@ import {
     geminiProvider,
     openrouterProvider,
     ollamaProvider,
+    copilotProvider,
 } from '@december/providers'
 
-export function instantiateProvider(provider: string, apiKey: string): any {
+import type { SubscriptionTokenBundle } from '../auth/subscriptions/types'
+
+export interface InstantiateProviderOptions {
+    authMethod?: 'byok' | 'december' | 'env' | 'subscription'
+    subscription?: SubscriptionTokenBundle
+    headers?: Record<string, string>
+    baseURL?: string
+}
+
+export function instantiateProvider(
+    provider: string,
+    apiKey: string,
+    options?: InstantiateProviderOptions
+): any {
     const normalized = (provider || '').toLowerCase().trim()
     switch (normalized) {
+        case 'copilot':
+        case 'github_copilot':
+        case 'github': {
+            const endpoint = options?.baseURL || options?.subscription?.endpoint
+            return copilotProvider(apiKey, {
+                endpoint,
+                headers: options?.headers,
+            })
+        }
         case 'openai':
+        case 'codex':
+        case 'chatgpt': {
+            if (options?.baseURL || options?.headers) {
+                return openaiProvider(options?.baseURL, apiKey, options?.headers)
+            }
             return openaiProvider(undefined, apiKey)
+        }
         case 'anthropic':
+        case 'claude': {
+            if (options?.authMethod === 'subscription' || options?.subscription) {
+                const headers = {
+                    'anthropic-beta': 'oauth-2024-11-18',
+                    ...(options?.headers || {}),
+                }
+                return anthropicProvider(options?.baseURL, apiKey, headers)
+            }
+            if (options?.baseURL || options?.headers) {
+                return anthropicProvider(options?.baseURL, apiKey, options?.headers)
+            }
             return anthropicProvider(undefined, apiKey)
+        }
         case 'gemini':
         case 'google':
+        case 'antigravity':
             return geminiProvider(apiKey)
         case 'openrouter':
             return openrouterProvider(apiKey)

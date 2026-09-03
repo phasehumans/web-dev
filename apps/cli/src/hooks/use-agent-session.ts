@@ -2,7 +2,7 @@ import { Agent, runAgentLoop } from '@december/agent'
 import { loadCustomCommands, interpolateCommandPrompt } from '@december/shared'
 import { useEffect, useCallback, useState, useRef } from 'react'
 
-import { loadConfig } from '../config'
+import { loadConfig, saveConfig } from '../config'
 import {
     AUTH_REQUIRED_NOTICE,
     HANDOFF_LOGIN_REQUIRED_NOTICE,
@@ -18,6 +18,7 @@ import { parseErrorMessage } from '../utils/error-parser'
 import { extractJsonArray } from '../utils/json-parser'
 import { getProviderModels } from '../utils/models'
 import { fetchOpenRouterModels } from '../utils/openrouter-models'
+import { instantiateProvider } from '../utils/provider-factory'
 import { formatUsageCard } from '../utils/usage-rates'
 
 import { getNextMsgId, processAgentStream } from './use-agent-runner'
@@ -42,9 +43,9 @@ export function useAgentSession({
 }: {
     agent: Agent
     isAuthenticated: boolean
-    authMethod?: 'byok' | 'december' | 'env'
+    authMethod?: 'byok' | 'december' | 'env' | 'subscription'
     hasBothAuth?: boolean
-    settingsAuthPriority?: 'byok' | 'december'
+    settingsAuthPriority?: 'byok' | 'december' | 'subscription'
     cliVersion?: string
     userEmail?: string
     sessionRepository?: any
@@ -632,9 +633,229 @@ export function useAgentSession({
                 return
             }
 
+            if (text.trim() === '/auth status' || text.trim() === '/auth') {
+                const config = await loadConfig()
+                const { getAuthStatus } = await import('../config')
+                const authStatus = await getAuthStatus()
+                const subKeys = config.subscriptions ? Object.keys(config.subscriptions) : []
+                const byokKeys = config.providers ? Object.keys(config.providers) : []
+
+                let subLines = ''
+                if (subKeys.length > 0) {
+                    for (const k of subKeys) {
+                        const sub = config.subscriptions![k]
+                        const typeStr = sub.subscriptionType ? ` [${sub.subscriptionType}]` : ''
+                        const userStr =
+                            sub.email || sub.accountName ? ` (${sub.email || sub.accountName})` : ''
+                        const expStr = sub.expiresAt
+                            ? sub.expiresAt > Date.now()
+                                ? 'Valid'
+                                : 'Expired (will auto-refresh)'
+                            : 'Active'
+                        subLines += `\n• **${k.toUpperCase()}**${typeStr}${userStr}: ${expStr}`
+                    }
+                } else {
+                    subLines = '\n*(None detected. Run /auth import or /login <provider>)*'
+                }
+
+                let byokLines = ''
+                if (byokKeys.length > 0) {
+                    for (const k of byokKeys) {
+                        byokLines += `\n• **${k.toUpperCase()}**`
+                    }
+                } else {
+                    byokLines = '\n*(None configured)*'
+                }
+
+                const decStatus = config.decemberToken
+                    ? `Connected ${config.email ? `(${config.email})` : ''}`
+                    : 'Not connected'
+
+                const card = `### Authentication & Subscription Status
+
+**Subscriptions:**${subLines}
+
+**BYOK API Keys:**${byokLines}
+
+**December Cloud Wallet:**
+${decStatus}
+
+**Active Auth Priority:** \`${config.authPriority || authStatus.authPriority}\`
+**Active Provider:** \`${config.activeProvider || 'none'}\` (Model: \`${config.activeModel || 'default'}\`)`
+
+                setActiveMessages((prev) => [
+                    ...prev,
+                    {
+                        id: getNextMsgId(),
+                        role: 'assistant',
+                        blocks: [{ type: 'text', content: card }],
+                    },
+                ])
+                return
+            }
+
+            if (text.trim() === '/auth import') {
+                addToast('Scanning local directories for subscriptions...', 'info')
+                const { importLocalSubscriptions } =
+                    await import('../auth/subscriptions/subscription-manager')
+                const result = await importLocalSubscriptions()
+                if (result.imported.length === 0) {
+                    addToast('No local subscription credentials found.', 'info')
+                } else {
+                    addToast(
+                        `Imported ${result.imported.length} subscription(s): ${result.imported.join(', ')}`,
+                        'success'
+                    )
+                    const { getProviderConfig, getAuthStatus } = await import('../config')
+                    const providerConfig = await getProviderConfig()
+                    const authStatus = await getAuthStatus()
+
+                    if (providerConfig && agent) {
+                        const llm = instantiateProvider(
+                            providerConfig.provider,
+                            providerConfig.apiKey,
+                            {
+                                authMethod: providerConfig.authMethod,
+                                subscription: providerConfig.subscription,
+                                headers: providerConfig.headers,
+                                baseURL: providerConfig.baseURL,
+                            }
+                        )
+                        agent.setLLM(llm)
+                        agent.modelOptions = { ...agent.modelOptions, model: providerConfig.model }
+                        setActiveModel(providerConfig.model)
+                        setSelectedProvider(providerConfig.provider)
+                        setIsAuthenticated(true)
+                        setAuthMethod(providerConfig.authMethod)
+                        setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+                        setSettingsAuthPriority(authStatus.authPriority)
+                    }
+                }
+                return
+            }
+
+            if (text.trim().startsWith('/login ')) {
+                const targetProvider = text.trim().slice('/login '.length).trim().toLowerCase()
+                if (targetProvider) {
+                    try {
+                        const { loginSubscription } =
+                            await import('../auth/subscriptions/subscription-manager')
+                        addToast(
+                            `Initiating subscription login for ${targetProvider.toUpperCase()}...`,
+                            'info'
+                        )
+                        await loginSubscription(targetProvider)
+                        const { getProviderConfig, getAuthStatus } = await import('../config')
+                        const providerConfig = await getProviderConfig()
+                        const authStatus = await getAuthStatus()
+
+                        if (providerConfig && agent) {
+                            const llm = instantiateProvider(
+                                providerConfig.provider,
+                                providerConfig.apiKey,
+                                {
+                                    authMethod: providerConfig.authMethod,
+                                    subscription: providerConfig.subscription,
+                                    headers: providerConfig.headers,
+                                    baseURL: providerConfig.baseURL,
+                                }
+                            )
+                            agent.setLLM(llm)
+                            agent.modelOptions = {
+                                ...agent.modelOptions,
+                                model: providerConfig.model,
+                            }
+                            setActiveModel(providerConfig.model)
+                            setSelectedProvider(providerConfig.provider)
+                            setIsAuthenticated(true)
+                            setAuthMethod(providerConfig.authMethod)
+                            setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+                            setSettingsAuthPriority(authStatus.authPriority)
+                        }
+                        addToast(
+                            `Successfully authenticated ${targetProvider.toUpperCase()}!`,
+                            'success'
+                        )
+                    } catch (e: any) {
+                        addToast(`Login failed: ${e.message}`, 'error')
+                    }
+                    return
+                }
+            }
+
+            if (text.trim().startsWith('/logout ')) {
+                const targetProvider = text.trim().slice('/logout '.length).trim().toLowerCase()
+                if (targetProvider) {
+                    const config = await loadConfig()
+                    let removed = false
+                    if (config.subscriptions && config.subscriptions[targetProvider]) {
+                        delete config.subscriptions[targetProvider]
+                        removed = true
+                    }
+                    if (config.providers && config.providers[targetProvider]) {
+                        delete config.providers[targetProvider]
+                        removed = true
+                    }
+                    if (targetProvider === 'december' && config.decemberToken) {
+                        delete config.decemberToken
+                        delete config.email
+                        removed = true
+                    }
+                    if (config.activeProvider === targetProvider) {
+                        delete config.activeProvider
+                        delete config.activeModel
+                    }
+                    await saveConfig(config)
+                    const { getProviderConfig, getAuthStatus } = await import('../config')
+                    const providerConfig = await getProviderConfig()
+                    const authStatus = await getAuthStatus()
+
+                    setIsAuthenticated(!!providerConfig)
+                    setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+                    setSettingsAuthPriority(authStatus.authPriority)
+
+                    if (providerConfig && agent) {
+                        const llm = instantiateProvider(
+                            providerConfig.provider,
+                            providerConfig.apiKey,
+                            {
+                                authMethod: providerConfig.authMethod,
+                                subscription: providerConfig.subscription,
+                                headers: providerConfig.headers,
+                                baseURL: providerConfig.baseURL,
+                            }
+                        )
+                        agent.setLLM(llm)
+                        agent.modelOptions = { ...agent.modelOptions, model: providerConfig.model }
+                        setActiveModel(providerConfig.model)
+                        setSelectedProvider(providerConfig.provider)
+                        setAuthMethod(providerConfig.authMethod)
+                    } else {
+                        setActiveModel('')
+                        setSelectedProvider(undefined)
+                        setAuthMethod(undefined)
+                    }
+
+                    if (removed) {
+                        addToast(`Logged out of ${targetProvider}.`, 'success')
+                    } else {
+                        addToast(`No active credentials found for ${targetProvider}.`, 'info')
+                    }
+                    return
+                }
+            }
+
             if (text.trim() === '/logout') {
                 const config = await loadConfig()
                 const items: { label: string; value: string }[] = []
+                if (config.subscriptions) {
+                    for (const sub of Object.keys(config.subscriptions)) {
+                        items.push({
+                            label: `${sub.charAt(0).toUpperCase() + sub.slice(1)} (Subscription)`,
+                            value: `subscription:${sub}`,
+                        })
+                    }
+                }
                 if (config.decemberToken) {
                     items.push({ label: 'December (Cloud Wallet)', value: 'decemberToken' })
                 }

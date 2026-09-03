@@ -9,6 +9,8 @@ import { parseCliArgs, getHelpText } from './args'
 export { parseCliArgs, getHelpText } from './args'
 export {
     handleLogoutCommand,
+    handleLoginCommand,
+    handleAuthCommand,
     handleInitCommand,
     handleUpdateCommand,
     handleDoctorCommand,
@@ -68,9 +70,24 @@ async function main() {
     }
 
     // Fast-path 3: Standalone subcommands (lazy loaded)
+    if (parsedArgs.command === 'auth') {
+        const action = parsedArgs.positionals[1] || 'status'
+        const { handleAuthCommand } = await import('./commands')
+        await handleAuthCommand({ action })
+        process.exit(0)
+    }
+
     if (parsedArgs.command === 'logout') {
+        const targetProvider = parsedArgs.positionals[1]
         const { handleLogoutCommand } = await import('./commands')
-        await handleLogoutCommand()
+        await handleLogoutCommand({ provider: targetProvider })
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'login') {
+        const targetProvider = parsedArgs.positionals[1]
+        const { handleLoginCommand } = await import('./commands')
+        await handleLoginCommand({ provider: targetProvider })
         process.exit(0)
     }
 
@@ -89,23 +106,6 @@ async function main() {
     if (parsedArgs.command === 'doctor') {
         const { handleDoctorCommand } = await import('./commands')
         await handleDoctorCommand({ fix: parsedArgs.fix })
-        process.exit(0)
-    }
-
-    if (parsedArgs.command === 'login') {
-        const { loginViaDeviceCode } = await import('./auth')
-        const { loadConfig, saveConfig } = await import('./config')
-        console.log('\nGenerating device code for December login...')
-        const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
-            console.log(
-                `\nPlease open ${uri} on any device and enter code: ${code}\nWaiting for authorization...`
-            )
-        })
-        const configToSave = await loadConfig()
-        configToSave.decemberToken = token
-        if (email) configToSave.email = email
-        await saveConfig(configToSave)
-        console.log('\x1b[32mSuccessfully logged in via device code!\x1b[0m\n')
         process.exit(0)
     }
 
@@ -140,7 +140,12 @@ async function main() {
         const providerConfig = await getProviderConfig()
         let llm: any
         if (providerConfig) {
-            llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
+            llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey, {
+                authMethod: providerConfig.authMethod,
+                subscription: providerConfig.subscription,
+                headers: providerConfig.headers,
+                baseURL: providerConfig.baseURL,
+            })
         } else {
             llm = openaiProvider(undefined, 'dummy-key')
         }
@@ -253,7 +258,12 @@ async function main() {
     // The TUI will intercept prompts and force them to /login
     let llm: any
     if (providerConfig) {
-        llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
+        llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey, {
+            authMethod: providerConfig.authMethod,
+            subscription: providerConfig.subscription,
+            headers: providerConfig.headers,
+            baseURL: providerConfig.baseURL,
+        })
     } else {
         llm = openaiProvider(undefined, 'dummy-key')
     }
