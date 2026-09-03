@@ -70,12 +70,10 @@ describe('ContextSelectMenu Component (Unit)', () => {
         expect(frame).toContain('Dynamic MCP Tools:')
         expect(frame).toContain('Conversation History:')
         expect(frame).toContain('Free space:')
-        expect(frame).toContain('Cacheable static prefix:')
 
         // Verify dots and grid glyphs
         expect(frame).toContain('●')
         expect(frame).toContain('□')
-        expect(frame).toContain('★')
 
         // Verify esc Cancel is rendered on the left
         expect(frame).toContain('esc')
@@ -95,6 +93,5 @@ describe('ContextSelectMenu Component (Unit)', () => {
         expect(frame).toContain('Dynamic MCP Tools: 0 tokens')
         expect(frame).toContain('Conversation History: 0 tokens')
         expect(frame).toContain('Free space:')
-        expect(frame).toContain('Cacheable static prefix: 0 tokens')
     })
 })

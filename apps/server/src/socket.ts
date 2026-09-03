@@ -74,7 +74,7 @@ export function initSocket(httpServer: any) {
         if (pattern === 'session_events:*') {
             const sessionId = channel.replace('session_events:', '')
             try {
-                const event = JSON.parse(message)
+                const event = typeof message === 'string' ? JSON.parse(message) : message
                 console.log(
                     `[SERVER CORE -> CLIENT] Relaying event '${event.type || 'unknown'}' to room session:${sessionId}`
                 )
@@ -175,7 +175,9 @@ export function initSocket(httpServer: any) {
                             timestamp: Date.now(),
                         })
                     )
-                    .catch(() => {})
+                    .catch(() => {
+                        // Intentionally swallowed: Redis disconnect event publish failure
+                    })
             }
         })
 
@@ -192,6 +194,9 @@ export function initSocket(httpServer: any) {
                     socket.emit('error', { message: 'sessionId is required' })
                     return
                 }
+
+                socket.data.activeSessionId = targetSessionId
+                socket.join(`session:${targetSessionId}`)
 
                 try {
                     console.log(

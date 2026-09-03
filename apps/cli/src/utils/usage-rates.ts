@@ -234,6 +234,26 @@ Provider: December Cloud
 *Usage is deducted directly from your December account credits. Request telemetry, token consumption, and monthly invoices are tracked at [${billingLink}](${billingLink})*`
     }
 
+    if (authMethod === 'subscription') {
+        const subDisplayName =
+            providerKey === 'copilot' || providerKey === 'github'
+                ? 'GitHub Copilot'
+                : providerKey === 'claude' || providerKey === 'anthropic'
+                  ? 'Claude Pro/Max (Claude Code)'
+                  : providerKey === 'codex' || providerKey === 'openai'
+                    ? 'ChatGPT Plus/Team/Pro (OpenAI Codex)'
+                    : providerKey === 'gemini' ||
+                        providerKey === 'google' ||
+                        providerKey === 'antigravity'
+                      ? 'Google One AI Premium (Gemini/Antigravity)'
+                      : `${providerKey.toUpperCase()} Subscription`
+
+        return `Active Model: \`${model}\` (Subscription)
+Provider: ${subDisplayName}
+
+*Usage is covered by your active ${subDisplayName} monthly subscription quota. Prompts route directly from your machine with OAuth authentication; no per-token charges or December proxy fees apply.*`
+    }
+
     if (!providerKey || providerKey === 'december_proxy') {
         providerKey = inferProviderFromModel(model)
     }

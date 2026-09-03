@@ -22,10 +22,13 @@ export const FALLBACK_OPENROUTER_MODELS: OpenRouterModelItem[] = [
     },
     { label: 'Anthropic: Claude Opus 5', value: 'anthropic/claude-opus-5' },
     { label: 'Anthropic: Claude Sonnet 5', value: 'anthropic/claude-sonnet-5' },
+    { label: 'Anthropic: Claude Fable 5.1', value: 'anthropic/claude-fable-5-1' },
     { label: 'Anthropic: Claude 3.7 Sonnet', value: 'anthropic/claude-3.7-sonnet' },
     { label: 'Anthropic: Claude 3.5 Sonnet', value: 'anthropic/claude-3.5-sonnet' },
+    { label: 'DeepSeek: DeepSeek V4 Pro', value: 'deepseek/deepseek-v4-pro' },
     { label: 'DeepSeek: DeepSeek R1', value: 'deepseek/deepseek-r1' },
     { label: 'DeepSeek: DeepSeek V3', value: 'deepseek/deepseek-chat' },
+    { label: 'Google: Gemini 3.8 Flash', value: 'google/gemini-3.8-flash' },
     { label: 'Google: Gemini 3.7 Flash', value: 'google/gemini-3.7-flash' },
     { label: 'Google: Gemini 3.6 Flash', value: 'google/gemini-3.6-flash' },
     { label: 'Meta: Llama 4 Scout', value: 'meta-llama/llama-4-scout' },
@@ -36,12 +39,14 @@ export const FALLBACK_OPENROUTER_MODELS: OpenRouterModelItem[] = [
     { label: 'OpenAI: GPT-5.4 Mini', value: 'openai/gpt-5.4-mini' },
     { label: 'OpenAI: GPT-4o', value: 'openai/gpt-4o' },
     { label: 'OpenAI: o3-mini', value: 'openai/o3-mini' },
+    { label: 'Qwen: Qwen 3.8 Max', value: 'qwen/qwen3.8-max' },
     { label: 'SpaceXAI: Grok 4.6', value: 'x-ai/grok-4.6' },
+    { label: 'ZAI: GLM 5.3 Flash', value: 'z-ai/glm-5.3-flash' },
 ]
 
 let cachedModels: OpenRouterModelItem[] | null = null
 let cacheTimestamp = 0
-const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+const CACHE_TTL_MS = 48 * 60 * 60 * 1000 // 48 hours
 
 export function clearOpenRouterModelsCache(): void {
     cachedModels = null
@@ -50,7 +55,8 @@ export function clearOpenRouterModelsCache(): void {
 
 export async function fetchOpenRouterModels(
     apiKey?: string,
-    forceRefresh = false
+    forceRefresh = false,
+    fetchFn: typeof fetch = fetch
 ): Promise<OpenRouterModelItem[]> {
     const now = Date.now()
     if (!forceRefresh && cachedModels && now - cacheTimestamp < CACHE_TTL_MS) {

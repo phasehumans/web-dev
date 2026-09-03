@@ -7,7 +7,7 @@ import { createProvider } from '../models.ts'
 import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '../types.ts'
 import type { Content } from '@google/genai'
 
-function sanitizeSchemaForGemini(schema: any): any {
+export function sanitizeSchemaForGemini(schema: any): any {
     if (!schema || typeof schema !== 'object') return schema
 
     const result = { ...schema }
@@ -47,7 +47,7 @@ function sanitizeSchemaForGemini(schema: any): any {
 }
 
 export function resolveGeminiModel(model?: string): string {
-    let name = model || 'gemini-3.6-flash'
+    let name = model || 'gemini-3.7-flash'
     if (name.startsWith('google/')) {
         name = name.slice('google/'.length)
     }

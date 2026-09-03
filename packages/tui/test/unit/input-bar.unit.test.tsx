@@ -111,4 +111,38 @@ describe('InputBar Component (Unit)', () => {
         expect(lastFrame()).toContain('gpt-5.6-sol')
         expect(lastFrame()).not.toContain('claude-opus-5')
     })
+
+    it('renders "Not connected (run /login)" when isAuthenticated is false', () => {
+        const handleSubmit = mock(() => {})
+        const { lastFrame } = render(
+            <RootLayout>
+                <InputBar
+                    onSubmit={handleSubmit}
+                    placeholder="Ask December to build..."
+                    activeModel="gemini-3.8-flash"
+                    isAuthenticated={false}
+                />
+            </RootLayout>
+        )
+        const frame = lastFrame()
+        expect(frame).toContain('Not connected (run /login)')
+        expect(frame).not.toContain('gemini-3.8-flash')
+    })
+
+    it('renders active model with subscription tag when isAuthenticated is true', () => {
+        const handleSubmit = mock(() => {})
+        const { lastFrame } = render(
+            <RootLayout>
+                <InputBar
+                    onSubmit={handleSubmit}
+                    placeholder="Ask December to build..."
+                    activeModel="gemini-3.8-flash"
+                    isAuthenticated={true}
+                    authMethod="subscription"
+                />
+            </RootLayout>
+        )
+        const frame = lastFrame()
+        expect(frame).toContain('gemini-3.8-flash (Subscription)')
+    })
 })

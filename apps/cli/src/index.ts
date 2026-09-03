@@ -5,10 +5,19 @@ import path from 'node:path'
 import pkg from '../package.json' with { type: 'json' }
 
 import { parseCliArgs, getHelpText } from './args'
+import { purgeProjectEnvApiKeys } from './utils/env-sanitizer'
+
+// Ensure no API keys or tokens from project .env files are loaded into CLI process
+purgeProjectEnvApiKeys()
 
 export { parseCliArgs, getHelpText } from './args'
+export { purgeProjectEnvApiKeys } from './utils/env-sanitizer'
 export {
     handleLogoutCommand,
+    handleLoginCommand,
+    handleLinkCommand,
+    handleKeyCommand,
+    handleAuthCommand,
     handleInitCommand,
     handleUpdateCommand,
     handleDoctorCommand,
@@ -54,6 +63,7 @@ async function main() {
 
     if (parsedArgs.cwd) {
         process.chdir(parsedArgs.cwd)
+        purgeProjectEnvApiKeys(parsedArgs.cwd)
     }
 
     // Ingest non-TTY piped standard input into prompt if present
@@ -68,9 +78,39 @@ async function main() {
     }
 
     // Fast-path 3: Standalone subcommands (lazy loaded)
+    if (parsedArgs.command === 'auth') {
+        const action = parsedArgs.positionals[1] || 'status'
+        const { handleAuthCommand } = await import('./commands')
+        await handleAuthCommand({ action })
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'link') {
+        const targetProvider = parsedArgs.positionals[1]
+        const { handleLinkCommand } = await import('./commands')
+        await handleLinkCommand({ provider: targetProvider })
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'key') {
+        const targetProvider = parsedArgs.positionals[1]
+        const key = parsedArgs.positionals[2]
+        const { handleKeyCommand } = await import('./commands')
+        await handleKeyCommand({ provider: targetProvider, key })
+        process.exit(0)
+    }
+
     if (parsedArgs.command === 'logout') {
+        const targetProvider = parsedArgs.positionals[1]
         const { handleLogoutCommand } = await import('./commands')
-        await handleLogoutCommand()
+        await handleLogoutCommand({ provider: targetProvider })
+        process.exit(0)
+    }
+
+    if (parsedArgs.command === 'login') {
+        const targetProvider = parsedArgs.positionals[1]
+        const { handleLoginCommand } = await import('./commands')
+        await handleLoginCommand({ provider: targetProvider })
         process.exit(0)
     }
 
@@ -89,23 +129,6 @@ async function main() {
     if (parsedArgs.command === 'doctor') {
         const { handleDoctorCommand } = await import('./commands')
         await handleDoctorCommand({ fix: parsedArgs.fix })
-        process.exit(0)
-    }
-
-    if (parsedArgs.command === 'login') {
-        const { loginViaDeviceCode } = await import('./auth')
-        const { loadConfig, saveConfig } = await import('./config')
-        console.log('\nGenerating device code for December login...')
-        const { token, email } = await loginViaDeviceCode(undefined, (code, uri) => {
-            console.log(
-                `\nPlease open ${uri} on any device and enter code: ${code}\nWaiting for authorization...`
-            )
-        })
-        const configToSave = await loadConfig()
-        configToSave.decemberToken = token
-        if (email) configToSave.email = email
-        await saveConfig(configToSave)
-        console.log('\x1b[32mSuccessfully logged in via device code!\x1b[0m\n')
         process.exit(0)
     }
 
@@ -135,12 +158,18 @@ async function main() {
 
         if (parsedArgs.scope) {
             setActiveScopeDir(parsedArgs.scope)
+            purgeProjectEnvApiKeys(parsedArgs.scope)
         }
 
         const providerConfig = await getProviderConfig()
         let llm: any
         if (providerConfig) {
-            llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
+            llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey, {
+                authMethod: providerConfig.authMethod,
+                subscription: providerConfig.subscription,
+                headers: providerConfig.headers,
+                baseURL: providerConfig.baseURL,
+            })
         } else {
             llm = openaiProvider(undefined, 'dummy-key')
         }
@@ -253,7 +282,12 @@ async function main() {
     // The TUI will intercept prompts and force them to /login
     let llm: any
     if (providerConfig) {
-        llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
+        llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey, {
+            authMethod: providerConfig.authMethod,
+            subscription: providerConfig.subscription,
+            headers: providerConfig.headers,
+            baseURL: providerConfig.baseURL,
+        })
     } else {
         llm = openaiProvider(undefined, 'dummy-key')
     }

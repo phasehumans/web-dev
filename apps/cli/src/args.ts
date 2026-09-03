@@ -50,7 +50,7 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
         const scope = values.scope as string | undefined
         const cwd = values.cwd as string | undefined
 
-        const knownCommands = ['login', 'logout', 'init', 'update', 'doctor']
+        const knownCommands = ['login', 'logout', 'init', 'update', 'doctor', 'auth', 'link', 'key']
         let command: string | undefined
         let prompt: string | undefined
 
@@ -94,13 +94,16 @@ export function parseCliArgs(args: string[]): ParsedCliArgs {
 
 export function getHelpText(version: string = '0.0.0'): string {
     return `December CLI v${version}
-AI coding agent that lives in your terminal.
+a coding agent that lives in your terminal.
 
 Usage:
   december                          Launch interactive TUI session
   december "<prompt>"               Execute headless agent task
-  december login                    Log in to December (via Device Code)
-  december logout                   Remove saved authentication credentials
+  december auth [status|import]     Inspect active subscriptions and authentication status
+  december link <provider>          Link AI subscription (copilot, claude, chatgpt, gemini)
+  december key <provider> [key]     Save BYOK API key (openai, anthropic, openrouter, etc.)
+  december login [provider]         Log in to December Cloud or subscription
+  december logout [provider]        Remove saved authentication credentials
   december init                     Initialize local .december configuration
   december update                   Update December CLI to the latest version
   december doctor [--fix]           Inspect installations, health, and resolve PATH collisions

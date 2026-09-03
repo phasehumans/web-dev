@@ -51,7 +51,7 @@ describe('parseCliArgs', () => {
 
     it('returns formatted help text', () => {
         const help = getHelpText('0.2.20')
-        expect(help).toContain('AI coding agent that lives in your terminal.')
+        expect(help).toContain('a coding agent that lives in your terminal.')
         expect(help).toContain('Usage:')
         expect(help).toContain('december')
         expect(help).toContain('--help')

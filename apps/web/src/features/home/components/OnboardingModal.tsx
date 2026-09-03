@@ -53,9 +53,9 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
                         Introducing December
                     </h2>
                     <p className="text-[12.5px] text-[#8F8E8D] leading-relaxed font-normal">
-                        December is an autonomous AI coding agent. Give it complex tasks to build,
-                        let the autonomous agent handle the execution in a secure cloud sandbox, and
-                        inspect diffs, runtime previews, and live terminals seamlessly.
+                        December is a coding agent for terminal and cloud. Give it complex tasks to
+                        build, let the autonomous agent handle the execution in a secure cloud
+                        sandbox, and inspect diffs, runtime previews, and live terminals seamlessly.
                     </p>
                 </div>
 

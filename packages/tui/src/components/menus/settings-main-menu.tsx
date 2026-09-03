@@ -58,12 +58,16 @@ export function SettingsMainMenu(props: any) {
         })
     }
 
-    if (hasBothAuth) {
-        mainItems.unshift({
-            label: `Preferred Auth Method    [${settingsAuthPriority === 'december' ? 'December Cloud' : 'BYOK'}]`,
-            value: 'authPriority',
-        })
-    }
+    const priorityLabel =
+        settingsAuthPriority === 'subscription'
+            ? 'Subscription'
+            : settingsAuthPriority === 'december'
+              ? 'December Cloud'
+              : 'BYOK'
+    mainItems.unshift({
+        label: `Preferred Auth Method    [${priorityLabel}]`,
+        value: 'authPriority',
+    })
 
     return (
         <Box flexDirection="column" paddingX={THEME.padding.paddingX}>

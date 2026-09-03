@@ -19,30 +19,35 @@ export function useAuthHandlers(
     ) => Promise<{ token: string; email: string | null }>
 ) {
     const {
-        isAuthenticated,
         setIsAuthenticated,
         setCurrentEmail,
         setAuthMode,
-        selectedProvider,
         setSelectedProvider,
         setActiveModel,
         setApiKey,
-        activeMessages,
         setActiveMessages,
         setStaticMessages,
         setIsStreaming,
-        isStreaming,
         setHasBothAuth,
         setSettingsAuthPriority,
         setAuthMethod,
         setStaticKey,
         setAuthError,
         addToast,
-        ollamaStatus,
         setOllamaStatus,
-    } = useCliStore()
+    } = useCliStore.getState()
 
     const handleAuthMenuSelect = async (item: any) => {
+        if (item.value === 'subscriptions' || item.value === 'subscription_select') {
+            setAuthMode('subscription_select')
+            return
+        }
+
+        if (item.value === 'byok') {
+            setAuthMode('byok_provider')
+            return
+        }
+
         if (item.value === 'december' || item.value === 'december_headless') {
             setAuthMode('none')
             setIsStreaming(true)
@@ -99,7 +104,13 @@ export function useAuthHandlers(
                 if (providerConfig) {
                     const provider = instantiateProvider(
                         providerConfig.provider,
-                        providerConfig.apiKey
+                        providerConfig.apiKey,
+                        {
+                            authMethod: providerConfig.authMethod,
+                            subscription: providerConfig.subscription,
+                            headers: providerConfig.headers,
+                            baseURL: providerConfig.baseURL,
+                        }
                     )
                     agent.setLLM(provider)
                     const activeModel = providerConfig.model
@@ -164,15 +175,20 @@ export function useAuthHandlers(
         addToast(`Model changed to ${item.value}`, 'success')
     }
 
-    const applyOllamaConfig = async (urlToUse: string, targetModel: string) => {
+    const applyOllamaConfig = async (
+        urlToUse: string,
+        targetModel: string,
+        providerName: string = 'ollama'
+    ) => {
         const config = await loadConfig()
         config.providers = config.providers || {}
-        config.providers['ollama'] = urlToUse
-        config.activeProvider = 'ollama'
+        config.providers[providerName] = urlToUse
+        config.activeProvider = providerName
         config.activeModel = targetModel
+        config.authPriority = 'byok'
         await saveConfig(config)
 
-        const llm = instantiateProvider('ollama', urlToUse)
+        const llm = instantiateProvider(providerName, urlToUse)
         if (agent) {
             agent.setLLM(llm)
             agent.modelOptions = { ...agent.modelOptions, model: targetModel }
@@ -188,28 +204,215 @@ export function useAuthHandlers(
         setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
         setSettingsAuthPriority(authStatus.authPriority)
         setIsAuthenticated(true)
-        setSelectedProvider('ollama')
+        setSelectedProvider(providerName)
         setAuthMode('none')
-        addToast(`Connected to local Ollama (${targetModel})`, 'success')
+        const displayName =
+            providerName === 'lmstudio'
+                ? 'LM Studio'
+                : providerName === 'llamacpp'
+                  ? 'llama.cpp'
+                  : 'Ollama'
+        addToast(`Connected to local ${displayName} (${targetModel})`, 'success')
+    }
+
+    const handleSubscriptionSelect = async (item: any) => {
+        const config = await loadConfig()
+
+        const { getSubscriptionAdapter, verifyAndResolveSubscription, loginSubscription } =
+            await import('../auth/subscriptions/subscription-manager')
+
+        if (getSubscriptionAdapter(item.value)) {
+            const { getDefaultModelForProvider } = await import('../utils/models')
+            const { getAuthStatus } = await import('../config')
+
+            // Step 1: Check and auto-verify local credentials if present
+            const verifiedBundle = await verifyAndResolveSubscription(item.value)
+            if (verifiedBundle) {
+                const targetModel = getDefaultModelForProvider(item.value)
+                const llm = instantiateProvider(
+                    verifiedBundle.provider,
+                    verifiedBundle.accessToken,
+                    {
+                        authMethod: 'subscription',
+                        subscription: verifiedBundle,
+                        baseURL: verifiedBundle.endpoint,
+                    }
+                )
+                if (agent) {
+                    agent.setLLM(llm)
+                    agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+                }
+                setActiveModel(targetModel)
+                setSelectedProvider(verifiedBundle.provider)
+                setIsAuthenticated(true)
+                setAuthMethod('subscription')
+
+                const authStatus = await getAuthStatus()
+                setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+                setSettingsAuthPriority(authStatus.authPriority)
+
+                const { updateConfig } = await import('../config')
+                await updateConfig({
+                    activeProvider: item.value,
+                    activeModel: targetModel,
+                    authPriority: 'subscription',
+                })
+
+                const { fetchLiveProviderModels } = await import('../utils/models')
+                fetchLiveProviderModels(
+                    verifiedBundle.provider,
+                    verifiedBundle.accessToken,
+                    verifiedBundle.endpoint
+                ).catch(() => {})
+
+                setAuthMode('none')
+                addToast(
+                    `Verified local ${item.value.toUpperCase()} subscription (${verifiedBundle.subscriptionType || 'active'})`,
+                    'success'
+                )
+                return
+            }
+
+            // Step 2: If no local credentials, launch interactive OAuth/device flow or key prompt
+            const adapter = getSubscriptionAdapter(item.value)
+            const isOauthProvider =
+                item.value === 'copilot' ||
+                item.value === 'claude' ||
+                item.value === 'codex' ||
+                item.value === 'gemini'
+
+            if (isOauthProvider) {
+                setAuthMode('none')
+                setIsStreaming(true)
+                try {
+                    const codeMsgId = getNextMsgId()
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([
+                        {
+                            id: codeMsgId,
+                            role: 'assistant',
+                            blocks: [
+                                {
+                                    type: 'text',
+                                    content: `Initiating ${item.value.toUpperCase()} subscription verification...`,
+                                },
+                            ],
+                        },
+                    ])
+
+                    const onCode = (code: string, uri: string) => {
+                        let promptText = `\nPlease open [${uri}](${uri}) in your browser to authorize.`
+                        if (code && !code.endsWith('-AUTH')) {
+                            promptText = `\nPlease open [${uri}](${uri}) on your device and enter code: \`${code}\``
+                        }
+                        setActiveMessages([
+                            {
+                                id: codeMsgId,
+                                role: 'assistant',
+                                blocks: [
+                                    {
+                                        type: 'text',
+                                        content: promptText,
+                                    },
+                                    {
+                                        type: 'text',
+                                        content:
+                                            'Waiting for authorization and subscription verification...',
+                                    },
+                                ],
+                            },
+                        ])
+                    }
+
+                    const bundle = await loginSubscription(item.value, onCode)
+                    const targetModel = getDefaultModelForProvider(item.value)
+                    const llm = instantiateProvider(bundle.provider, bundle.accessToken, {
+                        authMethod: 'subscription',
+                        subscription: bundle,
+                        baseURL: bundle.endpoint,
+                    })
+                    if (agent) {
+                        agent.setLLM(llm)
+                        agent.modelOptions = { ...agent.modelOptions, model: targetModel }
+                    }
+                    setActiveModel(targetModel)
+                    setSelectedProvider(bundle.provider)
+                    setIsAuthenticated(true)
+                    setAuthMethod('subscription')
+
+                    const { updateConfig } = await import('../config')
+                    await updateConfig({
+                        activeProvider: bundle.provider,
+                        activeModel: targetModel,
+                        authPriority: 'subscription',
+                    })
+
+                    const authStatus = await getAuthStatus()
+                    setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
+                    setSettingsAuthPriority(authStatus.authPriority)
+
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([
+                        {
+                            id: getNextMsgId(),
+                            role: 'assistant',
+                            blocks: [
+                                {
+                                    type: 'text',
+                                    content: `Successfully authenticated and verified ${item.value.toUpperCase()} subscription!`,
+                                    color: '#6EE7B7',
+                                },
+                            ],
+                        },
+                    ])
+                    const { fetchLiveProviderModels } = await import('../utils/models')
+                    fetchLiveProviderModels(
+                        bundle.provider,
+                        bundle.accessToken,
+                        bundle.endpoint
+                    ).catch(() => {})
+
+                    addToast(`Connected to ${item.value.toUpperCase()} subscription`, 'success')
+                } catch (err: any) {
+                    const errorText = `Subscription verification failed: ${err?.message || String(err)}`
+                    setAuthError(errorText)
+                    setStaticMessages((prev) => [...prev, ...useCliStore.getState().activeMessages])
+                    setActiveMessages([{ id: getNextMsgId(), role: 'error', text: errorText }])
+                } finally {
+                    setIsStreaming(false)
+                }
+                return
+            } else {
+                setSelectedProvider(item.value)
+                setAuthMode('byok_key')
+                return
+            }
+        }
     }
 
     const handleProviderSelect = async (item: any) => {
         const config = await loadConfig()
 
-        if (item.value === 'ollama') {
-            const { checkOllamaStatus, getDefaultModelForProvider } =
-                await import('../utils/models')
+        if (item.value === 'ollama' || item.value === 'lmstudio' || item.value === 'llamacpp') {
+            const {
+                checkLocalServerStatus,
+                getDefaultModelForProvider,
+                getDefaultUrlForLocalProvider,
+            } = await import('../utils/models')
+            const defaultUrl = getDefaultUrlForLocalProvider(item.value)
             const existingUrl =
-                config.providers?.['ollama'] || process.env.OLLAMA_HOST || 'http://localhost:11434'
-            const status = await checkOllamaStatus(existingUrl)
-            setOllamaStatus({ ...status, baseUrl: existingUrl })
+                config.providers?.[item.value] ||
+                (item.value === 'ollama' ? process.env.OLLAMA_HOST : undefined) ||
+                defaultUrl
+            const status = await checkLocalServerStatus(item.value, existingUrl)
+            setOllamaStatus({ ...status, baseUrl: existingUrl, provider: item.value })
 
             if (status.running && status.compatibleModels.length > 0) {
                 const targetModel =
-                    status.compatibleModels[0] || getDefaultModelForProvider('ollama')
-                await applyOllamaConfig(existingUrl, targetModel)
+                    status.compatibleModels[0] || getDefaultModelForProvider(item.value)
+                await applyOllamaConfig(existingUrl, targetModel, item.value)
             } else {
-                setSelectedProvider('ollama')
+                setSelectedProvider(item.value)
                 setAuthMode('ollama_setup')
             }
             return
@@ -218,6 +421,7 @@ export function useAuthHandlers(
         if (config.providers && config.providers[item.value]) {
             const key = config.providers[item.value]
             config.activeProvider = item.value
+            config.authPriority = 'byok'
 
             const { getDefaultModelForProvider } = await import('../utils/models')
             const targetModel = getDefaultModelForProvider(item.value)
@@ -242,6 +446,9 @@ export function useAuthHandlers(
             setIsAuthenticated(true)
             setSelectedProvider(item.value)
 
+            const { fetchLiveProviderModels } = await import('../utils/models')
+            fetchLiveProviderModels(item.value, key).catch(() => {})
+
             setAuthMode('none')
             addToast(
                 `Switched active provider to ${item.value.toUpperCase()} (${targetModel})`,
@@ -255,10 +462,11 @@ export function useAuthHandlers(
     }
 
     const handleKeySubmit = async (key: string) => {
-        if (isStreaming) return
+        if (useCliStore.getState().isStreaming) return
         const trimmedKey = key.trim()
         if (!trimmedKey) return
 
+        const selectedProvider = useCliStore.getState().selectedProvider
         setIsStreaming(true)
         setAuthError(null)
 
@@ -330,7 +538,11 @@ export function useAuthHandlers(
             config.providers[selectedProvider] = trimmedKey
             config.activeProvider = selectedProvider
             config.activeModel = finalModel
+            config.authPriority = 'byok'
             await saveConfig(config)
+
+            const { fetchLiveProviderModels } = await import('../utils/models')
+            fetchLiveProviderModels(selectedProvider, trimmedKey).catch(() => {})
 
             if (agent) {
                 agent.setLLM(testProvider)
@@ -339,6 +551,7 @@ export function useAuthHandlers(
             setActiveModel(finalModel)
             setIsAuthenticated(true)
             setSelectedProvider(selectedProvider)
+            setAuthMethod('byok')
 
             const { getAuthStatus, getProviderConfig } = await import('../config')
             const authStatus = await getAuthStatus()
@@ -383,6 +596,7 @@ export function useAuthHandlers(
                 config.providers[selectedProvider] = trimmedKey
                 config.activeProvider = selectedProvider
                 config.activeModel = finalModel
+                config.authPriority = 'byok'
                 await saveConfig(config)
 
                 if (agent) {
@@ -392,6 +606,7 @@ export function useAuthHandlers(
                 setActiveModel(finalModel)
                 setIsAuthenticated(true)
                 setSelectedProvider(selectedProvider)
+                setAuthMethod('byok')
 
                 const { getAuthStatus, getProviderConfig } = await import('../config')
                 const authStatus = await getAuthStatus()
@@ -484,13 +699,28 @@ export function useAuthHandlers(
             config.email = undefined
             setCurrentEmail(undefined)
             removedName = 'December Cloud Wallet'
+        } else if (value.startsWith('subscription:')) {
+            const provider = value.split(':')[1]
+            if (provider && config.subscriptions) {
+                delete config.subscriptions[provider]
+                removedName = `${provider.charAt(0).toUpperCase() + provider.slice(1)} Subscription`
+                if (config.activeProvider === provider) {
+                    config.activeProvider =
+                        Object.keys(config.subscriptions)[0] ||
+                        Object.keys(config.providers || {})[0] ||
+                        undefined
+                }
+            }
         } else if (value.startsWith('provider:')) {
             const provider = value.split(':')[1]
             if (provider && config.providers) {
                 delete config.providers[provider]
                 removedName = `${provider.charAt(0).toUpperCase() + provider.slice(1)} API Key`
                 if (config.activeProvider === provider) {
-                    config.activeProvider = Object.keys(config.providers)[0] || undefined
+                    config.activeProvider =
+                        Object.keys(config.subscriptions || {})[0] ||
+                        Object.keys(config.providers)[0] ||
+                        undefined
                 }
             }
         }
@@ -506,7 +736,12 @@ export function useAuthHandlers(
         setSettingsAuthPriority(authStatus.authPriority)
 
         if (providerConfig && agent) {
-            const llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey)
+            const llm = instantiateProvider(providerConfig.provider, providerConfig.apiKey, {
+                authMethod: providerConfig.authMethod,
+                subscription: providerConfig.subscription,
+                headers: providerConfig.headers,
+                baseURL: providerConfig.baseURL,
+            })
             agent.setLLM(llm)
             config.activeModel = providerConfig.model
             await saveConfig(config)
@@ -598,18 +833,39 @@ export function useAuthHandlers(
     }
 
     const handleOllamaRetry = async (customUrl?: string) => {
-        const urlToUse = customUrl || 'http://localhost:11434'
-        const { checkOllamaStatus, getDefaultModelForProvider } = await import('../utils/models')
-        const status = await checkOllamaStatus(urlToUse)
-        setOllamaStatus({ ...status, baseUrl: urlToUse })
+        const state = useCliStore.getState()
+        const currentProvider =
+            state.selectedProvider || (state.ollamaStatus as any)?.provider || 'ollama'
+        const {
+            checkLocalServerStatus,
+            getDefaultModelForProvider,
+            getDefaultUrlForLocalProvider,
+        } = await import('../utils/models')
+        const urlToUse =
+            customUrl ||
+            state.ollamaStatus?.baseUrl ||
+            getDefaultUrlForLocalProvider(currentProvider)
+        const status = await checkLocalServerStatus(currentProvider, urlToUse)
+        setOllamaStatus({ ...status, baseUrl: urlToUse, provider: currentProvider })
+
+        const displayName =
+            currentProvider === 'lmstudio'
+                ? 'LM Studio'
+                : currentProvider === 'llamacpp'
+                  ? 'llama.cpp'
+                  : 'Ollama'
 
         if (status.running && status.compatibleModels.length > 0) {
-            const targetModel = status.compatibleModels[0] || getDefaultModelForProvider('ollama')
-            await applyOllamaConfig(urlToUse, targetModel)
+            const targetModel =
+                status.compatibleModels[0] || getDefaultModelForProvider(currentProvider)
+            await applyOllamaConfig(urlToUse, targetModel, currentProvider)
         } else if (!status.running) {
-            addToast(`Ollama server not reachable at ${urlToUse}`, 'error')
+            addToast(`${displayName} server not reachable at ${urlToUse}`, 'error')
         } else {
-            addToast('Ollama is running, but no tool-compatible models were found.', 'warning')
+            addToast(
+                `${displayName} is running, but no tool-compatible models were found.`,
+                'warning'
+            )
         }
     }
 
@@ -618,16 +874,26 @@ export function useAuthHandlers(
     }
 
     const handleOllamaProceed = async (modelName?: string) => {
+        const state = useCliStore.getState()
+        const currentProvider =
+            state.selectedProvider || (state.ollamaStatus as any)?.provider || 'ollama'
         const config = await loadConfig()
-        const urlToUse = config.providers?.['ollama'] || 'http://localhost:11434'
-        const targetModel = modelName || 'qwen2.5-coder:7b'
-        await applyOllamaConfig(urlToUse, targetModel)
+        const { getDefaultUrlForLocalProvider, getDefaultModelForProvider } =
+            await import('../utils/models')
+        const urlToUse =
+            config.providers?.[currentProvider] ||
+            state.ollamaStatus?.baseUrl ||
+            getDefaultUrlForLocalProvider(currentProvider)
+        const targetModel = modelName || getDefaultModelForProvider(currentProvider) || 'default'
+        await applyOllamaConfig(urlToUse, targetModel, currentProvider)
     }
 
     return {
         handleAuthMenuSelect,
         handleModelSelect,
         handleProviderSelect,
+        handleByokSelect: handleProviderSelect,
+        handleSubscriptionSelect,
         handleKeySubmit,
         handleLogoutSelect,
         handleSessionSelect,

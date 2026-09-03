@@ -4,11 +4,19 @@ import path from 'node:path'
 
 import { ensureValidModelForProvider } from './utils/models'
 
+import type { SubscriptionTokenBundle } from './auth/subscriptions/types'
+
+export type { SubscriptionTokenBundle } from './auth/subscriptions/types'
+
 export interface ProviderConfig {
     provider:
         | 'openai'
         | 'anthropic'
         | 'gemini'
+        | 'google'
+        | 'claude'
+        | 'codex'
+        | 'copilot'
         | 'openrouter'
         | 'deepseek'
         | 'groq'
@@ -29,16 +37,21 @@ export interface ProviderConfig {
         | 'cohere'
         | 'ollama'
         | 'agentrouter'
+        | 'december_proxy'
         | string
     apiKey: string
     model?: string
-    authMethod?: 'byok' | 'december' | 'env'
+    authMethod?: 'byok' | 'december' | 'env' | 'subscription'
+    subscription?: SubscriptionTokenBundle
+    headers?: Record<string, string>
+    baseURL?: string
 }
 
 export interface DecemberConfig {
     activeProvider?: string
     activeModel?: string
     providers: Record<string, string>
+    subscriptions?: Record<string, SubscriptionTokenBundle>
     decemberToken?: string
     email?: string
     nonWorkspaceAccess?: boolean
@@ -54,7 +67,7 @@ export interface DecemberConfig {
     followUpMode?: 'all' | 'one-at-a-time'
     pathGuard?: boolean
     scope?: string
-    authPriority?: 'byok' | 'december'
+    authPriority?: 'subscription' | 'byok' | 'december'
     installMethod?: 'npm' | 'bun' | 'pnpm' | 'npx' | 'source'
     versionCheckCache?: {
         latestVersion: string
@@ -62,8 +75,20 @@ export interface DecemberConfig {
     }
 }
 
-const CONFIG_DIR = path.join(os.homedir(), '.config', 'december')
-const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json')
+export function getConfigDir(): string {
+    return (
+        process.env.DECEMBER_CONFIG_DIR ||
+        path.join(process.env.HOME || os.homedir(), '.config', 'december')
+    )
+}
+
+export function getConfigFile(): string {
+    return path.join(getConfigDir(), 'config.json')
+}
+
+export function getLogsDir(): string {
+    return process.env.DECEMBER_LOGS_DIR || path.join(getConfigDir(), 'logs')
+}
 
 function deepMergeSettings(base: any, overrides: any): any {
     const result = { ...base }
@@ -90,7 +115,8 @@ function deepMergeSettings(base: any, overrides: any): any {
 
 export async function loadConfig(): Promise<DecemberConfig> {
     try {
-        const data = await fs.readFile(CONFIG_FILE, 'utf-8')
+        const configFile = getConfigFile()
+        const data = await fs.readFile(configFile, 'utf-8')
         let config = JSON.parse(data)
 
         try {
@@ -102,7 +128,7 @@ export async function loadConfig(): Promise<DecemberConfig> {
             // workspace config is optional
         }
 
-        // self-heal: if providers exist but activeprovider is missing, select the first available
+        // self-heal: if providers exist but activeProvider is missing, select the first available
         if (
             !config.activeProvider &&
             config.providers &&
@@ -118,8 +144,11 @@ export async function loadConfig(): Promise<DecemberConfig> {
 }
 
 export async function saveConfig(config: DecemberConfig): Promise<void> {
-    await fs.mkdir(CONFIG_DIR, { recursive: true })
-    await fs.writeFile(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8')
+    const configDir = getConfigDir()
+    const configFile = getConfigFile()
+    await fs.mkdir(configDir, { recursive: true })
+    await fs.writeFile(configFile, JSON.stringify(config, null, 2), 'utf-8')
+    await fs.chmod(configFile, 0o600).catch(() => {})
 
     try {
         const workspacePath = path.join(process.cwd(), '.december', 'settings.json')
@@ -153,14 +182,65 @@ export async function saveConfig(config: DecemberConfig): Promise<void> {
     }
 }
 
+export async function updateConfig(partial: Partial<DecemberConfig>): Promise<DecemberConfig> {
+    const current = await loadConfig()
+    const updated = { ...current, ...partial }
+    await saveConfig(updated)
+    return updated
+}
+
+function resolveSubscriptionBundle(
+    config: DecemberConfig
+): { provider: string; bundle: SubscriptionTokenBundle } | undefined {
+    if (!config.subscriptions || Object.keys(config.subscriptions).length === 0) {
+        return undefined
+    }
+
+    const activeProvider = config.activeProvider
+    if (activeProvider && config.subscriptions[activeProvider]) {
+        return { provider: activeProvider, bundle: config.subscriptions[activeProvider] }
+    }
+
+    // Only map aliases if priority is explicitly subscription OR if activeProvider has no BYOK key
+    const hasByokForActive = !!(
+        activeProvider &&
+        config.providers &&
+        config.providers[activeProvider]
+    )
+
+    if (config.authPriority === 'subscription' || !hasByokForActive) {
+        // Check alias maps (e.g. anthropic -> claude, openai -> codex, google -> gemini)
+        if (activeProvider === 'anthropic' && config.subscriptions['claude']) {
+            return { provider: 'claude', bundle: config.subscriptions['claude'] }
+        }
+        if (activeProvider === 'openai' && config.subscriptions['codex']) {
+            return { provider: 'codex', bundle: config.subscriptions['codex'] }
+        }
+        if (activeProvider === 'google' && config.subscriptions['gemini']) {
+            return { provider: 'gemini', bundle: config.subscriptions['gemini'] }
+        }
+    }
+
+    if (config.authPriority === 'subscription') {
+        const firstKey = Object.keys(config.subscriptions)[0]
+        return { provider: firstKey, bundle: config.subscriptions[firstKey] }
+    }
+
+    return undefined
+}
+
 export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
     const config = await loadConfig()
 
-    const hasByokConfig =
-        config.activeProvider && config.providers && config.providers[config.activeProvider]
+    const hasByokConfig = !!(
+        config.activeProvider &&
+        config.providers &&
+        config.providers[config.activeProvider]
+    )
     const hasDecember = !!config.decemberToken
+    const subMatch = resolveSubscriptionBundle(config)
 
-    // if preferred is december and it exists, use it first
+    // 1. If explicit authPriority is december
     if (config.authPriority === 'december' && hasDecember) {
         const model = ensureValidModelForProvider('december_proxy', config.activeModel)
         return {
@@ -171,7 +251,40 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
         }
     }
 
-    // wallet vs byok priority: byok via config file takes precedence.
+    // 2. If explicit authPriority is byok, OR if activeProvider is configured in BYOK and priority is not subscription
+    if (
+        (config.authPriority === 'byok' ||
+            (hasByokConfig && config.authPriority !== 'subscription')) &&
+        hasByokConfig
+    ) {
+        const model = ensureValidModelForProvider(config.activeProvider!, config.activeModel)
+        return {
+            provider: config.activeProvider as any,
+            apiKey: config.providers[config.activeProvider!],
+            model,
+            authMethod: 'byok',
+        }
+    }
+
+    // 3. Subscription (explicit subscription priority, or active subscription without conflicting BYOK activeProvider)
+    if (subMatch && config.authPriority !== 'byok' && config.authPriority !== 'december') {
+        const { resolveSubscriptionToken } =
+            await import('./auth/subscriptions/subscription-manager')
+        const resolvedBundle = await resolveSubscriptionToken(subMatch.provider, subMatch.bundle)
+        const targetProvider = resolvedBundle.provider || subMatch.provider
+        const model = ensureValidModelForProvider(targetProvider, config.activeModel)
+
+        return {
+            provider: targetProvider,
+            apiKey: resolvedBundle.accessToken,
+            model,
+            authMethod: 'subscription',
+            subscription: resolvedBundle,
+            baseURL: resolvedBundle.endpoint,
+        }
+    }
+
+    // 4. BYOK in config takes precedence over December proxy fallback
     if (hasByokConfig) {
         const model = ensureValidModelForProvider(config.activeProvider!, config.activeModel)
         return {
@@ -182,7 +295,7 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
         }
     }
 
-    // wallet fallback
+    // 5. December Proxy fallback
     if (hasDecember) {
         const model = ensureValidModelForProvider('december_proxy', config.activeModel)
         return {
@@ -190,6 +303,36 @@ export async function getProviderConfig(): Promise<ProviderConfig | undefined> {
             apiKey: config.decemberToken!,
             model,
             authMethod: 'december',
+        }
+    }
+
+    // 6. Check if local subscription can be auto-detected from environment variables
+    if (
+        process.env.CLAUDE_CODE_OAUTH_TOKEN ||
+        process.env.ANTHROPIC_AUTH_TOKEN ||
+        process.env.COPILOT_TOKEN ||
+        process.env.GITHUB_COPILOT_TOKEN ||
+        process.env.OPENAI_OAUTH_TOKEN ||
+        process.env.CODEX_TOKEN ||
+        process.env.GEMINI_OAUTH_TOKEN ||
+        process.env.ANTIGRAVITY_TOKEN
+    ) {
+        const { detectAllSubscriptions, resolveSubscriptionToken } =
+            await import('./auth/subscriptions/subscription-manager')
+        const detected = await detectAllSubscriptions()
+        const firstKey = Object.keys(detected)[0]
+        if (firstKey && detected[firstKey]) {
+            const resolvedBundle = await resolveSubscriptionToken(firstKey, detected[firstKey])
+            const targetProvider = resolvedBundle.provider || firstKey
+            const model = ensureValidModelForProvider(targetProvider, config.activeModel)
+            return {
+                provider: targetProvider,
+                apiKey: resolvedBundle.accessToken,
+                model,
+                authMethod: 'subscription',
+                subscription: resolvedBundle,
+                baseURL: resolvedBundle.endpoint,
+            }
         }
     }
 
@@ -203,9 +346,14 @@ export async function getAuthStatus() {
         config.providers &&
         config.providers[config.activeProvider]
     )
+    const subscriptions = config.subscriptions ? Object.keys(config.subscriptions) : []
+    const hasSubscription = subscriptions.length > 0
+
     return {
         hasByok: hasByokConfig,
         hasDecember: !!config.decemberToken,
-        authPriority: config.authPriority || 'byok',
+        hasSubscription,
+        subscriptions,
+        authPriority: config.authPriority || (hasSubscription ? 'subscription' : 'byok'),
     }
 }

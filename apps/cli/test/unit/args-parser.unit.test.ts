@@ -31,6 +31,9 @@ describe('CLI Args Parser (Unit)', () => {
         expect(parseCliArgs(['init']).command).toBe('init')
         expect(parseCliArgs(['update']).command).toBe('update')
         expect(parseCliArgs(['doctor']).command).toBe('doctor')
+        expect(parseCliArgs(['auth']).command).toBe('auth')
+        expect(parseCliArgs(['link', 'copilot']).command).toBe('link')
+        expect(parseCliArgs(['key', 'openai', 'sk-test']).command).toBe('key')
         expect(parseCliArgs(['doctor', '--fix']).fix).toBe(true)
     })
 

@@ -84,7 +84,14 @@ export function useSettingsHandlers() {
                 break
             }
             case 'authPriority': {
-                const newPriority = settingsAuthPriority === 'december' ? 'byok' : 'december'
+                const priorities: ('subscription' | 'byok' | 'december')[] = [
+                    'subscription',
+                    'byok',
+                    'december',
+                ]
+                const currIdx = priorities.indexOf(settingsAuthPriority || 'byok')
+                const nextIdx = currIdx >= 0 ? (currIdx + 1) % priorities.length : 0
+                const newPriority = priorities[nextIdx]
                 config.authPriority = newPriority
                 setSettingsAuthPriority(newPriority)
                 updated = true
@@ -95,7 +102,13 @@ export function useSettingsHandlers() {
                 if (newProviderConfig && agent) {
                     const llm = instantiateProvider(
                         newProviderConfig.provider,
-                        newProviderConfig.apiKey
+                        newProviderConfig.apiKey,
+                        {
+                            authMethod: newProviderConfig.authMethod,
+                            subscription: newProviderConfig.subscription,
+                            headers: newProviderConfig.headers,
+                            baseURL: newProviderConfig.baseURL,
+                        }
                     )
                     agent.setLLM(llm)
 
@@ -108,13 +121,23 @@ export function useSettingsHandlers() {
                     const { useCliStore } = await import('../store')
                     useCliStore.getState().setSelectedProvider(newProviderConfig.provider)
                     setAuthMethod(newProviderConfig.authMethod)
+                    const displayPriority =
+                        newPriority === 'subscription'
+                            ? 'Subscription'
+                            : newPriority === 'december'
+                              ? 'December Cloud Wallet'
+                              : 'BYOK'
                     addToast(
-                        `Auth priority set to ${newPriority === 'december' ? 'December Cloud Wallet' : 'BYOK'} (${newProviderConfig.provider} / ${targetModel})`
+                        `Auth priority set to ${displayPriority} (${newProviderConfig.provider} / ${targetModel})`
                     )
                 } else {
-                    addToast(
-                        `Auth priority set to ${newPriority === 'december' ? 'December Cloud Wallet' : 'BYOK'}`
-                    )
+                    const displayPriority =
+                        newPriority === 'subscription'
+                            ? 'Subscription'
+                            : newPriority === 'december'
+                              ? 'December Cloud Wallet'
+                              : 'BYOK'
+                    addToast(`Auth priority set to ${displayPriority}`)
                 }
                 break
             }

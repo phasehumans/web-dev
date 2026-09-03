@@ -31,7 +31,6 @@ export function ContextSelectMenu(props: any) {
     const conversationHistoryTokens = decomp.conversationHistory.totalTokens
     const totalTokens = decomp.totalTokens
     const freeTokens = decomp.freeTokens
-    const cacheableStaticPrefixTokens = decomp.cacheableStaticPrefixTokens
 
     const pct = (n: number) => ((n / maxTokens) * 100).toFixed(1)
     const formatK = (n: number) => (n > 1000 ? (n / 1000).toFixed(1) + 'k' : n.toString())
@@ -105,12 +104,7 @@ export function ContextSelectMenu(props: any) {
                 <Text color={THEME.colors.text}>Context</Text>
             </Box>
             <Box flexDirection="row" gap={3}>
-                <Box flexDirection="column">
-                    {gridRows}
-                    <Box marginTop={1}>
-                        <MenuFooter items={[{ key: 'esc', label: 'Cancel' }]} />
-                    </Box>
-                </Box>
+                <Box flexDirection="column">{gridRows}</Box>
 
                 <Box flexDirection="column">
                     <Box gap={1}>
@@ -172,15 +166,10 @@ export function ContextSelectMenu(props: any) {
                             </Text>
                         </Box>
                     </Box>
-                    <Box marginTop={1} gap={1}>
-                        <Text color={THEME.colors.brand}>★</Text>
-                        <Text color={THEME.colors.muted}>
-                            Cacheable static prefix: {formatK(cacheableStaticPrefixTokens)} tokens (
-                            {pct(cacheableStaticPrefixTokens)}%)
-                        </Text>
-                    </Box>
                 </Box>
             </Box>
+
+            <MenuFooter items={[{ key: 'esc', label: 'Cancel' }]} />
         </Box>
     )
 }

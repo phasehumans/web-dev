@@ -94,6 +94,16 @@ export type GenerationStreamEvent =
           data: {
               result: any
               toolCallId?: string
+              output?: string
+              error?: string
+          }
+      }
+    | {
+          type: 'FileModified'
+          data: {
+              path: string
+              diff?: string
+              action?: 'created' | 'modified' | 'deleted'
           }
       }
     | {
@@ -224,6 +234,208 @@ export type GenerationStreamEvent =
           }
       }
 
+export function normalizeAgentStreamEvent(raw: any): GenerationStreamEvent {
+    let payload = raw
+    if (typeof payload === 'string') {
+        try {
+            payload = JSON.parse(payload)
+        } catch {
+            // Intentionally swallowed: Keep as raw string if JSON parsing fails
+        }
+    }
+
+    if (!payload || typeof payload !== 'object') {
+        return { type: 'StreamChunk', data: { content: String(raw ?? '') } }
+    }
+
+    let innerData = payload.data !== undefined ? payload.data : payload
+    if (typeof innerData === 'string') {
+        try {
+            innerData = JSON.parse(innerData)
+        } catch {
+            // Intentionally swallowed: Keep as raw string if JSON parsing fails
+        }
+    }
+
+    const eventType =
+        payload.type || (typeof innerData === 'object' && innerData?.type) || 'StreamChunk'
+
+    switch (eventType) {
+        case 'ThinkingChunk': {
+            const content =
+                (typeof innerData === 'object'
+                    ? (innerData?.content ?? innerData?.thoughts)
+                    : null) ??
+                payload.content ??
+                payload.thoughts ??
+                (typeof innerData === 'string' ? innerData : '')
+            return {
+                type: 'ThinkingChunk',
+                data: {
+                    content: typeof content === 'string' ? content : JSON.stringify(content ?? ''),
+                },
+            }
+        }
+        case 'StreamChunk': {
+            const content =
+                (typeof innerData === 'object' ? (innerData?.content ?? innerData?.chunk) : null) ??
+                payload.content ??
+                payload.chunk ??
+                (typeof innerData === 'string' ? innerData : '')
+            return {
+                type: 'StreamChunk',
+                data: {
+                    content: typeof content === 'string' ? content : JSON.stringify(content ?? ''),
+                },
+            }
+        }
+        case 'ToolCallStart': {
+            const tc =
+                (typeof innerData === 'object' && innerData?.toolCall) ||
+                payload.toolCall ||
+                (typeof innerData === 'object' ? innerData : payload)
+            const id = tc?.id || tc?.toolCallId || `tool-${Date.now()}`
+            const name = tc?.name || tc?.toolName || 'tool'
+            const input = tc?.input ?? tc?.toolInput ?? tc?.args ?? {}
+            return {
+                type: 'ToolCallStart',
+                data: {
+                    toolCall: { id, name, input, args: input },
+                },
+            }
+        }
+        case 'ToolExecutionUpdate':
+        case 'TerminalData': {
+            const toolCallId =
+                (typeof innerData === 'object' && (innerData?.toolCallId || innerData?.taskId)) ||
+                payload.toolCallId ||
+                payload.taskId ||
+                ''
+            const chunk =
+                (typeof innerData === 'object' && innerData?.chunk) ||
+                payload.chunk ||
+                (typeof innerData === 'string' ? innerData : '')
+            return {
+                type: 'ToolExecutionUpdate',
+                data: { toolCallId: String(toolCallId), chunk: String(chunk) },
+            }
+        }
+        case 'ToolCallResult': {
+            const res =
+                typeof innerData === 'object' && innerData?.result !== undefined
+                    ? innerData.result
+                    : payload.result !== undefined
+                      ? payload.result
+                      : innerData
+            const toolCallId =
+                (typeof innerData === 'object' && innerData?.toolCallId) ||
+                payload.toolCallId ||
+                (typeof res === 'object' && res?.toolCallId) ||
+                undefined
+            const output =
+                (typeof res === 'object' ? (res?.output ?? res?.content) : null) ??
+                (typeof innerData === 'object'
+                    ? (innerData?.output ?? innerData?.content)
+                    : null) ??
+                (typeof res === 'string' ? res : undefined)
+            const error =
+                (typeof res === 'object' ? res?.error : null) ??
+                (typeof innerData === 'object' ? innerData?.error : null) ??
+                payload.error ??
+                undefined
+            return {
+                type: 'ToolCallResult',
+                data: {
+                    result: res,
+                    toolCallId,
+                    output,
+                    error: error ? String(error) : undefined,
+                },
+            }
+        }
+        case 'FileModified': {
+            const path =
+                (typeof innerData === 'object' && (innerData?.path || innerData?.filePath)) ||
+                payload.path ||
+                payload.filePath ||
+                ''
+            const diff =
+                (typeof innerData === 'object' && innerData?.diff) || payload.diff || undefined
+            const action =
+                (typeof innerData === 'object' && innerData?.action) || payload.action || 'modified'
+            return {
+                type: 'FileModified',
+                data: {
+                    path: String(path),
+                    diff,
+                    action,
+                },
+            }
+        }
+        case 'ContextCompacted': {
+            const summary =
+                (typeof innerData === 'object' && innerData?.summary) || payload.summary || ''
+            return {
+                type: 'ContextCompacted',
+                data: { summary: String(summary) },
+            }
+        }
+        case 'AgentStatus': {
+            const message =
+                (typeof innerData === 'object' &&
+                    (innerData?.message || innerData?.statusMessage)) ||
+                payload.message ||
+                payload.statusMessage ||
+                ''
+            return {
+                type: 'AgentStatus',
+                data: { message: String(message) },
+            }
+        }
+        case 'AgentError': {
+            const error =
+                (typeof innerData === 'object' && (innerData?.error || innerData?.message)) ||
+                payload.error ||
+                payload.message ||
+                'Agent Execution Error'
+            return {
+                type: 'AgentError',
+                data: { error: String(error), message: String(error) },
+            }
+        }
+        case 'AgentInterrupt': {
+            return { type: 'AgentInterrupt', data: {} }
+        }
+        case 'TurnEnd': {
+            return { type: 'TurnEnd', data: {} }
+        }
+        case 'AgentEnd': {
+            return { type: 'AgentEnd', data: innerData }
+        }
+        case 'AgentStart':
+        case 'TurnStart':
+        case 'connected':
+        case 'project-created':
+        case 'phase':
+        case 'message-start':
+        case 'message-chunk':
+        case 'message-complete':
+        case 'build-plan':
+        case 'patch-plan':
+        case 'file-start':
+        case 'file-chunk':
+        case 'file-complete':
+        case 'file-error':
+        case 'result':
+        case 'error': {
+            return { type: eventType, data: innerData } as GenerationStreamEvent
+        }
+        default: {
+            return { type: eventType, data: innerData } as any
+        }
+    }
+}
+
 type GenerateProjectInput = {
     prompt: string
     sessionId?: string | null
@@ -280,6 +492,7 @@ const runOverSocket = async (
         const socket = getSharedSocket()
 
         let hasResolved = false
+        let hasSentPrompt = false
         let resultData: any = null
 
         const cleanup = () => {
@@ -288,6 +501,8 @@ const runOverSocket = async (
             socket.off('agent_event', handleAgentEvent)
             socket.off('error', handleError)
             socket.off('disconnect', handleDisconnect)
+            socket.io.off('reconnect', handleReconnect)
+            socket.io.off('reconnect_failed', handleReconnectFailed)
         }
 
         const handleConnect = () => {
@@ -295,11 +510,26 @@ const runOverSocket = async (
 
             socket.emit('join_session', sessionId)
 
-            socket.emit('send_prompt', {
-                sessionId: sessionId,
-                projectId: sessionId,
-                prompt: prompt,
-            })
+            if (!hasSentPrompt) {
+                hasSentPrompt = true
+                socket.emit('send_prompt', {
+                    sessionId: sessionId,
+                    projectId: sessionId,
+                    prompt: prompt,
+                })
+            }
+        }
+
+        const handleReconnect = () => {
+            socket.emit('join_session', sessionId)
+        }
+
+        const handleReconnectFailed = () => {
+            if (!hasResolved) {
+                hasResolved = true
+                cleanup()
+                reject(new ApiError('Socket reconnection failed after multiple attempts', 500))
+            }
         }
 
         const handleConnectError = async (err: any) => {
@@ -311,43 +541,35 @@ const runOverSocket = async (
                     return
                 }
             }
-            if (!hasResolved) {
+            if (!hasResolved && !socket.active) {
                 hasResolved = true
                 cleanup()
                 reject(new ApiError(err.message || 'Socket connection failed', 500))
             }
         }
 
-        const handleAgentEvent = (event: any) => {
-            let parsedData = event.data !== undefined ? event.data : event
-            if (typeof parsedData === 'string') {
-                try {
-                    parsedData = JSON.parse(parsedData)
-                } catch {
-                    // Intentionally swallowed: Keep as raw string if JSON parsing fails
-                }
-            }
-
-            const eventType = event.type || parsedData?.type || 'StreamChunk'
-            const streamEvent = { type: eventType, data: parsedData } as GenerationStreamEvent
+        const handleAgentEvent = (rawEvent: any) => {
+            const streamEvent = normalizeAgentStreamEvent(rawEvent)
             onEvent(streamEvent)
 
-            if (parsedData?.generatedFiles) {
-                useAppStore.getState().replaceGeneratedOutput(parsedData.generatedFiles)
+            if (streamEvent.data?.generatedFiles) {
+                useAppStore.getState().replaceGeneratedOutput(streamEvent.data.generatedFiles)
             }
 
-            if (eventType === 'result' || eventType === 'AgentEnd') {
-                resultData = parsedData
+            if (streamEvent.type === 'result' || streamEvent.type === 'AgentEnd') {
+                resultData = streamEvent.data
                 hasResolved = true
                 cleanup()
                 resolve(resultData)
             }
-            if (eventType === 'error' || eventType === 'AgentError') {
+            if (streamEvent.type === 'error' || streamEvent.type === 'AgentError') {
                 hasResolved = true
                 cleanup()
                 reject(
                     new ApiError(
-                        parsedData?.error || parsedData?.message || 'Agent Execution Error',
+                        (streamEvent.data as any)?.error ||
+                            streamEvent.data?.message ||
+                            'Agent Execution Error',
                         500
                     )
                 )
@@ -362,11 +584,11 @@ const runOverSocket = async (
             }
         }
 
-        const handleDisconnect = () => {
-            if (!hasResolved) {
+        const handleDisconnect = (reason: string) => {
+            if (reason === 'io server disconnect' && !hasResolved) {
                 hasResolved = true
                 cleanup()
-                reject(new Error('Socket disconnected prematurely'))
+                reject(new Error('Socket disconnected by server'))
             }
         }
 
@@ -385,6 +607,8 @@ const runOverSocket = async (
         socket.on('agent_event', handleAgentEvent)
         socket.on('error', handleError)
         socket.on('disconnect', handleDisconnect)
+        socket.io.on('reconnect', handleReconnect)
+        socket.io.on('reconnect_failed', handleReconnectFailed)
 
         if (socket.connected) {
             handleConnect()

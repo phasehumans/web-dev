@@ -46,7 +46,12 @@ function renderFormattedToolSummary(toolSummary: string, isError = false) {
     )
 }
 
-export const ToolCallCard: React.FC<ToolCallCardProps> = ({ toolName, toolInput, status }) => {
+export const ToolCallCard: React.FC<ToolCallCardProps> = ({
+    toolName,
+    toolInput,
+    status,
+    output,
+}) => {
     const isRunning = status === 'running'
     const isError = status === 'error'
     const summaryText = getToolSummary(toolName, toolInput)
@@ -54,8 +59,15 @@ export const ToolCallCard: React.FC<ToolCallCardProps> = ({ toolName, toolInput,
 
     if (isRunning) {
         return (
-            <div className="flex items-center gap-2 py-0.5 text-[12.5px] font-sans">
-                <CliSpinner label={actionLabel} />
+            <div className="flex flex-col gap-1 py-0.5 text-[12.5px] font-sans">
+                <div className="flex items-center gap-2">
+                    <CliSpinner label={actionLabel} />
+                </div>
+                {output && output.trim().length > 0 && (
+                    <div className="pl-5 text-xs font-mono text-[#8E8D8C] max-h-24 overflow-y-auto overflow-x-hidden whitespace-pre-wrap select-text leading-tight bg-black/20 p-1.5 rounded border border-white/5">
+                        {output.length > 300 ? '...' + output.slice(-300) : output}
+                    </div>
+                )}
             </div>
         )
     }

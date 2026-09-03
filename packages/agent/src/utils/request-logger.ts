@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { decomposeMessages, decomposeSystemPrompt, decomposeTools } from '@december/shared'
@@ -76,37 +77,99 @@ export function createRequestLogEntry(params: CreateRequestLogEntryParams): Requ
     return logEntry
 }
 
-export function getSessionLogPath(workspaceDir: string, sessionId: string): string {
-    if (!workspaceDir) return ''
+export function getGlobalConfigDir(): string {
+    return (
+        process.env.DECEMBER_CONFIG_DIR ||
+        path.join(process.env.HOME || os.homedir(), '.config', 'december')
+    )
+}
+
+export function getLogsDir(customDir?: string): string {
+    if (customDir) return customDir
+    if (process.env.DECEMBER_LOGS_DIR) return process.env.DECEMBER_LOGS_DIR
+    return path.join(getGlobalConfigDir(), 'logs')
+}
+
+export function getSessionLogPath(sessionIdOrLogsDir: string, logsDirOrSessionId?: string): string {
+    if (!sessionIdOrLogsDir && !logsDirOrSessionId) return ''
+
+    let sessionId: string
+    let customDir: string | undefined
+
+    if (logsDirOrSessionId) {
+        if (
+            sessionIdOrLogsDir.startsWith('session-') ||
+            (!sessionIdOrLogsDir.includes(path.sep) && logsDirOrSessionId.includes(path.sep))
+        ) {
+            sessionId = sessionIdOrLogsDir
+            customDir = logsDirOrSessionId
+        } else {
+            customDir = sessionIdOrLogsDir
+            sessionId = logsDirOrSessionId
+        }
+    } else {
+        sessionId = sessionIdOrLogsDir
+    }
+
     const cleanSessionId = sessionId.startsWith('session-') ? sessionId : `session-${sessionId}`
-    return path.join(workspaceDir, '.december', 'logs', `${cleanSessionId}.jsonl`)
+    return path.join(getLogsDir(customDir), `${cleanSessionId}.jsonl`)
 }
 
 export async function appendTurnLog(
-    workspaceDir: string | undefined,
-    sessionId: string,
-    entry: RequestLogEntry
+    arg1: string | undefined,
+    arg2: string | RequestLogEntry,
+    arg3?: RequestLogEntry | string
 ): Promise<void> {
-    if (!workspaceDir) return
     try {
-        const logFile = getSessionLogPath(workspaceDir, sessionId)
+        let sessionId: string
+        let entry: RequestLogEntry
+        let logsDir: string | undefined
+
+        if (typeof arg2 === 'object' && arg2 !== null) {
+            if (!arg1) return
+            sessionId = arg1
+            entry = arg2 as RequestLogEntry
+            logsDir = typeof arg3 === 'string' ? arg3 : undefined
+        } else {
+            if (!arg2 || !arg3 || typeof arg3 !== 'object') return
+            sessionId = arg2 as string
+            entry = arg3 as RequestLogEntry
+            logsDir = arg1
+        }
+
+        const logFile = getSessionLogPath(sessionId, logsDir)
         if (!logFile) return
-        const logsDir = path.dirname(logFile)
-        await fs.promises.mkdir(logsDir, { recursive: true })
+        const dir = path.dirname(logFile)
+        await fs.promises.mkdir(dir, { recursive: true })
         const line = JSON.stringify(entry) + '\n'
         await fs.promises.appendFile(logFile, line, 'utf8')
-    } catch (e) {
+    } catch {
         // Intentionally swallowed: Request logging must never block or crash the agent loop
     }
 }
 
 export async function getTurnLogs(
-    workspaceDir: string | undefined,
-    sessionId: string
+    arg1: string | undefined,
+    arg2?: string
 ): Promise<RequestLogEntry[]> {
-    if (!workspaceDir) return []
+    if (!arg1 && !arg2) return []
     try {
-        const logFile = getSessionLogPath(workspaceDir, sessionId)
+        let sessionId: string
+        let logsDir: string | undefined
+
+        if (arg2) {
+            if (arg1 && (arg1.startsWith('session-') || !arg1.includes(path.sep))) {
+                sessionId = arg1
+                logsDir = arg2
+            } else {
+                logsDir = arg1
+                sessionId = arg2
+            }
+        } else {
+            sessionId = arg1!
+        }
+
+        const logFile = getSessionLogPath(sessionId, logsDir)
         if (!logFile || !fs.existsSync(logFile)) {
             return []
         }
@@ -116,7 +179,7 @@ export async function getTurnLogs(
             .map((line) => line.trim())
             .filter((line) => line.length > 0)
             .map((line) => JSON.parse(line))
-    } catch (e) {
+    } catch {
         // Intentionally swallowed: return empty array if log file cannot be read
         return []
     }

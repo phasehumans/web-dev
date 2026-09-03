@@ -2,6 +2,8 @@ import readline from 'readline'
 
 import { runAgentLoop } from '@december/agent'
 
+import { purgeProjectEnvApiKeys } from './utils/env-sanitizer'
+
 import type { Agent } from '@december/agent'
 
 const originalConsole = {
@@ -27,6 +29,7 @@ export function restoreConsole() {
 
 export interface HeadlessTaskOptions {
     agent: Agent
+    cwd?: string
     stdin?: NodeJS.ReadableStream
     stdout?: NodeJS.WritableStream
     stderr?: NodeJS.WritableStream
@@ -52,6 +55,8 @@ export async function runHeadlessTask(
         stdout = process.stdout,
         stderr = process.stderr,
     } = options
+
+    purgeProjectEnvApiKeys(options.cwd)
 
     const isJson = Boolean(options.json)
 

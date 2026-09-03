@@ -4,18 +4,90 @@ import {
     geminiProvider,
     openrouterProvider,
     ollamaProvider,
+    copilotProvider,
+    antigravityProvider,
+    codexResponsesProvider,
 } from '@december/providers'
 
-export function instantiateProvider(provider: string, apiKey: string): any {
+import type { SubscriptionTokenBundle } from '../auth/subscriptions/types'
+
+export interface InstantiateProviderOptions {
+    authMethod?: 'byok' | 'december' | 'env' | 'subscription'
+    subscription?: SubscriptionTokenBundle
+    headers?: Record<string, string>
+    baseURL?: string
+}
+
+export function instantiateProvider(
+    provider: string,
+    apiKey: string,
+    options?: InstantiateProviderOptions
+): any {
     const normalized = (provider || '').toLowerCase().trim()
     switch (normalized) {
-        case 'openai':
+        case 'copilot':
+        case 'github_copilot':
+        case 'github': {
+            const endpoint = options?.baseURL || options?.subscription?.endpoint
+            return copilotProvider(apiKey, {
+                endpoint,
+                headers: options?.headers,
+            })
+        }
+        case 'codex':
+        case 'chatgpt': {
+            if (options?.authMethod === 'subscription' || options?.subscription) {
+                const endpoint = options?.baseURL || options?.subscription?.endpoint
+                const accountId = options?.subscription?.extra?.accountId
+                return codexResponsesProvider(apiKey, {
+                    endpoint,
+                    accountId,
+                    headers: options?.headers,
+                })
+            }
+            if (options?.baseURL || options?.headers) {
+                return openaiProvider(options?.baseURL, apiKey, options?.headers)
+            }
             return openaiProvider(undefined, apiKey)
+        }
+        case 'openai': {
+            if (options?.baseURL || options?.headers) {
+                return openaiProvider(options?.baseURL, apiKey, options?.headers)
+            }
+            return openaiProvider(undefined, apiKey)
+        }
         case 'anthropic':
+        case 'claude': {
+            if (options?.authMethod === 'subscription' || options?.subscription) {
+                const headers = {
+                    'anthropic-beta': 'oauth-2024-11-18',
+                    ...(options?.headers || {}),
+                }
+                return anthropicProvider(options?.baseURL, apiKey, headers)
+            }
+            if (options?.baseURL || options?.headers) {
+                return anthropicProvider(options?.baseURL, apiKey, options?.headers)
+            }
             return anthropicProvider(undefined, apiKey)
+        }
+        case 'antigravity': {
+            const endpoint = options?.baseURL || options?.subscription?.endpoint
+            return antigravityProvider(apiKey, {
+                endpoint,
+                headers: options?.headers,
+            })
+        }
         case 'gemini':
-        case 'google':
+        case 'google': {
+            if (options?.authMethod === 'subscription' || options?.subscription) {
+                const endpoint = options?.baseURL || options?.subscription?.endpoint
+                return antigravityProvider(apiKey, {
+                    endpoint,
+                    headers: options?.headers,
+                })
+            }
             return geminiProvider(apiKey)
+        }
         case 'openrouter':
             return openrouterProvider(apiKey)
         case 'deepseek':
@@ -23,7 +95,7 @@ export function instantiateProvider(provider: string, apiKey: string): any {
         case 'groq':
             return openaiProvider('https://api.groq.com/openai/v1', apiKey)
         case 'huggingface':
-            return openaiProvider('https://api-inference.huggingface.co/v1/', apiKey)
+            return openaiProvider('https://router.huggingface.co/v1', apiKey)
         case 'kimi':
             return anthropicProvider('https://api.kimi.com/coding', apiKey)
         case 'moonshot':
@@ -62,6 +134,25 @@ export function instantiateProvider(provider: string, apiKey: string): any {
             return openaiProvider('https://agentrouter.org/v1', apiKey, {
                 'User-Agent': 'claude-cli/2.1.0 (external, sdk-cli)',
             })
+        case 'minimax':
+            return openaiProvider('https://api.minimax.chat/v1', apiKey)
+        case 'dashscope':
+        case 'qwen':
+            return openaiProvider('https://dashscope.aliyuncs.com/compatible-mode/v1', apiKey)
+        case 'lmstudio': {
+            let endpoint = 'http://localhost:1234/v1'
+            if (apiKey && (apiKey.startsWith('http://') || apiKey.startsWith('https://'))) {
+                endpoint = apiKey.endsWith('/v1') ? apiKey : `${apiKey.replace(/\/+$/, '')}/v1`
+            }
+            return openaiProvider(endpoint, apiKey || 'lm-studio')
+        }
+        case 'llamacpp': {
+            let endpoint = 'http://localhost:8080/v1'
+            if (apiKey && (apiKey.startsWith('http://') || apiKey.startsWith('https://'))) {
+                endpoint = apiKey.endsWith('/v1') ? apiKey : `${apiKey.replace(/\/+$/, '')}/v1`
+            }
+            return openaiProvider(endpoint, apiKey || 'llama.cpp')
+        }
         case 'ollama': {
             let endpoint = 'http://localhost:11434/v1'
             if (apiKey && (apiKey.startsWith('http://') || apiKey.startsWith('https://'))) {

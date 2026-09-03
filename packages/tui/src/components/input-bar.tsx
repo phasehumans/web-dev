@@ -21,7 +21,8 @@ type Props = {
     disabled?: boolean
     placeholder?: string
     activeModel?: string
-    authMethod?: 'byok' | 'december' | 'env'
+    authMethod?: 'byok' | 'december' | 'env' | 'subscription'
+    isAuthenticated?: boolean
     hasBothAuth?: boolean
     authUI?: React.ReactNode
     agent?: any
@@ -46,6 +47,7 @@ export const InputBar = React.memo(function InputBar({
     placeholder = 'Ask December to build...',
     activeModel = 'unknown',
     authMethod,
+    isAuthenticated = true,
     hasBothAuth = false,
     authUI,
     agent,
@@ -461,10 +463,17 @@ export const InputBar = React.memo(function InputBar({
                             <Box gap={2} alignItems="center" flexShrink={1}>
                                 <Box gap={1} flexShrink={1}>
                                     <Text color={THEME.colors.muted}>
-                                        {activeModel}
-                                        {hasBothAuth && authMethod
-                                            ? ` (${authMethod === 'december' ? 'December Cloud' : 'BYOK'})`
-                                            : ''}
+                                        {!isAuthenticated
+                                            ? 'Not connected (run /login)'
+                                            : `${activeModel}${
+                                                  authMethod === 'subscription'
+                                                      ? ' (Subscription)'
+                                                      : authMethod === 'december'
+                                                        ? ' (December Cloud)'
+                                                        : authMethod === 'byok'
+                                                          ? ' (BYOK)'
+                                                          : ''
+                                              }`}
                                     </Text>
                                     {activeToast && (
                                         <Text

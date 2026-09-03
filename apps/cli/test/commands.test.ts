@@ -8,12 +8,17 @@ import { loadConfig, saveConfig } from '../src/config'
 
 describe('CLI Standalone Commands', () => {
     const tmpDir = path.join(process.cwd(), '.tmp-commands-test')
+    const originalHome = process.env.HOME
 
     beforeEach(async () => {
         await fs.mkdir(tmpDir, { recursive: true })
+        process.env.HOME = tmpDir
+        process.env.DECEMBER_CONFIG_DIR = path.join(tmpDir, '.config', 'december')
     })
 
     afterEach(async () => {
+        process.env.HOME = originalHome
+        delete process.env.DECEMBER_CONFIG_DIR
         await fs.rm(tmpDir, { recursive: true, force: true })
     })
 
@@ -120,17 +125,48 @@ describe('CLI Standalone Commands', () => {
         }
     })
 
-    it('handleDoctorCommand runs environment checks and outputs diagnostics', async () => {
+    it('handleKeyCommand saves API key to config and sets activeProvider', async () => {
+        const { handleKeyCommand } = await import('../src/commands')
+        await handleKeyCommand({ provider: 'openai', key: 'sk-test-custom-key' })
+
+        const config = await loadConfig()
+        expect(config.providers?.openai).toBe('sk-test-custom-key')
+        expect(config.activeProvider).toBe('openai')
+        expect(config.authPriority).toBe('byok')
+    })
+
+    it('handleLinkCommand without provider outputs available subscriptions', async () => {
         let loggedOutput = ''
         const originalLog = console.log
         console.log = (...args: any[]) => {
             loggedOutput += args.join(' ') + '\n'
         }
         try {
-            const { handleDoctorCommand } = await import('../src/commands')
-            await handleDoctorCommand({ fix: false })
-            expect(loggedOutput).toContain('December CLI Health & Environment Doctor')
-            expect(loggedOutput).toContain('Environment & Runtime')
+            const { handleLinkCommand } = await import('../src/commands')
+            await handleLinkCommand({})
+            expect(loggedOutput).toContain('Link an AI Subscription')
+            expect(loggedOutput).toContain('copilot')
+            expect(loggedOutput).toContain('claude')
+            expect(loggedOutput).toContain('chatgpt')
+            expect(loggedOutput).toContain('gemini')
+        } finally {
+            console.log = originalLog
+        }
+    })
+
+    it('handleAuthCommand prints subscriptions, BYOK, and cloud status', async () => {
+        let loggedOutput = ''
+        const originalLog = console.log
+        console.log = (...args: any[]) => {
+            loggedOutput += args.join(' ') + '\n'
+        }
+        try {
+            const { handleAuthCommand } = await import('../src/commands')
+            await handleAuthCommand({ action: 'status' })
+            expect(loggedOutput).toContain('Authentication & Subscription Status')
+            expect(loggedOutput).toContain('Subscriptions:')
+            expect(loggedOutput).toContain('BYOK API Keys:')
+            expect(loggedOutput).toContain('December Cloud Wallet:')
         } finally {
             console.log = originalLog
         }

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import * as configModule from '../src/config'
-import { setupAgentInterceptors } from '../src/store/interceptors'
+import { setupAgentInterceptors, globalSessionWhitelist } from '../src/store/interceptors'
 
 vi.mock('../src/config', () => ({
     loadConfig: vi.fn(),
@@ -14,6 +14,7 @@ describe('setupAgentInterceptors', () => {
 
     beforeEach(() => {
         vi.clearAllMocks()
+        globalSessionWhitelist.clear()
         mockAgent = {
             operations: { ui: {} },
         }

@@ -3,12 +3,14 @@ import { describe, expect, test } from 'bun:test'
 import { AgentRouterProvider } from '../../src/providers/agentrouter'
 import { CerebrasProvider } from '../../src/providers/cerebras'
 import { CohereProvider } from '../../src/providers/cohere'
+import { DashScopeProvider } from '../../src/providers/dashscope'
 import { DeepSeekProvider } from '../../src/providers/deepseek'
 import { FireworksProvider } from '../../src/providers/fireworks'
 import { GroqProvider } from '../../src/providers/groq'
 import { HuggingFaceProvider } from '../../src/providers/huggingface'
 import { HyperbolicProvider } from '../../src/providers/hyperbolic'
 import { KimiProvider } from '../../src/providers/kimi'
+import { MiniMaxProvider } from '../../src/providers/minimax'
 import { MistralProvider } from '../../src/providers/mistral'
 import { MoonshotProvider } from '../../src/providers/moonshot'
 import { NvidiaProvider } from '../../src/providers/nvidia'
@@ -108,5 +110,15 @@ describe('OpenAI-compatible Subproviders (Unit)', () => {
     test('instantiates AgentRouterProvider with correct ID', () => {
         const provider = new AgentRouterProvider('dummy-key')
         expect(provider.id).toBe('agentrouter')
+    })
+
+    test('instantiates DashScopeProvider with correct ID', () => {
+        const provider = new DashScopeProvider('dummy-key')
+        expect(provider.id).toBe('dashscope')
+    })
+
+    test('instantiates MiniMaxProvider with correct ID', () => {
+        const provider = new MiniMaxProvider('dummy-key')
+        expect(provider.id).toBe('minimax')
     })
 })

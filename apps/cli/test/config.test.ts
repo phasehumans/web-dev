@@ -229,6 +229,8 @@ describe('config', () => {
             expect(status).toEqual({
                 hasByok: true,
                 hasDecember: false,
+                hasSubscription: false,
+                subscriptions: [],
                 authPriority: 'byok',
             })
         })
@@ -246,6 +248,8 @@ describe('config', () => {
             expect(status).toEqual({
                 hasByok: false,
                 hasDecember: true,
+                hasSubscription: false,
+                subscriptions: [],
                 authPriority: 'byok',
             })
         })

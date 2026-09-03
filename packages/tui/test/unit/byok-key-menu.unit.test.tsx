@@ -8,6 +8,8 @@ describe('ByokKeyMenu Component (Unit)', () => {
     it('formats known and unknown provider names correctly', () => {
         expect(formatProviderName('openai')).toBe('OpenAI')
         expect(formatProviderName('anthropic')).toBe('Anthropic')
+        expect(formatProviderName('claude')).toBe('Anthropic')
+        expect(formatProviderName('codex')).toBe('OpenAI')
         expect(formatProviderName('google')).toBe('Google')
         expect(formatProviderName('openrouter')).toBe('OpenRouter')
         expect(formatProviderName('agentrouter')).toBe('AgentRouter')
