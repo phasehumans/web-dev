@@ -304,6 +304,7 @@ At the end of a session, or when a reflection pattern repeats $\ge 2$ times acro
 1. **Rule Synthesis Engine**: Evaluates the accumulated reflections across sessions for a given repository.
 2. **Deduplication & Conflict Resolution**: Checks existing `.december/rules.md` and `AGENTS.md` to prevent duplicate or conflicting instructions.
 3. **Automated Rule Persistence**: Appends the new structured rule to `.december/rules.md`:
+
     ```markdown
     <!-- .december/rules.md - Auto-synthesized rule -->
 
