@@ -6,7 +6,7 @@ export const getProviderModels = (provider: string) => {
     switch (provider) {
         case 'anthropic':
             return [
-                { label: 'Claude Opus 5 (Recommended)', value: 'claude-opus-5' },
+                { label: 'Claude Opus 5', value: 'claude-opus-5' },
                 { label: 'Claude Sonnet 5', value: 'claude-sonnet-5' },
                 { label: 'Claude Fable 5', value: 'claude-fable-5' },
                 { label: 'Claude Haiku 4.5', value: 'claude-haiku-4.5' },
@@ -20,7 +20,7 @@ export const getProviderModels = (provider: string) => {
         case 'google':
         case 'gemini':
             return [
-                { label: 'Gemini 3.7 Flash (Recommended)', value: 'gemini-3.7-flash' },
+                { label: 'Gemini 3.7 Flash', value: 'gemini-3.7-flash' },
                 { label: 'Gemini 3.6 Flash', value: 'gemini-3.6-flash' },
                 { label: 'Gemini 3.5 Flash', value: 'gemini-3.5-flash' },
                 { label: 'Gemini 3.5 Flash Lite', value: 'gemini-3.5-flash-lite' },
@@ -32,7 +32,7 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'openai':
             return [
-                { label: 'GPT-5.6 Sol (Recommended)', value: 'gpt-5.6-sol' },
+                { label: 'GPT-5.6 Sol', value: 'gpt-5.6-sol' },
                 { label: 'GPT-5.6 Terra', value: 'gpt-5.6-terra' },
                 { label: 'GPT-5.6 Luna', value: 'gpt-5.6-luna' },
                 { label: 'GPT-5.5 Pro', value: 'gpt-5.5-pro' },
@@ -50,12 +50,12 @@ export const getProviderModels = (provider: string) => {
             return FALLBACK_OPENROUTER_MODELS
         case 'deepseek':
             return [
-                { label: 'DeepSeek V4 Pro (Recommended)', value: 'deepseek-v4-pro' },
+                { label: 'DeepSeek V4 Pro', value: 'deepseek-v4-pro' },
                 { label: 'DeepSeek V4 Flash', value: 'deepseek-v4-flash' },
             ]
         case 'groq':
             return [
-                { label: 'GPT-OSS 120B (Recommended)', value: 'openai/gpt-oss-120b' },
+                { label: 'GPT-OSS 120B', value: 'openai/gpt-oss-120b' },
                 { label: 'GPT-OSS 20B', value: 'openai/gpt-oss-20b' },
                 { label: 'Qwen 3.6 27B', value: 'qwen/qwen3.6-27b' },
                 { label: 'Qwen 3.8 27B', value: 'qwen/qwen3.8-27b' },
@@ -65,7 +65,7 @@ export const getProviderModels = (provider: string) => {
         case 'huggingface':
             return [
                 {
-                    label: 'Llama 3.3 70B Instruct (Recommended)',
+                    label: 'Llama 3.3 70B Instruct',
                     value: 'meta-llama/Llama-3.3-70B-Instruct',
                 },
                 { label: 'Llama 3.1 8B Instruct', value: 'meta-llama/Meta-Llama-3.1-8B-Instruct' },
@@ -77,7 +77,7 @@ export const getProviderModels = (provider: string) => {
         case 'moonshot':
         case 'moonshoot':
             return [
-                { label: 'Kimi K3 (Recommended)', value: 'kimi-k3' },
+                { label: 'Kimi K3', value: 'kimi-k3' },
                 { label: 'Kimi K2.7 Code', value: 'kimi-k2.7-code' },
                 { label: 'Kimi K2.7 Code Highspeed', value: 'kimi-k2.7-code-highspeed' },
                 { label: 'Kimi K2.6', value: 'kimi-k2.6' },
@@ -85,7 +85,7 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'mistral':
             return [
-                { label: 'Mistral Large (Recommended)', value: 'mistral-large-latest' },
+                { label: 'Mistral Large', value: 'mistral-large-latest' },
                 { label: 'Mistral Medium', value: 'mistral-medium-latest' },
                 { label: 'Mistral Small', value: 'mistral-small-latest' },
                 { label: 'Codestral', value: 'codestral-latest' },
@@ -98,7 +98,7 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'xai':
             return [
-                { label: 'Grok 4.6 (Recommended)', value: 'grok-4.6' },
+                { label: 'Grok 4.6', value: 'grok-4.6' },
                 { label: 'Grok 4.5', value: 'grok-4.5' },
                 { label: 'Grok 4.3', value: 'grok-4.3' },
                 { label: 'Grok 4.20', value: 'grok-4.20' },
@@ -106,7 +106,7 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'zai':
             return [
-                { label: 'GLM 5 (Recommended)', value: 'glm-5' },
+                { label: 'GLM 5', value: 'glm-5' },
                 { label: 'GLM 5 Turbo', value: 'glm-5-turbo' },
                 { label: 'GLM 4.7', value: 'glm-4.7' },
                 { label: 'GLM 4.7 Flash', value: 'glm-4.7-flash' },
@@ -117,7 +117,7 @@ export const getProviderModels = (provider: string) => {
         case 'nvidia':
         case 'nim':
             return [
-                { label: 'GPT-OSS 120B (Recommended)', value: 'openai/gpt-oss-120b' },
+                { label: 'GPT-OSS 120B', value: 'openai/gpt-oss-120b' },
                 { label: 'GPT-OSS 20B', value: 'openai/gpt-oss-20b' },
                 { label: 'Nemotron 3.5 Lightning', value: 'nvidia/nemotron-3.5-lightning-30b-a3b' },
                 { label: 'Nemotron 3 Super 120B', value: 'nvidia/nemotron-3-super-120b-a12b' },
@@ -129,7 +129,7 @@ export const getProviderModels = (provider: string) => {
         case 'sambanova':
             return [
                 {
-                    label: 'Llama 3.3 70B Instruct (Recommended)',
+                    label: 'Llama 3.3 70B Instruct',
                     value: 'Meta-Llama-3.3-70B-Instruct',
                 },
                 { label: 'DeepSeek R1', value: 'DeepSeek-R1' },
@@ -138,13 +138,13 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'cerebras':
             return [
-                { label: 'GPT-OSS 120B (Recommended)', value: 'gpt-oss-120b' },
+                { label: 'GPT-OSS 120B', value: 'gpt-oss-120b' },
                 { label: 'Gemma 4 31B', value: 'gemma-4-31b' },
             ]
         case 'siliconflow':
         case 'siliconcloud':
             return [
-                { label: 'DeepSeek R1 (Recommended)', value: 'deepseek-ai/DeepSeek-R1' },
+                { label: 'DeepSeek R1', value: 'deepseek-ai/DeepSeek-R1' },
                 { label: 'DeepSeek V3', value: 'deepseek-ai/DeepSeek-V3' },
                 { label: 'Qwen 2.5 Coder 32B', value: 'Qwen/Qwen2.5-Coder-32B-Instruct' },
                 { label: 'Qwen 2.5 72B', value: 'Qwen/Qwen2.5-72B-Instruct' },
@@ -153,7 +153,7 @@ export const getProviderModels = (provider: string) => {
         case 'togetherai':
             return [
                 {
-                    label: 'Llama 3.3 70B Turbo (Recommended)',
+                    label: 'Llama 3.3 70B Turbo',
                     value: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
                 },
                 { label: 'DeepSeek R1', value: 'deepseek-ai/DeepSeek-R1' },
@@ -161,7 +161,7 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'hyperbolic':
             return [
-                { label: 'DeepSeek R1 (Recommended)', value: 'deepseek-ai/DeepSeek-R1' },
+                { label: 'DeepSeek R1', value: 'deepseek-ai/DeepSeek-R1' },
                 { label: 'DeepSeek V3', value: 'deepseek-ai/DeepSeek-V3' },
                 { label: 'Llama 3.3 70B', value: 'meta-llama/Llama-3.3-70B-Instruct' },
                 { label: 'Llama 3.1 405B', value: 'meta-llama/Meta-Llama-3.1-405B-Instruct' },
@@ -173,7 +173,7 @@ export const getProviderModels = (provider: string) => {
         case 'fireworksai':
             return [
                 {
-                    label: 'DeepSeek R1 (Recommended)',
+                    label: 'DeepSeek R1',
                     value: 'accounts/fireworks/models/deepseek-r1',
                 },
                 { label: 'DeepSeek V3', value: 'accounts/fireworks/models/deepseek-v3' },
@@ -193,20 +193,20 @@ export const getProviderModels = (provider: string) => {
             ]
         case 'perplexity':
             return [
-                { label: 'Sonar Reasoning Pro (Recommended)', value: 'sonar-reasoning-pro' },
+                { label: 'Sonar Reasoning Pro', value: 'sonar-reasoning-pro' },
                 { label: 'Sonar Pro', value: 'sonar-pro' },
                 { label: 'Sonar', value: 'sonar' },
             ]
         case 'cohere':
             return [
-                { label: 'Command A (Recommended)', value: 'command-a-03-2025' },
+                { label: 'Command A', value: 'command-a-03-2025' },
                 { label: 'Command R+', value: 'command-r-plus-08-2024' },
                 { label: 'Command R', value: 'command-r-08-2024' },
             ]
         case 'agentrouter':
         case 'agentrouter.org':
             return [
-                { label: 'GLM 5.3 (Recommended)', value: 'glm-5.3' },
+                { label: 'GLM 5.3', value: 'glm-5.3' },
                 { label: 'GPT-5.6 Sol', value: 'gpt-5.6-sol' },
                 { label: 'DeepSeek V4 Flash', value: 'deepseek-v4-flash' },
                 { label: 'Claude Opus 4.8', value: 'claude-opus-4-8' },
@@ -225,7 +225,7 @@ export const getProviderModels = (provider: string) => {
         case 'github_copilot':
         case 'github':
             return [
-                { label: 'GPT-4o (Recommended)', value: 'gpt-4o' },
+                { label: 'GPT-4o', value: 'gpt-4o' },
                 { label: 'GPT-4o Mini', value: 'gpt-4o-mini' },
                 { label: 'GPT-4.1', value: 'gpt-4.1' },
             ]
@@ -236,7 +236,7 @@ export const getProviderModels = (provider: string) => {
             return getProviderModels('openai')
         case 'ollama':
             return [
-                { label: 'Qwen 2.5 Coder 7B (Recommended)', value: 'qwen2.5-coder:7b' },
+                { label: 'Qwen 2.5 Coder 7B', value: 'qwen2.5-coder:7b' },
                 { label: 'Qwen 2.5 Coder 14B', value: 'qwen2.5-coder:14b' },
                 { label: 'Qwen 2.5 Coder 32B', value: 'qwen2.5-coder:32b' },
                 { label: 'Llama 3.3 70B', value: 'llama3.3:70b' },

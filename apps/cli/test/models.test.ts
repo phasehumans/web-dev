@@ -120,10 +120,10 @@ describe('models utils', () => {
 
     describe('getModelLabel', () => {
         it('returns correct label for a known model value', () => {
-            expect(getModelLabel('gemini-3.7-flash')).toBe('Gemini 3.7 Flash (Recommended)')
+            expect(getModelLabel('gemini-3.7-flash')).toBe('Gemini 3.7 Flash')
             expect(getModelLabel('gemini-3.6-flash')).toBe('Gemini 3.6 Flash')
-            expect(getModelLabel('claude-opus-5')).toBe('Claude Opus 5 (Recommended)')
-            expect(getModelLabel('gpt-5.6-sol')).toBe('GPT-5.6 Sol (Recommended)')
+            expect(getModelLabel('claude-opus-5')).toBe('Claude Opus 5')
+            expect(getModelLabel('gpt-5.6-sol')).toBe('GPT-5.6 Sol')
             expect(getModelLabel('o4-mini')).toBe('o4-mini')
         })
 
