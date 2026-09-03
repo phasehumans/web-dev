@@ -8,28 +8,28 @@ import { MenuFooter } from './menu-footer'
 const WINDOW_SIZE = 7
 
 export const PROVIDER_MENU_ITEMS = [
-    { label: 'Anthropic (Claude 3.7 / 3.5 API Key)', value: 'anthropic' },
-    { label: 'OpenAI (GPT-4o / o3 API Key)', value: 'openai' },
-    { label: 'Google AI Studio (Gemini API Key)', value: 'google' },
-    { label: 'OpenRouter (200+ Unified Models)', value: 'openrouter' },
-    { label: 'DeepSeek (DeepSeek V3 / R1)', value: 'deepseek' },
-    { label: 'Groq (Ultra-Fast Open Models)', value: 'groq' },
-    { label: 'Ollama (Local Models)', value: 'ollama' },
     { label: 'AgentRouter', value: 'agentrouter' },
+    { label: 'Anthropic', value: 'anthropic' },
     { label: 'Cerebras', value: 'cerebras' },
     { label: 'Cohere', value: 'cohere' },
+    { label: 'DeepSeek', value: 'deepseek' },
     { label: 'Fireworks AI', value: 'fireworks' },
+    { label: 'Google AI Studio', value: 'google' },
+    { label: 'Groq', value: 'groq' },
     { label: 'Hugging Face', value: 'huggingface' },
     { label: 'Hyperbolic', value: 'hyperbolic' },
-    { label: 'Kimi (Moonshot AI)', value: 'kimi' },
+    { label: 'Kimi', value: 'kimi' },
     { label: 'Mistral AI', value: 'mistral' },
     { label: 'NVIDIA NIM', value: 'nvidia' },
+    { label: 'Ollama', value: 'ollama' },
+    { label: 'OpenAI', value: 'openai' },
+    { label: 'OpenRouter', value: 'openrouter' },
     { label: 'Perplexity AI', value: 'perplexity' },
     { label: 'SambaNova Cloud', value: 'sambanova' },
     { label: 'SiliconFlow', value: 'siliconflow' },
     { label: 'Together AI', value: 'together' },
-    { label: 'xAI (Grok)', value: 'xai' },
-    { label: 'ZAI (GLM)', value: 'zai' },
+    { label: 'xAI', value: 'xai' },
+    { label: 'ZAI', value: 'zai' },
 ]
 
 export interface ByokProviderMenuProps {
