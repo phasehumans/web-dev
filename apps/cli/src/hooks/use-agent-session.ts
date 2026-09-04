@@ -800,10 +800,24 @@ ${decStatus}
                             setHasBothAuth(authStatus.hasByok && authStatus.hasDecember)
                             setSettingsAuthPriority(authStatus.authPriority)
                         }
-                        addToast(
-                            `Successfully authenticated ${targetProvider.toUpperCase()}!`,
-                            'success'
-                        )
+                        if (providerConfig?.subscription) {
+                            const { formatSubscriptionToast } =
+                                await import('../auth/subscriptions/formatters')
+                            addToast(
+                                formatSubscriptionToast(
+                                    providerConfig.subscription,
+                                    providerConfig.model
+                                ),
+                                'success'
+                            )
+                        } else {
+                            const { formatSubscriptionDisplayName } =
+                                await import('../auth/subscriptions/formatters')
+                            addToast(
+                                `Connected to ${formatSubscriptionDisplayName(targetProvider)}`,
+                                'success'
+                            )
+                        }
                     } catch (e: any) {
                         addToast(`Login failed: ${e.message}`, 'error')
                     }

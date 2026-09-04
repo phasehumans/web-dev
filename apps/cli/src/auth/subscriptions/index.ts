@@ -1,5 +1,6 @@
 export * from './types'
 export * from './subscription-manager'
+export * from './formatters'
 export { claudeAdapter } from './adapters/claude'
 export { codexAdapter } from './adapters/codex'
 export { copilotAdapter } from './adapters/copilot'

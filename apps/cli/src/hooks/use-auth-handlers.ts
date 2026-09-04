@@ -220,6 +220,8 @@ export function useAuthHandlers(
 
         const { getSubscriptionAdapter, verifyAndResolveSubscription, loginSubscription } =
             await import('../auth/subscriptions/subscription-manager')
+        const { formatSubscriptionToast, formatSubscriptionCard } =
+            await import('../auth/subscriptions/formatters')
 
         if (getSubscriptionAdapter(item.value)) {
             const { getDefaultModelForProvider } = await import('../utils/models')
@@ -266,10 +268,7 @@ export function useAuthHandlers(
                 ).catch(() => {})
 
                 setAuthMode('none')
-                addToast(
-                    `Verified local ${item.value.toUpperCase()} subscription (${verifiedBundle.subscriptionType || 'active'})`,
-                    'success'
-                )
+                addToast(formatSubscriptionToast(verifiedBundle, targetModel), 'success')
                 return
             }
 
@@ -359,7 +358,7 @@ export function useAuthHandlers(
                             blocks: [
                                 {
                                     type: 'text',
-                                    content: `Successfully authenticated and verified ${item.value.toUpperCase()} subscription!`,
+                                    content: formatSubscriptionCard(bundle, targetModel),
                                     color: '#6EE7B7',
                                 },
                             ],
@@ -372,7 +371,7 @@ export function useAuthHandlers(
                         bundle.endpoint
                     ).catch(() => {})
 
-                    addToast(`Connected to ${item.value.toUpperCase()} subscription`, 'success')
+                    addToast(formatSubscriptionToast(bundle, targetModel), 'success')
                 } catch (err: any) {
                     const errorText = `Subscription verification failed: ${err?.message || String(err)}`
                     setAuthError(errorText)

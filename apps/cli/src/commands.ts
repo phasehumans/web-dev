@@ -252,8 +252,14 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
         targetProvider === 'google' ||
         targetProvider === 'antigravity'
     ) {
-        const { loginSubscription } = await import('./auth/subscriptions/subscription-manager')
-        console.log(`\nInitiating subscription login for ${targetProvider.toUpperCase()}...`)
+        const {
+            loginSubscription,
+            formatSubscriptionDisplayName,
+            formatSubscriptionPlan,
+            formatSubscriptionIdentity,
+        } = await import('./auth/subscriptions')
+        const providerName = formatSubscriptionDisplayName(targetProvider)
+        console.log(`\nInitiating subscription login for ${providerName}...`)
         const bundle = await loginSubscription(targetProvider, (code, uri) => {
             console.log(
                 `\nPlease open ${uri} in your browser and enter code: ${code}\nWaiting for authorization...`
@@ -271,9 +277,21 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
             () => {}
         )
 
-        console.log(
-            `\x1b[32mSuccessfully authenticated ${targetProvider.toUpperCase()} subscription!\x1b[0m\n`
-        )
+        const GREEN = '\x1b[38;2;110;231;183m'
+        const WHITE = '\x1b[38;2;244;244;245m'
+        const RESET = '\x1b[0m'
+        const plan = formatSubscriptionPlan(bundle)
+        const identity = formatSubscriptionIdentity(bundle)
+
+        console.log(`\n${GREEN}Linked ${providerName} Subscription${RESET}`)
+        console.log(`  • Plan:         ${WHITE}${plan}${RESET}`)
+        if (identity) {
+            console.log(`  • Account:      ${WHITE}${identity}${RESET}`)
+        }
+        if (configToSave.activeModel) {
+            console.log(`  • Active Model: ${WHITE}${configToSave.activeModel}${RESET}`)
+        }
+        console.log(`  • Auth Mode:    ${WHITE}Subscription (Flat-rate)${RESET}\n`)
         return
     }
 
