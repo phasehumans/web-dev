@@ -1,5 +1,17 @@
 ## [unreleased]
 
+### Bug Fixes
+
+- _(auth)_ Improve ai subscription provider endpoints, gcloud fallback, and token refresh
+- _(auth)_ Polish subscription success toasts and cards without checkmark symbols
+- _(auth)_ Fix google oauth scopes, card formatting, and copilot identity
+
+### Miscellaneous Tasks
+
+- Remove justfile and cspell
+
+## [0.3.23] - 2026-09-04
+
 ### Features
 
 - Update settings ui, cli updater, integrations, and auth error handling
@@ -29,6 +41,7 @@
 ### Miscellaneous Tasks
 
 - _(platform,web)_ Remove unused import and downloadzip module
+- _(release)_ V0.3.23
 
 ## [0.3.22] - 2026-08-31
 
