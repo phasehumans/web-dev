@@ -2,6 +2,38 @@
 
 ### Features
 
+- Update settings ui, cli updater, integrations, and auth error handling
+- _(web,server)_ Live workspace chat streaming and real-time agent updates (#470)
+- _(cli)_ Add subscription auth with local detection, copilot device flow, and pkce oauth server
+- _(auth)_ Implement 3-pillar auth architecture and subscription select menu
+- Implement openai codex and chatgpt subscription oauth and responses backend
+- Implement subscription oauth adapters and skills research
+- Implement subscription oauth adapters and skills research specification (#479)
+
+### Bug Fixes
+
+- _(web)_ Add missing tailwindcss dependency
+- _(web)_ Refine mobile navigation, session loading screen, and settings ui
+- _(cli)_ Allow /model picker for subscription users and set copilot default model to gpt-4o
+- _(cli)_ Export updateConfig helper in config.ts
+- _(copilot)_ Map requested models to supported gpt-4o models
+- _(tui)_ Paginate model select menu to 7 items and remove recommended tags
+- _(providers)_ Handle undefined indexed access in codex and oauth jwt extraction
+
+### Styling
+
+- Format markdown documentation
+- _(tui)_ Remove emojis from auth menus and status row to preserve minimal styling
+- _(tui)_ Sort byok providers alphabetically and remove parentheses
+
+### Miscellaneous Tasks
+
+- _(platform,web)_ Remove unused import and downloadzip module
+
+## [0.3.22] - 2026-08-31
+
+### Features
+
 - _(web)_ Add cloudflare pages redirects and headers for spa deployment
 - _(web)_ Add pulsing logo preloader to index.html for instant startup loading
 
@@ -35,6 +67,7 @@
 - Remove standalone pr review and canvas modules to simplify coding agent
 - Remove fake settings stubs, dead modals, and clean diff tokenizer
 - Remove dead canvas subsystem, unrendered session filters, and clean unused web code
+- _(release)_ V0.3.22
 
 ## [0.3.21] - 2026-08-28
 
