@@ -24,17 +24,16 @@ export function getAllAvailableCommands(workspaceDir: string = process.cwd()): C
         const engine = new SkillDiscoveryEngine({ workspaceDir })
         const skills = engine.discoverAllSkills()
         skillItems = skills.map((s) => ({
-            name: s.name,
+            name: `skill:${s.name}`,
             description: formatSingleLineDescription(s.metadata.description),
-            value: `/${s.name}`,
+            value: `/skill:${s.name}`,
         }))
     } catch {
         // Intentionally swallowed: fallback when skills cannot be discovered
     }
 
-    const skillNames = new Set(skillItems.map((c) => c.name.toLowerCase()))
-    const filteredBuiltins = COMMANDS.filter((c) => !skillNames.has(c.name.toLowerCase()))
-    return [...filteredBuiltins, ...skillItems]
+    // Core built-in commands (e.g. /handoff) always take precedence and are never overwritten
+    return [...COMMANDS, ...skillItems]
 }
 
 export function getFilteredCommands(
@@ -43,5 +42,15 @@ export function getFilteredCommands(
 ): Command[] {
     const all = getAllAvailableCommands(workspaceDir)
     if (query.length === 0) return all
-    return all.filter((cmd) => cmd.name.toLowerCase().startsWith(query.toLowerCase()))
+
+    const cleanQuery = query.toLowerCase()
+    return all.filter((cmd) => {
+        const name = cmd.name.toLowerCase()
+        if (name.startsWith(cleanQuery)) return true
+        // If user typed query without "skill:" prefix, also match against the skill name (e.g. "tdd" matches "skill:tdd")
+        if (name.startsWith('skill:') && name.slice('skill:'.length).startsWith(cleanQuery)) {
+            return true
+        }
+        return false
+    })
 }

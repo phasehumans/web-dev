@@ -1497,26 +1497,59 @@ ${decStatus}
                 return
             }
 
-            // Check if input matches an installed skill (e.g. /ponytail or /tdd [args])
+            // Check if input matches an installed skill (e.g. /skill:handoff or /skill:tdd or /tdd [args])
             if (text.trim().startsWith('/')) {
                 const rawTrimmed = text.trim()
                 const [firstToken, ...restArgs] = rawTrimmed.split(/\s+/)
-                const potentialCmd = firstToken ? firstToken.slice(1).toLowerCase() : ''
-                try {
-                    const engine = new SkillDiscoveryEngine({ workspaceDir: process.cwd() })
-                    const skills = engine.discoverAllSkills()
-                    const matchedSkill = skills.find((s) => s.name.toLowerCase() === potentialCmd)
-                    if (matchedSkill) {
-                        const { body } = parseSkillFile(matchedSkill.entryFilePath)
-                        text = interpolateSkillPrompt(
-                            matchedSkill.name,
-                            body,
-                            restArgs,
-                            matchedSkill.directoryPath
+                let potentialCmd = firstToken ? firstToken.slice(1).toLowerCase() : ''
+                const isExplicitSkillPrefix = potentialCmd.startsWith('skill:')
+                if (isExplicitSkillPrefix) {
+                    potentialCmd = potentialCmd.slice('skill:'.length)
+                }
+
+                // Core built-ins take priority unless explicitly prefixed with /skill:
+                const coreBuiltins = new Set([
+                    'clear',
+                    'context',
+                    'copy',
+                    'exit',
+                    'feedback',
+                    'fork',
+                    'grill-me',
+                    'handoff',
+                    'init',
+                    'login',
+                    'logout',
+                    'mcp',
+                    'model',
+                    'new',
+                    'plan',
+                    'resume',
+                    'settings',
+                    'tasks',
+                    'update',
+                    'usage',
+                ])
+
+                if (isExplicitSkillPrefix || !coreBuiltins.has(potentialCmd)) {
+                    try {
+                        const engine = new SkillDiscoveryEngine({ workspaceDir: process.cwd() })
+                        const skills = engine.discoverAllSkills()
+                        const matchedSkill = skills.find(
+                            (s) => s.name.toLowerCase() === potentialCmd
                         )
+                        if (matchedSkill) {
+                            const { body } = parseSkillFile(matchedSkill.entryFilePath)
+                            text = interpolateSkillPrompt(
+                                matchedSkill.name,
+                                body,
+                                restArgs,
+                                matchedSkill.directoryPath
+                            )
+                        }
+                    } catch {
+                        // Intentionally swallowed: fallback to standard prompt if skill resolution fails
                     }
-                } catch {
-                    // Intentionally swallowed: fallback to standard prompt if skill resolution fails
                 }
             }
 
