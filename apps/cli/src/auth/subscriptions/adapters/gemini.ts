@@ -5,7 +5,7 @@ import path from 'node:path'
 
 import type { SubscriptionAdapter, SubscriptionTokenBundle } from '../types'
 
-const DEFAULT_ENDPOINT = 'https://daily-cloudcode-pa.googleapis.com'
+const DEFAULT_ENDPOINT = 'https://cloudcode-pa.googleapis.com'
 
 export const geminiAdapter: SubscriptionAdapter = {
     provider: 'gemini',
@@ -230,8 +230,35 @@ export const geminiAdapter: SubscriptionAdapter = {
             process.env.GOOGLE_OAUTH_CLIENT_SECRET || process.env.GEMINI_OAUTH_CLIENT_SECRET || ''
 
         if (!clientId) {
+            // Check if gcloud CLI is available and already authenticated
+            try {
+                const gcloudToken = execSync(
+                    'gcloud auth application-default print-access-token 2>/dev/null || gcloud auth print-access-token 2>/dev/null',
+                    {
+                        encoding: 'utf-8',
+                        timeout: 3000,
+                    }
+                ).trim()
+                if (gcloudToken && gcloudToken.startsWith('ya29.')) {
+                    return {
+                        provider: 'gemini',
+                        accessToken: gcloudToken,
+                        subscriptionType: 'gemini_advanced',
+                        source: 'local_import',
+                        updatedAt: Date.now(),
+                        endpoint: DEFAULT_ENDPOINT,
+                        extra: { source: 'gcloud_cli' },
+                    }
+                }
+            } catch {
+                // Intentionally swallowed: gcloud not installed or not authenticated
+            }
+
             throw new Error(
-                'Google OAuth Client ID is required for interactive login. Set GOOGLE_OAUTH_CLIENT_ID in your environment, or authenticate via Google Application Default Credentials (gcloud auth application-default login).'
+                'Google OAuth Client ID is required for interactive browser login.\n' +
+                    'Please set GOOGLE_OAUTH_CLIENT_ID in your environment, authenticate via gcloud:\n' +
+                    '  gcloud auth application-default login\n' +
+                    'or set ANTIGRAVITY_TOKEN / GEMINI_OAUTH_TOKEN.'
             )
         }
         const scopes =

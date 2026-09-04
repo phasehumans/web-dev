@@ -20,6 +20,7 @@ describe('models utils', () => {
     const testConfigDir = path.join(os.tmpdir(), `december-test-models-${Date.now()}`)
 
     beforeAll(() => {
+        clearProviderModelsCache()
         fs.mkdirSync(testConfigDir, { recursive: true })
         process.env.DECEMBER_CONFIG_DIR = testConfigDir
     })

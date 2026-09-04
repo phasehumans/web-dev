@@ -172,7 +172,7 @@ export function parseErrorMessage(err: any): string {
         !finalResult.includes('Please run /login')
     ) {
         const authNotice =
-            'Authentication failed or session expired. Please run `/login` to sign in with your December account (Cloud Wallet) or configure Bring Your Own Key (BYOK).\n'
+            'Authentication failed or session expired. Please run `/login` to sign in with your December account (Cloud Wallet), relink your AI Subscription, or configure Bring Your Own Key (BYOK).\n'
         return authNotice + finalResult
     }
 

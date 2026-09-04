@@ -180,6 +180,10 @@ export const claudeAdapter: SubscriptionAdapter = {
                 timeoutMs: 180000,
             })
         } catch (err: any) {
+            const recheck = await this.detectLocal()
+            if (recheck) {
+                return recheck
+            }
             throw new Error(
                 `Unable to start Claude OAuth callback server on port ${CALLBACK_PORT}: ${err.message}\n` +
                     'Please ensure no other Claude CLI instance is using port 53692 or run `claude login`.'

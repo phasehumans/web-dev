@@ -84,4 +84,65 @@ describe('Subscription Token Refresh & Resolver Daemon (Unit)', () => {
         expect(resolved.endpoint).toBe('https://api.individual.githubcopilot.com')
         expect(resolved.expiresAt).toBeGreaterThan(Date.now())
     })
+
+    it('exchanges GitHub PAT (ghp_) token for Copilot session token automatically', async () => {
+        const bundle: SubscriptionTokenBundle = {
+            provider: 'copilot',
+            accessToken: 'ghp_pat_token_test',
+            subscriptionType: 'copilot',
+        }
+
+        globalThis.fetch = vi.fn().mockImplementation(async (url: any) => {
+            if (String(url).includes('copilot_internal/v2/token')) {
+                return new Response(
+                    JSON.stringify({
+                        token: 'tid=copilot_from_ghp_pat;exp=1799999999;sku=copilot',
+                        expires_at: Math.floor(Date.now() / 1000) + 1800,
+                        endpoints: { api: 'https://api.individual.githubcopilot.com' },
+                    }),
+                    { status: 200, headers: { 'content-type': 'application/json' } }
+                )
+            }
+            throw new Error(`Unexpected URL: ${url}`)
+        }) as any
+
+        const resolved = await resolveSubscriptionToken('copilot', bundle)
+        expect(resolved.accessToken).toBe('tid=copilot_from_ghp_pat;exp=1799999999;sku=copilot')
+    })
+
+    it('forces token refresh via forceRefreshSubscription when token is invalid or 401', async () => {
+        const { forceRefreshSubscription } =
+            await import('../src/auth/subscriptions/subscription-manager')
+        const { loadConfig, saveConfig } = await import('../src/config')
+
+        const config = await loadConfig()
+        config.subscriptions = {
+            claude: {
+                provider: 'claude',
+                accessToken: 'old-access-token',
+                refreshToken: 'valid-refresh-token',
+                expiresAt: Date.now() + 3600 * 1000, // Not expired, but force refresh should still work
+                subscriptionType: 'claude_pro',
+            },
+        }
+        await saveConfig(config)
+
+        globalThis.fetch = vi.fn().mockResolvedValue(
+            new Response(
+                JSON.stringify({
+                    access_token: 'forced-refreshed-token',
+                    refresh_token: 'valid-refresh-token',
+                    expires_in: 3600,
+                }),
+                { status: 200, headers: { 'content-type': 'application/json' } }
+            )
+        ) as any
+
+        const refreshed = await forceRefreshSubscription('claude')
+        expect(refreshed).not.toBeNull()
+        expect(refreshed?.accessToken).toBe('forced-refreshed-token')
+
+        const updatedConfig = await loadConfig()
+        expect(updatedConfig.subscriptions?.claude?.accessToken).toBe('forced-refreshed-token')
+    })
 })

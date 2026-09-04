@@ -90,7 +90,7 @@ export const renderWelcomeEmail = ({
 
 Hi ${greetingName},
 
-December is an coding agent that lives in your terminal. It understands your codebase and helps you build faster by writing code, fixing bugs, and running commands.
+December is a coding agent that lives in your terminal. It understands your codebase and helps you build faster by writing code, fixing bugs, and running commands.
 
 Here is what you can do:
 - Writes code & runs commands: Ask it to build features, fix bugs, or run tests directly in your terminal or web dashboard.

@@ -77,7 +77,7 @@ export async function handleAuthCommand(options?: { action?: string }): Promise<
         }
 
         console.log(
-            `  ${GREEN}✔ Successfully detected and imported ${result.imported.length} subscription credential(s):${RESET}\n`
+            `  ${GREEN}Successfully detected and imported ${result.imported.length} subscription credential(s):${RESET}\n`
         )
         for (const [provider, bundle] of Object.entries(result.bundles)) {
             const typeStr = bundle.subscriptionType ? ` (${bundle.subscriptionType})` : ''
@@ -119,9 +119,7 @@ export async function handleAuthCommand(options?: { action?: string }): Promise<
                     ? `${GREEN}Valid${RESET}`
                     : `${YELLOW}Expired (will auto-refresh)${RESET}`
                 : `${GREEN}Active${RESET}`
-            console.log(
-                `  • ${GREEN}✔${RESET} ${WHITE}${k.toUpperCase()}${RESET}${typeStr}${userStr}: ${expStr}`
-            )
+            console.log(`  • ${WHITE}${k.toUpperCase()}${RESET}${typeStr}${userStr}: ${expStr}`)
         }
     } else {
         console.log(
@@ -135,7 +133,7 @@ export async function handleAuthCommand(options?: { action?: string }): Promise<
     console.log(`${WHITE}BYOK API Keys:${RESET}`)
     if (byokKeys.length > 0) {
         for (const k of byokKeys) {
-            console.log(`  • ${GREEN}✔${RESET} ${WHITE}${k.toUpperCase()}${RESET}`)
+            console.log(`  • ${WHITE}${k.toUpperCase()}${RESET}`)
         }
     } else {
         console.log(`  ${GRAY}No BYOK API keys saved in config.${RESET}`)
@@ -145,7 +143,7 @@ export async function handleAuthCommand(options?: { action?: string }): Promise<
     // December Cloud
     console.log(`${WHITE}December Cloud Wallet:${RESET}`)
     if (config.decemberToken) {
-        console.log(`  • ${GREEN}✔ Connected${RESET} ${config.email ? `(${config.email})` : ''}`)
+        console.log(`  • ${GREEN}Connected${RESET} ${config.email ? `(${config.email})` : ''}`)
     } else {
         console.log(`  ${GRAY}Not connected.${RESET}`)
     }
@@ -172,10 +170,10 @@ export async function handleLinkCommand(options?: { provider?: string }): Promis
         )
         console.log(`\nUsage: ${GREEN}december link <provider>${RESET}`)
         console.log(`\nSupported Providers:`)
-        console.log(`  • ${WHITE}copilot${RESET}   - GitHub Copilot Subscription`)
-        console.log(`  • ${WHITE}claude${RESET}    - Claude Code (Anthropic Pro/Team)`)
-        console.log(`  • ${WHITE}chatgpt${RESET}   - OpenAI ChatGPT Plus/Team/Pro`)
-        console.log(`  • ${WHITE}gemini${RESET}    - Google Gemini / Antigravity\n`)
+        console.log(`  • ${WHITE}claude${RESET}    - Anthropic (Claude)`)
+        console.log(`  • ${WHITE}copilot${RESET}   - GitHub (Copilot)`)
+        console.log(`  • ${WHITE}gemini${RESET}    - Google (Gemini / Antigravity)`)
+        console.log(`  • ${WHITE}chatgpt${RESET}   - OpenAI (ChatGPT)\n`)
         return
     }
 
@@ -235,7 +233,7 @@ export async function handleKeyCommand(options?: {
     fetchLiveProviderModels(provider, finalKey).catch(() => {})
 
     console.log(
-        `\n${GREEN}✔ Successfully saved API key for ${provider.toUpperCase()} (Model: ${defaultModel})!${RESET}\n`
+        `\n${GREEN}Successfully saved API key for ${provider.toUpperCase()} (Model: ${defaultModel})!${RESET}\n`
     )
 }
 
@@ -427,7 +425,7 @@ export async function handleUpdateCommand(options?: { force?: boolean }): Promis
 
     if (result.alreadyUpToDate) {
         console.log(
-            `\n${GREEN}✔${RESET}  ${WHITE}You are already using the latest version of December CLI (v${result.installedVersion || result.targetVersion}).${RESET}`
+            `\n  ${WHITE}You are already using the latest version of December CLI (v${result.installedVersion || result.targetVersion}).${RESET}`
         )
         console.log(`   ${GRAY}Use ${WHITE}december update --force${GRAY} to reinstall.${RESET}\n`)
         return
@@ -436,12 +434,12 @@ export async function handleUpdateCommand(options?: { force?: boolean }): Promis
     if (result.success) {
         const versionStr = result.installedVersion ? ` to v${result.installedVersion}` : ''
         console.log(
-            `\n${GREEN}✔${RESET}  ${WHITE}December CLI successfully updated${versionStr} via ${result.method}!${RESET}`
+            `\n  ${GREEN}December CLI successfully updated${versionStr} via ${result.method}!${RESET}`
         )
 
         if (result.collisionFixed && result.cleanedBinaries && result.cleanedBinaries.length > 0) {
             console.log(
-                `\n${GREEN}✔${RESET}  ${WHITE}Resolved ${result.cleanedBinaries.length} conflicting older binary location(s):${RESET}`
+                `\n  ${WHITE}Resolved ${result.cleanedBinaries.length} conflicting older binary location(s):${RESET}`
             )
             for (const b of result.cleanedBinaries) {
                 console.log(`   ${GRAY}• ${b}${RESET}`)
@@ -457,15 +455,13 @@ export async function handleUpdateCommand(options?: { force?: boolean }): Promis
         }
     } else {
         if (result.isPermissionError) {
-            console.error(
-                `\n${RED}✖${RESET}  ${WHITE}Permission denied while installing global package.${RESET}`
-            )
+            console.error(`\n${RED}Permission denied while installing global package.${RESET}`)
             console.error(
                 `   ${YELLOW}→${RESET} Try running with elevated permissions: ${WHITE}${result.sudoCmd || result.manualCmd}${RESET}\n`
             )
         } else {
             console.error(
-                `\n${RED}✖${RESET}  Failed to update December CLI via ${result.method}: ${result.error || 'Unknown error'}`
+                `\n${RED}Failed to update December CLI via ${result.method}: ${result.error || 'Unknown error'}${RESET}`
             )
             console.error(`   Try running manually: ${WHITE}${result.manualCmd}${RESET}\n`)
         }
@@ -532,13 +528,13 @@ export async function handleDoctorCommand(options?: { fix?: boolean }): Promise<
                 const fixed = await resolveAndCleanStaleBinaries(target, diagnosis.allBinaries)
                 if (fixed.length > 0) {
                     console.log(
-                        `  ${GREEN}✔ Forwarded ${fixed.length} shadowed binary path(s) to primary active binary (${target.path}).${RESET}`
+                        `  ${GREEN}Forwarded ${fixed.length} shadowed binary path(s) to primary active binary (${target.path}).${RESET}`
                     )
                     console.log(
                         `  ${YELLOW}ℹ Run "hash -r" (bash) or restart your terminal to apply.${RESET}\n`
                     )
                 } else {
-                    console.log(`  ${GREEN}✔ All binary links are already aligned.${RESET}\n`)
+                    console.log(`  ${GREEN}All binary links are already aligned.${RESET}\n`)
                 }
             }
         } else {
@@ -547,9 +543,7 @@ export async function handleDoctorCommand(options?: { fix?: boolean }): Promise<
             )
         }
     } else {
-        console.log(
-            `  ${GREEN}✔ No binary collisions detected. Clean single installation.${RESET}\n`
-        )
+        console.log(`  ${GREEN}No binary collisions detected. Clean single installation.${RESET}\n`)
     }
 
     // 4. Configuration & Auth

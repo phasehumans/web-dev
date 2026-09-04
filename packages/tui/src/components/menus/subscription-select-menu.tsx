@@ -13,20 +13,20 @@ export interface SubscriptionItem {
 
 export const SUBSCRIPTION_MENU_ITEMS: SubscriptionItem[] = [
     {
-        label: 'GitHub Copilot',
-        value: 'copilot',
-    },
-    {
-        label: 'Claude Code',
+        label: 'Anthropic (Claude)',
         value: 'claude',
     },
     {
-        label: 'ChatGPT Plus / Team / Pro',
-        value: 'codex',
+        label: 'GitHub (Copilot)',
+        value: 'copilot',
     },
     {
-        label: 'Google Gemini / Antigravity',
+        label: 'Google (Gemini / Antigravity)',
         value: 'gemini',
+    },
+    {
+        label: 'OpenAI (ChatGPT)',
+        value: 'codex',
     },
 ]
 

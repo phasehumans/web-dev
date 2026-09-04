@@ -10,7 +10,7 @@ import type { LLMProvider, Message, ProviderStreamChunk, ProviderTool } from '..
 export const ANTIGRAVITY_DEFAULT_ENDPOINT =
     process.env.ANTIGRAVITY_ENDPOINT ||
     process.env.CLOUD_CODE_URL ||
-    'https://daily-cloudcode-pa.googleapis.com'
+    'https://cloudcode-pa.googleapis.com'
 
 export function resolveAntigravityModel(model?: string): string {
     let name = model || 'gemini-3.8-flash'

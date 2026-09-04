@@ -1,5 +1,5 @@
 export const AUTH_REQUIRED_NOTICE =
-    'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.'
+    'You are not logged in and have no custom API keys (BYOK) configured.\n\nPlease run `/login` to:\n- Link an AI Subscription (Copilot, Claude, ChatGPT, Gemini), or\n- Sign in with your December account (Cloud Wallet), or\n- Configure Bring Your Own Key (BYOK) for providers like OpenAI, Anthropic, Gemini, OpenRouter, etc.'
 
 export const HANDOFF_LOGIN_REQUIRED_NOTICE =
     'Cloud handoff migrates your local terminal session and workspace to December Cloud (https://trydecember.com).\n\nTo proceed, please log in:\n- Type `/login` and select Sign in with December (Device Code), or\n- Run `december login` in your terminal'

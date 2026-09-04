@@ -87,6 +87,7 @@ export async function resolveSubscriptionToken(
         bundle.provider === 'copilot' &&
         (bundle.accessToken.startsWith('gho_') ||
             bundle.accessToken.startsWith('ghu_') ||
+            bundle.accessToken.startsWith('ghp_') ||
             bundle.accessToken.startsWith('github_pat_'))
 
     if (isExpiringSoon || isCopilotRaw) {
@@ -111,6 +112,35 @@ export async function resolveSubscriptionToken(
     }
 
     return bundle
+}
+
+export async function forceRefreshSubscription(
+    provider: string
+): Promise<SubscriptionTokenBundle | null> {
+    const adapter = getSubscriptionAdapter(provider)
+    if (!adapter || !adapter.refreshToken) {
+        return null
+    }
+
+    const config = await loadConfig()
+    const bundle = config.subscriptions?.[adapter.provider]
+    if (!bundle) {
+        return null
+    }
+
+    try {
+        const refreshed = await adapter.refreshToken(bundle)
+        if (refreshed) {
+            config.subscriptions = config.subscriptions || {}
+            config.subscriptions[adapter.provider] = refreshed
+            await saveConfig(config)
+            return refreshed
+        }
+    } catch {
+        // Intentionally swallowed: fallback to null on failed refresh
+    }
+
+    return null
 }
 
 export async function loginSubscription(

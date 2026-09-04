@@ -76,7 +76,7 @@ const SUCCESS_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="card">
-    <div class="badge">✔</div>
+    <div class="badge">●</div>
     <h1>Authentication Successful</h1>
     <p>Your subscription session has been authorized.<br>You can safely close this window and return to December CLI.</p>
     <div class="hint">December Terminal Agent is ready</div>

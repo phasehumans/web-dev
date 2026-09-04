@@ -11,10 +11,10 @@ import { KeyboardLayerProvider } from '../../src/providers/keyboard-layer'
 describe('SubscriptionSelectMenu Component (Unit)', () => {
     it('has 4 subscription items', () => {
         expect(SUBSCRIPTION_MENU_ITEMS.length).toBe(4)
-        expect(SUBSCRIPTION_MENU_ITEMS[0].value).toBe('copilot')
-        expect(SUBSCRIPTION_MENU_ITEMS[1].value).toBe('claude')
-        expect(SUBSCRIPTION_MENU_ITEMS[2].value).toBe('codex')
-        expect(SUBSCRIPTION_MENU_ITEMS[3].value).toBe('gemini')
+        expect(SUBSCRIPTION_MENU_ITEMS[0].value).toBe('claude')
+        expect(SUBSCRIPTION_MENU_ITEMS[1].value).toBe('copilot')
+        expect(SUBSCRIPTION_MENU_ITEMS[2].value).toBe('gemini')
+        expect(SUBSCRIPTION_MENU_ITEMS[3].value).toBe('codex')
     })
 
     it('renders all subscriptions', () => {
@@ -27,12 +27,12 @@ describe('SubscriptionSelectMenu Component (Unit)', () => {
 
         const frame = lastFrame() || ''
         expect(frame).toContain('Select AI Subscription Provider:')
-        expect(frame).toContain('GitHub Copilot')
+        expect(frame).toContain('Anthropic (Claude)')
         expect(frame).not.toContain('[detected locally]')
-        expect(frame).toContain('Claude Code')
-        expect(frame).toContain('ChatGPT Plus / Team / Pro')
+        expect(frame).toContain('GitHub (Copilot)')
+        expect(frame).toContain('Google (Gemini / Antigravity)')
         expect(frame).not.toContain('[connect]')
-        expect(frame).toContain('Google Gemini / Antigravity')
+        expect(frame).toContain('OpenAI (ChatGPT)')
     })
 
     it('navigates with arrows and selects subscription', async () => {
@@ -47,19 +47,19 @@ describe('SubscriptionSelectMenu Component (Unit)', () => {
             </KeyboardLayerProvider>
         )
 
-        expect(lastFrame()).toContain('❭ GitHub Copilot')
+        expect(lastFrame()).toContain('❭ Anthropic (Claude)')
 
-        // Down arrow to Claude
+        // Down arrow to GitHub
         stdin.write('\u001B[B')
         await new Promise((resolve) => setTimeout(resolve, 10))
 
-        expect(lastFrame()).toContain('❭ Claude Code')
+        expect(lastFrame()).toContain('❭ GitHub (Copilot)')
 
         // Press Enter
         stdin.write('\r')
         await new Promise((resolve) => setTimeout(resolve, 10))
 
         expect(selectedItem).toBeDefined()
-        expect(selectedItem?.value).toBe('claude')
+        expect(selectedItem?.value).toBe('copilot')
     })
 })
