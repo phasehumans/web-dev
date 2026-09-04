@@ -7,7 +7,7 @@ import { MenuFooter } from '../menus/menu-footer'
 import { getFilteredCommands } from './filter-commands'
 
 const WINDOW_SIZE = 5
-const CMD_COL_WIDTH = 24
+const CMD_COL_WIDTH = 32
 
 type CommandMenuProps = {
     query: string
@@ -52,17 +52,20 @@ export function CommandMenu({ query, selectedIndex, windowStart }: CommandMenuPr
                         <Text color={isSelected ? THEME.colors.brand : THEME.colors.muted}>
                             {isSelected ? `${THEME.glyphs.selector} ` : '  '}
                         </Text>
-                        <Box width={CMD_COL_WIDTH}>
+                        <Box width={CMD_COL_WIDTH} marginRight={2} flexShrink={0}>
                             <Text
                                 color={isSelected ? THEME.colors.brand : THEME.colors.muted}
                                 bold={false}
+                                wrap="truncate-end"
                             >
                                 /{cmd.name}
                             </Text>
                         </Box>
-                        <Text color={THEME.colors.muted} wrap="truncate-end">
-                            {cmd.description}
-                        </Text>
+                        <Box flexShrink={1}>
+                            <Text color={THEME.colors.muted} wrap="truncate-end">
+                                {cmd.description}
+                            </Text>
+                        </Box>
                     </Box>
                 )
             })}
