@@ -19,7 +19,7 @@ describe('AgentHarness (Unit)', () => {
         fs.rmSync(tmpDir, { recursive: true, force: true })
     })
 
-    test('discovers rules and skills from AGENTS.md, .december/AGENTS.md, .december/rules.md, and .december/skills.md', () => {
+    test('discovers rules from AGENTS.md, .december/AGENTS.md, and .december/rules.md', () => {
         const decDir = path.join(tmpDir, '.december')
         fs.mkdirSync(decDir, { recursive: true })
 
@@ -29,7 +29,6 @@ describe('AgentHarness (Unit)', () => {
             '# December Agents Guide\nMore rules here.'
         )
         fs.writeFileSync(path.join(decDir, 'rules.md'), '# Workspace Rules\nSingle rules file.')
-        fs.writeFileSync(path.join(decDir, 'skills.md'), '# Skills\nCustom skill content.')
 
         const harness = new AgentHarness({
             llm: new MockLLM(),
@@ -44,10 +43,64 @@ describe('AgentHarness (Unit)', () => {
         expect(systemPrompt).toContain('Root Agents Guide')
         expect(systemPrompt).toContain('December Agents Guide')
         expect(systemPrompt).toContain('Workspace Rules')
-        expect(systemPrompt).toContain('Custom skill content.')
         expect(systemPrompt).toContain('Inspect Logs & Stack Traces First')
         expect(systemPrompt).toContain('Root Cause Resolution')
         expect(systemPrompt).toContain('Execution & Verification')
+    })
+
+    test('discovers structured skills from .december/skills and .agents/skills and injects alphabetized <skills> catalog', () => {
+        const decSkillDir = path.join(tmpDir, '.december', 'skills', 'docker-deploy')
+        fs.mkdirSync(decSkillDir, { recursive: true })
+        fs.writeFileSync(
+            path.join(decSkillDir, 'SKILL.md'),
+            `---
+name: docker-deploy
+description: Prepares and builds docker deployments.
+argument-hint: '[dev|prod]'
+---
+# Docker Deploy Instructions`
+        )
+
+        const agentsSkillDir = path.join(tmpDir, '.agents', 'skills', 'ponytail')
+        fs.mkdirSync(agentsSkillDir, { recursive: true })
+        fs.writeFileSync(
+            path.join(agentsSkillDir, 'SKILL.md'),
+            `---
+name: ponytail
+description: Forces the laziest solution that actually works.
+---
+# Ponytail Runbook`
+        )
+
+        const harness = new AgentHarness({
+            llm: new MockLLM(),
+            tools: [],
+            operations: {} as any,
+            workspaceDir: tmpDir,
+            homeDir: path.join(tmpDir, 'mock-home'),
+        })
+
+        const discovered = harness.getDiscoveredSkills()
+        expect(discovered.length).toBe(2)
+        expect(discovered.map((s) => s.name)).toEqual(['docker-deploy', 'ponytail'])
+
+        const systemPrompt = harness.getAgent().systemPrompt
+        expect(systemPrompt).toContain('<skills>')
+        expect(systemPrompt).toContain('</skills>')
+        expect(systemPrompt).toContain('- docker-deploy (')
+        expect(systemPrompt).toContain(': Prepares and builds docker deployments.')
+        expect(systemPrompt).toContain('- ponytail (')
+        expect(systemPrompt).toContain(': Forces the laziest solution that actually works.')
+
+        // Verify raw instructions are not dumped into system prompt (progressive disclosure)
+        expect(systemPrompt).not.toContain('# Docker Deploy Instructions')
+        expect(systemPrompt).not.toContain('# Ponytail Runbook')
+
+        // Verify prompt cache invariant: <skills> catalog comes before <project_context> and Current date
+        const skillsIndex = systemPrompt.indexOf('<skills>')
+        const dateIndex = systemPrompt.indexOf('Current date:')
+        expect(skillsIndex).toBeGreaterThan(0)
+        expect(dateIndex).toBeGreaterThan(skillsIndex)
     })
 
     test('uses DEFAULT_BASE_SYSTEM_PROMPT when baseSystemPrompt is omitted', () => {

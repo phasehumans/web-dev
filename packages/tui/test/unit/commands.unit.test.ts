@@ -120,10 +120,7 @@ describe('/init command action', () => {
             expect(fs.existsSync(rulesFile)).toBe(false)
             expect(fs.existsSync(skillsFile)).toBe(false)
 
-            expect(fs.existsSync(commandsFile)).toBe(true)
-            const commandsContent = fs.readFileSync(commandsFile, 'utf8')
-            expect(commandsContent).toContain('// {')
-            expect(commandsContent).toContain('"name": "test"')
+            expect(fs.existsSync(commandsFile)).toBe(false)
 
             expect(fs.existsSync(mcpFile)).toBe(true)
             expect(fs.existsSync(settingsFile)).toBe(true)

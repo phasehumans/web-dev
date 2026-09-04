@@ -1,12 +1,13 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { SkillDiscoveryEngine, formatSkillsCatalog } from '@december/shared'
 import { McpClientPool } from '@december/tools'
 
 import { Agent } from '../agent'
 
 import type { AgentConfig } from '../agent'
-import type { Tool } from '@december/shared'
+import type { Tool, DiscoveredSkill } from '@december/shared'
 import type { McpConfigFile } from '@december/tools'
 
 export const DEFAULT_BASE_SYSTEM_PROMPT = `You are December, an autonomous, expert coding agent. You help the user by exploring codebases, executing terminal commands, editing files, and resolving complex tasks.
@@ -38,6 +39,7 @@ You operate across two environments seamlessly: locally via a terminal CLI, and 
 export interface HarnessConfig extends Omit<AgentConfig, 'systemPrompt'> {
     baseSystemPrompt?: string
     workspaceDir: string
+    homeDir?: string
     mcpPool?: McpClientPool
     mcpConfig?: McpConfigFile
     skipMcp?: boolean
@@ -47,23 +49,28 @@ export class AgentHarness {
     private agent: Agent
     private config: HarnessConfig
     private mcpPool?: McpClientPool
+    private skills: DiscoveredSkill[]
 
     constructor(config: HarnessConfig) {
         this.config = config
 
-        // 1. discover skills
-        const skills = this.discoverSkills()
+        // 1. discover structured skills
+        const skillEngine = new SkillDiscoveryEngine({
+            workspaceDir: config.workspaceDir,
+            homeDir: config.homeDir,
+        })
+        this.skills = skillEngine.discoverAllSkills()
 
         const systemPrompt = config.baseSystemPrompt || DEFAULT_BASE_SYSTEM_PROMPT
 
-        // 3. discover project rules
+        // 2. discover project rules
         const rules = this.discoverRules()
 
-        // 4. assemble final system prompt: static prefix first (for KV prompt cache hits), dynamic metadata last
+        // 3. assemble final system prompt: static prefix first (for KV prompt cache hits), dynamic metadata last
         let finalPrompt = `${systemPrompt}`
 
-        if (skills.length > 0) {
-            finalPrompt += `\n\nAvailable Skills:\n${skills.join('\n')}`
+        if (this.skills.length > 0) {
+            finalPrompt += `\n\n${formatSkillsCatalog(this.skills)}`
         }
 
         if (rules.length > 0) {
@@ -126,21 +133,8 @@ export class AgentHarness {
         return harness
     }
 
-    private discoverSkills(): string[] {
-        const skills: string[] = []
-        const skillsFile = path.join(this.config.workspaceDir, '.december', 'skills.md')
-
-        try {
-            if (fs.existsSync(skillsFile)) {
-                const content = fs.readFileSync(skillsFile, 'utf8').trim()
-                if (content) {
-                    skills.push(content)
-                }
-            }
-        } catch (e) {
-            // ignore errors reading skills
-        }
-        return skills
+    public getDiscoveredSkills(): DiscoveredSkill[] {
+        return this.skills
     }
 
     private discoverRules(): { path: string; content: string }[] {

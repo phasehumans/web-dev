@@ -314,17 +314,6 @@ const DEFAULT_AGENTS_MD = `# Agent Guidelines & Project Instructions
 Add project-specific guidelines, rules, skills, testing commands, architecture patterns, and conventions in this file for December to follow.
 `
 
-const DEFAULT_COMMANDS_JSON = `{
-  "commands": [
-    // {
-    //   "name": "test",
-    //   "description": "Run tests and fix failures",
-    //   "prompt": "Run 'bun test $PKG'. If any test fails, fix the root cause and verify."
-    // }
-  ]
-}
-`
-
 const DEFAULT_MCP_JSON =
     JSON.stringify(
         {
@@ -363,12 +352,6 @@ export async function handleInitCommand(options?: { quiet?: boolean }): Promise<
             targetPath: path.join(rootDir, 'AGENTS.md'),
             displayPath: 'AGENTS.md',
             content: DEFAULT_AGENTS_MD,
-        },
-        {
-            name: 'commands.json',
-            targetPath: path.join(decDir, 'commands.json'),
-            displayPath: '.december/commands.json',
-            content: DEFAULT_COMMANDS_JSON,
         },
         {
             name: 'mcp.json',

@@ -55,7 +55,7 @@ describe('CLI Standalone Commands', () => {
             const agentsContent = await fs.readFile(rootAgentsPath, 'utf-8')
             expect(agentsContent).toContain('Agent Guidelines')
 
-            const decFiles = ['settings.json', 'commands.json', 'mcp.json']
+            const decFiles = ['settings.json', 'mcp.json']
             for (const file of decFiles) {
                 const exists = await fs
                     .access(path.join(tmpDir, '.december', file))
@@ -81,20 +81,6 @@ describe('CLI Standalone Commands', () => {
                 .then(() => true)
                 .catch(() => false)
             expect(skillsExists).toBe(false)
-
-            const rawCommandsContent = await fs.readFile(
-                path.join(tmpDir, '.december', 'commands.json'),
-                'utf-8'
-            )
-            expect(rawCommandsContent).toContain('// {')
-            expect(rawCommandsContent).toContain('"name": "test"')
-            expect(rawCommandsContent).toContain('// }')
-
-            const { parseJsonWithComments, loadCustomCommands } = await import('@december/shared')
-            const parsedCommands = parseJsonWithComments<any>(rawCommandsContent)
-            expect(Array.isArray(parsedCommands.commands)).toBe(true)
-            expect(parsedCommands.commands.length).toBe(0)
-            expect(loadCustomCommands(tmpDir)).toEqual([])
 
             const rawSettingsContent = await fs.readFile(
                 path.join(tmpDir, '.december', 'settings.json'),

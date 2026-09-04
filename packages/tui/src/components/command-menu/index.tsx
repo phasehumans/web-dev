@@ -60,7 +60,9 @@ export function CommandMenu({ query, selectedIndex, windowStart }: CommandMenuPr
                                 /{cmd.name}
                             </Text>
                         </Box>
-                        <Text color={THEME.colors.muted}>{cmd.description}</Text>
+                        <Text color={THEME.colors.muted} wrap="truncate-end">
+                            {cmd.description}
+                        </Text>
                     </Box>
                 )
             })}

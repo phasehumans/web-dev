@@ -22,6 +22,7 @@ export {
     handleUpdateCommand,
     handleDoctorCommand,
 } from './commands'
+export { handleSkillCommand } from './commands/skill'
 export { runHeadlessTask, suppressConsole, restoreConsole } from './headless-runner'
 export type { HeadlessTaskOptions, HeadlessTaskResult } from './headless-runner'
 
@@ -130,6 +131,21 @@ async function main() {
         const { handleDoctorCommand } = await import('./commands')
         await handleDoctorCommand({ fix: parsedArgs.fix })
         process.exit(0)
+    }
+
+    if (parsedArgs.command === 'skill' || parsedArgs.command === 'skills') {
+        const action = parsedArgs.positionals[1]
+        const target = parsedArgs.positionals[2]
+        const { handleSkillCommand } = await import('./commands/skill')
+        await handleSkillCommand({
+            action,
+            target,
+            isGlobal: parsedArgs.isGlobal,
+            isLocal: parsedArgs.isLocal,
+            positionals: parsedArgs.positionals.slice(1),
+            cwd: parsedArgs.cwd || process.cwd(),
+        })
+        process.exit(process.exitCode || 0)
     }
 
     // Path 4: Headless Task Execution (Load agent harness & tools, skip Ink/React/TUI)

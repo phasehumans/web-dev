@@ -1,9 +1,0 @@
-{
-    "commands": [
-        // {
-        //   "name": "test",
-        //   "description": "Run tests and fix failures",
-        //   "prompt": "Run 'bun test $PKG'. If any test fails, fix the root cause and verify."
-        // }
-    ]
-}

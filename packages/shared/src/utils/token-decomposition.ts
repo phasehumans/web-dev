@@ -54,20 +54,35 @@ export function decomposeSystemPrompt(
         }
     }
 
-    // 2. Extract skills from Available Skills:\n...
+    // 2. Extract skills from <skills>...</skills> or Available Skills:
     let skillsText = ''
     const skills: string[] = []
-    const skillsRegex =
-        /Available Skills:\n([\s\S]*?)(?=(?:\n\n<project_context>|\n\nCurrent date:|$))/i
-    const skillsMatch = trimmedPrompt.match(skillsRegex)
 
-    if (skillsMatch && skillsMatch[1]) {
-        skillsText = skillsMatch[1].trim()
-        const skillLines = skillsText
-            .split('\n')
-            .map((s) => s.trim())
-            .filter((s) => s.length > 0)
-        skills.push(...skillLines)
+    const skillsBlockRegex = /<skills>([\s\S]*?)<\/skills>/i
+    const skillsBlockMatch = trimmedPrompt.match(skillsBlockRegex)
+    if (skillsBlockMatch && skillsBlockMatch[1]) {
+        skillsText = skillsBlockMatch[0].trim()
+        const catalogRegex = /^-\s+([a-z0-9-_]+)\b.*?:/gm
+        let m: RegExpExecArray | null
+        while ((m = catalogRegex.exec(skillsBlockMatch[1])) !== null) {
+            if (m[1]) {
+                skills.push(m[1])
+            }
+        }
+    } else {
+        const legacySkillsRegex =
+            /Available Skills:([\s\S]*?)(?=\n\n<project_context>|\n\nCurrent date:|$)/i
+        const legacySkillsMatch = trimmedPrompt.match(legacySkillsRegex)
+        if (legacySkillsMatch && legacySkillsMatch[1]) {
+            skillsText = legacySkillsMatch[0].trim()
+            const lines = legacySkillsMatch[1].split('\n')
+            for (const line of lines) {
+                const trimmed = line.trim()
+                if (trimmed.startsWith('-')) {
+                    skills.push(trimmed)
+                }
+            }
+        }
     }
 
     // 3. Extract dynamic environment: Current date: ...
@@ -85,9 +100,11 @@ export function decomposeSystemPrompt(
     }
 
     // 4. Extract base system prompt
-    // Base prompt is whatever comes before Available Skills, <project_context>, or Current date:
+    // Base prompt is whatever comes before <skills>, Available Skills:, <project_context>, or Current date:
     let basePrompt = trimmedPrompt
     const cutMarkers = [
+        '\n\n<skills>',
+        '<skills>',
         '\n\nAvailable Skills:',
         'Available Skills:',
         '\n\n<project_context>',

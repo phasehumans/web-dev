@@ -1,5 +1,5 @@
 import { Agent, runAgentLoop } from '@december/agent'
-import { loadCustomCommands, interpolateCommandPrompt } from '@december/shared'
+import { SkillDiscoveryEngine, parseSkillFile, interpolateSkillPrompt } from '@december/shared'
 import { useEffect, useCallback, useState, useRef } from 'react'
 
 import { loadConfig, saveConfig } from '../config'
@@ -1497,15 +1497,26 @@ ${decStatus}
                 return
             }
 
-            // Check if input matches a custom slash command from commands.json
+            // Check if input matches an installed skill (e.g. /ponytail or /tdd [args])
             if (text.trim().startsWith('/')) {
                 const rawTrimmed = text.trim()
                 const [firstToken, ...restArgs] = rawTrimmed.split(/\s+/)
-                const potentialCmd = firstToken.slice(1).toLowerCase()
-                const customCommands = loadCustomCommands()
-                const matchedCmd = customCommands.find((c) => c.name.toLowerCase() === potentialCmd)
-                if (matchedCmd) {
-                    text = interpolateCommandPrompt(matchedCmd.prompt, restArgs)
+                const potentialCmd = firstToken ? firstToken.slice(1).toLowerCase() : ''
+                try {
+                    const engine = new SkillDiscoveryEngine({ workspaceDir: process.cwd() })
+                    const skills = engine.discoverAllSkills()
+                    const matchedSkill = skills.find((s) => s.name.toLowerCase() === potentialCmd)
+                    if (matchedSkill) {
+                        const { body } = parseSkillFile(matchedSkill.entryFilePath)
+                        text = interpolateSkillPrompt(
+                            matchedSkill.name,
+                            body,
+                            restArgs,
+                            matchedSkill.directoryPath
+                        )
+                    }
+                } catch {
+                    // Intentionally swallowed: fallback to standard prompt if skill resolution fails
                 }
             }
 

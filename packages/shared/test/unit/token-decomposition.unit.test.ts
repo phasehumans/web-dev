@@ -26,7 +26,11 @@ describe('Token Decomposition (Unit)', () => {
     describe('decomposeSystemPrompt', () => {
         test('decomposes composite prompt with base prompt, skills, rules, and dynamic env', () => {
             const base = 'You are December, an autonomous coding agent.'
-            const skills = 'Available Skills:\n- Skill 1\n- Skill 2'
+            const skills = `<skills>
+Available skills:
+- skill-1 (/path/to/skill-1/SKILL.md): Skill 1 description.
+- skill-2 (/path/to/skill-2/SKILL.md): Skill 2 description.
+</skills>`
             const rules =
                 '<project_context>\nThe user has provided instructions:\n<project_instructions path="AGENTS.md">\nRule 1: Always verify\n</project_instructions>\n<project_instructions path=".december/rules.md">\nRule 2: Surgical edits\n</project_instructions>\n</project_context>'
             const env = 'Current date: 2026-08-19\nCurrent working directory: /home/workspace'
@@ -38,9 +42,9 @@ describe('Token Decomposition (Unit)', () => {
             expect(result.basePrompt).toBe(base)
             expect(result.basePromptTokens).toBe(estimateTextTokens(base))
 
-            expect(result.skills).toEqual(['- Skill 1', '- Skill 2'])
-            expect(result.skillsText).toBe('- Skill 1\n- Skill 2')
-            expect(result.skillsTokens).toBe(estimateTextTokens('- Skill 1\n- Skill 2'))
+            expect(result.skills).toEqual(['skill-1', 'skill-2'])
+            expect(result.skillsText).toBe(skills)
+            expect(result.skillsTokens).toBe(estimateTextTokens(skills))
 
             expect(result.rules.length).toBe(2)
             expect(result.rules[0]).toEqual({
@@ -64,6 +68,31 @@ describe('Token Decomposition (Unit)', () => {
                     result.skillsTokens +
                     result.dynamicEnvTokens
             )
+        })
+
+        test('decomposes composite prompt with structured <skills> catalog block', () => {
+            const base = 'You are December, an autonomous coding agent.'
+            const skills = `<skills>
+You can use specialized 'skills' to help you with complex tasks.
+
+Available skills:
+- docker-deploy (/repo/.december/skills/docker-deploy/SKILL.md) (args: [dev|prod]): Deploy containers.
+- ponytail (/repo/.agents/skills/ponytail/SKILL.md): Lazy coding.
+</skills>`
+            const rules =
+                '<project_context>\n<project_instructions path="AGENTS.md">\nRule 1: Always verify\n</project_instructions>\n</project_context>'
+            const env = 'Current date: 2026-08-19\nCurrent working directory: /home/workspace'
+
+            const composite = `${base}\n\n${skills}\n\n${rules}\n\n${env}`
+            const result = decomposeSystemPrompt(composite)
+
+            expect(result.basePrompt).toBe(base)
+            expect(result.basePromptTokens).toBe(estimateTextTokens(base))
+            expect(result.skills).toEqual(['docker-deploy', 'ponytail'])
+            expect(result.skillsText).toBe(skills)
+            expect(result.skillsTokens).toBe(estimateTextTokens(skills))
+            expect(result.rules.length).toBe(1)
+            expect(result.dynamicEnv).toBe(env)
         })
 
         test('handles simple system prompt with no skills or rules', () => {
@@ -169,7 +198,7 @@ describe('Token Decomposition (Unit)', () => {
     describe('decomposeContext', () => {
         test('computes complete context decomposition including cacheable static prefix', () => {
             const basePrompt = 'Base prompt'
-            const skills = 'Available Skills:\n- Skill A'
+            const skills = `<skills>\nAvailable skills:\n- skill-a (/path/to/skill-a/SKILL.md): Skill A.\n</skills>`
             const rules =
                 '<project_context>\n<project_instructions path="AGENTS.md">\nFollow rules\n</project_instructions>\n</project_context>'
             const env = 'Current date: 2026-08-19'
@@ -197,7 +226,7 @@ describe('Token Decomposition (Unit)', () => {
             expect(decomp.model).toBe('gemini-3.6-flash')
             expect(decomp.maxTokens).toBe(100000)
             expect(decomp.basePrompt.text).toBe('Base prompt')
-            expect(decomp.skills.items).toEqual(['- Skill A'])
+            expect(decomp.skills.items).toEqual(['skill-a'])
             expect(decomp.rules.files.length).toBe(1)
             expect(decomp.builtInTools.tools.length).toBe(1)
             expect(decomp.dynamicMcpTools.tools.length).toBe(1)

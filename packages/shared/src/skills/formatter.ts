@@ -1,0 +1,33 @@
+import type { DiscoveredSkill } from './types'
+
+export function formatSkillsCatalog(skills: DiscoveredSkill[]): string {
+    if (!skills || skills.length === 0) return ''
+
+    const lines = [
+        '<skills>',
+        "You can use specialized 'skills' to help you with complex tasks. Each skill has a name and a description listed below.",
+        '',
+        'Skills are folders of instructions, scripts, and resources that extend your capabilities for specialized tasks. Each skill folder contains:',
+        '- **SKILL.md** (required): The main instruction file with YAML frontmatter (name, description) and detailed markdown instructions',
+        '',
+        'More complex skills may include additional directories and files as needed, for example:',
+        '- **scripts/** - Helper scripts and utilities that extend your capabilities',
+        '- **examples/** - Reference implementations and usage patterns',
+        '- **resources/** - Additional files, templates, or assets the skill may reference',
+        '- **references/** - Contains additional documentation that agents can read when needed',
+        '',
+        '',
+        'If a skill seems relevant to your current task, you MUST read its `SKILL.md` instructions using `read_file` before proceeding. You may skip this step only if you are delegating the skill-related task to a subagent that will read and follow the instructions itself.',
+        '',
+        'When calling `read_file` on these skill paths, always use the exact path provided in the "Available skills" list below.',
+        '',
+        'Available skills:',
+    ]
+
+    for (const skill of skills) {
+        lines.push(`- ${skill.name} (${skill.entryFilePath}): ${skill.metadata.description}`)
+    }
+
+    lines.push('</skills>')
+    return lines.join('\n')
+}

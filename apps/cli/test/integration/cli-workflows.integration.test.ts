@@ -16,7 +16,7 @@ describe('CLI Commands & Workflows (Integration)', () => {
             await handleInitCommand()
 
             expect(fs.existsSync(path.join(tmpDir, 'AGENTS.md'))).toBe(true)
-            expect(fs.existsSync(path.join(tmpDir, '.december', 'commands.json'))).toBe(true)
+            expect(fs.existsSync(path.join(tmpDir, '.december', 'commands.json'))).toBe(false)
             expect(fs.existsSync(path.join(tmpDir, '.december', 'mcp.json'))).toBe(true)
             expect(fs.existsSync(path.join(tmpDir, '.december', 'settings.json'))).toBe(true)
             expect(fs.existsSync(path.join(tmpDir, '.decemberignore'))).toBe(false)

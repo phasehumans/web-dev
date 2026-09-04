@@ -229,13 +229,11 @@ export const COMMANDS: Command[] = [
                 const decDir = path.join(rootDir, '.december')
 
                 const agentsFile = path.join(rootDir, 'AGENTS.md')
-                const commandsFile = path.join(decDir, 'commands.json')
                 const mcpFile = path.join(decDir, 'mcp.json')
                 const settingsFile = path.join(decDir, 'settings.json')
 
                 if (
                     fs.existsSync(agentsFile) &&
-                    fs.existsSync(commandsFile) &&
                     fs.existsSync(mcpFile) &&
                     fs.existsSync(settingsFile)
                 ) {
@@ -249,12 +247,6 @@ export const COMMANDS: Command[] = [
                     fs.writeFileSync(
                         agentsFile,
                         '# Agent Guidelines & Project Instructions\n\nAdd project-specific guidelines, rules, skills, testing commands, architecture patterns, and conventions in this file for December to follow.\n'
-                    )
-                }
-                if (!fs.existsSync(commandsFile)) {
-                    fs.writeFileSync(
-                        commandsFile,
-                        `{\n  "commands": [\n    // {\n    //   "name": "test",\n    //   "description": "Run tests and fix failures",\n    //   "prompt": "Run 'bun test $PKG'. If any test fails, fix the root cause and verify."\n    // }\n  ]\n}\n`
                     )
                 }
                 if (!fs.existsSync(mcpFile)) {
