@@ -67,12 +67,16 @@ export function formatSubscriptionPlan(bundle: Partial<SubscriptionTokenBundle>)
 export function formatSubscriptionIdentity(
     bundle: Partial<SubscriptionTokenBundle>
 ): string | undefined {
+    const isGithub = bundle.provider === 'copilot' || bundle.provider === 'github'
+    if (isGithub && bundle.accountName && bundle.accountName.trim()) {
+        const name = bundle.accountName.trim()
+        return !name.startsWith('@') ? `@${name}` : name
+    }
     if (bundle.email && bundle.email.trim()) {
         return bundle.email.trim()
     }
     if (bundle.accountName && bundle.accountName.trim()) {
         const name = bundle.accountName.trim()
-        const isGithub = bundle.provider === 'copilot' || bundle.provider === 'github'
         return isGithub && !name.startsWith('@') ? `@${name}` : name
     }
     return undefined
@@ -98,7 +102,7 @@ export function formatSubscriptionToast(
 
 export function formatSubscriptionCard(
     bundle: Partial<SubscriptionTokenBundle>,
-    activeModel?: string
+    _activeModel?: string
 ): string {
     const providerName = formatSubscriptionDisplayName(bundle.provider)
     const plan = formatSubscriptionPlan(bundle)
@@ -107,12 +111,13 @@ export function formatSubscriptionCard(
     const lines = [`Linked ${providerName} Subscription`, `  • Plan:         ${plan}`]
 
     if (identity) {
-        lines.push(`  • Account:      ${identity}`)
+        const isGithub = bundle.provider === 'copilot' || bundle.provider === 'github'
+        const accountDisplay =
+            isGithub && identity.startsWith('@')
+                ? `[${identity}](https://github.com/${identity.slice(1)})`
+                : identity
+        lines.push(`  • Account:      ${accountDisplay}`)
     }
-    if (activeModel) {
-        lines.push(`  • Active Model: ${activeModel}`)
-    }
-    lines.push(`  • Auth Mode:    Subscription (Flat-rate)`)
 
     return lines.join('\n')
 }

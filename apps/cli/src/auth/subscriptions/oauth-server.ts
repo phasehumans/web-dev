@@ -16,6 +16,27 @@ export function generatePKCE(): PKCEPair {
     return { codeVerifier, codeChallenge, state }
 }
 
+const DECEMBER_LOGO_SVG = `<svg class="logo" viewBox="5 4 14 16" fill="none" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+  <line x1="12" y1="12" x2="12" y2="5.3" />
+  <line x1="12" y1="7.5" x2="13.9" y2="6.4" />
+  <line x1="12" y1="7.5" x2="10.1" y2="6.4" />
+  <line x1="12" y1="12" x2="17.8" y2="8.65" />
+  <line x1="15.9" y1="9.75" x2="17.8" y2="10.85" />
+  <line x1="15.9" y1="9.75" x2="15.9" y2="7.55" />
+  <line x1="12" y1="12" x2="17.8" y2="15.35" />
+  <line x1="15.9" y1="14.25" x2="15.9" y2="16.45" />
+  <line x1="15.9" y1="14.25" x2="17.8" y2="13.15" />
+  <line x1="12" y1="12" x2="12" y2="18.7" />
+  <line x1="12" y1="16.5" x2="10.1" y2="17.6" />
+  <line x1="12" y1="16.5" x2="13.9" y2="17.6" />
+  <line x1="12" y1="12" x2="6.2" y2="15.35" />
+  <line x1="8.1" y1="14.25" x2="6.2" y2="13.15" />
+  <line x1="8.1" y1="14.25" x2="8.1" y2="16.45" />
+  <line x1="12" y1="12" x2="6.2" y2="8.65" />
+  <line x1="8.1" y1="9.75" x2="8.1" y2="7.55" />
+  <line x1="8.1" y1="9.75" x2="6.2" y2="10.85" />
+</svg>`
+
 const SUCCESS_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,69 +44,144 @@ const SUCCESS_HTML = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>December - Authentication Successful</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #0D1117;
-      color: #C9D1D9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #141414;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .logo-container {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
     }
-    .card {
-      background: #161B22;
-      border: 1px solid #30363D;
-      border-radius: 12px;
-      padding: 32px 40px;
-      text-align: center;
-      max-width: 420px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #238636;
-      color: white;
-      font-size: 24px;
-      margin-bottom: 16px;
+    .logo {
+      width: 42px;
+      height: 42px;
     }
     h1 {
-      font-size: 20px;
-      color: #FFFFFF;
-      margin: 0 0 8px;
+      font-size: 22px;
+      font-weight: 400;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
     }
-    p {
-      color: #8B949E;
-      font-size: 14px;
-      margin: 0 0 20px;
-      line-height: 1.5;
-    }
-    .hint {
-      font-size: 12px;
-      color: #58A6FF;
-      background: rgba(56, 139, 253, 0.1);
-      padding: 8px 12px;
-      border-radius: 6px;
+    p.desc {
+      font-size: 13px;
+      color: #A3A3A3;
+      line-height: 1.6;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="badge">●</div>
+  <div class="container">
+    <div class="logo-container">
+      ${DECEMBER_LOGO_SVG}
+    </div>
     <h1>Authentication Successful</h1>
-    <p>Your subscription session has been authorized.<br>You can safely close this window and return to December CLI.</p>
-    <div class="hint">December Terminal Agent is ready</div>
+    <p class="desc">Your subscription session has been authorized.<br>You can safely close this window and return to December CLI.</p>
   </div>
   <script>
     setTimeout(() => { window.close(); }, 3000);
   </script>
 </body>
 </html>`
+
+function getErrorHtml(errorDescription?: string): string {
+    const safeDesc = (errorDescription || 'Authentication request was cancelled or failed.')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>December - Authorization Failed</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #141414;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .container {
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .logo-container {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo {
+      width: 42px;
+      height: 42px;
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 400;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    p.desc {
+      font-size: 13px;
+      color: #EF4444;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo-container">
+      ${DECEMBER_LOGO_SVG.replace('stroke="white"', 'stroke="#EF4444"')}
+    </div>
+    <h1>Authorization Failed</h1>
+    <p class="desc">${safeDesc}<br>You can safely close this window and return to December CLI.</p>
+  </div>
+</body>
+</html>`
+}
 
 export interface LocalOAuthServerOptions {
     timeoutMs?: number
@@ -169,11 +265,13 @@ export async function startLocalOAuthServer(options?: LocalOAuthServerOptions): 
                 const errorDescription =
                     queryParams.error_description || queryParams.errorDescription
 
+                const htmlResponse = error ? getErrorHtml(errorDescription || error) : SUCCESS_HTML
+
                 res.writeHead(200, {
                     'Content-Type': 'text/html; charset=utf-8',
                     Connection: 'close',
                 })
-                res.end(SUCCESS_HTML)
+                res.end(htmlResponse)
 
                 cleanupServer().finally(() => {
                     callbackPromiseResolve({

@@ -279,6 +279,7 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
 
         const GREEN = '\x1b[38;2;110;231;183m'
         const WHITE = '\x1b[38;2;244;244;245m'
+        const BRAND = '\x1b[38;2;137;180;248m'
         const RESET = '\x1b[0m'
         const plan = formatSubscriptionPlan(bundle)
         const identity = formatSubscriptionIdentity(bundle)
@@ -286,12 +287,9 @@ export async function handleLoginCommand(options?: { provider?: string }): Promi
         console.log(`\n${GREEN}Linked ${providerName} Subscription${RESET}`)
         console.log(`  • Plan:         ${WHITE}${plan}${RESET}`)
         if (identity) {
-            console.log(`  • Account:      ${WHITE}${identity}${RESET}`)
+            console.log(`  • Account:      ${BRAND}${identity}${RESET}`)
         }
-        if (configToSave.activeModel) {
-            console.log(`  • Active Model: ${WHITE}${configToSave.activeModel}${RESET}`)
-        }
-        console.log(`  • Auth Mode:    ${WHITE}Subscription (Flat-rate)${RESET}\n`)
+        console.log()
         return
     }
 

@@ -26,11 +26,9 @@ tests
 docs
 *.md
 .gitleaks.toml
-.cspell.json
 .editorconfig
 .prettier*
 eslint.config.js
 knip.jsonc
 commitlint.config.js
 cliff.toml
-Justfile

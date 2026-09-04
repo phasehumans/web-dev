@@ -358,8 +358,7 @@ export function useAuthHandlers(
                             blocks: [
                                 {
                                     type: 'text',
-                                    content: formatSubscriptionCard(bundle, targetModel),
-                                    color: '#6EE7B7',
+                                    content: `\n${formatSubscriptionCard(bundle, targetModel)}`,
                                 },
                             ],
                         },

@@ -242,9 +242,31 @@ export const copilotAdapter: SubscriptionAdapter = {
             // Intentionally swallowed: use raw token if immediate exchange fails
         }
 
+        // Fetch GitHub user profile (login handle and email)
+        let accountName: string | undefined
+        let email: string | undefined
+        try {
+            const userRes = await fetch('https://api.github.com/user', {
+                headers: {
+                    Authorization: `token ${ghOAuthToken}`,
+                    'User-Agent': 'GithubCopilot/1.240.0',
+                    Accept: 'application/json',
+                },
+            })
+            if (userRes.ok) {
+                const userData = (await userRes.json()) as any
+                accountName = userData.login || userData.name
+                email = userData.email
+            }
+        } catch {
+            // Intentionally swallowed: fallback to undefined account info
+        }
+
         return {
             provider: 'copilot',
             accessToken: copilotToken,
+            accountName,
+            email,
             endpoint,
             expiresAt,
             subscriptionType: 'copilot',

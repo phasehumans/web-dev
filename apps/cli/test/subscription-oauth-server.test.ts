@@ -28,7 +28,7 @@ describe('Subscription Local OAuth Server & PKCE (Unit)', () => {
         expect(res.status).toBe(200)
         const html = await res.text()
         expect(html).toContain('Authentication Successful')
-        expect(html).toContain('December Terminal Agent')
+        expect(html).toContain('December CLI')
 
         const result = await callbackPromise
         expect(result.code).toBe(testCode)

@@ -141,8 +141,19 @@ describe('Subscription Formatters (Unit)', () => {
             expect(card).toContain('Linked Anthropic Claude Subscription')
             expect(card).toContain('• Plan:         Claude Pro')
             expect(card).toContain('• Account:      alex@example.com')
-            expect(card).toContain('• Active Model: claude-sonnet-5')
-            expect(card).toContain('• Auth Mode:    Subscription (Flat-rate)')
+            expect(card).not.toContain('Active Model')
+            expect(card).not.toContain('Auth Mode')
+        })
+
+        it('formats Copilot card with @handle as markdown link', () => {
+            const card = formatSubscriptionCard({
+                provider: 'copilot',
+                subscriptionType: 'copilot',
+                accountName: 'octocat',
+            })
+            expect(card).toContain('Linked GitHub Copilot Subscription')
+            expect(card).toContain('• Plan:         Copilot Individual')
+            expect(card).toContain('• Account:      [@octocat](https://github.com/octocat)')
         })
     })
 })
