@@ -36,8 +36,9 @@ export function resolveCodexModel(model?: string): string {
 export function extractChatGPTAccountId(token: string): string | undefined {
     try {
         const parts = token.split('.')
-        if (parts.length === 3) {
-            const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf-8'))
+        const payloadPart = parts[1]
+        if (parts.length === 3 && payloadPart) {
+            const payload = JSON.parse(Buffer.from(payloadPart, 'base64url').toString('utf-8'))
             return payload['https://api.openai.com/auth']?.chatgpt_account_id
         }
     } catch {

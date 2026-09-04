@@ -305,9 +305,10 @@ export const geminiAdapter: SubscriptionAdapter = {
             if (tokenData.id_token) {
                 try {
                     const parts = tokenData.id_token.split('.')
-                    if (parts.length >= 2) {
+                    const payloadPart = parts[1]
+                    if (parts.length >= 2 && payloadPart) {
                         const payload = JSON.parse(
-                            Buffer.from(parts[1], 'base64url').toString('utf-8')
+                            Buffer.from(payloadPart, 'base64url').toString('utf-8')
                         )
                         email = payload.email
                     }

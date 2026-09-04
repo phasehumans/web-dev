@@ -22,8 +22,9 @@ const DEFAULT_ENDPOINT = 'https://chatgpt.com/backend-api'
 function decodeJwtPayload(token: string): any | null {
     try {
         const parts = token.split('.')
-        if (parts.length === 3) {
-            const decoded = Buffer.from(parts[1], 'base64url').toString('utf-8')
+        const payloadPart = parts[1]
+        if (parts.length === 3 && payloadPart) {
+            const decoded = Buffer.from(payloadPart, 'base64url').toString('utf-8')
             return JSON.parse(decoded)
         }
     } catch {
