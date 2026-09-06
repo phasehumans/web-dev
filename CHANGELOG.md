@@ -1,5 +1,18 @@
 ## [unreleased]
 
+### Features
+
+- _(skills)_ Implement modular skills system matching agy and remove custom commands
+- _(skills)_ Prefix skills with skill: to prevent collision with core commands
+- _(providers)_ Add arcee ai byok provider support
+
+### Bug Fixes
+
+- _(tui)_ Expand command column width with margin and truncate long command names
+- _(cli)_ Enforce active binary verification and shadowing detection during update
+
+## [0.3.24] - 2026-09-04
+
 ### Bug Fixes
 
 - _(auth)_ Improve ai subscription provider endpoints, gcloud fallback, and token refresh
@@ -9,6 +22,7 @@
 ### Miscellaneous Tasks
 
 - Remove justfile and cspell
+- _(release)_ V0.3.24
 
 ## [0.3.23] - 2026-09-04
 
