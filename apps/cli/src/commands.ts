@@ -430,7 +430,7 @@ export async function handleUpdateCommand(options?: { force?: boolean }): Promis
         return
     }
 
-    if (result.success) {
+    if (result.success && result.verified) {
         const versionStr = result.installedVersion ? ` to v${result.installedVersion}` : ''
         console.log(
             `\n  ${GREEN}December CLI successfully updated${versionStr} via ${result.method}!${RESET}`
@@ -453,7 +453,43 @@ export async function handleUpdateCommand(options?: { force?: boolean }): Promis
             console.log('')
         }
     } else {
-        if (result.isPermissionError) {
+        if (!result.verified && result.shadowingBinary) {
+            console.error(
+                `\n${YELLOW}⚠ Update completed, but your terminal is still starting an older version!${RESET}`
+            )
+            console.error(
+                `  • Installed version: ${WHITE}v${result.installedVersion || result.targetVersion}${RESET} (via ${result.method})`
+            )
+            console.error(
+                `  • Active in $PATH:   ${RED}v${result.activeVersion || 'older'}${RESET} (${result.activeBinaryPath || result.shadowingBinary.path})`
+            )
+            console.error(
+                `\n  ${GRAY}Why this happens: Your shell's $PATH resolves "${result.activeBinaryPath || result.shadowingBinary.path}" before the newly updated location.${RESET}`
+            )
+
+            if (result.failedBinaries && result.failedBinaries.some((b) => b.needsSudo)) {
+                console.error(`\n  ${YELLOW}Permission required to clean older binary:${RESET}`)
+                for (const fb of result.failedBinaries) {
+                    if (fb.needsSudo) {
+                        console.error(`    ${WHITE}sudo rm "${fb.path}"${RESET}`)
+                    }
+                }
+            } else {
+                console.error(
+                    `\n  ${WHITE}To ensure your terminal uses the latest version:${RESET}`
+                )
+                console.error(
+                    `    ${YELLOW}1.${RESET} Remove older binary: ${WHITE}rm "${result.shadowingBinary.path}"${RESET}`
+                )
+                console.error(
+                    `    ${YELLOW}2.${RESET} Or update active package: ${WHITE}bun add -g @trydecember/cli@latest${RESET} (or appropriate package manager)`
+                )
+                console.error(
+                    `    ${YELLOW}3.${RESET} Clear shell command cache: ${WHITE}hash -r${RESET} (bash) or ${WHITE}rehash${RESET} (zsh)`
+                )
+            }
+            console.error('')
+        } else if (result.isPermissionError) {
             console.error(`\n${RED}Permission denied while installing global package.${RESET}`)
             console.error(
                 `   ${YELLOW}→${RESET} Try running with elevated permissions: ${WHITE}${result.sudoCmd || result.manualCmd}${RESET}\n`
@@ -524,16 +560,35 @@ export async function handleDoctorCommand(options?: { fix?: boolean }): Promise<
             console.log(`${BLUE}✱${RESET}  ${WHITE}Resolving binary collisions (--fix)...${RESET}`)
             const target = diagnosis.activeBinary || diagnosis.allBinaries[0]
             if (target) {
-                const fixed = await resolveAndCleanStaleBinaries(target, diagnosis.allBinaries)
-                if (fixed.length > 0) {
+                const { cleanedOrForwarded, failedBinaries } = await resolveAndCleanStaleBinaries(
+                    target,
+                    diagnosis.allBinaries
+                )
+                if (cleanedOrForwarded.length > 0) {
                     console.log(
-                        `  ${GREEN}Forwarded ${fixed.length} shadowed binary path(s) to primary active binary (${target.path}).${RESET}`
+                        `  ${GREEN}Forwarded ${cleanedOrForwarded.length} shadowed binary path(s) to primary active binary (${target.path}).${RESET}`
                     )
                     console.log(
                         `  ${YELLOW}ℹ Run "hash -r" (bash) or restart your terminal to apply.${RESET}\n`
                     )
-                } else {
+                } else if (failedBinaries.length === 0) {
                     console.log(`  ${GREEN}All binary links are already aligned.${RESET}\n`)
+                }
+
+                if (failedBinaries.length > 0) {
+                    console.log(
+                        `  ${RED}Failed to forward ${failedBinaries.length} binary path(s) due to permissions:${RESET}`
+                    )
+                    for (const fb of failedBinaries) {
+                        if (fb.needsSudo) {
+                            console.log(
+                                `    ${YELLOW}• ${fb.path} -> Run: sudo rm "${fb.path}" (or sudo ln -sf "${target.path}" "${fb.path}")${RESET}`
+                            )
+                        } else {
+                            console.log(`    ${YELLOW}• ${fb.path}: ${fb.error}${RESET}`)
+                        }
+                    }
+                    console.log('')
                 }
             }
         } else {

@@ -80,4 +80,90 @@ describe('CLI Binary Discovery & Multi-Package-Manager Diagnostics (Unit)', () =
             await fs.rm(tmpDir, { recursive: true, force: true })
         })
     })
+
+    describe('isEligibleBinaryPath', () => {
+        test('filters out source files and non-binary file names', async () => {
+            const { isEligibleBinaryPath } = await import('../src/utils/bin-discovery')
+            expect(isEligibleBinaryPath('/home/user/december/apps/cli/src/index.ts')).toBe(false)
+            expect(isEligibleBinaryPath('/home/user/december/src/main.tsx')).toBe(false)
+            expect(isEligibleBinaryPath('/home/user/december/types.d.ts')).toBe(false)
+            expect(isEligibleBinaryPath('/home/user/december/dist/december.js.map')).toBe(false)
+            expect(isEligibleBinaryPath('/home/user/.bun/bin/december')).toBe(true)
+            expect(isEligibleBinaryPath('/usr/local/bin/december')).toBe(true)
+            expect(isEligibleBinaryPath('C:\\npm\\december.cmd')).toBe(true)
+        })
+    })
+
+    describe('resolveAndCleanStaleBinaries', () => {
+        test('skips source development files and cleans stale binaries', async () => {
+            const { resolveAndCleanStaleBinaries } = await import('../src/utils/bin-discovery')
+            const tmpDir = path.join(os.tmpdir(), `december-test-clean-${Date.now()}`)
+            await fs.mkdir(tmpDir, { recursive: true })
+
+            const bin1Dir = path.join(tmpDir, 'bin1')
+            const bin2Dir = path.join(tmpDir, 'bin2')
+            await fs.mkdir(bin1Dir, { recursive: true })
+            await fs.mkdir(bin2Dir, { recursive: true })
+
+            const primaryBin = path.join(bin1Dir, 'december')
+            const staleBin = path.join(bin2Dir, 'december')
+            const sourceFile = path.join(tmpDir, 'src-index.ts')
+
+            await fs.writeFile(primaryBin, '#!/usr/bin/env node\nconsole.log("primary")', {
+                mode: 0o755,
+            })
+            await fs.writeFile(staleBin, '#!/usr/bin/env node\nconsole.log("stale")', {
+                mode: 0o755,
+            })
+            await fs.writeFile(sourceFile, 'console.log("source code")', { mode: 0o644 })
+
+            const res = await resolveAndCleanStaleBinaries(
+                {
+                    path: primaryBin,
+                    realPath: primaryBin,
+                    manager: 'bun',
+                    version: '0.3.25',
+                    isSymlink: false,
+                    isActive: true,
+                    isShadowed: false,
+                },
+                [
+                    {
+                        path: primaryBin,
+                        realPath: primaryBin,
+                        manager: 'bun',
+                        version: '0.3.25',
+                        isSymlink: false,
+                        isActive: true,
+                        isShadowed: false,
+                    },
+                    {
+                        path: staleBin,
+                        realPath: staleBin,
+                        manager: 'npm',
+                        version: '0.3.20',
+                        isSymlink: false,
+                        isActive: false,
+                        isShadowed: true,
+                    },
+                    {
+                        path: sourceFile,
+                        realPath: sourceFile,
+                        manager: 'source',
+                        version: '0.3.25',
+                        isSymlink: false,
+                        isActive: false,
+                        isShadowed: true,
+                    },
+                ]
+            )
+
+            expect(res.cleanedOrForwarded).toContain(staleBin)
+            expect(res.cleanedOrForwarded).not.toContain(sourceFile)
+            const sourceContent = await fs.readFile(sourceFile, 'utf-8')
+            expect(sourceContent).toBe('console.log("source code")')
+
+            await fs.rm(tmpDir, { recursive: true, force: true })
+        })
+    })
 })

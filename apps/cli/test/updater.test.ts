@@ -210,5 +210,105 @@ describe('CLI Updater & Install Method Detection (Unit)', () => {
             expect(result.alreadyUpToDate).toBeUndefined()
             expect(execCalled).toBe(true)
         })
+
+        test('fails and reports shadowing binary when active binary in PATH remains stale after install', async () => {
+            const mockExec: any = (_cmd: string, _opts: any, callback: any) => {
+                callback(null, 'Updated global package successfully', '')
+            }
+
+            const result = await performCliUpdate({
+                configInstallMethod: 'npm',
+                currentVersion: '0.3.20',
+                fetchLatestFn: async () => '0.3.25',
+                execFn: mockExec,
+                skipVerification: false,
+                diagnoseFn: async () => ({
+                    activeBinary: {
+                        path: '/home/user/.bun/bin/december',
+                        realPath: '/home/user/.bun/bin/december',
+                        manager: 'bun',
+                        version: '0.3.20',
+                        isSymlink: false,
+                        isActive: true,
+                        isShadowed: false,
+                    },
+                    allBinaries: [
+                        {
+                            path: '/home/user/.bun/bin/december',
+                            realPath: '/home/user/.bun/bin/december',
+                            manager: 'bun',
+                            version: '0.3.20',
+                            isSymlink: false,
+                            isActive: true,
+                            isShadowed: false,
+                        },
+                        {
+                            path: '/home/user/.nvm/versions/node/v22/bin/december',
+                            realPath: '/home/user/.nvm/versions/node/v22/bin/december',
+                            manager: 'npm',
+                            version: '0.3.25',
+                            isSymlink: false,
+                            isActive: false,
+                            isShadowed: true,
+                        },
+                    ],
+                    shadowedBinaries: [],
+                    hasCollision: true,
+                    hasStaleActive: true,
+                    latestInstalledVersion: '0.3.25',
+                }),
+                cleanFn: async () => ({
+                    cleanedOrForwarded: [],
+                    failedBinaries: [
+                        {
+                            path: '/home/user/.bun/bin/december',
+                            error: 'EACCES: permission denied',
+                            needsSudo: true,
+                        },
+                    ],
+                }),
+            })
+
+            expect(result.success).toBe(false)
+            expect(result.verified).toBe(false)
+            expect(result.shadowingBinary?.path).toBe('/home/user/.bun/bin/december')
+            expect(result.error).toContain('runs v0.3.20')
+            expect(result.failedBinaries?.length).toBe(1)
+            expect(result.failedBinaries?.[0].needsSudo).toBe(true)
+        })
+
+        test('succeeds when active binary matches target version', async () => {
+            const mockExec: any = (_cmd: string, _opts: any, callback: any) => {
+                callback(null, 'Updated global package successfully', '')
+            }
+
+            const result = await performCliUpdate({
+                configInstallMethod: 'bun',
+                currentVersion: '0.3.20',
+                fetchLatestFn: async () => '0.3.25',
+                execFn: mockExec,
+                skipVerification: false,
+                diagnoseFn: async () => ({
+                    activeBinary: {
+                        path: '/home/user/.bun/bin/december',
+                        realPath: '/home/user/.bun/bin/december',
+                        manager: 'bun',
+                        version: '0.3.25',
+                        isSymlink: false,
+                        isActive: true,
+                        isShadowed: false,
+                    },
+                    allBinaries: [],
+                    shadowedBinaries: [],
+                    hasCollision: false,
+                    hasStaleActive: false,
+                    latestInstalledVersion: '0.3.25',
+                }),
+            })
+
+            expect(result.success).toBe(true)
+            expect(result.verified).toBe(true)
+            expect(result.activeVersion).toBe('0.3.25')
+        })
     })
 })

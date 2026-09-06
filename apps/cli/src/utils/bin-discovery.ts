@@ -98,11 +98,33 @@ async function readVersionFromPackageJson(targetPath: string): Promise<string | 
 }
 
 /**
+ * Check if a file path is eligible to be a global CLI binary, filtering out source files.
+ */
+export function isEligibleBinaryPath(filePath: string): boolean {
+    const normalized = filePath.replace(/\\/g, '/').toLowerCase()
+    if (
+        normalized.endsWith('.ts') ||
+        normalized.endsWith('.tsx') ||
+        normalized.endsWith('.d.ts') ||
+        normalized.endsWith('.map') ||
+        normalized.includes('/src/') ||
+        normalized.includes('apps/cli/src') ||
+        normalized.endsWith('/index.js')
+    ) {
+        return false
+    }
+
+    const base = path.posix.basename(normalized)
+    const validNames = ['december', 'december.cmd', 'december.exe', 'december.ps1', 'december.js']
+    return validNames.includes(base)
+}
+
+/**
  * Fallback: execute binary directly to get version string.
  */
 function readVersionFromExecution(binPath: string): Promise<string | undefined> {
     return new Promise((resolve) => {
-        execFile(binPath, ['--version'], { timeout: 1500 }, (error, stdout) => {
+        execFile(binPath, ['--version'], { timeout: 3000 }, (error, stdout) => {
             if (error || !stdout) {
                 resolve(undefined)
                 return
@@ -168,8 +190,8 @@ export async function findAllDecemberBinaries(
 
     candidateFiles.push(...knownLocations)
 
-    // Also include current process.argv[1] if specified
-    if (options?.argv1) {
+    // Also include current process.argv[1] if specified and eligible
+    if (options?.argv1 && isEligibleBinaryPath(options.argv1)) {
         candidateFiles.push(options.argv1)
     }
 
@@ -181,6 +203,8 @@ export async function findAllDecemberBinaries(
     let activeAssigned = false
 
     for (const candidate of candidateFiles) {
+        if (!isEligibleBinaryPath(candidate)) continue
+
         const normalizedPath = path.normalize(candidate)
         if (seenPaths.has(normalizedPath)) continue
         seenPaths.add(normalizedPath)
@@ -300,6 +324,28 @@ export async function diagnoseBinaryCollisions(
     }
 }
 
+function isPermissionDeniedError(errMsg: string): boolean {
+    const lower = errMsg.toLowerCase()
+    return (
+        lower.includes('eacces') ||
+        lower.includes('eperm') ||
+        lower.includes('permission denied') ||
+        lower.includes('missing write access') ||
+        lower.includes('operation not permitted')
+    )
+}
+
+export interface FailedStaleBinary {
+    path: string
+    error: string
+    needsSudo: boolean
+}
+
+export interface ResolveCleanResult {
+    cleanedOrForwarded: string[]
+    failedBinaries: FailedStaleBinary[]
+}
+
 /**
  * Safely forward a stale binary path to point directly to the primary target binary.
  * This prevents broken shell hash tables (`bash: ...: No such file or directory`)
@@ -308,7 +354,7 @@ export async function diagnoseBinaryCollisions(
 export async function forwardStaleBinary(
     stalePath: string,
     targetPath: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; isPermissionError?: boolean }> {
     try {
         if (stalePath === targetPath) {
             return { success: true }
@@ -320,8 +366,16 @@ export async function forwardStaleBinary(
         // Remove old stale binary/symlink
         try {
             await fs.unlink(stalePath)
-        } catch {
-            // If unlink fails, attempt chmod / overwrite
+        } catch (unlinkErr: any) {
+            const errStr = unlinkErr?.message || ''
+            if (isPermissionDeniedError(errStr)) {
+                return {
+                    success: false,
+                    error: errStr,
+                    isPermissionError: true,
+                }
+            }
+            // Intentionally swallowed: unlink may fail if file was moved or on Windows locking
         }
 
         // On POSIX, create symlink pointing to targetPath
@@ -335,9 +389,11 @@ export async function forwardStaleBinary(
 
         return { success: true }
     } catch (e: any) {
+        const errMsg = e?.message ?? 'Failed to forward stale binary'
         return {
             success: false,
-            error: e?.message ?? 'Failed to forward stale binary',
+            error: errMsg,
+            isPermissionError: isPermissionDeniedError(errMsg),
         }
     }
 }
@@ -348,8 +404,9 @@ export async function forwardStaleBinary(
 export async function resolveAndCleanStaleBinaries(
     targetPrimaryBinary: DecemberBinaryInfo,
     allBinaries: DecemberBinaryInfo[]
-): Promise<string[]> {
+): Promise<ResolveCleanResult> {
     const cleanedOrForwarded: string[] = []
+    const failedBinaries: FailedStaleBinary[] = []
 
     for (const bin of allBinaries) {
         if (
@@ -359,12 +416,23 @@ export async function resolveAndCleanStaleBinaries(
             continue
         }
 
+        // Never forward or modify source development files or source directories
+        if (bin.manager === 'source' || !isEligibleBinaryPath(bin.path)) {
+            continue
+        }
+
         // If stale binary is in a different manager path (e.g. ~/.bun/bin/december while target is npm)
         const forwardRes = await forwardStaleBinary(bin.path, targetPrimaryBinary.path)
         if (forwardRes.success) {
             cleanedOrForwarded.push(bin.path)
+        } else {
+            failedBinaries.push({
+                path: bin.path,
+                error: forwardRes.error || 'Failed to forward stale binary',
+                needsSudo: Boolean(forwardRes.isPermissionError),
+            })
         }
     }
 
-    return cleanedOrForwarded
+    return { cleanedOrForwarded, failedBinaries }
 }

@@ -1287,7 +1287,7 @@ ${decStatus}
                         `You are already using the latest version (v${result.installedVersion || result.targetVersion}).`,
                         'success'
                     )
-                } else if (result.success) {
+                } else if (result.success && result.verified) {
                     const verStr = result.installedVersion ? ` to v${result.installedVersion}` : ''
                     if (result.collisionFixed) {
                         addToast(
@@ -1305,6 +1305,11 @@ ${decStatus}
                             'info'
                         )
                     }
+                } else if (!result.verified && result.shadowingBinary) {
+                    addToast(
+                        `Updated to v${result.installedVersion || result.targetVersion}, but terminal still runs v${result.activeVersion || 'older'} from ${result.activeBinaryPath || result.shadowingBinary.path}. Run: rm "${result.shadowingBinary.path}"`,
+                        'warning'
+                    )
                 } else {
                     const hintCmd = result.sudoCmd || result.manualCmd
                     addToast(
@@ -1497,64 +1502,11 @@ ${decStatus}
                 return
             }
 
-            // Check if input matches an installed skill (e.g. /skill:handoff or /skill:tdd or /tdd [args])
-            if (text.trim().startsWith('/')) {
-                const rawTrimmed = text.trim()
-                const [firstToken, ...restArgs] = rawTrimmed.split(/\s+/)
-                let potentialCmd = firstToken ? firstToken.slice(1).toLowerCase() : ''
-                const isExplicitSkillPrefix = potentialCmd.startsWith('skill:')
-                if (isExplicitSkillPrefix) {
-                    potentialCmd = potentialCmd.slice('skill:'.length)
-                }
-
-                // Core built-ins take priority unless explicitly prefixed with /skill:
-                const coreBuiltins = new Set([
-                    'clear',
-                    'context',
-                    'copy',
-                    'exit',
-                    'feedback',
-                    'fork',
-                    'grill-me',
-                    'handoff',
-                    'init',
-                    'login',
-                    'logout',
-                    'mcp',
-                    'model',
-                    'new',
-                    'plan',
-                    'resume',
-                    'settings',
-                    'tasks',
-                    'update',
-                    'usage',
-                ])
-
-                if (isExplicitSkillPrefix || !coreBuiltins.has(potentialCmd)) {
-                    try {
-                        const engine = new SkillDiscoveryEngine({ workspaceDir: process.cwd() })
-                        const skills = engine.discoverAllSkills()
-                        const matchedSkill = skills.find(
-                            (s) => s.name.toLowerCase() === potentialCmd
-                        )
-                        if (matchedSkill) {
-                            const { body } = parseSkillFile(matchedSkill.entryFilePath)
-                            text = interpolateSkillPrompt(
-                                matchedSkill.name,
-                                body,
-                                restArgs,
-                                matchedSkill.directoryPath
-                            )
-                        }
-                    } catch {
-                        // Intentionally swallowed: fallback to standard prompt if skill resolution fails
-                    }
-                }
-            }
+            const rawUserPrompt = text.trim()
+            if (!rawUserPrompt) return
 
             if (!isAuthenticated) {
-                const userMsg: Message = { id: getNextMsgId(), role: 'user', text }
+                const userMsg: Message = { id: getNextMsgId(), role: 'user', text: rawUserPrompt }
                 const noticeMsg: Message = {
                     id: getNextMsgId(),
                     role: 'assistant',
@@ -1577,25 +1529,85 @@ ${decStatus}
 
             // normal chat logic
             if (isStreaming) {
-                setQueuedPrompts((prev) => [...prev, text.trim()])
+                setQueuedPrompts((prev) => [...prev, rawUserPrompt])
                 return
             }
 
-            let currentText: string | undefined = text.trim()
-            while (currentText) {
-                if (currentText.includes('@') && !currentText.includes('<context_file')) {
+            let currentRawPrompt: string | undefined = rawUserPrompt
+            while (currentRawPrompt) {
+                const promptToProcess = currentRawPrompt
+                let displayText = promptToProcess
+                let executionPrompt = promptToProcess
+
+                // Check if input matches an installed skill (e.g. /skill:handoff or /skill:tdd or /tdd [args])
+                if (promptToProcess.startsWith('/')) {
+                    const [firstToken, ...restArgs] = promptToProcess.split(/\s+/)
+                    let potentialCmd = firstToken ? firstToken.slice(1).toLowerCase() : ''
+                    const isExplicitSkillPrefix = potentialCmd.startsWith('skill:')
+                    if (isExplicitSkillPrefix) {
+                        potentialCmd = potentialCmd.slice('skill:'.length)
+                    }
+
+                    // Core built-ins take priority unless explicitly prefixed with /skill:
+                    const coreBuiltins = new Set([
+                        'clear',
+                        'context',
+                        'copy',
+                        'exit',
+                        'feedback',
+                        'fork',
+                        'grill-me',
+                        'handoff',
+                        'init',
+                        'login',
+                        'logout',
+                        'mcp',
+                        'model',
+                        'new',
+                        'plan',
+                        'resume',
+                        'settings',
+                        'tasks',
+                        'update',
+                        'usage',
+                    ])
+
+                    if (isExplicitSkillPrefix || !coreBuiltins.has(potentialCmd)) {
+                        try {
+                            const engine = new SkillDiscoveryEngine({ workspaceDir: process.cwd() })
+                            const skills = engine.discoverAllSkills()
+                            const matchedSkill = skills.find(
+                                (s) => s.name.toLowerCase() === potentialCmd
+                            )
+                            if (matchedSkill) {
+                                const { body } = parseSkillFile(matchedSkill.entryFilePath)
+                                executionPrompt = interpolateSkillPrompt(
+                                    matchedSkill.name,
+                                    body,
+                                    restArgs,
+                                    matchedSkill.directoryPath
+                                )
+                                displayText = promptToProcess
+                            }
+                        } catch {
+                            // Intentionally swallowed: fallback to standard prompt if skill resolution fails
+                        }
+                    }
+                }
+
+                if (executionPrompt.includes('@') && !executionPrompt.includes('<context_file')) {
                     try {
                         const { resolveContextMentions } = await import('@december/shared')
-                        const resolved = await resolveContextMentions(currentText)
-                        currentText = resolved.expandedPrompt
+                        const resolved = await resolveContextMentions(executionPrompt)
+                        executionPrompt = resolved.expandedPrompt
                     } catch {
-                        // Intentionally swallowed: keep currentText on resolution error
+                        // Intentionally swallowed: keep executionPrompt on resolution error
                     }
                 }
 
                 setIsStreaming(true)
                 const assistantMsgId = getNextMsgId()
-                const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text: currentText }
+                const newUserMsg: Message = { id: getNextMsgId(), role: 'user', text: displayText }
                 setStaticMessages((prev) => [
                     ...prev,
                     ...useCliStore.getState().activeMessages,
@@ -1604,7 +1616,10 @@ ${decStatus}
                 setActiveMessages([{ id: assistantMsgId, role: 'assistant', blocks: [] }])
 
                 try {
-                    const stream = runAgentLoop(agent, currentText)
+                    const stream = runAgentLoop(agent, {
+                        content: executionPrompt,
+                        displayText,
+                    })
                     await processAgentStream({ stream, setActiveMessages, assistantMsgId })
                 } catch (err: any) {
                     setActiveMessages((prev) => [
@@ -1619,10 +1634,10 @@ ${decStatus}
 
                 const nextQueue = useCliStore.getState().queuedPrompts
                 if (nextQueue.length > 0) {
-                    currentText = nextQueue[0]
+                    currentRawPrompt = nextQueue[0]
                     useCliStore.getState().setQueuedPrompts(nextQueue.slice(1))
                 } else {
-                    currentText = undefined
+                    currentRawPrompt = undefined
                 }
             }
         },

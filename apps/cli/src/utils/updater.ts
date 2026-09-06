@@ -8,6 +8,10 @@ import {
     compareVersions,
     diagnoseBinaryCollisions,
     resolveAndCleanStaleBinaries,
+    type BinaryCollisionDiagnosis,
+    type DecemberBinaryInfo,
+    type FailedStaleBinary,
+    type ResolveCleanResult,
 } from './bin-discovery'
 import { clearVersionCheckCache, fetchLatestFromNpm } from './version-check'
 
@@ -38,9 +42,13 @@ export interface UpdateResult {
     manualCmd: string
     targetVersion?: string
     installedVersion?: string
+    activeVersion?: string
+    activeBinaryPath?: string
     verified: boolean
     collisionFixed?: boolean
     cleanedBinaries?: string[]
+    failedBinaries?: FailedStaleBinary[]
+    shadowingBinary?: DecemberBinaryInfo
     shellHashNotice?: boolean
     isPermissionError?: boolean
     sudoCmd?: string
@@ -174,6 +182,12 @@ export interface PerformUpdateOptions {
     configInstallMethod?: string
     platform?: string
     skipVerification?: boolean
+    argv1?: string
+    diagnoseFn?: (options?: any) => Promise<BinaryCollisionDiagnosis>
+    cleanFn?: (
+        targetPrimaryBinary: DecemberBinaryInfo,
+        allBinaries: DecemberBinaryInfo[]
+    ) => Promise<ResolveCleanResult>
 }
 
 export async function performCliUpdate(options?: PerformUpdateOptions): Promise<UpdateResult> {
@@ -188,7 +202,33 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
     }
 
     const platform = options?.platform ?? process.platform
-    const method = detectInstallMethod({ configInstallMethod })
+    const diagnose = options?.diagnoseFn ?? diagnoseBinaryCollisions
+    const cleanStale = options?.cleanFn ?? resolveAndCleanStaleBinaries
+
+    // Preliminary check to see if an active binary exists in PATH
+    let preDiagnosis: BinaryCollisionDiagnosis | null = null
+    try {
+        preDiagnosis = await diagnose({
+            argv1: options?.argv1 ?? (process.argv.length > 1 ? process.argv[1] : undefined),
+        })
+    } catch {
+        // Intentionally swallowed: preliminary diagnosis fallback
+    }
+
+    let detectedMethod = detectInstallMethod({
+        configInstallMethod,
+        argv1: options?.argv1,
+    })
+
+    // If config was not explicitly set, prioritize the manager of the active binary in PATH
+    if (!configInstallMethod && preDiagnosis?.activeBinary?.manager) {
+        const activeMgr = preDiagnosis.activeBinary.manager
+        if (activeMgr === 'bun' || activeMgr === 'npm' || activeMgr === 'pnpm') {
+            detectedMethod = activeMgr
+        }
+    }
+
+    const method = detectedMethod
     const { command, manualCmd, description } = getUpdateCommand(method, platform)
 
     if (method === 'source') {
@@ -247,6 +287,7 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
             manualCmd,
             targetVersion,
             installedVersion: currentVersion,
+            activeVersion: currentVersion,
             verified: true,
             output: `December CLI is already up to date (v${currentVersion}).`,
         }
@@ -291,15 +332,20 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
 
             let verified = true
             let installedVersion = targetVersion
+            let activeVersion = targetVersion
+            let activeBinaryPath: string | undefined
             let collisionFixed = false
             let cleanedBinaries: string[] = []
+            let failedBinaries: FailedStaleBinary[] = []
+            let shadowingBinary: DecemberBinaryInfo | undefined
             let shellHashNotice = false
+            let verificationError: string | undefined
 
             // 2. Post-Update Verification & Collision Resolution
             if (!options?.skipVerification) {
                 try {
                     options?.onProgress?.('Verifying updated binary and PATH resolution...')
-                    const postDiagnosis = await diagnoseBinaryCollisions()
+                    const postDiagnosis = await diagnose()
                     const allFound = postDiagnosis.allBinaries
 
                     // Find the binary with the highest version
@@ -323,31 +369,39 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
                         options?.onProgress?.(
                             'Resolving multiple installation paths to ensure active terminal uses latest version...'
                         )
-                        cleanedBinaries = await resolveAndCleanStaleBinaries(
-                            highestVersionBin,
-                            allFound
-                        )
+                        const cleanRes = await cleanStale(highestVersionBin, allFound)
+                        cleanedBinaries = cleanRes.cleanedOrForwarded
+                        failedBinaries = cleanRes.failedBinaries
                         if (cleanedBinaries.length > 0) {
                             collisionFixed = true
                             shellHashNotice = true
                         }
                     }
 
-                    // Re-check post-cleanup
-                    const reCheck = await diagnoseBinaryCollisions()
+                    // Re-check authoritative active binary after cleanup
+                    const reCheck = await diagnose()
+                    if (reCheck.activeBinary) {
+                        activeVersion = reCheck.activeBinary.version
+                        activeBinaryPath = reCheck.activeBinary.path
+                    }
+
                     if (
                         targetVersion &&
                         reCheck.activeBinary?.version &&
                         compareVersions(reCheck.activeBinary.version, targetVersion) < 0
                     ) {
                         verified = false
+                        shadowingBinary = reCheck.activeBinary
+                        verificationError = `December CLI was updated to v${installedVersion}, but your active terminal still starts an older version (runs v${reCheck.activeBinary.version} from ${reCheck.activeBinary.path}).`
                     }
                 } catch {
                     // Intentionally swallowed: verification fallback should not fail the overall update
                 }
             }
 
-            if (options?.onSuccess) {
+            const overallSuccess = verified
+
+            if (overallSuccess && options?.onSuccess) {
                 try {
                     await options.onSuccess()
                 } catch {
@@ -356,16 +410,21 @@ export async function performCliUpdate(options?: PerformUpdateOptions): Promise<
             }
 
             resolve({
-                success: true,
+                success: overallSuccess,
                 method,
                 command,
                 manualCmd,
                 targetVersion,
                 installedVersion,
+                activeVersion,
+                activeBinaryPath,
                 verified,
                 collisionFixed,
                 cleanedBinaries,
+                failedBinaries: failedBinaries.length > 0 ? failedBinaries : undefined,
+                shadowingBinary,
                 shellHashNotice,
+                error: verificationError,
                 output: (stdout || 'Update completed successfully.').trim(),
             })
         })

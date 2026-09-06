@@ -59,7 +59,7 @@ export function fetchLatestFromNpm(): Promise<string | null> {
     return new Promise((resolve) => {
         const req = https.get(
             'https://registry.npmjs.org/@trydecember/cli/latest',
-            { timeout: 1200 },
+            { timeout: 5000 },
             (res) => {
                 if (res.statusCode !== 200) {
                     resolve(null)
