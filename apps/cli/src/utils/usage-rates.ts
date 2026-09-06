@@ -51,6 +51,26 @@ export const OFFICIAL_MODEL_RATES: Record<string, ModelRate> = {
     'grok-4.6': { name: 'grok-4.6', inputRate: 2.0, outputRate: 10.0 },
     'grok-4.5': { name: 'grok-4.5', inputRate: 2.0, outputRate: 10.0 },
 
+    // Arcee AI & Hosted Models
+    'trinity-large-thinking': { name: 'trinity-large-thinking', inputRate: 0.25, outputRate: 0.8 },
+    'deepseek/deepseek-v4-flash-latest': {
+        name: 'deepseek/deepseek-v4-flash-latest',
+        inputRate: 0.14,
+        outputRate: 0.28,
+    },
+    'deepseek/deepseek-v4-pro-0813': {
+        name: 'deepseek/deepseek-v4-pro-0813',
+        inputRate: 1.32,
+        outputRate: 3.96,
+    },
+    'zai-org/glm-5.2': { name: 'zai-org/glm-5.2', inputRate: 1.4, outputRate: 4.4 },
+    'moonshotai/kimi-k3': { name: 'moonshotai/kimi-k3', inputRate: 3.0, outputRate: 15.0 },
+    'thinkingmachines/inkling-small': {
+        name: 'thinkingmachines/inkling-small',
+        inputRate: 0.5,
+        outputRate: 1.2,
+    },
+
     // Ollama (Local)
     ollama: { name: 'ollama', inputRate: 0.0, outputRate: 0.0 },
 }
@@ -80,6 +100,7 @@ export const PROVIDER_BILLING_LINKS: Record<string, string> = {
     cohere: 'https://dashboard.cohere.com/billing',
     huggingface: 'https://huggingface.co/settings/billing',
     agentrouter: 'https://agentrouter.org/console/token',
+    arcee: 'https://platform.arcee.ai/api/api-keys',
     ollama: 'http://localhost:11434',
 }
 
@@ -108,11 +129,13 @@ export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
     cohere: 'Cohere',
     huggingface: 'Hugging Face',
     agentrouter: 'AgentRouter',
+    arcee: 'Arcee AI',
     ollama: 'Ollama (Local)',
 }
 
 export function inferProviderFromModel(modelName: string): string {
     const lower = (modelName || '').toLowerCase()
+    if (lower.startsWith('trinity') || lower.startsWith('arcee')) return 'arcee'
     if (lower.startsWith('claude') || lower.startsWith('anthropic/')) return 'anthropic'
     if (
         lower.startsWith('gpt') ||

@@ -120,6 +120,26 @@ const DEFAULT_CLIENT_SECRET = String.fromCharCode(
     102
 )
 
+function getGcloudToken(): string | null {
+    try {
+        const redirect = process.platform === 'win32' ? '2>NUL' : '2>/dev/null'
+        const gcloudToken = execSync(
+            `gcloud auth application-default print-access-token ${redirect} || gcloud auth print-access-token ${redirect}`,
+            {
+                encoding: 'utf-8',
+                timeout: 3000,
+                stdio: ['pipe', 'pipe', 'ignore'],
+            }
+        ).trim()
+        if (gcloudToken && gcloudToken.startsWith('ya29.')) {
+            return gcloudToken
+        }
+    } catch {
+        // Intentionally swallowed: gcloud not installed or not authenticated
+    }
+    return null
+}
+
 export const geminiAdapter: SubscriptionAdapter = {
     provider: 'gemini',
     displayName: 'Google Antigravity / Gemini Advanced',
@@ -250,26 +270,16 @@ export const geminiAdapter: SubscriptionAdapter = {
         }
 
         // 3. Check gcloud CLI if installed
-        try {
-            const gcloudToken = execSync(
-                'gcloud auth application-default print-access-token 2>/dev/null || gcloud auth print-access-token 2>/dev/null',
-                {
-                    encoding: 'utf-8',
-                    timeout: 3000,
-                }
-            ).trim()
-            if (gcloudToken && gcloudToken.startsWith('ya29.')) {
-                return {
-                    provider: 'gemini',
-                    accessToken: gcloudToken,
-                    subscriptionType: 'gemini_advanced',
-                    source: 'local_import',
-                    updatedAt: Date.now(),
-                    extra: { source: 'gcloud_cli' },
-                }
+        const gcloudToken = getGcloudToken()
+        if (gcloudToken) {
+            return {
+                provider: 'gemini',
+                accessToken: gcloudToken,
+                subscriptionType: 'gemini_advanced',
+                source: 'local_import',
+                updatedAt: Date.now(),
+                extra: { source: 'gcloud_cli' },
             }
-        } catch {
-            // Intentionally swallowed: gcloud not installed or not authenticated
         }
 
         return null
@@ -348,27 +358,17 @@ export const geminiAdapter: SubscriptionAdapter = {
 
         if (!clientId) {
             // Check if gcloud CLI is available and already authenticated
-            try {
-                const gcloudToken = execSync(
-                    'gcloud auth application-default print-access-token 2>/dev/null || gcloud auth print-access-token 2>/dev/null',
-                    {
-                        encoding: 'utf-8',
-                        timeout: 3000,
-                    }
-                ).trim()
-                if (gcloudToken && gcloudToken.startsWith('ya29.')) {
-                    return {
-                        provider: 'gemini',
-                        accessToken: gcloudToken,
-                        subscriptionType: 'gemini_advanced',
-                        source: 'local_import',
-                        updatedAt: Date.now(),
-                        endpoint: DEFAULT_ENDPOINT,
-                        extra: { source: 'gcloud_cli' },
-                    }
+            const gcloudToken = getGcloudToken()
+            if (gcloudToken) {
+                return {
+                    provider: 'gemini',
+                    accessToken: gcloudToken,
+                    subscriptionType: 'gemini_advanced',
+                    source: 'local_import',
+                    updatedAt: Date.now(),
+                    endpoint: DEFAULT_ENDPOINT,
+                    extra: { source: 'gcloud_cli' },
                 }
-            } catch {
-                // Intentionally swallowed: gcloud not installed or not authenticated
             }
 
             throw new Error(

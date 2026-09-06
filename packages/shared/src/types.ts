@@ -21,6 +21,7 @@ export interface AgentMessage extends Message {
     isUI?: boolean
     errorMessage?: string
     timestamp?: number
+    displayText?: string
 }
 
 export interface ToolCall {

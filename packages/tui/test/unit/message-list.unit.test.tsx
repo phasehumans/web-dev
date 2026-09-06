@@ -197,4 +197,54 @@ describe('MessageList Component (Unit)', () => {
         expect(b2Idx).toBe(u2Idx + 2)
         expect(rawLines[u2Idx + 1]?.trim()).toBe('')
     })
+
+    it('renders displayText over text when displayText is provided', () => {
+        const staticMessages = [
+            {
+                id: 'u1',
+                role: 'user' as const,
+                text: 'Full expanded prompt with hundreds of lines of context',
+                displayText: '/skill:implement',
+            },
+        ]
+
+        const { lastFrame } = renderWithProviders(
+            <MessageList
+                staticKey={0}
+                staticMessages={staticMessages}
+                activeMessages={[]}
+                isAuthenticated={true}
+            />
+        )
+
+        const frame = lastFrame() || ''
+        expect(frame).toContain('/skill:implement')
+        expect(frame).not.toContain('Full expanded prompt')
+    })
+
+    it('sanitizes [Skill Invocation: /<cmd>] header and does not render entire skill body', () => {
+        const fullSkillPrompt = `[Skill Invocation: /ask-matt] (Skill Directory: /home/chaitanya/.agents/skills/ask-matt)\n\nPlease follow the procedures from skill 'ask-matt':\n\n# Ask Matt\n\nYou don't remember every skill, so ask.`
+
+        const staticMessages = [
+            {
+                id: 'u1',
+                role: 'user' as const,
+                text: fullSkillPrompt,
+            },
+        ]
+
+        const { lastFrame } = renderWithProviders(
+            <MessageList
+                staticKey={0}
+                staticMessages={staticMessages}
+                activeMessages={[]}
+                isAuthenticated={true}
+            />
+        )
+
+        const frame = lastFrame() || ''
+        expect(frame).toContain('/ask-matt')
+        expect(frame).not.toContain('Please follow the procedures from skill')
+        expect(frame).not.toContain("You don't remember every skill, so ask.")
+    })
 })

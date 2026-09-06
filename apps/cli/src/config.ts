@@ -37,6 +37,7 @@ export interface ProviderConfig {
         | 'cohere'
         | 'ollama'
         | 'agentrouter'
+        | 'arcee'
         | 'december_proxy'
         | string
     apiKey: string

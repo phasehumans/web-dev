@@ -9,12 +9,12 @@ import {
 import { KeyboardLayerProvider } from '../../src/providers/keyboard-layer'
 
 describe('ByokProviderMenu Component (Unit)', () => {
-    it('has 26 total API key and local provider items without subscriptions', () => {
-        expect(PROVIDER_MENU_ITEMS.length).toBe(26)
+    it('has 27 total API key and local provider items without subscriptions', () => {
+        expect(PROVIDER_MENU_ITEMS.length).toBe(27)
         expect(PROVIDER_MENU_ITEMS[0].value).toBe('agentrouter')
         expect(PROVIDER_MENU_ITEMS[1].value).toBe('anthropic')
-        expect(PROVIDER_MENU_ITEMS[2].value).toBe('cerebras')
-        expect(PROVIDER_MENU_ITEMS[3].value).toBe('cohere')
+        expect(PROVIDER_MENU_ITEMS[2].value).toBe('arcee')
+        expect(PROVIDER_MENU_ITEMS[3].value).toBe('cerebras')
     })
 
     it('renders 7 visible items with down more indicator initially', () => {
@@ -29,12 +29,12 @@ describe('ByokProviderMenu Component (Unit)', () => {
         expect(frame).toContain('Select API Provider (BYOK):')
         expect(frame).toContain('AgentRouter')
         expect(frame).toContain('Anthropic')
+        expect(frame).toContain('Arcee AI')
         expect(frame).toContain('Cerebras')
         expect(frame).toContain('Cohere')
         expect(frame).toContain('DeepSeek')
         expect(frame).toContain('Fireworks AI')
-        expect(frame).toContain('Google AI Studio')
-        expect(frame).toContain('↓ 19 more')
+        expect(frame).toContain('↓ 20 more')
     })
 
     it('navigates through items with arrow keys and updates more indicators', async () => {
@@ -59,12 +59,12 @@ describe('ByokProviderMenu Component (Unit)', () => {
 
         const frameAfterScroll = lastFrame() || ''
         expect(frameAfterScroll).toContain('↑ 1 more')
-        expect(frameAfterScroll).toContain('↓ 18 more')
+        expect(frameAfterScroll).toContain('↓ 19 more')
 
-        // Press Enter to select current item (Groq)
+        // Press Enter to select current item (Google AI Studio)
         stdin.write('\r')
         await new Promise((resolve) => setTimeout(resolve, 10))
         expect(selectedItem).toBeDefined()
-        expect(selectedItem?.value).toBe('groq')
+        expect(selectedItem?.value).toBe('google')
     })
 })

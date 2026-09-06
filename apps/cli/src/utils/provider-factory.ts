@@ -18,6 +18,10 @@ export interface InstantiateProviderOptions {
     baseURL?: string
 }
 
+function withProviderId(provider: any, id: string): any {
+    return typeof provider === 'object' && provider !== null ? { ...provider, id } : provider
+}
+
 export function instantiateProvider(
     provider: string,
     apiKey: string,
@@ -56,26 +60,24 @@ export function instantiateProvider(
             }
             return openaiProvider(undefined, apiKey)
         }
-        case 'anthropic':
-        case 'claude': {
+        case 'antigravity':
+            return antigravityProvider(apiKey, {
+                endpoint: options?.baseURL,
+                headers: options?.headers,
+            })
+        case 'claude':
+        case 'anthropic': {
             if (options?.authMethod === 'subscription' || options?.subscription) {
-                const headers = {
-                    'anthropic-beta': 'oauth-2024-11-18',
-                    ...(options?.headers || {}),
-                }
-                return anthropicProvider(options?.baseURL, apiKey, headers)
+                const endpoint = options?.baseURL || options?.subscription?.endpoint
+                return anthropicProvider(endpoint, apiKey, {
+                    ...options?.headers,
+                    'anthropic-beta': 'claude-code-20250219,oauth-2024-06-20',
+                })
             }
             if (options?.baseURL || options?.headers) {
                 return anthropicProvider(options?.baseURL, apiKey, options?.headers)
             }
             return anthropicProvider(undefined, apiKey)
-        }
-        case 'antigravity': {
-            const endpoint = options?.baseURL || options?.subscription?.endpoint
-            return antigravityProvider(apiKey, {
-                endpoint,
-                headers: options?.headers,
-            })
         }
         case 'gemini':
         case 'google': {
@@ -91,54 +93,85 @@ export function instantiateProvider(
         case 'openrouter':
             return openrouterProvider(apiKey)
         case 'deepseek':
-            return openaiProvider('https://api.deepseek.com', apiKey)
+            return withProviderId(openaiProvider('https://api.deepseek.com', apiKey), 'deepseek')
         case 'groq':
-            return openaiProvider('https://api.groq.com/openai/v1', apiKey)
+            return withProviderId(openaiProvider('https://api.groq.com/openai/v1', apiKey), 'groq')
         case 'huggingface':
-            return openaiProvider('https://router.huggingface.co/v1', apiKey)
+            return withProviderId(
+                openaiProvider('https://router.huggingface.co/v1', apiKey),
+                'huggingface'
+            )
         case 'kimi':
-            return anthropicProvider('https://api.kimi.com/coding', apiKey)
+            return withProviderId(anthropicProvider('https://api.kimi.com/coding', apiKey), 'kimi')
         case 'moonshot':
         case 'moonshoot':
-            return openaiProvider('https://api.moonshot.ai/v1', apiKey)
+            return withProviderId(openaiProvider('https://api.moonshot.ai/v1', apiKey), 'moonshot')
         case 'mistral':
-            return openaiProvider('https://api.mistral.ai/v1', apiKey)
+            return withProviderId(openaiProvider('https://api.mistral.ai/v1', apiKey), 'mistral')
         case 'xai':
-            return openaiProvider('https://api.x.ai/v1', apiKey)
+            return withProviderId(openaiProvider('https://api.x.ai/v1', apiKey), 'xai')
         case 'zai':
-            return openaiProvider('https://api.z.ai/api/coding/paas/v4', apiKey)
+            return withProviderId(
+                openaiProvider('https://api.z.ai/api/coding/paas/v4', apiKey),
+                'zai'
+            )
         case 'nvidia':
         case 'nim':
-            return openaiProvider('https://integrate.api.nvidia.com/v1', apiKey)
+            return withProviderId(
+                openaiProvider('https://integrate.api.nvidia.com/v1', apiKey),
+                'nvidia'
+            )
         case 'sambanova':
-            return openaiProvider('https://api.sambanova.ai/v1', apiKey)
+            return withProviderId(
+                openaiProvider('https://api.sambanova.ai/v1', apiKey),
+                'sambanova'
+            )
         case 'cerebras':
-            return openaiProvider('https://api.cerebras.ai/v1', apiKey)
+            return withProviderId(openaiProvider('https://api.cerebras.ai/v1', apiKey), 'cerebras')
         case 'siliconflow':
         case 'siliconcloud':
-            return openaiProvider('https://api.siliconflow.cn/v1', apiKey)
+            return withProviderId(
+                openaiProvider('https://api.siliconflow.cn/v1', apiKey),
+                'siliconflow'
+            )
         case 'together':
         case 'togetherai':
-            return openaiProvider('https://api.together.xyz/v1', apiKey)
+            return withProviderId(openaiProvider('https://api.together.xyz/v1', apiKey), 'together')
         case 'hyperbolic':
-            return openaiProvider('https://api.hyperbolic.xyz/v1', apiKey)
+            return withProviderId(
+                openaiProvider('https://api.hyperbolic.xyz/v1', apiKey),
+                'hyperbolic'
+            )
         case 'fireworks':
         case 'fireworksai':
-            return openaiProvider('https://api.fireworks.ai/inference/v1', apiKey)
+            return withProviderId(
+                openaiProvider('https://api.fireworks.ai/inference/v1', apiKey),
+                'fireworks'
+            )
         case 'perplexity':
-            return openaiProvider('https://api.perplexity.ai', apiKey)
+            return withProviderId(openaiProvider('https://api.perplexity.ai', apiKey), 'perplexity')
         case 'cohere':
-            return openaiProvider('https://api.cohere.com/v2', apiKey)
+            return withProviderId(openaiProvider('https://api.cohere.com/v2', apiKey), 'cohere')
         case 'agentrouter':
         case 'agentrouter.org':
-            return openaiProvider('https://agentrouter.org/v1', apiKey, {
-                'User-Agent': 'claude-cli/2.1.0 (external, sdk-cli)',
-            })
+            return withProviderId(
+                openaiProvider('https://agentrouter.org/v1', apiKey, {
+                    'User-Agent': 'claude-cli/2.1.0 (external, sdk-cli)',
+                }),
+                'agentrouter'
+            )
         case 'minimax':
-            return openaiProvider('https://api.minimax.chat/v1', apiKey)
+            return withProviderId(openaiProvider('https://api.minimax.chat/v1', apiKey), 'minimax')
+        case 'arcee':
+        case 'arceeai':
+        case 'arcee-ai':
+            return withProviderId(openaiProvider('https://api.arcee.ai/api/v1', apiKey), 'arcee')
         case 'dashscope':
         case 'qwen':
-            return openaiProvider('https://dashscope.aliyuncs.com/compatible-mode/v1', apiKey)
+            return withProviderId(
+                openaiProvider('https://dashscope.aliyuncs.com/compatible-mode/v1', apiKey),
+                'dashscope'
+            )
         case 'lmstudio': {
             let endpoint = 'http://localhost:1234/v1'
             if (apiKey && (apiKey.startsWith('http://') || apiKey.startsWith('https://'))) {

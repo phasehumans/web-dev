@@ -146,6 +146,12 @@ export async function findAllDecemberBinaries(
     const env = options?.env ?? process.env
     const rawPath = options?.envPath ?? env.PATH ?? ''
     const pathDirs = rawPath.split(path.delimiter).filter(Boolean)
+    // On Linux / WSL, exclude Windows mount paths (/mnt/*) unless explicitly passed in options.envPath
+    const isWslOrLinux = process.platform === 'linux'
+    const searchDirs =
+        isWslOrLinux && !options?.envPath
+            ? pathDirs.filter((dir) => !dir.startsWith('/mnt/'))
+            : pathDirs
 
     const candidateFiles: string[] = []
 
@@ -155,7 +161,7 @@ export async function findAllDecemberBinaries(
             ? ['december.cmd', 'december.exe', 'december.ps1', 'december']
             : ['december']
 
-    for (const dir of pathDirs) {
+    for (const dir of searchDirs) {
         for (const name of binNames) {
             candidateFiles.push(path.join(dir, name))
         }
@@ -358,6 +364,17 @@ export async function forwardStaleBinary(
     try {
         if (stalePath === targetPath) {
             return { success: true }
+        }
+
+        // Avoid creating broken cross-OS symlinks between WSL Linux paths and Windows mounts
+        if (
+            process.platform === 'linux' &&
+            (stalePath.startsWith('/mnt/') || targetPath.startsWith('/mnt/'))
+        ) {
+            return {
+                success: false,
+                error: 'Cannot create cross-OS symlink between WSL and Windows mount',
+            }
         }
 
         // Ensure target exists

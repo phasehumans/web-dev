@@ -193,6 +193,26 @@ describe('instantiateProvider', () => {
         )
     })
 
+    it('instantiates arcee provider via openai compat', () => {
+        instantiateProvider('arcee', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.arcee.ai/api/v1',
+            'key-123'
+        )
+
+        instantiateProvider('arceeai', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.arcee.ai/api/v1',
+            'key-123'
+        )
+
+        instantiateProvider('arcee-ai', 'key-123')
+        expect(providers.openaiProvider).toHaveBeenCalledWith(
+            'https://api.arcee.ai/api/v1',
+            'key-123'
+        )
+    })
+
     it('instantiates ollama provider with default localhost endpoint', () => {
         const p = instantiateProvider('ollama', '')
         expect(p).toBe('mock-ollama')

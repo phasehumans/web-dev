@@ -1,6 +1,6 @@
 import util from 'util'
 
-import { safeParseJson } from '@december/shared'
+import { safeParseJson, formatInsufficientCreditsNotice } from '@december/shared'
 import pRetry, { AbortError } from 'p-retry'
 
 import { Agent } from './agent'
@@ -187,14 +187,22 @@ function formatError(e: any): string {
 
 export async function* runAgentLoop(
     agent: Agent,
-    userInput?: string
+    userInput?: string | { content: string; displayText?: string }
 ): AsyncGenerator<AgentEvent, void, unknown> {
     const eventQueue = new AsyncQueue<AgentEvent>()
     const abortController = new AbortController()
     agent.activeAbortController = abortController
 
     if (userInput) {
-        agent.addMessage({ role: 'user', content: userInput })
+        if (typeof userInput === 'string') {
+            agent.addMessage({ role: 'user', content: userInput })
+        } else {
+            agent.addMessage({
+                role: 'user',
+                content: userInput.content,
+                displayText: userInput.displayText,
+            })
+        }
         await agent.saveContext()
     }
     ;(async () => {
@@ -653,9 +661,12 @@ async function streamAssistantResponse(
         }
 
         if (errorMsg.includes('402') || errorMsg.toLowerCase().includes('insufficient credits')) {
-            errorMsg =
-                'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing or configure Bring Your Own Key (BYOK) via `/login` to continue using December.\n' +
-                errorMsg
+            const providerId = (agent.llm?.id || '').toLowerCase().trim()
+            const model = agent.modelOptions?.model
+            const notice = formatInsufficientCreditsNotice(providerId, model, errorMsg)
+            if (!errorMsg.includes(notice)) {
+                errorMsg = `${notice}\n${errorMsg}`
+            }
         } else if (
             errorMsg.includes('无可用渠道') ||
             errorMsg.toLowerCase().includes('no available channel') ||

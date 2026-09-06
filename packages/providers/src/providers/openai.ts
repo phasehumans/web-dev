@@ -39,7 +39,8 @@ export function supportsReasoningEffort(model?: string, baseURL?: string): boole
             baseURL.includes('together.xyz') ||
             baseURL.includes('hyperbolic.xyz') ||
             baseURL.includes('cerebras.ai') ||
-            baseURL.includes('sambanova.ai'))
+            baseURL.includes('sambanova.ai') ||
+            baseURL.includes('arcee.ai'))
     ) {
         return false
     }

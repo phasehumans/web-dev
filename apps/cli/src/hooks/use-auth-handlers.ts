@@ -767,7 +767,14 @@ export function useAuthHandlers(
             const resumedMessages: Message[] = []
             for (const msg of agent.messages) {
                 if (msg.role === 'user') {
-                    resumedMessages.push({ id: getNextMsgId(), role: 'user', text: msg.content })
+                    let userText = msg.displayText || msg.content
+                    if (!msg.displayText && userText.startsWith('[Skill Invocation: /')) {
+                        const match = userText.match(/^\[Skill Invocation: (\/[^\]]+)\]/)
+                        if (match) {
+                            userText = match[1]
+                        }
+                    }
+                    resumedMessages.push({ id: getNextMsgId(), role: 'user', text: userText })
                 } else if (msg.role === 'assistant') {
                     const blocks: MessageBlock[] = []
 

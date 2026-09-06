@@ -61,6 +61,7 @@ INVALID LINE
             expect(isSensitiveEnvKey('OPENROUTER_API_KEY')).toBe(true)
             expect(isSensitiveEnvKey('GROQ_API_KEY')).toBe(true)
             expect(isSensitiveEnvKey('DEEPSEEK_API_KEY')).toBe(true)
+            expect(isSensitiveEnvKey('ARCEE_API_KEY')).toBe(true)
             expect(isSensitiveEnvKey('COPILOT_TOKEN')).toBe(true)
             expect(isSensitiveEnvKey('GITHUB_COPILOT_TOKEN')).toBe(true)
             expect(isSensitiveEnvKey('CLAUDE_CODE_OAUTH_TOKEN')).toBe(true)

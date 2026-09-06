@@ -392,6 +392,24 @@ export const getCuratedProviderModels = (provider: string) => {
                 { label: 'MiniMax Text 01', value: 'MiniMax-Text-01' },
                 { label: 'MiniMax VL 01', value: 'MiniMax-VL-01' },
             ]
+        case 'arcee':
+        case 'arceeai':
+        case 'arcee-ai':
+            return [
+                { label: 'Trinity Large Thinking', value: 'trinity-large-thinking' },
+                {
+                    label: 'DeepSeek V4 Flash',
+                    value: 'deepseek/deepseek-v4-flash-latest',
+                },
+                { label: 'DeepSeek V4 Pro', value: 'deepseek/deepseek-v4-pro' },
+                {
+                    label: 'DeepSeek V4 Pro 0813',
+                    value: 'deepseek/deepseek-v4-pro-0813',
+                },
+                { label: 'GLM 5.2', value: 'zai-org/glm-5.2' },
+                { label: 'Kimi K3', value: 'moonshotai/kimi-k3' },
+                { label: 'Inkling Small', value: 'thinkingmachines/inkling-small' },
+            ]
         case 'dashscope':
         case 'qwen':
             return [
@@ -764,6 +782,11 @@ export async function fetchLiveProviderModels(
                 case 'hyperbolic':
                     endpoint = 'https://api.hyperbolic.xyz/v1/models'
                     break
+                case 'arcee':
+                case 'arceeai':
+                case 'arcee-ai':
+                    endpoint = 'https://api.arcee.ai/api/v1/models'
+                    break
                 case 'december':
                 case 'december_proxy': {
                     const serverUrl = process.env.SERVER_URL || 'https://api.trydecember.com'
@@ -909,6 +932,7 @@ export const getModelLabel = (value: string) => {
         'lmstudio',
         'llamacpp',
         'ollama',
+        'arcee',
         'december_proxy',
     ]
     for (const p of allProviders) {
@@ -924,6 +948,7 @@ export const isValidModelForProvider = (provider: string, model?: string): boole
     const normalized = (provider || '').toLowerCase().trim()
     if (normalized === 'openrouter' && (model.includes('/') || model.includes(':'))) return true
     if (normalized === 'agentrouter' && (model.includes('/') || model.includes(':'))) return true
+    if (normalized === 'arcee' && (model.includes('/') || model.includes(':'))) return true
     if (normalized === 'ollama') return isToolCompatibleOllamaModel(model)
 
     const models = getProviderModels(normalized)

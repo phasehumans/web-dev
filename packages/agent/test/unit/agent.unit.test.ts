@@ -236,4 +236,24 @@ describe('Agent core functionality (Unit)', () => {
         expect(nextMsgs.length).toBe(1) // only system prompt
         expect(nextMsgs.some((m) => m.content === 'what is date tday')).toBe(false)
     })
+
+    test('runAgentLoop records displayText on user message when provided', async () => {
+        const agent = new Agent({
+            llm: new MockLLM(),
+            tools: [],
+            operations: mockOperations,
+        })
+
+        for await (const _ of runAgentLoop(agent, {
+            content: 'Full expanded skill prompt with procedures...',
+            displayText: '/skill:implement',
+        })) {
+            // consume stream
+        }
+
+        const userMsg = agent.messages.find((m) => m.role === 'user')
+        expect(userMsg).toBeDefined()
+        expect(userMsg?.content).toBe('Full expanded skill prompt with procedures...')
+        expect(userMsg?.displayText).toBe('/skill:implement')
+    })
 })

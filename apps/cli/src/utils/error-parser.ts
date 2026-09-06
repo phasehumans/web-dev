@@ -146,6 +146,17 @@ export function parseErrorMessage(err: any): string {
         return openRouterCreditsNotice + finalResult
     }
 
+    const isArceeCredits =
+        !isDecemberCredits &&
+        (lowerStr.includes('arcee') || lowerStr.includes('trinity')) &&
+        (lowerStr.includes('credits') || lowerStr.includes('402'))
+
+    if (isArceeCredits && !finalResult.includes('Insufficient credits in your Arcee AI account')) {
+        const arceeCreditsNotice =
+            'Insufficient credits in your Arcee AI account. Please add credits or top up your balance at https://platform.arcee.ai/api/api-keys\n'
+        return arceeCreditsNotice + finalResult
+    }
+
     const isChannelError =
         lowerStr.includes('无可用渠道') ||
         lowerStr.includes('no available channel') ||

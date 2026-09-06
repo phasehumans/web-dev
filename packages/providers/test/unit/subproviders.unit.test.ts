@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 
 import { AgentRouterProvider } from '../../src/providers/agentrouter'
+import { ArceeProvider } from '../../src/providers/arcee'
 import { CerebrasProvider } from '../../src/providers/cerebras'
 import { CohereProvider } from '../../src/providers/cohere'
 import { DashScopeProvider } from '../../src/providers/dashscope'
@@ -120,5 +121,10 @@ describe('OpenAI-compatible Subproviders (Unit)', () => {
     test('instantiates MiniMaxProvider with correct ID', () => {
         const provider = new MiniMaxProvider('dummy-key')
         expect(provider.id).toBe('minimax')
+    })
+
+    test('instantiates ArceeProvider with correct ID', () => {
+        const provider = new ArceeProvider('dummy-key')
+        expect(provider.id).toBe('arcee')
     })
 })

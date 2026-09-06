@@ -28,7 +28,8 @@ function renderSingleMessage(
             />
         )
     }
-    if (msg.role === 'user') return <UserMessage key={key} message={msg.text ?? ''} />
+    if (msg.role === 'user')
+        return <UserMessage key={key} message={msg.displayText || msg.text || ''} />
     if (msg.role === 'error') {
         const prevRole = index > 0 ? allMessages[index - 1]?.role : null
         const hasTopMargin = prevRole !== 'user'

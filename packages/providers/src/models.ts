@@ -78,7 +78,13 @@ export const MODEL_CONTEXT_WINDOWS: Record<string, number> = {
     sonar: 128000,
     'command-a-plus-05-2026': 256000,
     'command-a-reasoning-08-2025': 256000,
-    'command-a-03-2025': 256000,
+    'trinity-large-thinking': 262144,
+    'thinkingmachines/inkling-small': 262144,
+    'deepseek/deepseek-v4-flash-latest': 1000000,
+    'deepseek/deepseek-v4-pro-0813': 1000000,
+    'deepseek/deepseek-v4-pro': 512000,
+    'zai-org/glm-5.2': 262144,
+    'moonshotai/kimi-k3': 1000000,
 }
 
 export function getModelContextWindow(value: string): number {
@@ -111,7 +117,9 @@ export function getModelContextWindow(value: string): number {
         lower.includes('mistral-small') ||
         lower.includes('command-a') ||
         lower.includes('qwen3.8-flash-next') ||
-        lower.includes('qwen3-coder')
+        lower.includes('qwen3-coder') ||
+        lower.includes('trinity') ||
+        lower.includes('inkling')
     )
         return 262144
     if (lower.includes('gpt-5.6') || lower.includes('gpt-5.5')) return 1050000
@@ -120,7 +128,8 @@ export function getModelContextWindow(value: string): number {
     if (lower.includes('o4') || lower.includes('o3') || lower.includes('o1')) return 200000
     if (lower.includes('deepseek-v4')) return 1000000
     if (lower.includes('glm-5')) return 1000000
-    if (lower.includes('qwen3.8-max') || lower.includes('qwen3.7-max')) return 1000000
+    if (lower.includes('qwen3.8-max') || lower.includes('qwen3.7-max') || lower.includes('kimi'))
+        return 1000000
     if (lower.includes('minimax-m3')) return 512000
     if (lower.includes('minimax-m2')) return 200000
     if (lower.includes('gpt-4.5')) return 128000

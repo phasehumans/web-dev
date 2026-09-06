@@ -8,8 +8,8 @@ import {
 import { PROVIDER_MENU_ITEMS } from '../../src/components/menus/byok-provider-menu'
 
 describe('BYOK Provider URLs & Names Audit (Unit)', () => {
-    it('ensures all 26 BYOK providers have corresponding key URLs starting with https://', () => {
-        expect(PROVIDER_MENU_ITEMS.length).toBe(26)
+    it('ensures all 27 BYOK providers have corresponding key URLs starting with https://', () => {
+        expect(PROVIDER_MENU_ITEMS.length).toBe(27)
 
         for (const item of PROVIDER_MENU_ITEMS) {
             const url = PROVIDER_KEY_URLS[item.value]
@@ -19,7 +19,7 @@ describe('BYOK Provider URLs & Names Audit (Unit)', () => {
         }
     })
 
-    it('ensures all 26 BYOK providers have a display name defined in PROVIDER_NAMES', () => {
+    it('ensures all 27 BYOK providers have a display name defined in PROVIDER_NAMES', () => {
         for (const item of PROVIDER_MENU_ITEMS) {
             const name = PROVIDER_NAMES[item.value]
             expect(name).toBeDefined()
@@ -31,6 +31,7 @@ describe('BYOK Provider URLs & Names Audit (Unit)', () => {
 
     it('validates specific exact destination URLs for major providers', () => {
         expect(PROVIDER_KEY_URLS['anthropic']).toBe('https://console.anthropic.com/settings/keys')
+        expect(PROVIDER_KEY_URLS['arcee']).toBe('https://platform.arcee.ai/api/api-keys')
         expect(PROVIDER_KEY_URLS['openai']).toBe('https://platform.openai.com/api-keys')
         expect(PROVIDER_KEY_URLS['google']).toBe('https://aistudio.google.com/app/apikey')
         expect(PROVIDER_KEY_URLS['openrouter']).toBe('https://openrouter.ai/settings/keys')

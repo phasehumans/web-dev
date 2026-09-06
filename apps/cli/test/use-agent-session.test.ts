@@ -121,4 +121,26 @@ describe('useCliStore activeMessages handling', () => {
         store.setActiveModel('gemini-3.7-flash')
         expect(useCliStore.getState().activeModel).toBe('gemini-3.7-flash')
     })
+
+    it('preserves clean skill invocation command in queuedPrompts instead of whole prompt', () => {
+        const store = useCliStore.getState()
+        store.setQueuedPrompts(['/skill:implement', '/ask-matt'])
+
+        expect(useCliStore.getState().queuedPrompts).toEqual(['/skill:implement', '/ask-matt'])
+        expect(useCliStore.getState().queuedPrompts[0]).not.toContain(
+            'Please follow the procedures'
+        )
+    })
+
+    it('extracts skill invocation command from [Skill Invocation: /...] prompt header for resume', () => {
+        const legacySkillContent = `[Skill Invocation: /ask-matt] (Skill Directory: /home/chaitanya/.agents/skills/ask-matt)\n\nPlease follow the procedures from skill 'ask-matt':\n\n# Ask Matt`
+        const match = legacySkillContent.match(/^\[Skill Invocation: (\/[^\]]+)\]/)
+        expect(match).toBeTruthy()
+        expect(match?.[1]).toBe('/ask-matt')
+
+        const legacySkillWithArgs = `[Skill Invocation: /tdd auth-service] (Skill Directory: /home/chaitanya/.agents/skills/tdd)\n\nPlease follow the procedures from skill 'tdd':\n\n# TDD`
+        const matchWithArgs = legacySkillWithArgs.match(/^\[Skill Invocation: (\/[^\]]+)\]/)
+        expect(matchWithArgs).toBeTruthy()
+        expect(matchWithArgs?.[1]).toBe('/tdd auth-service')
+    })
 })

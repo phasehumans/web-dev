@@ -16,6 +16,11 @@ describe('Models Utility & Context Windows (Unit)', () => {
         expect(getModelContextWindow('gpt-4o')).toBe(128000)
         expect(getModelContextWindow('gpt-4o-mini')).toBe(128000)
         expect(getModelContextWindow('deepseek-chat')).toBe(128000)
+        expect(getModelContextWindow('trinity-large-thinking')).toBe(262144)
+        expect(getModelContextWindow('thinkingmachines/inkling-small')).toBe(262144)
+        expect(getModelContextWindow('zai-org/glm-5.2')).toBe(262144)
+        expect(getModelContextWindow('moonshotai/kimi-k3')).toBe(1000000)
+        expect(getModelContextWindow('deepseek/deepseek-v4-flash-latest')).toBe(1000000)
     })
 
     it('returns inferred context window size based on model name substring heuristics', () => {
@@ -28,6 +33,8 @@ describe('Models Utility & Context Windows (Unit)', () => {
         expect(getModelContextWindow('deepseek-v3')).toBe(128000)
         expect(getModelContextWindow('llama-3.3-70b')).toBe(128000)
         expect(getModelContextWindow('llama-3.1-8b')).toBe(128000)
+        expect(getModelContextWindow('custom-trinity-model')).toBe(262144)
+        expect(getModelContextWindow('inkling-small')).toBe(262144)
         expect(getModelContextWindow('model-128k-context')).toBe(131072)
         expect(getModelContextWindow('model-32k-context')).toBe(32768)
         expect(getModelContextWindow('model-8192-context')).toBe(8192)

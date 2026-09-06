@@ -128,3 +128,120 @@ export function startOfUtcMonth(date: Date = new Date()): Date {
 export function startOfNextUtcMonth(date: Date = new Date()): Date {
     return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1))
 }
+
+export const PROVIDER_BILLING_LINKS: Record<string, string> = {
+    december: 'https://trydecember.com/settings/billing',
+    december_proxy: 'https://trydecember.com/settings/billing',
+    google: 'https://aistudio.google.com/app/usage',
+    gemini: 'https://aistudio.google.com/app/usage',
+    anthropic: 'https://console.anthropic.com/settings/billing',
+    openai: 'https://platform.openai.com/usage',
+    openrouter: 'https://openrouter.ai/settings/credits',
+    deepseek: 'https://platform.deepseek.com/usage',
+    groq: 'https://console.groq.com/usage',
+    mistral: 'https://console.mistral.ai/billing/',
+    moonshot: 'https://platform.moonshot.cn/console/recharge',
+    kimi: 'https://platform.moonshot.cn/console/recharge',
+    xai: 'https://console.x.ai/',
+    zai: 'https://open.bigmodel.cn/usercenter/apikeys',
+    nvidia: 'https://build.nvidia.com/',
+    sambanova: 'https://cloud.sambanova.ai/',
+    cerebras: 'https://cloud.cerebras.ai/',
+    siliconflow: 'https://cloud.siliconflow.cn/account/ak',
+    together: 'https://api.together.ai/settings/billing',
+    hyperbolic: 'https://app.hyperbolic.ai/settings',
+    fireworks: 'https://app.fireworks.ai/settings/billing',
+    perplexity: 'https://www.perplexity.ai/settings/api',
+    cohere: 'https://dashboard.cohere.com/billing',
+    huggingface: 'https://huggingface.co/settings/billing',
+    agentrouter: 'https://agentrouter.org/console/token',
+    arcee: 'https://platform.arcee.ai/api/api-keys',
+    arceeai: 'https://platform.arcee.ai/api/api-keys',
+    'arcee-ai': 'https://platform.arcee.ai/api/api-keys',
+    ollama: 'http://localhost:11434',
+}
+
+export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+    december: 'December Wallet',
+    december_proxy: 'December Wallet',
+    google: 'Google AI Studio',
+    gemini: 'Google AI Studio',
+    anthropic: 'Anthropic Console',
+    openai: 'OpenAI Platform',
+    openrouter: 'OpenRouter',
+    deepseek: 'DeepSeek Platform',
+    groq: 'GroqCloud Console',
+    mistral: 'Mistral Console',
+    moonshot: 'Moonshot AI Platform',
+    kimi: 'Moonshot Kimi Console',
+    xai: 'xAI Console',
+    zai: 'ZAI Platform',
+    nvidia: 'NVIDIA NIM Console',
+    sambanova: 'SambaNova Cloud',
+    cerebras: 'Cerebras Cloud',
+    siliconflow: 'SiliconFlow Cloud',
+    together: 'Together AI Console',
+    hyperbolic: 'Hyperbolic Console',
+    fireworks: 'Fireworks AI Console',
+    perplexity: 'Perplexity Settings',
+    cohere: 'Cohere Dashboard',
+    huggingface: 'HuggingFace Settings',
+    agentrouter: 'AgentRouter Token Console',
+    arcee: 'Arcee AI',
+    arceeai: 'Arcee AI',
+    'arcee-ai': 'Arcee AI',
+    ollama: 'Ollama (Local)',
+}
+
+export function formatInsufficientCreditsNotice(
+    provider?: string,
+    model?: string,
+    rawErrorMsg?: string
+): string {
+    const rawLower = (rawErrorMsg || '').toLowerCase()
+    let normalized = (provider || '').toLowerCase().trim()
+
+    // Infer provider from model name if provider is generic (e.g. 'openai') or empty
+    if (!normalized || normalized === 'openai') {
+        const modelLower = (model || '').toLowerCase()
+        if (
+            modelLower.includes('trinity') ||
+            modelLower.includes('inkling') ||
+            modelLower.includes('arcee')
+        ) {
+            normalized = 'arcee'
+        } else if (modelLower.includes('deepseek')) {
+            normalized = 'deepseek'
+        } else if (modelLower.includes('kimi') || modelLower.includes('moonshot')) {
+            normalized = 'moonshot'
+        } else if (modelLower.includes('grok')) {
+            normalized = 'xai'
+        } else if (modelLower.includes('glm')) {
+            normalized = 'zai'
+        }
+    }
+
+    // Explicit December Wallet check or default december provider
+    const isDecember =
+        normalized === 'december' ||
+        normalized === 'december_proxy' ||
+        rawLower.includes('december wallet') ||
+        rawLower.includes('trydecember.com')
+
+    if (isDecember || (!normalized && !model)) {
+        return 'Insufficient credits in December Wallet. Please add credits at https://trydecember.com/settings/billing or configure Bring Your Own Key (BYOK) via `/login` to continue using December.'
+    }
+
+    if (normalized === 'arcee' || normalized === 'arceeai' || normalized === 'arcee-ai') {
+        return 'Insufficient credits in your Arcee AI account. Please add credits or top up your balance at https://platform.arcee.ai/api/api-keys'
+    }
+
+    const displayName = PROVIDER_DISPLAY_NAMES[normalized] || normalized.toUpperCase()
+    const billingLink = PROVIDER_BILLING_LINKS[normalized]
+
+    if (billingLink) {
+        return `Insufficient credits in your ${displayName} account. Please add credits or top up your balance at ${billingLink}`
+    }
+
+    return `Insufficient credits in your ${displayName} account. Please add credits or check your account billing status with your provider.`
+}

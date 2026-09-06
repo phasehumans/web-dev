@@ -132,6 +132,14 @@ describe('error-parser', () => {
         expect(parsed).not.toMatch(/[\u{1F300}-\u{1F9FF}]/u)
     })
 
+    test('attaches Arcee credit notice when 402 or credit limit is exhausted on Arcee', () => {
+        const raw402Err = '402 Insufficient credits. Arcee model trinity-large-thinking'
+        const parsed = parseErrorMessage(raw402Err)
+        expect(parsed).toContain('https://platform.arcee.ai/api/api-keys')
+        expect(parsed).toContain('Insufficient credits in your Arcee AI account')
+        expect(parsed).not.toContain('December Wallet')
+    })
+
     test('attaches authentication notice when 401 or session expired error occurs', () => {
         const raw401Err = '401 status code (no body)'
         const parsed = parseErrorMessage(raw401Err)

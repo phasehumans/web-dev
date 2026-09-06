@@ -10,6 +10,7 @@ const WINDOW_SIZE = 7
 export const PROVIDER_MENU_ITEMS = [
     { label: 'AgentRouter', value: 'agentrouter' },
     { label: 'Anthropic', value: 'anthropic' },
+    { label: 'Arcee AI', value: 'arcee' },
     { label: 'Cerebras', value: 'cerebras' },
     { label: 'Cohere', value: 'cohere' },
     { label: 'DeepSeek', value: 'deepseek' },
